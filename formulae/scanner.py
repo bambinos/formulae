@@ -1,5 +1,3 @@
-from .token import Token
-
 class ScanError(Exception):
     pass
 
@@ -58,7 +56,10 @@ class Scanner:
         elif char == ',':
             self.add_token('COMMA')
         elif char == '.':
-            self.add_token('PERIOD')
+            if self.peek().isdigit():
+                self.floatnum()
+            else:
+                self.add_token('PERIOD') 
         elif char == '+':
             self.add_token('PLUS')
         elif char == '-':
@@ -91,7 +92,12 @@ class Scanner:
             self.scan_token()
         self.tokens.append(Token('EOF', ''))
         return self.tokens
-
+    
+    def floatnum(self):
+        while self.peek().isdigit():
+            self.advance()
+        self.add_token('NUMBER', float(self.code[self.start:self.current]))
+        
     def number(self):
         is_float = False
         while self.peek().isdigit():
@@ -112,7 +118,8 @@ class Scanner:
         self.add_token('NUMBER', token)
 
     def identifier(self):
-        while self.peek().isalnum():
+        # 'mod.function' is also an identifier
+        while self.peek().isalnum() or self.peek() == '.':
             self.advance()
         # Check if the identifier is a reserved word
         identifier = self.code[self.start:self.current]
