@@ -1,3 +1,5 @@
+from .token import Token
+
 class ScanError(Exception):
     pass
 
