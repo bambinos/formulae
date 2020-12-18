@@ -94,10 +94,8 @@ class Scanner:
 
     def number(self):
         is_float = False
-
         while self.peek().isdigit():
             self.advance()
-
         # Look for fractional part, if present
         if self.peek() == "." and self.peek_next().isdigit():
             is_float = True
@@ -106,7 +104,6 @@ class Scanner:
             # Keep consuming numbers, if present
             while self.peek().isdigit():
                 self.advance()
-
         if is_float:
             token = float(self.code[self.start:self.current])
         else:
