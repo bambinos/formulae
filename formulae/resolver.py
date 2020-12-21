@@ -1,17 +1,25 @@
+from .terms import Term
+
 class Resolver:
 
     def __init__(self, expr):
         self.expr = expr
 
     def resolve(self):
-        self.expr.accept(self)
+        return self.expr.accept(self)
 
     def visitGroupingExpr(self):
         pass
 
-    def visitBinaryExpr(self):
-        pass
-
+    def visitBinaryExpr(self, expr):
+        otype = expr.operator.type
+        if otype == 'PLUS':
+            return expr.left.accept(self) | expr.right.accept(self)
+        elif otype == 'MINUS':
+            return expr.left.accept(self) - expr.right.accept(self)
+        else:
+            pass
+    
     def visitUnaryExpr(self):
         self.expr
         pass
@@ -19,8 +27,8 @@ class Resolver:
     def visitCallExpr(self):
         pass
 
-    def visitVariableExpr(self):
-        pass
+    def visitVariableExpr(self, expr):
+        return Term(expr.name.lexeme, expr.name.lexeme)
 
     def visitLiteralExpr(self):
         pass

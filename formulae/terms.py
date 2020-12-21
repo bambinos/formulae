@@ -11,18 +11,89 @@ class Term:
     kind : str
         An optional type for the Term. Possible values are 'numeric' and 'categoric'.
         TODO: Add kind 'ordinal'.
-    fun: callable
-        An optional function used to transform the values of the term.
-        Only applies for 'numeric' variables for now.
-    fargs: dictionary
-        An optional dictionary where keys are argument names and values are argument values
-        that are passed to the callable 'fun'.
     """
 
-    def __init__(self, name, variables, kind=None, fun=None, fargs=None):
+    def __init__(self, name, variable, data=None, kind=None):
         self.name = name
-        self.variables = variables
+        self.variable = variable
+        self.data = data
         self.kind = kind
-        self.fun = fun
-        self.fargs = fargs
+        
+    def __hash__(self):
+        return hash((self.name, self.variable, self.data, self.kind))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)): return NotImplemented
+        return self.name == other.name and self.variable == other.variable and self.kind == other.kind
+
+    def __or__(self, other):
+        if not isinstance(other, type(self)): 
+            return NotImplemented
+            
+        if self == other:
+            return ModelTerms(self)
+        else:
+            return ModelTerms(self, other)
+    
+    def __sub__(self, other):
+        if not isinstance(other, type(self)): 
+            return NotImplemented
+        # "x" - "y" is equal to "x"
+        return self
+    
+    
+    def __repr__(self):
+        return self.__str__()
+        
+    def __str__(self):
+        string_list = [
+            "name= " + self.name,
+            "variable= " + self.variable,
+            "kind= " + str(self.kind),
+            "data= " + str(self.data)
+        ]
+        return 'Term(\n  ' + '\n  '.join(string_list) + '\n)'
+        
+class InteractionTerm:
+    """Representation of an interaction term
+
+    Parameters
+    ----------
+    name : str
+        Name of the term.
+    terms: list
+        list of Terms taking place in the interaction
+    """
+
+    def __init__(self, name, terms):
+        self.name = name
+        self.terms = self.assert_terms(terms)
+
+
+class ModelTerms:
+    # TODO: Add accept method, so we accept and unpack ModelTerms
+    accepted_terms = (Term, InteractionTerm)
+    def __init__(self, *terms):
+        if all([isinstance(term, self.accepted_terms) for term in terms]):
+            self.terms = set([term for term in terms])
+        else:
+            raise ValueError("not term")
+           
+    def __sub__(self, other):
+        if isinstance(other, type(self)):
+            self.terms = self.terms - other.terms
+            return self
+        elif isinstance(other, Term):
+            self.terms = self.terms - {other}
+            return self
+        else:
+            return NotImplemented
+            
+    
+    def __repr__(self):
+        terms = ',\n'.join([repr(term) for term in self.terms])
+        return 'ModelTerms(\n  ' + '  '.join(terms.splitlines(True)) + '\n)'
+            
+           
+            
 
