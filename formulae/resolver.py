@@ -13,6 +13,7 @@ class Resolver:
         pass
 
     def visitUnaryExpr(self):
+        self.expr
         pass
 
     def visitCallExpr(self):

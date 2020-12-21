@@ -9,8 +9,9 @@ class Expr:
 
 class Grouping(Expr):
 
-    def __init__(self, expression):
+    def __init__(self, expression, is_arg):
         self.expression = expression
+        self.is_cais_argll = is_arg
 
     def __repr__(self):
         return self.__str__()
@@ -24,10 +25,11 @@ class Grouping(Expr):
 
 class Binary(Expr):
 
-    def __init__(self, left, operator, right):
+    def __init__(self, left, operator, right, is_arg):
         self.left = left
         self.operator = operator
         self.right = right
+        self.is_arg = is_arg
 
     def __repr__(self):
         return self.__str__()
@@ -45,9 +47,10 @@ class Binary(Expr):
 
 class Unary(Expr):
 
-    def __init__(self, operator, right):
+    def __init__(self, operator, right, is_arg):
         self.operator = operator
         self.right = right
+        self.is_arg = is_arg
 
     def __repr__(self):
         return self.__str__()
@@ -65,9 +68,10 @@ class Unary(Expr):
 class Call(Expr):
     """Represents built-in or added functions in formulae"""
 
-    def __init__(self, callee, arguments):
+    def __init__(self, callee, arguments, is_arg):
         self.callee = callee
         self.arguments = arguments
+        self.is_arg = is_arg
 
     def __repr__(self):
         return self.__str__()
@@ -84,8 +88,9 @@ class Call(Expr):
 
 class Variable(Expr):
 
-    def __init__(self, name):
+    def __init__(self, name, is_arg):
         self.name = name
+        self.is_arg = is_arg
 
     def __repr__(self):
         return self.__str__()
@@ -97,9 +102,9 @@ class Variable(Expr):
         return visitor.visitVariableExpr(self)
 
 class Literal(Expr):
-
-    def __init__(self, value):
+    def __init__(self, value, is_arg):
         self.value = value
+        self.is_arg = is_arg
 
     def __repr__(self):
         return self.__str__()
