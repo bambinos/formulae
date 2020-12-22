@@ -44,14 +44,45 @@ class Term:
             return NotImplemented
         # x-y is equal to x
         return self
-    
+        
     def __mul__(self, other):
-        if isinstance(other, type(self)):
+        if isinstance(other, Term):
             name = f"{self.name}:{other.name}"
-            return InteractionTerm(name, self, other)
+            return ModelTerms(self, other, InteractionTerm(name, self, other))
+        if isinstance(other, ModelTerms):
+            products = product({self}, other.terms)
+            terms = [InteractionTerm(f"{p[0].name}:{p[1].name}", p[0], p[1]) for p in products]
+            return ModelTerms(*terms)
+            
+    def __matmul__(self, other):
+        if isinstance(other, type(self)):
+            if self == other:
+                return self
+            else:
+                name = f"{self.name}:{other.name}"
+                return InteractionTerm(name, self, other)
         if isinstance(other, InteractionTerm):
             return other.add_term(self)
-
+            
+    def __pow__(self, other):
+        if isinstance(other, LiteralTerm) and isinstance(other.value, int) and other.value >= 1:
+            return self
+            # if other.value == 1:
+            #    return self
+            # else:
+            #    terms = [self for i in range(other.value)]
+            #    name = ":".join([self.name for i in range(other.value)])
+            #    return InteractionTerm(name, *terms)
+        else:
+            raise ValueError("Bad power")
+            
+    def __truediv__(self, other):
+        if isinstance(other, Term):
+            name = f"{self.name}:{other.name}"
+            return ModelTerms(self, InteractionTerm(name, self, other))
+        else:
+            raise ValueError("Bad truediv")
+            
     def __repr__(self):
         return self.__str__()
 
@@ -75,13 +106,13 @@ class InteractionTerm:
         list of Terms taking place in the interaction
     """
 
-    def __init__(self, name, term1, term2):
+    def __init__(self, name, *terms):
         # self.terms is a list because I have to admit repeated terms
         # self.variables is a set because i want to store each variable once
         # but there must be a better way to do this
         self.name = name
-        self.terms = [term1, term2]
-        self.variables = {term1.variable, term2.variable}
+        self.terms = [term for term in terms]
+        self.variables = {term.variable for term in terms}
 
     def __hash__(self):
         return hash((self.name))
@@ -103,8 +134,11 @@ class InteractionTerm:
             return self
         else:
             return NotImplemented
-   
-    def __mul__(self, other):
+            
+    def __or__ (self, other):
+        return ModelTerms(self, other)
+    
+    def __matmul__(self, other):
         if isinstance(other, (type(self), Term)):
             return self.add_term(other)
         else:
@@ -119,6 +153,16 @@ class InteractionTerm:
             "variables= " + str(self.variables)
         ]
         return 'InteractionTerm(\n  ' + '\n  '.join(string_list) + '\n)'
+    
+class LiteralTerm:
+    def __init__(self, value):
+        self.value = value
+    
+    def __repr__(self):
+        return self.__str__()
+        
+    def __str__(self):
+        return f"LiteralTerm(value={self.value})"
     
 
 class ResponseTerm:
