@@ -1,4 +1,4 @@
-from .terms import Term
+from .terms import Term, InteractionTerm, ResponseTerm
 
 class Resolver:
 
@@ -17,6 +17,8 @@ class Resolver:
             return expr.left.accept(self) | expr.right.accept(self)
         elif otype == 'MINUS':
             return expr.left.accept(self) - expr.right.accept(self)
+        elif otype == 'TILDE':
+            return ResponseTerm(expr.left.accept(self)) | expr.right.accept(self)
         else:
             pass
     

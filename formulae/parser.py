@@ -59,7 +59,7 @@ class Parser:
 
     def expression(self, is_arg=False):
         return self.tilde(is_arg)
-        
+
     def tilde(self, is_arg=False):
         expr = self.addition(is_arg)
         if self.match('TILDE'):
@@ -75,7 +75,7 @@ class Parser:
             right = self.multiplication(is_arg)
             expr = Binary(expr, operator, right, is_arg)
         return expr
-    
+
     def multiplication(self, is_arg=False):
         expr = self.unary(is_arg)
         while self.match(['STAR', 'STAR_STAR', 'SLASH', 'COLON']):
@@ -125,7 +125,7 @@ class Parser:
                 right = self.call()
                 self.consume('RIGHT_PAREN', "Expect ')' after expression.")
                 # probably this pipe will fail if is_arg==True
-                return Binary(expr, operator, right, is_arg) 
+                return Binary(expr, operator, right, is_arg)
             self.consume('RIGHT_PAREN', "Expect ')' after expression.")
             return Grouping(expr, is_arg)
         else:
@@ -133,4 +133,4 @@ class Parser:
 
 
 # ':' and '*' must be left-associative
-# 
+#
