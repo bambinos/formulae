@@ -57,41 +57,57 @@ class Parser:
     def parse(self):
         return self.expression()
 
-    def expression(self, is_arg=False):
-        return self.tilde(is_arg)
+    def expression(self):
+        return self.tilde()
 
-    def tilde(self, is_arg=False):
-        expr = self.addition(is_arg)
+    def tilde(self):
+        expr = self.addition()
         if self.match('TILDE'):
             operator = self.previous()
-            right = self.addition(is_arg)
-            expr = Binary(expr, operator, right, is_arg)
+            right = self.addition()
+            expr = Binary(expr, operator, right)
         return expr
 
-    def addition(self, is_arg):
-        expr = self.multiplication(is_arg)
+    def addition(self):
+        expr = self.multiplication()
         while self.match(['MINUS', 'PLUS']):
             operator = self.previous()
-            right = self.multiplication(is_arg)
-            expr = Binary(expr, operator, right, is_arg)
+            right = self.multiplication()
+            expr = Binary(expr, operator, right)
         return expr
-
-    def multiplication(self, is_arg=False):
-        expr = self.unary(is_arg)
-        while self.match(['COLON', 'STAR', 'STAR_STAR', 'SLASH']):
+        
+    def multiplication(self):
+        expr = self.interaction()
+        while self.match(['STAR', 'SLASH']):
             operator = self.previous()
-            right = self.unary(is_arg)
-            expr = Binary(expr, operator, right, is_arg)
+            right = self.interaction()
+            expr = Binary(expr, operator, right)
+        return expr
+        
+    def interaction(self):
+        expr = self.multiple_interaction()
+        while self.match(['COLON']):
+            operator = self.previous()
+            right = self.multiple_interaction()
+            expr = Binary(expr, operator, right)
+        return expr
+    
+    def multiple_interaction(self):
+        expr = self.unary()
+        while self.match(['STAR_STAR']):
+            operator = self.previous()
+            right = self.unary()
+            expr = Binary(expr, operator, right)
         return expr
 
-    def unary(self, is_arg=False):
+    def unary(self):
         if self.match(['PLUS', 'MINUS']):
             operator = self.previous()
-            right = self.unary(is_arg)
-            return Unary(operator, right, is_arg)
-        return self.call(is_arg)
+            right = self.unary()
+            return Unary(operator, right)
+        return self.call()
 
-    def call(self, is_arg=False):
+    def call(self):
         expr = self.primary()
         while True:
             if self.match('LEFT_PAREN'):
@@ -100,34 +116,32 @@ class Parser:
                 break
         return expr
 
-    def finishcall(self, callee, is_arg=False):
+    def finishcall(self, callee):
         # TODO: Check custom calls
         arguments = []
         if not self.check('RIGHT_PAREN'):
             while True:
                 # TODO: check args len?
-                arguments.append(self.expression(is_arg=True))
+                arguments.append(self.expression())
                 if not self.match('COMMA'):
                     break
         self.consume('RIGHT_PAREN', "Expect ')' after arguments.")
-        # The is_arg enables nested calls
-        return Call(callee, arguments, is_arg)
+        return Call(callee, arguments)
 
-    def primary(self, is_arg=False):
+    def primary(self):
         if self.match('NUMBER'):
-            return Literal(self.previous().literal, is_arg)
+            return Literal(self.previous().literal)
         elif self.match('IDENTIFIER'):
-            return Variable(self.previous(), is_arg)
+            return Variable(self.previous())
         elif self.match('LEFT_PAREN'):
-            expr = self.expression(is_arg)
+            expr = self.expression()
             if self.match('PIPE'):
                 operator = self.previous()
                 right = self.call()
                 self.consume('RIGHT_PAREN', "Expect ')' after expression.")
-                # probably this pipe will fail if is_arg==True
-                return Binary(expr, operator, right, is_arg)
+                return Binary(expr, operator, right)
             self.consume('RIGHT_PAREN', "Expect ')' after expression.")
-            return Grouping(expr, is_arg)
+            return Grouping(expr)
         else:
             raise ParseError("Expect expression.")
 

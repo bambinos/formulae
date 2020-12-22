@@ -9,15 +9,14 @@ class Expr:
 
 class Grouping(Expr):
 
-    def __init__(self, expression, is_arg):
+    def __init__(self, expression):
         self.expression = expression
-        self.is_cais_argll = is_arg
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        return 'Grouping(' + str(self.expression) + ')'
+        return 'Grouping(\n  ' + str(self.expression) + '\n)'
 
     def accept(self, visitor):
         return visitor.visitGroupingExpr(self)
@@ -25,42 +24,43 @@ class Grouping(Expr):
 
 class Binary(Expr):
 
-    def __init__(self, left, operator, right, is_arg):
+    def __init__(self, left, operator, right):
         self.left = left
         self.operator = operator
         self.right = right
-        self.is_arg = is_arg
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
+        left = '  '.join(str(self.left).splitlines(True))
+        right = '  '.join(str(self.right).splitlines(True))
         string_list = [
-            "left=" + str(self.left),
+            "left=" + left,
             "op=" + str(self.operator.lexeme),
-            "right=" + str(self.right)
+            "right=" + right
         ]
-        return 'Binary(' + ', '.join(string_list) + ')'
+        return 'Binary(\n  ' + ',\n  '.join(string_list) + '\n)'
 
     def accept(self, visitor):
         return visitor.visitBinaryExpr(self)
 
 class Unary(Expr):
 
-    def __init__(self, operator, right, is_arg):
+    def __init__(self, operator, right):
         self.operator = operator
         self.right = right
-        self.is_arg = is_arg
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
+        right = '  '.join(str(self.right).splitlines(True))
         string_list = [
             "op=" + str(self.operator.lexeme),
-            "right=" + str(self.right)
+            "right=" + right
         ]
-        return 'Unary(' + ', '.join(string_list) + ')'
+        return 'Unary(\n  ' + ', '.join(string_list) + '\n)'
 
     def accept(self, visitor):
         return visitor.visitUnaryExpr(self)
@@ -68,29 +68,29 @@ class Unary(Expr):
 class Call(Expr):
     """Represents built-in or added functions in formulae"""
 
-    def __init__(self, callee, arguments, is_arg):
+    def __init__(self, callee, arguments):
         self.callee = callee
         self.arguments = arguments
-        self.is_arg = is_arg
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
+        args = ",\n".join([repr(arg) for arg in self.arguments])
+        args = '  '.join(args.splitlines(True))
         string_list = [
             "callee=" + str(self.callee),
-            "args=" + ", ".join([repr(arg) for arg in self.arguments])
+            "args=" + args
         ]
-        return 'Call(' + ', '.join(string_list) + ')'
+        return 'Call(\n  ' + ',\n  '.join(string_list) + '\n)'
 
     def accept(self, visitor):
         return visitor.visitCallExpr(self)
 
 class Variable(Expr):
 
-    def __init__(self, name, is_arg):
+    def __init__(self, name):
         self.name = name
-        self.is_arg = is_arg
 
     def __repr__(self):
         return self.__str__()
@@ -102,9 +102,8 @@ class Variable(Expr):
         return visitor.visitVariableExpr(self)
 
 class Literal(Expr):
-    def __init__(self, value, is_arg):
+    def __init__(self, value):
         self.value = value
-        self.is_arg = is_arg
 
     def __repr__(self):
         return self.__str__()
