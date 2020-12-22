@@ -78,7 +78,7 @@ class Parser:
 
     def multiplication(self, is_arg=False):
         expr = self.unary(is_arg)
-        while self.match(['STAR', 'STAR_STAR', 'SLASH', 'COLON']):
+        while self.match(['COLON', 'STAR', 'STAR_STAR', 'SLASH']):
             operator = self.previous()
             right = self.unary(is_arg)
             expr = Binary(expr, operator, right, is_arg)

@@ -13,12 +13,15 @@ class Resolver:
 
     def visitBinaryExpr(self, expr):
         otype = expr.operator.type
+        if otype == 'TILDE':
+            return ResponseTerm(expr.left.accept(self)) | expr.right.accept(self)
         if otype == 'PLUS':
             return expr.left.accept(self) | expr.right.accept(self)
         elif otype == 'MINUS':
             return expr.left.accept(self) - expr.right.accept(self)
-        elif otype == 'TILDE':
-            return ResponseTerm(expr.left.accept(self)) | expr.right.accept(self)
+        elif otype == 'COLON':
+            return expr.left.accept(self) * expr.right.accept(self)
+            
         else:
             pass
     
