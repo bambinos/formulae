@@ -1,6 +1,7 @@
-from .terms import Term, InteractionTerm, LiteralTerm, ResponseTerm
+from .terms import Term, InteractionTerm, LiteralTerm, ResponseTerm, NegatedTerm
+from .expr import Literal
 
-class ResolveError(Exception):
+class ResolverError(Exception):
     pass
 
 class Resolver:
@@ -11,8 +12,8 @@ class Resolver:
     def resolve(self):
         return self.expr.accept(self)
 
-    def visitGroupingExpr(self):
-        pass
+    def visitGroupingExpr(self, expr):
+        return expr.expression.accept(self)
 
     def visitBinaryExpr(self, expr):
         otype = expr.operator.type
@@ -31,13 +32,23 @@ class Resolver:
         elif otype == 'STAR':
             return expr.left.accept(self) * expr.right.accept(self)
         elif otype == 'SLASH':
-            return expr.left.accept(self) / expr.right.accept(self)           
+            return expr.left.accept(self) / expr.right.accept(self)
         else:
-            raise ResolveError("Couldn't resolve BinaryExpr with otype '" + otype + "'")
-    
-    def visitUnaryExpr(self):
-        self.expr
-        pass
+            raise ResolverError("Couldn't resolve BinaryExpr with otype '" + otype + "'")
+
+    def visitUnaryExpr(self, expr):
+        otype = expr.operator.type
+        if otype == 'PLUS':
+            return expr.right.accept(self)
+        elif otype == 'MINUS':
+            if isinstance(expr.right, Literal) and expr.right.value in [0, 1]:
+                return NegatedTerm("intercept")
+            else:
+                # Maybe return something like EmptyTerm so something like 'y ~ -x'
+                # works as if it only had intercept?
+                raise ResolverError("Unary negation can only be applied to '0' or '1'")
+        else:
+            raise ResolverError("Couldn't resolve UnaryExpr with otype '" + otype + "'")
 
     def visitCallExpr(self):
         pass

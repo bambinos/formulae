@@ -1,3 +1,5 @@
+import itertools
+
 class Term:
     """Representation of a model term.
 
@@ -44,26 +46,30 @@ class Term:
             return NotImplemented
         # x-y is equal to x
         return self
-        
+
     def __mul__(self, other):
         if isinstance(other, Term):
-            name = f"{self.name}:{other.name}"
-            return ModelTerms(self, other, InteractionTerm(name, self, other))
+            if self == other:
+                return self
+            else:
+                # name = f"{self.name}:{other.name}"
+                return ModelTerms(self, other, InteractionTerm(self, other))
         if isinstance(other, ModelTerms):
-            products = product({self}, other.terms)
-            terms = [InteractionTerm(f"{p[0].name}:{p[1].name}", p[0], p[1]) for p in products]
+            products = itertools.product({self}, other.terms)
+            #terms = [InteractionTerm(f"{p[0].name}:{p[1].name}", p[0], p[1]) for p in products]
+            terms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
-            
+
     def __matmul__(self, other):
         if isinstance(other, type(self)):
             if self == other:
                 return self
             else:
-                name = f"{self.name}:{other.name}"
-                return InteractionTerm(name, self, other)
+                # name = f"{self.name}:{other.name}"
+                return InteractionTerm(self, other)
         if isinstance(other, InteractionTerm):
             return other.add_term(self)
-            
+
     def __pow__(self, other):
         if isinstance(other, LiteralTerm) and isinstance(other.value, int) and other.value >= 1:
             return self
@@ -75,14 +81,14 @@ class Term:
             #    return InteractionTerm(name, *terms)
         else:
             raise ValueError("Bad power")
-            
+
     def __truediv__(self, other):
         if isinstance(other, Term):
-            name = f"{self.name}:{other.name}"
-            return ModelTerms(self, InteractionTerm(name, self, other))
+            # name = f"{self.name}:{other.name}"
+            return ModelTerms(self, InteractionTerm(self, other))
         else:
             raise ValueError("Bad truediv")
-            
+
     def __repr__(self):
         return self.__str__()
 
@@ -106,13 +112,17 @@ class InteractionTerm:
         list of Terms taking place in the interaction
     """
 
-    def __init__(self, name, *terms):
+    def __init__(self, *terms):
         # self.terms is a list because I have to admit repeated terms
         # self.variables is a set because i want to store each variable once
         # but there must be a better way to do this
-        self.name = name
-        self.terms = [term for term in terms]
-        self.variables = {term.variable for term in terms}
+        #self.name = name
+        self.variables = set()
+        self.terms = []
+        for term in terms:
+            self.add_term(term)
+        #self.terms = [term for term in terms]
+        #self.variables = {term.variable for term in terms}
 
     def __hash__(self):
         return hash((self.name))
@@ -120,50 +130,64 @@ class InteractionTerm:
     def __eq__(self, other):
         if not isinstance(other, type(self)): return NotImplemented
         return self.name == other.name and self.terms == other.terms and self.variables == other.variables
-   
+
     def add_term(self, term):
         if isinstance(term, Term):
-            self.name += f":{term.name}"
             self.terms.append(term)
             self.variables.add(term.variable)
+            # self.name += f":{term.name}"
             return self
         elif isinstance(term, InteractionTerm):
-            self.name += f":{term.name}"
             self.terms = self.terms + term.terms
             self.variables.update(term.variables)
+            # self.name += f":{term.name}"
             return self
         else:
             return NotImplemented
-            
+
+    @property
+    def name(self):
+        return ":".join([term.name for term in self.terms])
+
     def __or__ (self, other):
         return ModelTerms(self, other)
-    
+
     def __matmul__(self, other):
         if isinstance(other, (type(self), Term)):
             return self.add_term(other)
         else:
             return NotImplemented
-   
+
     def __repr__(self):
         return self.__str__()
-   
+
     def __str__(self):
         string_list = [
             "name= " + self.name,
             "variables= " + str(self.variables)
         ]
         return 'InteractionTerm(\n  ' + '\n  '.join(string_list) + '\n)'
-    
+
 class LiteralTerm:
     def __init__(self, value):
         self.value = value
-    
+
     def __repr__(self):
         return self.__str__()
-        
+
     def __str__(self):
         return f"LiteralTerm(value={self.value})"
-    
+
+class NegatedTerm:
+    def __init__(self, what):
+        self.what = what
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return f"NegatedTerm(what={self.what})"
+
 
 class ResponseTerm:
     """Representation of a response term
@@ -246,6 +270,23 @@ class ModelTerms:
         elif isinstance(other, type(self)):
             self.terms = self.terms | set([term for term in other.terms])
             return self
+        else:
+            return NotImplemented
+
+    def __matmul__(self, other):
+        if isinstance(other, type(self)):
+            products = itertools.product(self.terms, other.terms)
+            # terms = [InteractionTerm(f"{p[0].name}:{p[1].name}", p[0], p[1]) for p in products]
+            terms = [InteractionTerm(p[0], p[1]) for p in products]
+            return ModelTerms(*terms)
+        elif isinstance(other, Term):
+            products = itertools.product(self.terms, {other})
+            #terms = [InteractionTerm(f"{p[0].name}:{p[1].name}", p[0], p[1]) for p in products]
+            terms = [InteractionTerm(p[0], p[1]) for p in products]
+            return ModelTerms(*terms)
+        #elif isinstance(other, InteractionTerm):
+        #    terms = [other.add_term(term) for term in self.terms]
+        #    return ModelTerms(*terms)
         else:
             return NotImplemented
 

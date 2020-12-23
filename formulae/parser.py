@@ -75,7 +75,7 @@ class Parser:
             right = self.multiplication()
             expr = Binary(expr, operator, right)
         return expr
-        
+
     def multiplication(self):
         expr = self.interaction()
         while self.match(['STAR', 'SLASH']):
@@ -83,7 +83,7 @@ class Parser:
             right = self.interaction()
             expr = Binary(expr, operator, right)
         return expr
-        
+
     def interaction(self):
         expr = self.multiple_interaction()
         while self.match(['COLON']):
@@ -91,7 +91,7 @@ class Parser:
             right = self.multiple_interaction()
             expr = Binary(expr, operator, right)
         return expr
-    
+
     def multiple_interaction(self):
         expr = self.unary()
         while self.match(['STAR_STAR']):
