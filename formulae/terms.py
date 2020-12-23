@@ -34,7 +34,7 @@ class Term:
                 return self
             else:
                 return ModelTerms(self, other)
-        elif isinstance(other, InteractionTerm):
+        elif isinstance(other, (InteractionTerm, NegatedTerm)):
             return ModelTerms(self, other)
         elif isinstance(other, ModelTerms):
             return other.add_term(self)
@@ -42,21 +42,26 @@ class Term:
             return NotImplemented
 
     def __sub__(self, other):
-        if not isinstance(other, type(self)):
+        if isinstance(other, type(self)):
+            # x-y is equal to x
+            return self
+        elif isinstance(other, LiteralTerm):
+            if other.value in [0, 1]:
+                return ModelTerms(self, NegatedTerm("intercept"))
+            else:
+                # If using other value than 0 or 1, ignore operation
+                return self
+        else:
             return NotImplemented
-        # x-y is equal to x
-        return self
 
     def __mul__(self, other):
         if isinstance(other, Term):
             if self == other:
                 return self
             else:
-                # name = f"{self.name}:{other.name}"
                 return ModelTerms(self, other, InteractionTerm(self, other))
         if isinstance(other, ModelTerms):
             products = itertools.product({self}, other.terms)
-            #terms = [InteractionTerm(f"{p[0].name}:{p[1].name}", p[0], p[1]) for p in products]
             terms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
 
@@ -182,11 +187,19 @@ class NegatedTerm:
     def __init__(self, what):
         self.what = what
 
+    def __or__ (self, other):
+        if isinstance(other, (Term, InteractionTerm)):
+            return ModelTerms(self, other)
+        elif isinstance(other, ModelTerms):
+            return other.add_term(self)
+        else:
+            return NotImplemented
+
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        return f"NegatedTerm(what={self.what})"
+        return f"NegatedTerm(\n  what={self.what}\n)"
 
 
 class ResponseTerm:
@@ -226,7 +239,7 @@ class ResponseTerm:
 
 class ModelTerms:
     # TODO: Add accept method, so we accept and unpack ModelTerms
-    accepted_terms = (Term, InteractionTerm)
+    accepted_terms = (Term, InteractionTerm, NegatedTerm)
 
     def __init__(self, *terms, response=None):
 
