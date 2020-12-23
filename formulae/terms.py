@@ -251,7 +251,7 @@ class ModelTerms:
         if all([isinstance(term, self.accepted_terms) for term in terms]):
             self.terms = set([term for term in terms])
         else:
-            raise ValueError("not term")
+            raise ValueError("All terms must be of class Term, InteractionTerm or NegatedTerm")
 
     def add_response(self, term):
         if isinstance(term, ResponseTerm):
@@ -286,20 +286,29 @@ class ModelTerms:
         else:
             return NotImplemented
 
+    def __mul__(self, other):
+        if isinstance(other, type(self)):
+            products = itertools.product(self.terms, other.terms)
+            terms = list(self.terms) + list(other.terms)
+            iterms = [InteractionTerm(p[0], p[1]) for p in products]
+            return ModelTerms(*terms) | ModelTerms(*iterms)
+        elif isinstance(other, Term):
+            products = itertools.product(self.terms, {other})
+            terms = [term for term in self.terms] + [other]
+            iterms = [InteractionTerm(p[0], p[1]) for p in products]
+            return ModelTerms(*terms) | ModelTerms(*iterms)
+        else:
+            return NotImplemented
+
     def __matmul__(self, other):
         if isinstance(other, type(self)):
             products = itertools.product(self.terms, other.terms)
-            # terms = [InteractionTerm(f"{p[0].name}:{p[1].name}", p[0], p[1]) for p in products]
             terms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
         elif isinstance(other, Term):
             products = itertools.product(self.terms, {other})
-            #terms = [InteractionTerm(f"{p[0].name}:{p[1].name}", p[0], p[1]) for p in products]
             terms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
-        #elif isinstance(other, InteractionTerm):
-        #    terms = [other.add_term(term) for term in self.terms]
-        #    return ModelTerms(*terms)
         else:
             return NotImplemented
 
