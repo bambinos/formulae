@@ -260,7 +260,7 @@ class CallTerm:
             products = itertools.product({self}, other.terms)
             terms = [self] + list(other.terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
-            return ModelTerms(*terms) | ModelTerms(*iterms)
+            return ModelTerms(*terms) + ModelTerms(*iterms)
         else:
             return NotImplemented
 
@@ -272,7 +272,7 @@ class CallTerm:
         elif isinstance(other, ModelTerms):
             products = itertools.product({self}, other.terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
-            return ModelTerms(*terms) | ModelTerms(*iterms)
+            return ModelTerms(*terms) + ModelTerms(*iterms)
         else:
             return NotImplemented
 
@@ -375,12 +375,12 @@ class ModelTerms:
             products = itertools.product(self.terms, other.terms)
             terms = list(self.terms) + list(other.terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
-            return ModelTerms(*terms) | ModelTerms(*iterms)
+            return ModelTerms(*terms) + ModelTerms(*iterms)
         elif isinstance(other, Term):
             products = itertools.product(self.terms, {other})
             terms = [term for term in self.terms] + [other]
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
-            return ModelTerms(*terms) | ModelTerms(*iterms)
+            return ModelTerms(*terms) + ModelTerms(*iterms)
         else:
             return NotImplemented
 
