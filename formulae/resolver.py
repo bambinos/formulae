@@ -1,4 +1,4 @@
-from .terms import Term, InteractionTerm, LiteralTerm, ResponseTerm, NegatedTerm
+from .terms import Term, InteractionTerm, CallTerm, LiteralTerm, ResponseTerm, NegatedTerm
 from .expr import Literal
 
 class ResolverError(Exception):
@@ -50,8 +50,8 @@ class Resolver:
         else:
             raise ResolverError("Couldn't resolve UnaryExpr with otype '" + otype + "'")
 
-    def visitCallExpr(self):
-        pass
+    def visitCallExpr(self, expr):
+        return CallTerm(expr)
 
     def visitVariableExpr(self, expr):
         return Term(expr.name.lexeme, expr.name.lexeme)

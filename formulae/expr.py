@@ -68,19 +68,19 @@ class Unary(Expr):
 class Call(Expr):
     """Represents built-in or added functions in formulae"""
 
-    def __init__(self, callee, arguments):
+    def __init__(self, callee, arguments, special=False):
         self.callee = callee
         self.arguments = arguments
+        self.special = special
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        args = ",\n".join([repr(arg) for arg in self.arguments])
-        args = '  '.join(args.splitlines(True))
         string_list = [
             "callee=" + str(self.callee),
-            "args=" + args
+            "args=" + self.arguments.lexeme,
+            "special=" + str(self.special)
         ]
         return 'Call(\n  ' + ',\n  '.join(string_list) + '\n)'
 

@@ -29,13 +29,13 @@ class Term:
         return self.name == other.name and self.variable == other.variable and self.kind == other.kind
 
     def __or__(self, other):
-        if isinstance(other, Term):
+        if isinstance(other, (InteractionTerm, NegatedTerm, CallTerm)):
+            return ModelTerms(self, other)
+        elif isinstance(other, Term):
             if self == other:
                 return self
             else:
                 return ModelTerms(self, other)
-        elif isinstance(other, (InteractionTerm, NegatedTerm)):
-            return ModelTerms(self, other)
         elif isinstance(other, ModelTerms):
             return other.add_term(self)
         else:
@@ -55,42 +55,51 @@ class Term:
             return NotImplemented
 
     def __mul__(self, other):
-        if isinstance(other, Term):
+        if isinstance(other, CallTerm):
+            return ModelTerms(self, other, InteractionTerm(self, other))
+        elif isinstance(other, InteractionTerm):
+            return ModelTerms(self, other, other.add_term(self))
+        elif isinstance(other, Term):
+            print("aaa")
             if self == other:
                 return self
             else:
                 return ModelTerms(self, other, InteractionTerm(self, other))
-        if isinstance(other, ModelTerms):
+        elif isinstance(other, ModelTerms):
             products = itertools.product({self}, other.terms)
             terms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
+        else:
+            return NotImplemented
 
     def __matmul__(self, other):
+        if isinstance(other, CallTerm):
+            return InteractionTerm(self, other)
         if isinstance(other, type(self)):
             if self == other:
                 return self
             else:
-                # name = f"{self.name}:{other.name}"
                 return InteractionTerm(self, other)
         if isinstance(other, InteractionTerm):
             return other.add_term(self)
 
+    # Maybe I should drop this __pow__
     def __pow__(self, other):
         if isinstance(other, LiteralTerm) and isinstance(other.value, int) and other.value >= 1:
             return self
-            # if other.value == 1:
-            #    return self
-            # else:
-            #    terms = [self for i in range(other.value)]
-            #    name = ":".join([self.name for i in range(other.value)])
-            #    return InteractionTerm(name, *terms)
         else:
             raise ValueError("Bad power")
 
     def __truediv__(self, other):
-        if isinstance(other, Term):
-            # name = f"{self.name}:{other.name}"
+        if isinstance(other, (CallTerm, LiteralTerm)):
             return ModelTerms(self, InteractionTerm(self, other))
+        elif isinstance(other, InteractionTerm):
+            return ModelTerms(self, other.add_term(self))
+        if isinstance(other, type(self)):
+            if self == other:
+                return self
+            else:
+                return ModelTerms(self, InteractionTerm(self, other))
         else:
             raise ValueError("Bad truediv")
 
@@ -121,13 +130,10 @@ class InteractionTerm:
         # self.terms is a list because I have to admit repeated terms
         # self.variables is a set because i want to store each variable once
         # but there must be a better way to do this
-        #self.name = name
         self.variables = set()
         self.terms = []
         for term in terms:
             self.add_term(term)
-        #self.terms = [term for term in terms]
-        #self.variables = {term.variable for term in terms}
 
     def __hash__(self):
         return hash((self.name))
@@ -140,12 +146,13 @@ class InteractionTerm:
         if isinstance(term, Term):
             self.terms.append(term)
             self.variables.add(term.variable)
-            # self.name += f":{term.name}"
             return self
+        elif isinstance(term, CallTerm):
+            self.terms.append(term)
+            self.variables.add(term.call)
         elif isinstance(term, InteractionTerm):
             self.terms = self.terms + term.terms
             self.variables.update(term.variables)
-            # self.name += f":{term.name}"
             return self
         else:
             return NotImplemented
@@ -158,7 +165,7 @@ class InteractionTerm:
         return ModelTerms(self, other)
 
     def __matmul__(self, other):
-        if isinstance(other, (type(self), Term)):
+        if isinstance(other, (type(self), Term, CallTerm)):
             return self.add_term(other)
         else:
             return NotImplemented
@@ -176,6 +183,7 @@ class InteractionTerm:
 class LiteralTerm:
     def __init__(self, value):
         self.value = value
+        self.name = str(self.value)
 
     def __repr__(self):
         return self.__str__()
@@ -187,8 +195,15 @@ class NegatedTerm:
     def __init__(self, what):
         self.what = what
 
-    def __or__ (self, other):
-        if isinstance(other, (Term, InteractionTerm)):
+    def __hash__(self):
+        return hash((self.what))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)): return NotImplemented
+        return self.what == other.what
+
+    def __or__(self, other):
+        if isinstance(other, Term):
             return ModelTerms(self, other)
         elif isinstance(other, ModelTerms):
             return other.add_term(self)
@@ -201,6 +216,76 @@ class NegatedTerm:
     def __str__(self):
         return f"NegatedTerm(\n  what={self.what}\n)"
 
+
+class CallTerm:
+    """Representation of a call term
+    """
+
+    def __init__(self, expr):
+        self.call = expr.callee.name.lexeme + expr.arguments.lexeme
+        self.name = self.call
+        self.special = expr.special
+
+    def __hash__(self):
+        return hash((self.call, self.special))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)): return NotImplemented
+        return self.call == other.call and self.special == other.special
+
+    def __or__(self, other):
+        if isinstance(other, (Term, InteractionTerm, CallTerm, NegatedTerm, LiteralTerm)):
+            return ModelTerms(self, other)
+        elif isinstance(other, ModelTerms):
+            return other.add_term(self)
+        else:
+            return NotImplemented
+
+    def __sub__(self, other):
+        if isinstance(other, (Term, InteractionTerm, CallTerm, NegatedTerm)):
+            # x-y is equal to x
+            return self
+        elif isinstance(other, LiteralTerm):
+            if other.value in [0, 1]:
+                return ModelTerms(self, NegatedTerm("intercept"))
+            else:
+                # If using other value than 0 or 1, ignore operation
+                return self
+        else:
+            return NotImplemented
+
+    def __mul__(self, other):
+        if isinstance(other, (Term, InteractionTerm, CallTerm, LiteralTerm)):
+            return ModelTerms(self, other, InteractionTerm(self, other))
+        elif isinstance(other, ModelTerms):
+            products = itertools.product({self}, other.terms)
+            terms = [self] + list(other.terms)
+            iterms = [InteractionTerm(p[0], p[1]) for p in products]
+            return ModelTerms(*terms) | ModelTerms(*iterms)
+        else:
+            return NotImplemented
+
+    def __matmul__(self, other):
+        if isinstance(other, (Term, CallTerm, LiteralTerm)):
+            return InteractionTerm(self, other)
+        elif isinstance(other, InteractionTerm):
+            return other.add_term(self)
+        elif isinstance(other, ModelTerms):
+            products = itertools.product({self}, other.terms)
+            iterms = [InteractionTerm(p[0], p[1]) for p in products]
+            return ModelTerms(*terms) | ModelTerms(*iterms)
+        else:
+            return NotImplemented
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        strlist = [
+            "call=" + self.call,
+            "special=" + str(self.special)
+        ]
+        return 'CallTerm(\n  ' + ',\n  '.join(strlist) + '\n)'
 
 class ResponseTerm:
     """Representation of a response term
@@ -238,8 +323,7 @@ class ResponseTerm:
             return NotImplemented
 
 class ModelTerms:
-    # TODO: Add accept method, so we accept and unpack ModelTerms
-    accepted_terms = (Term, InteractionTerm, NegatedTerm)
+    accepted_terms = (Term, InteractionTerm, NegatedTerm, CallTerm)
 
     def __init__(self, *terms, response=None):
 
@@ -263,6 +347,7 @@ class ModelTerms:
     def add_term(self, term):
         if isinstance(term, self.accepted_terms):
             self.terms.add(term)
+            return self
         else:
             raise ValueError("not accepted term")
 

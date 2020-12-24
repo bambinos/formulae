@@ -109,24 +109,10 @@ class Parser:
 
     def call(self):
         expr = self.primary()
-        while True:
-            if self.match('LEFT_PAREN'):
-                expr = self.finishcall(expr)
-            else:
-                break
+        if self.match('CALLARGS'):
+            args = self.previous()
+            expr = Call(expr, args)
         return expr
-
-    def finishcall(self, callee):
-        # TODO: Check custom calls
-        arguments = []
-        if not self.check('RIGHT_PAREN'):
-            while True:
-                # TODO: check args len?
-                arguments.append(self.expression())
-                if not self.match('COMMA'):
-                    break
-        self.consume('RIGHT_PAREN', "Expect ')' after arguments.")
-        return Call(callee, arguments)
 
     def primary(self):
         if self.match('NUMBER'):
@@ -144,7 +130,3 @@ class Parser:
             return Grouping(expr)
         else:
             raise ParseError("Expect expression.")
-
-
-# ':' and '*' must be left-associative
-#

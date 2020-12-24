@@ -29,7 +29,7 @@ class Scanner:
         return self.code[self.current]
 
     def peek_next(self):
-        if self.current + 1 >= len(self.code): # o len(self.code) + 1
+        if self.current + 1 >= len(self.code):
             return ''
         return self.code[self.current + 1]
 
@@ -55,13 +55,15 @@ class Scanner:
             self.add_token('LEFT_BRACE')
         elif char == '}':
             self.add_token('RIGHT_BRACE')
+        elif char == '`':
+            self.add_token('BACKQUOTE')
         elif char == ',':
             self.add_token('COMMA')
         elif char == '.':
             if self.peek().isdigit():
                 self.floatnum()
             else:
-                self.add_token('PERIOD') 
+                self.add_token('PERIOD')
         elif char == '+':
             self.add_token('PLUS')
         elif char == '-':
@@ -94,12 +96,12 @@ class Scanner:
             self.scan_token()
         self.tokens.append(Token('EOF', ''))
         return self.tokens
-    
+
     def floatnum(self):
         while self.peek().isdigit():
             self.advance()
         self.add_token('NUMBER', float(self.code[self.start:self.current]))
-        
+
     def number(self):
         is_float = False
         while self.peek().isdigit():
@@ -130,6 +132,30 @@ class Scanner:
         else:
             _type = 'IDENTIFIER'
         self.add_token(_type)
+
+        # Check if this is a function call
+        # This is hacky... not completely happy with it
+        if self.peek() == '(':
+            self.start = self.current
+            self.callargs()
+
+    def callargs(self):
+        open_count = 0
+        close_count = 0
+        args = ''
+
+        while True:
+            if self.peek() == '(':
+                open_count += 1
+            if self.peek() == ')':
+                close_count += 1
+
+            self.advance()
+
+            if open_count == close_count:
+                break
+
+        self.add_token('CALLARGS')
 
     def add_token(self, _type, literal=None):
         # Only literals have "literal != None"
