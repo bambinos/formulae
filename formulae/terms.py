@@ -28,7 +28,7 @@ class Term:
         if not isinstance(other, type(self)): return NotImplemented
         return self.name == other.name and self.variable == other.variable and self.kind == other.kind
 
-    def __or__(self, other):
+    def __add__(self, other):
         if isinstance(other, (InteractionTerm, NegatedTerm, CallTerm)):
             return ModelTerms(self, other)
         elif isinstance(other, Term):
@@ -46,10 +46,10 @@ class Term:
             # x-y is equal to x
             return self
         elif isinstance(other, LiteralTerm):
+            # If using other value than 0 or 1, ignore operation
             if other.value in [0, 1]:
                 return ModelTerms(self, NegatedTerm("intercept"))
             else:
-                # If using other value than 0 or 1, ignore operation
                 return self
         else:
             return NotImplemented
@@ -60,7 +60,6 @@ class Term:
         elif isinstance(other, InteractionTerm):
             return ModelTerms(self, other, other.add_term(self))
         elif isinstance(other, Term):
-            print("aaa")
             if self == other:
                 return self
             else:
@@ -161,7 +160,7 @@ class InteractionTerm:
     def name(self):
         return ":".join([term.name for term in self.terms])
 
-    def __or__ (self, other):
+    def __add__ (self, other):
         return ModelTerms(self, other)
 
     def __matmul__(self, other):
@@ -202,7 +201,7 @@ class NegatedTerm:
         if not isinstance(other, type(self)): return NotImplemented
         return self.what == other.what
 
-    def __or__(self, other):
+    def __add__(self, other):
         if isinstance(other, Term):
             return ModelTerms(self, other)
         elif isinstance(other, ModelTerms):
@@ -233,7 +232,7 @@ class CallTerm:
         if not isinstance(other, type(self)): return NotImplemented
         return self.call == other.call and self.special == other.special
 
-    def __or__(self, other):
+    def __add__(self, other):
         if isinstance(other, (Term, InteractionTerm, CallTerm, NegatedTerm, LiteralTerm)):
             return ModelTerms(self, other)
         elif isinstance(other, ModelTerms):
@@ -314,7 +313,7 @@ class ResponseTerm:
         ]
         return 'ResponseTerm(\n  ' + '\n  '.join(string_list) + '\n)'
 
-    def __or__(self, other):
+    def __add__(self, other):
         if isinstance(other, (Term, InteractionTerm)):
             return ModelTerms(other, response=self)
         elif isinstance(other, ModelTerms):
@@ -361,7 +360,7 @@ class ModelTerms:
         else:
             return NotImplemented
 
-    def __or__(self, other):
+    def __add__(self, other):
         if isinstance(other, self.accepted_terms):
             self.add_term(other)
             return self

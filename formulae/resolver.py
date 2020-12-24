@@ -18,9 +18,9 @@ class Resolver:
     def visitBinaryExpr(self, expr):
         otype = expr.operator.type
         if otype == 'TILDE':
-            return ResponseTerm(expr.left.accept(self)) | expr.right.accept(self)
+            return ResponseTerm(expr.left.accept(self)) + expr.right.accept(self)
         if otype == 'PLUS':
-            return expr.left.accept(self) | expr.right.accept(self)
+            return expr.left.accept(self) + expr.right.accept(self)
         elif otype == 'MINUS':
             return expr.left.accept(self) - expr.right.accept(self)
         elif otype == 'STAR_STAR':
