@@ -25,7 +25,7 @@ class Term:
         return hash((self.name, self.variable, self.data, self.kind))
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)): return NotImplemented
+        if not isinstance(other, type(self)): return False
         return self.name == other.name and self.variable == other.variable and self.kind == other.kind
 
     def __add__(self, other):
@@ -138,7 +138,7 @@ class InteractionTerm:
         return hash((self.name))
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)): return NotImplemented
+        if not isinstance(other, type(self)): return False
         return self.name == other.name and self.terms == other.terms and self.variables == other.variables
 
     def add_term(self, term):
@@ -184,6 +184,13 @@ class LiteralTerm:
         self.value = value
         self.name = str(self.value)
 
+    def __hash__(self):
+        return hash((self.value, self.name))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)): return False
+        return self.value == other.value and self.name == other.name
+
     def __repr__(self):
         return self.__str__()
 
@@ -198,7 +205,7 @@ class NegatedTerm:
         return hash((self.what))
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)): return NotImplemented
+        if not isinstance(other, type(self)): return False
         return self.what == other.what
 
     def __add__(self, other):
@@ -229,7 +236,7 @@ class CallTerm:
         return hash((self.call, self.special))
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)): return NotImplemented
+        if not isinstance(other, type(self)): return False
         return self.call == other.call and self.special == other.special
 
     def __add__(self, other):
@@ -271,6 +278,7 @@ class CallTerm:
             return other.add_term(self)
         elif isinstance(other, ModelTerms):
             products = itertools.product({self}, other.terms)
+            terms = [self] + list(other.terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms) + ModelTerms(*iterms)
         else:
@@ -300,6 +308,13 @@ class ResponseTerm:
             self.data = term.data
         else:
             raise ValueError("Response Term must be univariate")
+
+    def __hash__(self):
+        return hash((self.term, self.name, self.variable, self.kind, self.data))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)): return False
+        return self.term == other.term and self.name == other.name and self.variable == other.variable and self.kind == other.kind and self.data == other.data
 
     def __repr__(self):
         return self.__str__()
@@ -332,7 +347,7 @@ class ModelTerms:
             raise ValueError("bad ResponseTerm")
 
         if all([isinstance(term, self.accepted_terms) for term in terms]):
-            self.terms = set([term for term in terms])
+            self.terms = [term for term in terms]
         else:
             raise ValueError("All terms must be of class Term, InteractionTerm or NegatedTerm")
 
@@ -345,27 +360,31 @@ class ModelTerms:
 
     def add_term(self, term):
         if isinstance(term, self.accepted_terms):
-            self.terms.add(term)
+            if term not in self.terms:
+                self.terms.append(term)
             return self
         else:
             raise ValueError("not accepted term")
 
-    def __sub__(self, other):
-        if isinstance(other, type(self)):
-            self.terms = self.terms - other.terms
-            return self
-        elif isinstance(other, Term):
-            self.terms = self.terms - {other}
+    def __add__(self, other):
+        if isinstance(other, self.accepted_terms):
+            return self.add_term(other)
+        elif isinstance(other, type(self)):
+            for term in other.terms:
+                self.add_term(term)
             return self
         else:
             return NotImplemented
 
-    def __add__(self, other):
-        if isinstance(other, self.accepted_terms):
-            self.add_term(other)
+    def __sub__(self, other):
+        if isinstance(other, type(self)):
+            for term in other.terms:
+                if term in self.terms:
+                    self.terms.remove(term)
             return self
-        elif isinstance(other, type(self)):
-            self.terms = self.terms | set([term for term in other.terms])
+        elif isinstance(other, Term):
+            if other in self.terms:
+                self.terms.remove(other)
             return self
         else:
             return NotImplemented
