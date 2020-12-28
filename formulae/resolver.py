@@ -33,6 +33,8 @@ class Resolver:
             return expr.left.accept(self) * expr.right.accept(self)
         elif otype == 'SLASH':
             return expr.left.accept(self) / expr.right.accept(self)
+        elif otype == 'PIPE':
+            return expr.left.accept(self) | expr.right.accept(self)
         else:
             raise ResolverError("Couldn't resolve BinaryExpr with otype '" + otype + "'")
 

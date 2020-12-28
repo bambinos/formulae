@@ -1,5 +1,8 @@
 import itertools
 
+# TODO:
+# Create global tuple for Term, InteractionTerm, CallTerm, NegatedTerm, LiteralTerm, RandomTerm
+
 class Term:
     """Representation of a model term.
 
@@ -29,7 +32,7 @@ class Term:
         return self.name == other.name and self.variable == other.variable and self.kind == other.kind
 
     def __add__(self, other):
-        if isinstance(other, (InteractionTerm, NegatedTerm, CallTerm)):
+        if isinstance(other, (InteractionTerm, NegatedTerm, CallTerm, RandomTerm)):
             return ModelTerms(self, other)
         elif isinstance(other, Term):
             if self == other:
@@ -102,6 +105,13 @@ class Term:
         else:
             raise ValueError("Bad truediv")
 
+    def __or__(self, other):
+        # 'factor' must be a Term
+        if isinstance(other, type(self)):
+            return RandomTerm(self, other)
+        else:
+            ValueError("'factor' must be a single term.")
+
     def __repr__(self):
         return self.__str__()
 
@@ -156,10 +166,6 @@ class InteractionTerm:
         else:
             return NotImplemented
 
-    @property
-    def name(self):
-        return ":".join([term.name for term in self.terms])
-
     def __add__ (self, other):
         return ModelTerms(self, other)
 
@@ -168,6 +174,14 @@ class InteractionTerm:
             return self.add_term(other)
         else:
             return NotImplemented
+
+    def __or__(self, other):
+        # TODO
+        pass
+
+    @property
+    def name(self):
+        return ":".join([term.name for term in self.terms])
 
     def __repr__(self):
         return self.__str__()
@@ -191,6 +205,12 @@ class LiteralTerm:
         if not isinstance(other, type(self)): return False
         return self.value == other.value and self.name == other.name
 
+    def __or__(self, other):
+        if isinstance(other, Term):
+            return RandomTerm(self, other)
+        else:
+            ValueError("'factor' must be a single term.")
+
     def __repr__(self):
         return self.__str__()
 
@@ -209,12 +229,15 @@ class NegatedTerm:
         return self.what == other.what
 
     def __add__(self, other):
-        if isinstance(other, Term):
+        if isinstance(other, (Term, InteractionTerm, CallTerm, NegatedTerm, LiteralTerm, RandomTerm)):
             return ModelTerms(self, other)
         elif isinstance(other, ModelTerms):
             return other.add_term(self)
         else:
             return NotImplemented
+
+    def __or__(self, other):
+        raise ValueError("LHS does not make sense in '|' operation.")
 
     def __repr__(self):
         return self.__str__()
@@ -240,7 +263,7 @@ class CallTerm:
         return self.call == other.call and self.special == other.special
 
     def __add__(self, other):
-        if isinstance(other, (Term, InteractionTerm, CallTerm, NegatedTerm, LiteralTerm)):
+        if isinstance(other, (Term, InteractionTerm, CallTerm, NegatedTerm, LiteralTerm, RandomTerm)):
             return ModelTerms(self, other)
         elif isinstance(other, ModelTerms):
             return other.add_term(self)
@@ -284,6 +307,12 @@ class CallTerm:
         else:
             return NotImplemented
 
+    def __or__(self, other):
+        if isinstance(other, Term):
+            return RandomTerm(self, other)
+        else:
+            ValueError("'factor' must be a single term.")
+
     def __repr__(self):
         return self.__str__()
 
@@ -293,6 +322,47 @@ class CallTerm:
             "special=" + str(self.special)
         ]
         return 'CallTerm(\n  ' + ',\n  '.join(strlist) + '\n)'
+
+class RandomTerm:
+    """Representation of random effects term
+    """
+
+    def __init__(self, expr, factor):
+        # 'expr' and 'factor' names are taken from lme4
+        self.expr = expr
+        self.factor = factor
+
+    def __add__(self, other):
+        if isinstance(other, (Term, InteractionTerm, CallTerm, NegatedTerm, LiteralTerm, RandomTerm)):
+            return ModelTerms(self, other)
+        elif isinstance(other, ModelTerms):
+            return other.add_term(self)
+        else:
+            return NotImplemented
+
+    def __sub__(self, other):
+        # Is this right?
+        return self
+
+    def __mul__(self, other):
+        raise ValueError("* operator not supported for random term.")
+
+    def __matmul__(self, other):
+        raise ValueError(": operator not supported for random term.")
+
+    def __pow__(self, other):
+        raise ValueError("** operator not supported for random term.")
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        strlist = [
+            "expr= " + '  '.join(str(self.expr).splitlines(True)),
+            "factor= " + '  '.join(str(self.factor).splitlines(True)),
+        ]
+
+        return 'RandomTerm(\n  ' + ',\n  '.join(strlist) + '\n)'
 
 class ResponseTerm:
     """Representation of a response term
@@ -316,6 +386,14 @@ class ResponseTerm:
         if not isinstance(other, type(self)): return False
         return self.term == other.term and self.name == other.name and self.variable == other.variable and self.kind == other.kind and self.data == other.data
 
+    def __add__(self, other):
+        if isinstance(other, (Term, InteractionTerm)):
+            return ModelTerms(other, response=self)
+        elif isinstance(other, ModelTerms):
+            return other.add_response(self)
+        else:
+            return NotImplemented
+
     def __repr__(self):
         return self.__str__()
 
@@ -328,16 +406,9 @@ class ResponseTerm:
         ]
         return 'ResponseTerm(\n  ' + '\n  '.join(string_list) + '\n)'
 
-    def __add__(self, other):
-        if isinstance(other, (Term, InteractionTerm)):
-            return ModelTerms(other, response=self)
-        elif isinstance(other, ModelTerms):
-            return other.add_response(self)
-        else:
-            return NotImplemented
 
 class ModelTerms:
-    accepted_terms = (Term, InteractionTerm, NegatedTerm, CallTerm)
+    accepted_terms = (Term, InteractionTerm, NegatedTerm, CallTerm, RandomTerm)
 
     def __init__(self, *terms, response=None):
 
@@ -349,7 +420,7 @@ class ModelTerms:
         if all([isinstance(term, self.accepted_terms) for term in terms]):
             self.terms = [term for term in terms]
         else:
-            raise ValueError("All terms must be of class Term, InteractionTerm or NegatedTerm")
+            raise ValueError("Can't understand Term")
 
     def add_response(self, term):
         if isinstance(term, ResponseTerm):
