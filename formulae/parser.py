@@ -69,8 +69,16 @@ class Parser:
         return expr
 
     def addition(self):
-        expr = self.multiplication()
+        expr = self.random_effect()
         while self.match(['MINUS', 'PLUS']):
+            operator = self.previous()
+            right = self.random_effect()
+            expr = Binary(expr, operator, right)
+        return expr
+
+    def random_effect(self):
+        expr = self.multiplication()
+        while self.match(['PIPE']):
             operator = self.previous()
             right = self.multiplication()
             expr = Binary(expr, operator, right)
@@ -121,11 +129,6 @@ class Parser:
             return Variable(self.previous())
         elif self.match('LEFT_PAREN'):
             expr = self.expression()
-            if self.match('PIPE'):
-                operator = self.previous()
-                right = self.call()
-                self.consume('RIGHT_PAREN', "Expect ')' after expression.")
-                return Binary(expr, operator, right)
             self.consume('RIGHT_PAREN', "Expect ')' after expression.")
             return Grouping(expr)
         else:

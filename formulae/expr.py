@@ -16,7 +16,7 @@ class Grouping(Expr):
         return self.__str__()
 
     def __str__(self):
-        return 'Grouping(\n  ' + str(self.expression) + '\n)'
+        return 'Grouping(\n  ' + '  '.join(str(self.expression).splitlines(True)) + '\n)'
 
     def accept(self, visitor):
         return visitor.visitGroupingExpr(self)
