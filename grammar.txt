@@ -1,0 +1,15 @@
+DRAFT!!!
+
+formula               → (response "~")? predictor;
+
+addition              → multiplication ( ("+" | "-") multiplication )* ;
+multiplication        → interaction ( ("*" | "/") interaction )* ;
+interaction           → multiple_interaction ( ":" multiple_interaction )* ;
+multiple_interaction  → unary ( "**" unary )* ;
+unary                 → ( "+" | "-" ) unary | call ;
+call                  → primary ( "(" arguments? ")" )? ;
+primary               → NUMBER | IDENTIFIER | "(" expression ")" ;
+
+arguments             →  TODO ;
+
+TODO: NUMBER, IDENTIFIER, AND MAYBE MORE
