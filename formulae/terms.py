@@ -1,4 +1,4 @@
-import itertools
+from itertools import product, combinations
 
 
 class BaseTerm:
@@ -16,19 +16,11 @@ class BaseTerm:
                 return self
             return ModelTerms(self, other)
         elif isinstance(other, ModelTerms):
-            # other.add_term(self) does not preserve order
             return ModelTerms(self) + other
         else:
             return NotImplemented
 
     def __sub__(self, other):
-        #if isinstance(other, LiteralTerm):
-        #    if other.value in [0, 1]:
-        #        return ModelTerms(self, NegatedIntercept())
-        #    else:
-        #        raise ValueError("Negated integer must be either 0 or 1.")
-        #if isinstance(other, NegatedIntercept):
-        #    return ModelTerms(self, other)
         if isinstance(other, (ATOMIC_TERMS, ModelTerms)):
             return self
         else:
@@ -84,7 +76,7 @@ class Term(BaseTerm):
         elif isinstance(other, InteractionTerm):
             return ModelTerms(self, other, other.add_term(self))
         elif isinstance(other, ModelTerms):
-            products = itertools.product([self], other.terms)
+            products = product([self], other.terms)
             terms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
         else:
@@ -112,7 +104,7 @@ class Term(BaseTerm):
         elif isinstance(other, InteractionTerm):
             return ModelTerms(self, other.add_term(self))
         elif isinstance(other, ModelTerms):
-            products = itertools.product([self], other.terms)
+            products = product([self], other.terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(self) + ModelTerms(*iterms)
         else:
@@ -120,11 +112,13 @@ class Term(BaseTerm):
 
     def __or__(self, other):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
-            return RandomTerm(self, other)
-        elif isinstance(other, ModelTerms):
-            products = itertools.product([self], other.terms)
-            terms = [RandomTerm(p[0], p[1]) for p in products]
+            # implicit intercept
+            terms = [RandomTerm(InterceptTerm(), other), RandomTerm(self, other)]
             return ModelTerms(*terms)
+        elif isinstance(other, ModelTerms):
+            iterms = [RandomTerm(InterceptTerm(), p[1]) for p in product([self], other.terms)]
+            terms = [RandomTerm(p[0], p[1]) for p in product([self], other.terms)]
+            return ModelTerms(*iterms) + ModelTerms(*terms)
         else:
             return NotImplemented
 
@@ -172,7 +166,7 @@ class InteractionTerm(BaseTerm):
         elif isinstance(other, InteractionTerm):
             return ModelTerms(self, other, other.add_term(self))
         elif isinstance(other, ModelTerms):
-            products = itertools.product([self], other.terms)
+            products = product([self], other.terms)
             terms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
         else:
@@ -182,7 +176,7 @@ class InteractionTerm(BaseTerm):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
             return self.add_term(other)
         elif isinstance(other, ModelTerms):
-            products = itertools.product([self], other.terms)
+            products = product([self], other.terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*iterms)
         else:
@@ -192,7 +186,7 @@ class InteractionTerm(BaseTerm):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
             return RandomTerm(self, other)
         elif isinstance(other, ModelTerms):
-            products = itertools.product([self], other.terms)
+            products = product([self], other.terms)
             terms = [RandomTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
         else:
@@ -249,7 +243,7 @@ class LiteralTerm(BaseTerm):
         if isinstance(other, (Term, CallTerm)):
             return RandomTerm(self, other)
         elif isinstance(other, ModelTerms):
-            products = itertools.product([self], other.terms)
+            products = product([self], other.terms)
             terms = [RandomTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
         else:
@@ -272,6 +266,14 @@ class InterceptTerm(BaseTerm):
         if not isinstance(other, type(self)): return False
         return self.what == other.what
 
+    def __or__(self, other):
+        if isinstance(other, (Term, CallTerm, InteractionTerm)):
+            return RandomTerm(self, other)
+        elif isinstance(other, ModelTerms):
+            products = product([self], other.terms)
+            terms = [RandomTerm(p[0], p[1]) for p in products]
+            return ModelTerms(*terms)
+
     def __repr__(self):
         return self.__str__()
 
@@ -288,6 +290,9 @@ class NegatedIntercept(BaseTerm):
     def __eq__(self, other):
         if not isinstance(other, type(self)): return False
         return self.what == other.what
+
+    def __or__(self, other):
+        raise ValueError("At least include an intercept in '|' operation")
 
     def __repr__(self):
         return self.__str__()
@@ -315,7 +320,7 @@ class CallTerm(BaseTerm):
         if isinstance(other, (Term, InteractionTerm, CallTerm, LiteralTerm)):
             return ModelTerms(self, other, InteractionTerm(self, other))
         elif isinstance(other, ModelTerms):
-            products = itertools.product([self], other.terms)
+            products = product([self], other.terms)
             terms = [self] + list(other.terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms) + ModelTerms(*iterms)
@@ -328,7 +333,7 @@ class CallTerm(BaseTerm):
         elif isinstance(other, InteractionTerm):
             return other.add_term(self)
         elif isinstance(other, ModelTerms):
-            products = itertools.product([self], other.terms)
+            products = product([self], other.terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*iterms)
         else:
@@ -338,7 +343,7 @@ class CallTerm(BaseTerm):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
             return RandomTerm(self, other)
         elif isinstance(other, ModelTerms):
-            products = itertools.product([self], other.terms)
+            products = product([self], other.terms)
             terms = [RandomTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
         else:
@@ -404,20 +409,20 @@ class ResponseTerm:
         return self.__str__()
 
     def __str__(self):
-        return 'ResponseTerm(\n  ' + '\n  '.join(self.term.name) + '\n)'
+        return 'ResponseTerm(\n  ' + self.term.name + '\n)'
 
 
 class ModelTerms:
 
     def __init__(self, *terms, response=None):
-
         if isinstance(response, ResponseTerm) or response is None:
             self.response = response
         else:
             raise ValueError("bad ResponseTerm")
 
         if all([isinstance(term, ATOMIC_TERMS) for term in terms]):
-            self.terms = [term for term in terms]
+            self.terms = [term for term in terms if not isinstance(term, RandomTerm)]
+            self.random_terms = [term for term in terms if isinstance(term, RandomTerm)]
         else:
             raise ValueError("Can't understand Term")
 
@@ -427,7 +432,7 @@ class ModelTerms:
         elif isinstance(other, ATOMIC_TERMS):
             return self.add_term(other)
         elif isinstance(other, type(self)):
-            for term in other.terms:
+            for term in other.all_terms:
                 self.add_term(term)
             return self
         else:
@@ -435,25 +440,31 @@ class ModelTerms:
 
     def __sub__(self, other):
         if isinstance(other, type(self)):
-            for term in other.terms:
+            for term in other.all_terms:
                 if term in self.terms:
                     self.terms.remove(term)
+                if term in self.random_terms:
+                    self.random_terms.remove(term)
             return self
-        elif isinstance(other, (Term, CallTerm, InteractionTerm, RandomTerm, InterceptTerm)):
+        elif isinstance(other, (Term, CallTerm, InteractionTerm, InterceptTerm)):
             if other in self.terms:
                 self.terms.remove(other)
+            return self
+        elif isinstance(other, RandomTerm):
+            if other in self.random_terms:
+                self.random_terms.remove(other)
             return self
         else:
             return NotImplemented
 
     def __mul__(self, other):
         if isinstance(other, type(self)):
-            products = itertools.product(self.terms, other.terms)
+            products = product(self.terms, other.terms)
             terms = list(self.terms) + list(other.terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms) + ModelTerms(*iterms)
-        elif isinstance(other, Term):
-            products = itertools.product(self.terms, {other})
+        elif isinstance(other, (Term, CallTerm)):
+            products = product(self.terms, [other])
             terms = [term for term in self.terms] + [other]
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms) + ModelTerms(*iterms)
@@ -462,11 +473,11 @@ class ModelTerms:
 
     def __matmul__(self, other):
         if isinstance(other, type(self)):
-            products = itertools.product(self.terms, other.terms)
+            products = product(self.terms, other.terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*iterms)
-        elif isinstance(other, Term):
-            products = itertools.product(self.terms, {other})
+        elif isinstance(other, (Term, CallTerm)):
+            products = product(self.terms, [other])
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*iterms)
         else:
@@ -474,8 +485,8 @@ class ModelTerms:
 
     def __pow__(self, other):
         if isinstance(other, LiteralTerm) and isinstance(other.value, int) and other.value >= 1:
-            combinations = [list(p) for i in range(2, other.value + 1) for p in itertools.combinations(self.terms, i)]
-            iterms = [InteractionTerm(*terms) for terms in combinations]
+            comb = [list(p) for i in range(2, other.value + 1) for p in combinations(self.terms, i)]
+            iterms = [InteractionTerm(*terms) for terms in comb]
             return self + ModelTerms(*iterms)
         else:
             raise ValueError("Power must be a positive integer")
@@ -490,6 +501,17 @@ class ModelTerms:
         else:
             return NotImplemented
 
+    def __or__(self, other):
+        if isinstance(other, (Term, CallTerm, InteractionTerm)):
+            if NegatedIntercept() in self.terms:
+                self.terms.remove(NegatedIntercept())
+                return RandomTerm(self, other)
+            else:
+                terms = InterceptTerm() + self
+                return RandomTerm(terms, other)
+        else:
+            return NotImplemented
+
     def __repr__(self):
         terms = ',\n'.join([repr(term) for term in self.terms])
         if self.response is None:
@@ -497,6 +519,10 @@ class ModelTerms:
         else:
             string = '  '.join(str(self.response).splitlines(True))
             string += ',\n  ' + '  '.join(terms.splitlines(True))
+
+        if self.random_terms:
+            random_terms = ',\n'.join([repr(term) for term in self.random_terms])
+            string += ',\n  ' + '  '.join(random_terms.splitlines(True))
 
         return 'ModelTerms(\n  ' + string + '\n)'
 
@@ -508,15 +534,20 @@ class ModelTerms:
             raise ValueError("not ResponseTerm")
 
     def add_term(self, term):
-        if isinstance(term, ATOMIC_TERMS):
+        if isinstance(term, RandomTerm):
+            if term not in self.random_terms:
+                self.random_terms.append(term)
+            return self
+        elif isinstance(term, ATOMIC_TERMS):
             if term not in self.terms:
                 self.terms.append(term)
             return self
         else:
             raise ValueError("not accepted term")
 
-    #def check_intercept(self):
-    #    if
+    @property
+    def all_terms(self):
+        return self.terms + self.random_terms
 
 
-ATOMIC_TERMS = (Term, InteractionTerm, CallTerm, InterceptTerm, LiteralTerm, RandomTerm)
+ATOMIC_TERMS = (Term, InteractionTerm, CallTerm, InterceptTerm, NegatedIntercept, LiteralTerm, RandomTerm)

@@ -61,24 +61,24 @@ class Parser:
         return self.tilde()
 
     def tilde(self):
-        expr = self.addition()
+        expr = self.random_effect()
         if self.match('TILDE'):
             operator = self.previous()
             right = self.addition()
             expr = Binary(expr, operator, right)
         return expr
 
-    def addition(self):
-        expr = self.random_effect()
-        while self.match(['MINUS', 'PLUS']):
+    def random_effect(self):
+        expr = self.addition()
+        while self.match(['PIPE']):
             operator = self.previous()
-            right = self.random_effect()
+            right = self.addition()
             expr = Binary(expr, operator, right)
         return expr
 
-    def random_effect(self):
+    def addition(self):
         expr = self.multiplication()
-        while self.match(['PIPE']):
+        while self.match(['MINUS', 'PLUS']):
             operator = self.previous()
             right = self.multiplication()
             expr = Binary(expr, operator, right)
