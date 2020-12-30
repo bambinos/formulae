@@ -1,6 +1,10 @@
 # formulae
 
-Still under very early development
+**UNDER DEVELOPMENT**
 
-If you want to see what I'm doing, you can check `Playground.ipynb`. It is the place
-where I play and try to break the code I'm implementing
+There's a good base for the parsing and composition of a model description object is done.
+
+Next step is to create something "similar" to `dmatrices` in Patsy and functions to evaluate
+code using a data frame as a data mask.
+
+You can check existing features in `Features.ipynb`.
