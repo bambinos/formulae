@@ -95,6 +95,17 @@ class Scanner:
             self.start = self.current
             self.scan_token()
         self.tokens.append(Token('EOF', ''))
+
+        # Check number of '~' and add implicit intercept
+        tilde_idx = [i for i in range(len(self.tokens)) if is_tilde(self.tokens[i])]
+
+        if len(tilde_idx) == 0:
+            self.tokens = [Token('NUMBER', '1', 1), Token('PLUS', '+')] + self.tokens
+        if len(tilde_idx) == 1:
+            self.tokens.insert(tilde_idx[0] + 1, Token('NUMBER', '1', 1))
+            self.tokens.insert(tilde_idx[0] + 2, Token('PLUS', '+'))
+        if len(tilde_idx) > 1:
+            raise ValueError("More than one '~' in model formula")
         return self.tokens
 
     def floatnum(self):
@@ -142,7 +153,6 @@ class Scanner:
     def callargs(self):
         open_count = 0
         close_count = 0
-        args = ''
 
         while True:
             if self.peek() == '(':
@@ -161,3 +171,9 @@ class Scanner:
         # Only literals have "literal != None"
         source = self.code[self.start:self.current]
         self.tokens.append(Token(_type, source, literal))
+
+def is_tilde(token):
+    if token.type == 'TILDE':
+        return True
+    else:
+        return False

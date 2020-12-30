@@ -1,4 +1,4 @@
-from .terms import Term, InteractionTerm, CallTerm, LiteralTerm, ResponseTerm, NegatedTerm
+from .terms import Term, InteractionTerm, CallTerm, LiteralTerm, ResponseTerm, InterceptTerm, NegatedIntercept
 from .expr import Literal
 
 class ResolverError(Exception):
@@ -24,7 +24,6 @@ class Resolver:
         elif otype == 'MINUS':
             return expr.left.accept(self) - expr.right.accept(self)
         elif otype == 'STAR_STAR':
-            # right must be an integer
             return expr.left.accept(self) ** expr.right.accept(self)
         elif otype == 'COLON':
             # there is not __colon__ method
@@ -43,11 +42,12 @@ class Resolver:
         if otype == 'PLUS':
             return expr.right.accept(self)
         elif otype == 'MINUS':
-            if isinstance(expr.right, Literal) and expr.right.value in [0, 1]:
-                return NegatedTerm("intercept")
+            expr = expr.right.accept(self)
+            if isinstance(expr, InterceptTerm):
+                return NegatedIntercept()
+            elif isinstance(expr, NegatedIntercept):
+                return InterceptTerm()
             else:
-                # Maybe return something like EmptyTerm so something like 'y ~ -x'
-                # works as if it only had intercept?
                 raise ResolverError("Unary negation can only be applied to '0' or '1'")
         else:
             raise ResolverError("Couldn't resolve UnaryExpr with otype '" + otype + "'")
@@ -59,4 +59,9 @@ class Resolver:
         return Term(expr.name.lexeme, expr.name.lexeme)
 
     def visitLiteralExpr(self, expr):
-        return LiteralTerm(expr.value)
+        if expr.value == 0:
+            return NegatedIntercept()
+        elif expr.value == 1:
+            return InterceptTerm()
+        else:
+            return LiteralTerm(expr.value)
