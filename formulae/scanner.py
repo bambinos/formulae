@@ -41,6 +41,11 @@ class Scanner:
         self.current += 1
         return True
 
+    def add_token(self, _type, literal=None):
+        # Only literals have "literal != None"
+        source = self.code[self.start:self.current]
+        self.tokens.append(Token(_type, source, literal))
+
     def scan_token(self):
         char = self.advance()
         if char == '(':
@@ -69,12 +74,37 @@ class Scanner:
         elif char == '-':
             self.add_token('MINUS')
         elif char == '/':
-            self.add_token('SLASH')
+            if self.match('/'):
+                self.add_token('SLASH_SLASH')
+            else:
+                self.add_token('SLASH')
         elif char == '*':
             if self.match('*'):
                 self.add_token('STAR_STAR')
             else:
                 self.add_token('STAR')
+        elif char == '!':
+            if self.match('='):
+                self.add_token('BANG_EQUAL')
+            else:
+                self.add_token('BANG')
+        elif char == '=':
+            if self.match('=='):
+                self.add_token('EQUAL_EQUAL')
+            else:
+                self.add_token('EQUAL')
+        elif char == '<':
+            if self.match('='):
+                self.add_token('LESS_EQUAL')
+            else:
+                self.add_token('LESS')
+        elif char == '>':
+            if self.match('='):
+                self.add_token('GREATER_EQUAL')
+            else:
+                self.add_token('GREATER')
+        elif char == '%':
+            self.add_token('MODULO')
         elif char == '~':
             self.add_token('TILDE')
         elif char == ':':
@@ -90,7 +120,7 @@ class Scanner:
         else:
             raise ValueError("Unexpected character: " + str(char))
 
-    def scan_tokens(self):
+    def scan(self, add_intercept=True):
         while not self.at_end():
             self.start = self.current
             self.scan_token()
@@ -99,13 +129,16 @@ class Scanner:
         # Check number of '~' and add implicit intercept
         tilde_idx = [i for i in range(len(self.tokens)) if is_tilde(self.tokens[i])]
 
-        if len(tilde_idx) == 0:
-            self.tokens = [Token('NUMBER', '1', 1), Token('PLUS', '+')] + self.tokens
-        if len(tilde_idx) == 1:
-            self.tokens.insert(tilde_idx[0] + 1, Token('NUMBER', '1', 1))
-            self.tokens.insert(tilde_idx[0] + 2, Token('PLUS', '+'))
         if len(tilde_idx) > 1:
-            raise ValueError("More than one '~' in model formula")
+            raise ValueError("There is more than one '~' in model formula")
+
+        if add_intercept:
+            if len(tilde_idx) == 0:
+                self.tokens = [Token('NUMBER', '1', 1), Token('PLUS', '+')] + self.tokens
+            if len(tilde_idx) == 1:
+                self.tokens.insert(tilde_idx[0] + 1, Token('NUMBER', '1', 1))
+                self.tokens.insert(tilde_idx[0] + 2, Token('PLUS', '+'))
+
         return self.tokens
 
     def floatnum(self):
@@ -143,34 +176,6 @@ class Scanner:
         else:
             _type = 'IDENTIFIER'
         self.add_token(_type)
-
-        # Check if this is a function call
-        # This is hacky... not completely happy with it
-        if self.peek() == '(':
-            self.start = self.current
-            self.callargs()
-
-    def callargs(self):
-        open_count = 0
-        close_count = 0
-
-        while True:
-            if self.peek() == '(':
-                open_count += 1
-            if self.peek() == ')':
-                close_count += 1
-
-            self.advance()
-
-            if open_count == close_count:
-                break
-
-        self.add_token('CALLARGS')
-
-    def add_token(self, _type, literal=None):
-        # Only literals have "literal != None"
-        source = self.code[self.start:self.current]
-        self.tokens.append(Token(_type, source, literal))
 
 def is_tilde(token):
     if token.type == 'TILDE':
