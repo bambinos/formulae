@@ -1,4 +1,4 @@
-from .expr import (Grouping, Binary, Unary, Call, Variable, Literal)
+from .expr import (Python, Bqname, Grouping, Binary, Unary, Call, Variable, Literal)
 from .utils import listify
 
 class ParseError(Exception):
@@ -127,9 +127,15 @@ class Parser:
             return Literal(self.previous().literal)
         elif self.match('IDENTIFIER'):
             return Variable(self.previous())
+        elif self.match('BQNAME'):
+            return Bqname(self.previous())
         elif self.match('LEFT_PAREN'):
             expr = self.expression()
             self.consume('RIGHT_PAREN', "Expect ')' after expression.")
             return Grouping(expr)
+        elif self.match('LEFT_BRACE'):
+            expr = self.expression()
+            self.consume('RIGHT_BRACE', "Expect '}' after expression.")
+            return Python(expr)
         else:
             raise ParseError("Expect expression.")

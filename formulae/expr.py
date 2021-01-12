@@ -7,6 +7,33 @@ class Expr:
     def accept(self):
         pass
 
+class Python(Expr):
+    def __init__(self, expression):
+        self.expression = expression
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return 'Python(\n  ' + '  '.join(str(self.expression).splitlines(True)) + '\n)'
+
+    def accept(self, visitor):
+        return visitor.visitPythonExpr(self)
+
+class Bqname(Expr):
+    def __init__(self, expression):
+        self.expression = expression
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return 'Bqname(\n  ' + '  '.join(str(self.expression).splitlines(True)) + '\n)'
+
+    def accept(self, visitor):
+        return visitor.visitPythonExpr(self)
+
+
 class Grouping(Expr):
 
     def __init__(self, expression):

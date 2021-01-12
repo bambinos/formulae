@@ -61,7 +61,7 @@ class Scanner:
         elif char == '}':
             self.add_token('RIGHT_BRACE')
         elif char == '`':
-            self.add_token('BACKQUOTE')
+            self.backquote()
         elif char == ',':
             self.add_token('COMMA')
         elif char == '.':
@@ -176,6 +176,15 @@ class Scanner:
         else:
             _type = 'IDENTIFIER'
         self.add_token(_type)
+
+    def backquote(self):
+        while True:
+            if self.peek() == '`':
+                break
+            else:
+                self.advance()
+        self.advance()
+        self.add_token('BQNAME')
 
 def is_tilde(token):
     if token.type == 'TILDE':
