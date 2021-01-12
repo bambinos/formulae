@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from itertools import product, combinations
 from pandas.api.types import is_string_dtype, is_numeric_dtype, is_categorical_dtype
@@ -138,12 +139,24 @@ class Term(BaseTerm):
         return 'Term(\n  ' + '\n  '.join(string_list) + '\n)'
 
     def eval(self, data):
-        x = eval_in_data_mask(self.variable, data)
+        x = data[self.variable]
+
         if is_numeric_dtype(x):
-            return x.to_numpy()
+            return self.eval_numeric(x)
+        elif is_string_dtype(x) or is_categorical_dtype(x):
+            return self.eval_categoric(x)
         else:
             return NotImplemented
 
+    def eval_numeric(self, x):
+        # TODO: Return column numbers
+        return x.to_numpy()
+
+    def eval_categoric(self, x):
+        # TODO: Return column numbers, slice, or something like that
+        # Also, return baseline level, etc.
+        x = pd.get_dummies(x, drop_first=True).to_numpy()
+        return x.T
 
 class InteractionTerm(BaseTerm):
     """Representation of an interaction term
