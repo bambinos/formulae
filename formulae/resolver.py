@@ -65,3 +65,10 @@ class Resolver:
             return InterceptTerm()
         else:
             return LiteralTerm(expr.value)
+
+    def visitQuotedNameExpr(self, expr):
+        # delete backquotes in 'variable'
+        return Term(expr.expression.lexeme, expr.expression.lexeme[1:-1])
+
+# When evaluating ModelTerms object we'll have to "evaluate" CallTerms in a different manner
+# because the arguments is expressed as an AST and not as a ModelTerms object.

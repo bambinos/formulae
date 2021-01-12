@@ -305,16 +305,17 @@ class CallTerm(BaseTerm):
     """
 
     def __init__(self, expr):
-        self.call = expr.callee.name.lexeme + expr.arguments.lexeme
-        self.name = self.call
+        # self.call = expr.callee.name.lexeme + expr.args.lexeme
+        self.name = expr.callee.name.lexeme
+        self.args = expr.args
         self.special = expr.special
 
     def __hash__(self):
-        return hash((self.call, self.special))
+        return hash((self.name, self.args, self.special))
 
     def __eq__(self, other):
         if not isinstance(other, type(self)): return False
-        return self.call == other.call and self.special == other.special
+        return self.name == other.name, self.args == other.args and self.special == other.special
 
     def __mul__(self, other):
         if isinstance(other, (Term, InteractionTerm, CallTerm, LiteralTerm)):
@@ -354,7 +355,8 @@ class CallTerm(BaseTerm):
 
     def __str__(self):
         strlist = [
-            "call=" + self.call,
+            "call=" + self.name,
+            "args=" + '  '.join(str(self.args).splitlines(True)),
             "special=" + str(self.special)
         ]
         return 'CallTerm(\n  ' + ',\n  '.join(strlist) + '\n)'

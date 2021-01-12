@@ -20,7 +20,7 @@ class Python(Expr):
     def accept(self, visitor):
         return visitor.visitPythonExpr(self)
 
-class Bqname(Expr):
+class QuotedName(Expr):
     def __init__(self, expression):
         self.expression = expression
 
@@ -28,10 +28,10 @@ class Bqname(Expr):
         return self.__str__()
 
     def __str__(self):
-        return 'Bqname(\n  ' + '  '.join(str(self.expression).splitlines(True)) + '\n)'
+        return 'QuotedName(' + self.expression.lexeme + ')'
 
     def accept(self, visitor):
-        return visitor.visitPythonExpr(self)
+        return visitor.visitQuotedNameExpr(self)
 
 
 class Grouping(Expr):
@@ -95,9 +95,9 @@ class Unary(Expr):
 class Call(Expr):
     """Represents built-in or added functions in formulae"""
 
-    def __init__(self, callee, arguments, special=False):
+    def __init__(self, callee, args, special=False):
         self.callee = callee
-        self.arguments = arguments
+        self.args = args
         self.special = special
 
     def __repr__(self):
@@ -106,7 +106,7 @@ class Call(Expr):
     def __str__(self):
         string_list = [
             "callee=" + str(self.callee),
-            "args=" + self.arguments.lexeme,
+            "args=" + '  '.join(str(self.args).splitlines(True)),
             "special=" + str(self.special)
         ]
         return 'Call(\n  ' + ',\n  '.join(string_list) + '\n)'

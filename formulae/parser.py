@@ -1,4 +1,5 @@
-from .expr import (Python, Bqname, Grouping, Binary, Unary, Call, Variable, Literal)
+from .expr import (Python, QuotedName, Grouping, Binary, Unary, Call, Variable, Literal)
+from .token import Token
 from .utils import listify
 
 class ParseError(Exception):
@@ -117,9 +118,22 @@ class Parser:
 
     def call(self):
         expr = self.primary()
-        if self.match('CALLARGS'):
-            args = self.previous()
-            expr = Call(expr, args)
+        while True:
+            if self.match('LEFT_PAREN'):
+                expr = self.finishcall(expr)
+            else:
+                break
+        return expr
+
+    def finishcall(self, expr):
+        args = []
+        if not self.check('RIGHT_PAREN'):
+            while True:
+                args.append(self.expression())
+                if not self.match('COMMA'):
+                    break
+        self.consume('RIGHT_PAREN', "Expect ')' after arguments.")
+        expr = Call(expr, args)
         return expr
 
     def primary(self):
@@ -128,14 +142,15 @@ class Parser:
         elif self.match('IDENTIFIER'):
             return Variable(self.previous())
         elif self.match('BQNAME'):
-            return Bqname(self.previous())
+            return QuotedName(self.previous())
         elif self.match('LEFT_PAREN'):
             expr = self.expression()
             self.consume('RIGHT_PAREN', "Expect ')' after expression.")
             return Grouping(expr)
         elif self.match('LEFT_BRACE'):
+            # {x + 1} is translated to I(x + 1) and then we resolve the latter.
             expr = self.expression()
             self.consume('RIGHT_BRACE', "Expect '}' after expression.")
-            return Python(expr)
+            return Call(Variable(Token('IDENTIFIER', 'I')), expr)
         else:
             raise ParseError("Expect expression.")
