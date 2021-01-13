@@ -13,12 +13,12 @@ class DesignMatrices:
     def __init__(self, model, data):
         self.model = model
         self.response = ResponseVector(self.model.response, data)
-        self.fixed = FixedMatrix(self.model.terms, data)
-        self.random = RandomMatrix(self.model.random_terms, data)
+        self.fixed = FixedEffectsMatrix(self.model.terms, data)
+        self.random = RandomEffectsMatrix(self.model.random_terms, data)
 
 
-class Base:
-    """A base class for ResponseVector, FixedMatrix and RandomMatrix
+class DesignMatrix:
+    """A base class for ResponseVector, FixedEffectsMatrix and RandomEffectsMatrix
     """
 
     def __init__(self, model, data):
@@ -30,7 +30,7 @@ class Base:
         return NotImplemented
 
 
-class ResponseVector(Base):
+class ResponseVector(DesignMatrix):
     """Representation of the respose vector of a model
     """
 
@@ -44,7 +44,7 @@ class ResponseVector(Base):
         pass
 
 
-class FixedMatrix(Base):
+class FixedEffectsMatrix(DesignMatrix):
     """Representation of the design matrix for the fixed part of a model.
     """
 
@@ -55,7 +55,7 @@ class FixedMatrix(Base):
         pass
 
 
-class RandomMatrix(Base):
+class RandomEffectsMatrix(DesignMatrix):
     """Representation of the design matrix for the fixed part of a model.
     """
 

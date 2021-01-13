@@ -150,13 +150,30 @@ class Term(BaseTerm):
 
     def eval_numeric(self, x):
         # TODO: Return column numbers
-        return x.to_numpy()
+        out = {
+            'value': np.atleast_2d(x.to_numpy()).T,
+            'type': 'numeric'
+        }
+        return out
 
-    def eval_categoric(self, x):
-        # TODO: Return column numbers, slice, or something like that
-        # Also, return baseline level, etc.
-        x = pd.get_dummies(x, drop_first=True).to_numpy()
-        return x.T
+    def eval_categoric(self, x, full_rank=True):
+        if isinstance(x, pd.Categorical) and x.dtype.ordered:
+            reference = x.min()
+        else:
+            reference = x[0]
+
+        if full_rank:
+            # .to_numpy() returns 2d array
+            value = pd.get_dummies(x, drop_first=True).to_numpy()
+        else:
+            raise NotImplementedError
+
+        out = {
+            'value': value,
+            'type': 'categoric',
+            'reference': reference
+        }
+        return out
 
 class InteractionTerm(BaseTerm):
     """Representation of an interaction term
@@ -282,14 +299,14 @@ class LiteralTerm(BaseTerm):
 
 class InterceptTerm(BaseTerm):
     def __init__(self):
-        self.what = "intercept"
+        self.name = "Intercept"
 
     def __hash__(self):
-        return hash((self.what))
+        return hash((self.name))
 
     def __eq__(self, other):
         if not isinstance(other, type(self)): return False
-        return self.what == other.what
+        return self.name == other.name
 
     def __or__(self, other):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
@@ -306,18 +323,24 @@ class InterceptTerm(BaseTerm):
         return "InterceptTerm()"
 
     def eval(self, data):
-        return np.ones(data.shape[0])
+        # Only works with DataFrames or Series so far
+        out = {
+            'value': np.ones((data.shape[0], 1)),
+            'type': 'Intercept'
+        }
+        return out
+
 
 class NegatedIntercept(BaseTerm):
     def __init__(self):
-        self.what = "intercept"
+        self.name = "Intercept"
 
     def __hash__(self):
-        return hash((self.what))
+        return hash((self.name))
 
     def __eq__(self, other):
         if not isinstance(other, type(self)): return False
-        return self.what == other.what
+        return self.name == other.name
 
     def __or__(self, other):
         raise ValueError("At least include an intercept in '|' operation")
@@ -580,6 +603,7 @@ class ModelTerms:
         return self.fixed_terms + self.random_terms
 
     def eval(self, data):
-        return np.vstack([term.eval(data) for term in self.terms]).T
+        return {term.name:term.eval(data) for term in self.terms}
+        # return np.vstack([term.eval(data) for term in self.terms]).T
 
 ATOMIC_TERMS = (Term, InteractionTerm, CallTerm, InterceptTerm, NegatedIntercept, LiteralTerm, RandomTerm)
