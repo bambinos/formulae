@@ -2,9 +2,11 @@ import numpy as np
 import pandas as pd
 
 from itertools import product, combinations
+from functools import reduce
 from pandas.api.types import is_string_dtype, is_numeric_dtype, is_categorical_dtype
 
 from .eval_in_data_mask import eval_in_data_mask
+from .utils import multiply
 
 class BaseTerm:
     """Base Class created to share some common methods
@@ -74,12 +76,10 @@ class Term(BaseTerm):
         return self.name == other.name and self.variable == other.variable and self.kind == other.kind
 
     def __mul__(self, other):
-        if isinstance(other, (Term, CallTerm)):
+        if isinstance(other, (Term, InteractionTerm, CallTerm)):
             if self == other:
                 return self
             return ModelTerms(self, other, InteractionTerm(self, other))
-        elif isinstance(other, InteractionTerm):
-            return ModelTerms(self, other, other.add_term(self))
         elif isinstance(other, ModelTerms):
             products = product([self], other.fixed_terms)
             terms = [InteractionTerm(p[0], p[1]) for p in products]
@@ -156,17 +156,14 @@ class Term(BaseTerm):
         }
         return out
 
-    def eval_categoric(self, x, full_rank=True):
+    def eval_categoric(self, x):
         if isinstance(x, pd.Categorical) and x.dtype.ordered:
             reference = x.min()
         else:
             reference = x[0]
 
-        if full_rank:
-            # .to_numpy() returns 2d array
-            value = pd.get_dummies(x, drop_first=True).to_numpy()
-        else:
-            raise NotImplementedError
+        # .to_numpy() returns 2d array
+        value = pd.get_dummies(x, drop_first=True).to_numpy()
 
         out = {
             'value': value,
@@ -244,14 +241,6 @@ class InteractionTerm(BaseTerm):
         ]
         return 'InteractionTerm(\n  ' + '\n  '.join(string_list) + '\n)'
 
-    def eval(self, data):
-        value = np.prod([term.eval(data)['value'] for term in self.terms], axis=0)
-        out = {
-            'value': value,
-            'type': 'interaction'
-        }
-        return out
-
     @property
     def name(self):
         return ":".join([term.name for term in self.terms])
@@ -263,9 +252,9 @@ class InteractionTerm(BaseTerm):
                 self.variables.add(term.variable)
             return self
         elif isinstance(term, CallTerm):
-            if term.call not in self.variables:
+            if term not in self.terms:
                 self.terms.append(term)
-                self.variables.add(term.call)
+                # self.variables.add(term.call)
             return self
         elif isinstance(term, InteractionTerm):
             terms = [term for term in term.terms if term not in self.terms]
@@ -274,6 +263,19 @@ class InteractionTerm(BaseTerm):
             return self
         else:
             return NotImplemented
+
+    def eval(self, data):
+        # I'm not very happy with this implementation since we call `.eval()`
+        # again on terms that are highly likely to be in the model
+        # Also, 'vars' should be a dictionary with richer information about the
+        # terms involved
+        value = reduce(multiply, [term.eval(data)['value'] for term in self.terms])
+        out = {
+            'value': value,
+            'type': 'interaction',
+            'vars': [term.name for term in self.terms]
+        }
+        return out
 
 class LiteralTerm(BaseTerm):
     def __init__(self, value):
@@ -369,6 +371,9 @@ class CallTerm(BaseTerm):
         self.args = expr.args
         self.special = expr.special
 
+    def args_to_string(self):
+        pass
+
     def __hash__(self):
         return hash((self.name, self.args, self.special))
 
@@ -377,7 +382,7 @@ class CallTerm(BaseTerm):
         return self.name == other.name, self.args == other.args and self.special == other.special
 
     def __mul__(self, other):
-        if isinstance(other, (Term, InteractionTerm, CallTerm, LiteralTerm)):
+        if isinstance(other, (Term, InteractionTerm, CallTerm)):
             return ModelTerms(self, other, InteractionTerm(self, other))
         elif isinstance(other, ModelTerms):
             products = product([self], other.fixed_terms)
@@ -388,7 +393,7 @@ class CallTerm(BaseTerm):
             return NotImplemented
 
     def __matmul__(self, other):
-        if isinstance(other, (Term, CallTerm, LiteralTerm)):
+        if isinstance(other, (Term, CallTerm)):
             return InteractionTerm(self, other)
         elif isinstance(other, InteractionTerm):
             return other.add_term(self)
