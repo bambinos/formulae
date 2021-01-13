@@ -6,7 +6,8 @@ from functools import reduce
 from pandas.api.types import is_string_dtype, is_numeric_dtype, is_categorical_dtype
 
 from .eval_in_data_mask import eval_in_data_mask
-from .utils import multiply
+
+import operator
 
 class BaseTerm:
     """Base Class created to share some common methods
@@ -149,7 +150,6 @@ class Term(BaseTerm):
             raise NotImplementedError
 
     def eval_numeric(self, x):
-        # TODO: Return column numbers
         out = {
             'value': np.atleast_2d(x.to_numpy()).T,
             'type': 'numeric'
@@ -269,7 +269,7 @@ class InteractionTerm(BaseTerm):
         # again on terms that are highly likely to be in the model
         # Also, 'vars' should be a dictionary with richer information about the
         # terms involved
-        value = reduce(multiply, [term.eval(data)['value'] for term in self.terms])
+        value = reduce(operator.mul, [term.eval(data)['value'] for term in self.terms])
         out = {
             'value': value,
             'type': 'interaction',
@@ -306,6 +306,13 @@ class LiteralTerm(BaseTerm):
 
     def __str__(self):
         return f"LiteralTerm(value={self.value})"
+
+    def eval(self, data):
+        out = {
+            'value': np.ones((data.shape[0], 1)) * self.value,
+            'type': 'Literal'
+        }
+        return out
 
 class InterceptTerm(BaseTerm):
     def __init__(self):

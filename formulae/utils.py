@@ -7,6 +7,3 @@ def listify(obj):
         return []
     else:
         return obj if isinstance(obj, (list, tuple, type(None))) else [obj]
-
-def multiply(x, y):
-    return x * y
