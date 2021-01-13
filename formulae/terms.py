@@ -146,7 +146,7 @@ class Term(BaseTerm):
         elif is_string_dtype(x) or is_categorical_dtype(x):
             return self.eval_categoric(x)
         else:
-            return NotImplemented
+            raise NotImplementedError
 
     def eval_numeric(self, x):
         # TODO: Return column numbers
@@ -243,6 +243,14 @@ class InteractionTerm(BaseTerm):
             "variables= " + str(self.variables)
         ]
         return 'InteractionTerm(\n  ' + '\n  '.join(string_list) + '\n)'
+
+    def eval(self, data):
+        value = np.prod([term.eval(data)['value'] for term in self.terms], axis=0)
+        out = {
+            'value': value,
+            'type': 'interaction'
+        }
+        return out
 
     @property
     def name(self):
@@ -485,7 +493,7 @@ class ModelTerms:
         elif isinstance(other, ATOMIC_TERMS):
             return self.add_term(other)
         elif isinstance(other, type(self)):
-            for term in other.all_terms:
+            for term in other.terms:
                 self.add_term(term)
             return self
         else:
@@ -493,7 +501,7 @@ class ModelTerms:
 
     def __sub__(self, other):
         if isinstance(other, type(self)):
-            for term in other.all_terms:
+            for term in other.terms:
                 if term in self.fixed_terms:
                     self.fixed_terms.remove(term)
                 if term in self.random_terms:
