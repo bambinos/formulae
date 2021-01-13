@@ -6,6 +6,7 @@ from functools import reduce
 from pandas.api.types import is_string_dtype, is_numeric_dtype, is_categorical_dtype
 
 from .eval_in_data_mask import eval_in_data_mask
+from .print_call import CallEvalPrinter, CallNamePrinter
 
 import operator
 
@@ -374,12 +375,10 @@ class CallTerm(BaseTerm):
 
     def __init__(self, expr):
         # self.call = expr.callee.name.lexeme + expr.args.lexeme
-        self.name = expr.callee.name.lexeme
+        self.callee = expr.callee.name.lexeme
         self.args = expr.args
         self.special = expr.special
-
-    def args_to_string(self):
-        pass
+        self.name = self.get_name_str()
 
     def __hash__(self):
         return hash((self.name, self.args, self.special))
@@ -432,6 +431,23 @@ class CallTerm(BaseTerm):
         ]
         return 'CallTerm(\n  ' + ',\n  '.join(strlist) + '\n)'
 
+    def accept(self, visitor):
+        return visitor.visitCallTerm(self)
+
+    def get_eval_str(self):
+        return CallEvalPrinter(self).print()
+
+    def get_name_str(self):
+        return CallNamePrinter(self).print()
+
+    def eval(self, data):
+        x = eval_in_data_mask(self.get_eval_str(), data)
+        out = {
+            'value': np.atleast_2d(x.to_numpy()).T,
+            'type': 'call'
+        }
+        return out
+
 class RandomTerm(BaseTerm):
     """Representation of random effects term
     """
@@ -449,7 +465,6 @@ class RandomTerm(BaseTerm):
             "expr= " + '  '.join(str(self.expr).splitlines(True)),
             "factor= " + '  '.join(str(self.factor).splitlines(True)),
         ]
-
         return 'RandomTerm(\n  ' + ',\n  '.join(strlist) + '\n)'
 
 class ResponseTerm:
