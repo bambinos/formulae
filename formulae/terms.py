@@ -83,8 +83,8 @@ class Term(BaseTerm):
                 return self
             return ModelTerms(self, other, InteractionTerm(self, other))
         elif isinstance(other, ModelTerms):
-            products = product([self], other.fixed_terms)
-            terms = [self] + other.fixed_terms
+            products = product([self], other.common_terms)
+            terms = [self] + other.common_terms
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms) + ModelTerms(*iterms)
         else:
@@ -112,7 +112,7 @@ class Term(BaseTerm):
         elif isinstance(other, InteractionTerm):
             return ModelTerms(self, other.add_term(self))
         elif isinstance(other, ModelTerms):
-            products = product([self], other.fixed_terms)
+            products = product([self], other.common_terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(self) + ModelTerms(*iterms)
         else:
@@ -124,8 +124,8 @@ class Term(BaseTerm):
             terms = [RandomTerm(InterceptTerm(), other), RandomTerm(self, other)]
             return ModelTerms(*terms)
         elif isinstance(other, ModelTerms):
-            iterms = [RandomTerm(InterceptTerm(), p[1]) for p in product([self], other.fixed_terms)]
-            terms = [RandomTerm(p[0], p[1]) for p in product([self], other.fixed_terms)]
+            iterms = [RandomTerm(InterceptTerm(), p[1]) for p in product([self], other.common_terms)]
+            terms = [RandomTerm(p[0], p[1]) for p in product([self], other.common_terms)]
             return ModelTerms(*iterms) + ModelTerms(*terms)
         else:
             return NotImplemented
@@ -207,7 +207,7 @@ class InteractionTerm(BaseTerm):
         elif isinstance(other, InteractionTerm):
             return ModelTerms(self, other, other.add_term(self))
         elif isinstance(other, ModelTerms):
-            products = product([self], other.fixed_terms)
+            products = product([self], other.common_terms)
             terms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
         else:
@@ -217,7 +217,7 @@ class InteractionTerm(BaseTerm):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
             return self.add_term(other)
         elif isinstance(other, ModelTerms):
-            products = product([self], other.fixed_terms)
+            products = product([self], other.common_terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*iterms)
         else:
@@ -227,7 +227,7 @@ class InteractionTerm(BaseTerm):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
             return RandomTerm(self, other)
         elif isinstance(other, ModelTerms):
-            products = product([self], other.fixed_terms)
+            products = product([self], other.common_terms)
             terms = [RandomTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
         else:
@@ -297,7 +297,7 @@ class LiteralTerm(BaseTerm):
         if isinstance(other, (Term, CallTerm)):
             return RandomTerm(self, other)
         elif isinstance(other, ModelTerms):
-            products = product([self], other.fixed_terms)
+            products = product([self], other.common_terms)
             terms = [RandomTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
         else:
@@ -331,7 +331,7 @@ class InterceptTerm(BaseTerm):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
             return RandomTerm(self, other)
         elif isinstance(other, ModelTerms):
-            products = product([self], other.fixed_terms)
+            products = product([self], other.common_terms)
             terms = [RandomTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
 
@@ -392,8 +392,8 @@ class CallTerm(BaseTerm):
         if isinstance(other, (Term, InteractionTerm, CallTerm)):
             return ModelTerms(self, other, InteractionTerm(self, other))
         elif isinstance(other, ModelTerms):
-            products = product([self], other.fixed_terms)
-            terms = [self] + list(other.fixed_terms)
+            products = product([self], other.common_terms)
+            terms = [self] + list(other.common_terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms) + ModelTerms(*iterms)
         else:
@@ -405,7 +405,7 @@ class CallTerm(BaseTerm):
         elif isinstance(other, InteractionTerm):
             return other.add_term(self)
         elif isinstance(other, ModelTerms):
-            products = product([self], other.fixed_terms)
+            products = product([self], other.common_terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*iterms)
         else:
@@ -415,7 +415,7 @@ class CallTerm(BaseTerm):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
             return RandomTerm(self, other)
         elif isinstance(other, ModelTerms):
-            products = product([self], other.fixed_terms)
+            products = product([self], other.common_terms)
             terms = [RandomTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
         else:
@@ -500,6 +500,9 @@ class ResponseTerm:
     def __str__(self):
         return 'ResponseTerm(\n  ' + '  '.join(str(self.term).splitlines(True)) + '\n)'
 
+    def eval(self, data):
+        return self.term.eval(data)
+
 
 class ModelTerms:
 
@@ -510,8 +513,8 @@ class ModelTerms:
             raise ValueError("bad ResponseTerm")
 
         if all([isinstance(term, ATOMIC_TERMS) for term in terms]):
-            self.fixed_terms = [term for term in terms if not isinstance(term, RandomTerm)]
-            self.random_terms = [term for term in terms if isinstance(term, RandomTerm)]
+            self.common_terms = [term for term in terms if not isinstance(term, RandomTerm)]
+            self.group_terms = [term for term in terms if isinstance(term, RandomTerm)]
         else:
             raise ValueError("Can't understand Term")
 
@@ -530,31 +533,31 @@ class ModelTerms:
     def __sub__(self, other):
         if isinstance(other, type(self)):
             for term in other.terms:
-                if term in self.fixed_terms:
-                    self.fixed_terms.remove(term)
-                if term in self.random_terms:
-                    self.random_terms.remove(term)
+                if term in self.common_terms:
+                    self.common_terms.remove(term)
+                if term in self.group_terms:
+                    self.group_terms.remove(term)
             return self
         elif isinstance(other, (Term, CallTerm, InteractionTerm, InterceptTerm)):
-            if other in self.fixed_terms:
-                self.fixed_terms.remove(other)
+            if other in self.common_terms:
+                self.common_terms.remove(other)
             return self
         elif isinstance(other, RandomTerm):
-            if other in self.random_terms:
-                self.random_terms.remove(other)
+            if other in self.group_terms:
+                self.group_terms.remove(other)
             return self
         else:
             return NotImplemented
 
     def __mul__(self, other):
         if isinstance(other, type(self)):
-            products = product(self.fixed_terms, other.fixed_terms)
-            terms = list(self.fixed_terms) + list(other.fixed_terms)
+            products = product(self.common_terms, other.common_terms)
+            terms = list(self.common_terms) + list(other.common_terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms) + ModelTerms(*iterms)
         elif isinstance(other, (Term, CallTerm)):
-            products = product(self.fixed_terms, [other])
-            terms = [term for term in self.fixed_terms] + [other]
+            products = product(self.common_terms, [other])
+            terms = [term for term in self.common_terms] + [other]
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms) + ModelTerms(*iterms)
         else:
@@ -562,11 +565,11 @@ class ModelTerms:
 
     def __matmul__(self, other):
         if isinstance(other, type(self)):
-            products = product(self.fixed_terms, other.fixed_terms)
+            products = product(self.common_terms, other.common_terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*iterms)
         elif isinstance(other, (Term, CallTerm)):
-            products = product(self.fixed_terms, [other])
+            products = product(self.common_terms, [other])
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*iterms)
         else:
@@ -574,7 +577,7 @@ class ModelTerms:
 
     def __pow__(self, other):
         if isinstance(other, LiteralTerm) and isinstance(other.value, int) and other.value >= 1:
-            comb = [list(p) for i in range(2, other.value + 1) for p in combinations(self.fixed_terms, i)]
+            comb = [list(p) for i in range(2, other.value + 1) for p in combinations(self.common_terms, i)]
             iterms = [InteractionTerm(*terms) for terms in comb]
             return self + ModelTerms(*iterms)
         else:
@@ -583,17 +586,17 @@ class ModelTerms:
     def __truediv__(self, other):
         # See https://patsy.readthedocs.io/en/latest/formulas.html
         if isinstance(other, (Term, CallTerm)):
-            return self.add_term(InteractionTerm(*self.fixed_terms + [other]))
+            return self.add_term(InteractionTerm(*self.common_terms + [other]))
         elif isinstance(other, ModelTerms):
-            iterms = [InteractionTerm(*self.fixed_terms + [term]) for term in other.fixed_terms]
+            iterms = [InteractionTerm(*self.common_terms + [term]) for term in other.common_terms]
             return self + ModelTerms(*iterms)
         else:
             return NotImplemented
 
     def __or__(self, other):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
-            if NegatedIntercept() in self.fixed_terms:
-                self.fixed_terms.remove(NegatedIntercept())
+            if NegatedIntercept() in self.common_terms:
+                self.common_terms.remove(NegatedIntercept())
                 return RandomTerm(self, other)
             else:
                 terms = InterceptTerm() + self
@@ -602,16 +605,16 @@ class ModelTerms:
             return NotImplemented
 
     def __repr__(self):
-        terms = ',\n'.join([repr(term) for term in self.fixed_terms])
+        terms = ',\n'.join([repr(term) for term in self.common_terms])
         if self.response is None:
             string = '  '.join(terms.splitlines(True))
         else:
             string = '  '.join(str(self.response).splitlines(True))
             string += ',\n  ' + '  '.join(terms.splitlines(True))
 
-        if self.random_terms:
-            random_terms = ',\n'.join([repr(term) for term in self.random_terms])
-            string += ',\n  ' + '  '.join(random_terms.splitlines(True))
+        if self.group_terms:
+            group_terms = ',\n'.join([repr(term) for term in self.group_terms])
+            string += ',\n  ' + '  '.join(group_terms.splitlines(True))
 
         return 'ModelTerms(\n  ' + string + '\n)'
 
@@ -624,19 +627,19 @@ class ModelTerms:
 
     def add_term(self, term):
         if isinstance(term, RandomTerm):
-            if term not in self.random_terms:
-                self.random_terms.append(term)
+            if term not in self.group_terms:
+                self.group_terms.append(term)
             return self
         elif isinstance(term, ATOMIC_TERMS):
-            if term not in self.fixed_terms:
-                self.fixed_terms.append(term)
+            if term not in self.common_terms:
+                self.common_terms.append(term)
             return self
         else:
             raise ValueError("not accepted term")
 
     @property
     def terms(self):
-        return self.fixed_terms + self.random_terms
+        return self.common_terms + self.group_terms
 
     def eval(self, data):
         return {term.name:term.eval(data) for term in self.terms}
