@@ -56,7 +56,7 @@ class Resolver:
         return CallTerm(expr)
 
     def visitVariableExpr(self, expr):
-        return Term(expr.name.lexeme, expr.name.lexeme)
+        return Term(expr.name.lexeme, expr.name.lexeme, expr.level)
 
     def visitLiteralExpr(self, expr):
         if expr.value == 0:

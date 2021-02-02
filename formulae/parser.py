@@ -140,7 +140,15 @@ class Parser:
         if self.match('NUMBER'):
             return Literal(self.previous().literal)
         elif self.match('IDENTIFIER'):
-            return Variable(self.previous())
+            identifier = self.previous()
+            if self.match('LEFT_BRACKET'):
+                level = self.expression()
+                if not isinstance(level, Variable):
+                    raise ValueError('Subset notation only allows a level name.')
+                self.consume('RIGHT_BRACKET', "Expect ']' after level name.")
+                return Variable(identifier, level)
+            else:
+                return Variable(self.previous())
         elif self.match('BQNAME'):
             return QuotedName(self.previous())
         elif self.match('LEFT_PAREN'):

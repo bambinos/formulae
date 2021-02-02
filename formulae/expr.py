@@ -116,14 +116,18 @@ class Call(Expr):
 
 class Variable(Expr):
 
-    def __init__(self, name):
+    def __init__(self, name, level=None):
         self.name = name
+        self.level = level
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        return 'Variable('+ self.name.lexeme + ')'
+        string_list = ['name=' + self.name.lexeme]
+        if self.level is not None:
+            string_list.append('level=' + self.level.lexeme)
+        return 'Variable('+ ',\n  '.join(string_list) + ')'
 
     def accept(self, visitor):
         return visitor.visitVariableExpr(self)

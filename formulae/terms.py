@@ -65,9 +65,13 @@ class Term(BaseTerm):
         TODO: Add kind 'ordinal'.
     """
 
-    def __init__(self, name, variable, kind=None):
+    def __init__(self, name, variable, level=None, kind=None):
         self.name = name
         self.variable = variable
+        if level is not None:
+            self.level = level.name.lexeme
+        else:
+            self.level = level
         self.kind = kind
 
     def __hash__(self):
@@ -139,33 +143,44 @@ class Term(BaseTerm):
             "variable= " + self.variable,
             "kind= " + str(self.kind)
         ]
+        if self.level is not None:
+            string_list.append("level= " + self.level)
         return 'Term(\n  ' + '\n  '.join(string_list) + '\n)'
 
-    def eval(self, data):
+    def eval(self, data, is_response=False):
+        # We don't support multiple level categoric responses yet.
+        # `is_response` flags whether the term evaluated is response
+        # and returns a 1d array of 0-1 encoding instead of a matrix in case there are
+        # multiple levels.
+        # In the future, we can support multiple levels.
         x = data[self.variable]
 
         if is_numeric_dtype(x):
             return self.eval_numeric(x)
         elif is_string_dtype(x) or is_categorical_dtype(x):
-            return self.eval_categoric(x)
+            return self.eval_categoric(x, is_response)
         else:
             raise NotImplementedError
 
     def eval_numeric(self, x):
+        if self.level is not None:
+            raise ValueError("Subset notation can't be used with a numeric variable.")
         out = {
             'value': np.atleast_2d(x.to_numpy()).T,
             'type': 'numeric'
         }
         return out
 
-    def eval_categoric(self, x):
-        if hasattr(x, 'ordered') and x.dtype.ordered:
-            reference = x.min()
+    def eval_categoric(self, x, is_response):
+        if is_response:
+            value, reference = self.eval_categoric_response(x)
         else:
-            reference = x[0]
-
-        # .to_numpy() returns 2d array
-        value = pd.get_dummies(x, drop_first=True).to_numpy()
+            if hasattr(x, 'ordered') and x.dtype.ordered:
+                reference = x.min()
+            else:
+                reference = x[0]
+            # .to_numpy() returns 2d array
+            value = pd.get_dummies(x, drop_first=True).to_numpy()
 
         out = {
             'value': value,
@@ -173,6 +188,15 @@ class Term(BaseTerm):
             'reference': reference
         }
         return out
+
+    def eval_categoric_response(self, x):
+        if self.level is not None:
+            x = np.where(x == self.level, 1, 0)
+            reference = self.level
+        else:
+            reference = x[0]
+            x = np.where(x == reference, 1, 0)
+        return np.atleast_2d(x).T, reference
 
 class InteractionTerm(BaseTerm):
     """Representation of an interaction term
@@ -375,7 +399,6 @@ class CallTerm(BaseTerm):
     """
 
     def __init__(self, expr):
-        # self.call = expr.callee.name.lexeme + expr.args.lexeme
         self.callee = expr.callee.name.lexeme
         self.args = expr.args
         self.special = expr.special
@@ -441,7 +464,7 @@ class CallTerm(BaseTerm):
     def get_name_str(self):
         return CallNamePrinter(self).print()
 
-    def eval(self, data):
+    def eval(self, data, is_response=False):
         x = eval_in_data_mask(self.get_eval_str(), data)
         out = {
             'value': np.atleast_2d(x.to_numpy()).T,
@@ -501,7 +524,7 @@ class ResponseTerm:
         return 'ResponseTerm(\n  ' + '  '.join(str(self.term).splitlines(True)) + '\n)'
 
     def eval(self, data):
-        return self.term.eval(data)
+        return self.term.eval(data, is_response=True)
 
 
 class ModelTerms:
