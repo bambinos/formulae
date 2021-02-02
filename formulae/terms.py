@@ -84,8 +84,9 @@ class Term(BaseTerm):
             return ModelTerms(self, other, InteractionTerm(self, other))
         elif isinstance(other, ModelTerms):
             products = product([self], other.fixed_terms)
-            terms = [InteractionTerm(p[0], p[1]) for p in products]
-            return ModelTerms(*terms)
+            terms = [self] + other.fixed_terms
+            iterms = [InteractionTerm(p[0], p[1]) for p in products]
+            return ModelTerms(*terms) + ModelTerms(*iterms)
         else:
             return NotImplemented
 
@@ -497,7 +498,7 @@ class ResponseTerm:
         return self.__str__()
 
     def __str__(self):
-        return 'ResponseTerm(\n  ' + str(self.term) + '\n)'
+        return 'ResponseTerm(\n  ' + '  '.join(str(self.term).splitlines(True)) + '\n)'
 
 
 class ModelTerms:
