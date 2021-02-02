@@ -159,7 +159,8 @@ class Term(BaseTerm):
         return out
 
     def eval_categoric(self, x):
-        if isinstance(x, pd.Categorical) and x.dtype.ordered:
+        if hasattr(x, 'ordered') and x.dtype.ordered:
+            print('xxxxx')
             reference = x.min()
         else:
             reference = x[0]
