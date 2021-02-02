@@ -14,29 +14,19 @@ class DesignMatrices:
     """
 
     def __init__(self, model, data):
+        self.response = None
+        self.common = None
+        self.group = None
         self.model = model
 
         if self.model.response is not None:
             self.response = ResponseVector(self.model.response, data)
-        else:
-            self.response = None
 
-        self.common = CommonEffectsMatrix(ModelTerms(*self.model.common_terms), data)
-        # self.group = GroupEffectsMatrix(self.model.group_terms, data)
+        if self.model.common_terms is not None:
+            self.common = CommonEffectsMatrix(ModelTerms(*self.model.common_terms), data)
 
-
-class DesignMatrix:
-    """A base class for ResponseVector, CommonEffectsMatrix and GroupEffectsMatrix
-    """
-
-    def __init__(self, model, data):
-        self.model = model
-        self.data = data
-        self.evaluate()
-
-    def evaluate(self):
-        return NotImplemented
-
+        if self.model.group_terms is not None:
+            self.group = GroupEffectsMatrix(self.model.group_terms, data)
 
 class ResponseVector:
     """Representation of the respose vector of a model
@@ -58,35 +48,72 @@ class ResponseVector:
         self.data = d['value']
         self.type = d['type']
         if self.type == 'categoric':
-            self.refclass = d.reference
+            self.refclass = d['reference']
 
+    def __repr__(self):
+        return self.__str__()
 
-class CommonEffectsMatrix(DesignMatrix):
+    def __str__(self):
+        string_list = [
+            'name=' + self.term.term.name,
+            'type=' + self.type,
+            "length=" + str(len(self.data))
+        ]
+        if self.type == 'categoric':
+            string_list += ['refclass=' + self.refclass]
+        return 'ResponseVector(' + ', '.join(string_list) + ')'
+
+class CommonEffectsMatrix:
     """Representation of the design matrix for the common effects of a model.
     """
 
     def __init__(self, terms, data):
         self.data = None
-        self.columns = None # USE SLICES
-        self.names = None
+        self._terms_info = None
         self.terms = terms
         self.evaluate(data)
 
     def evaluate(self, data):
         d = self.terms.eval(data)
         self.data = np.column_stack([d[key]['value'] for key in d.keys()])
+        self.terms_info = {}
+        # Get types and column slices
+        start = 0
+        for key in d.keys():
+            delta = d[key]['value'].shape[1]
+            self.terms_info[key] = {
+                'type': d[key]['type'],
+                'cols': slice(start, start + delta)
+            }
+            start += delta
 
-    def _get_sub_matrix(self, column):
-        # Method to obtain the columns of the matrix that correspond to a variable.
-        pass
+    def __getitem__(self, term):
+        if term not in self.terms_info.keys():
+            raise ValueError(f"'{term}' is not a valid term name")
+        else:
+            return self.data[:, self.terms_info[term]['cols']]
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        terms_list = []
+        for key, value in self.terms_info.items():
+            terms_list.append(f"'{key}': {{type={value['type']}, cols={str(value['cols'])}}}")
+        terms_str = ',\n  '.join(terms_list)
+        string_list = [
+            'shape=' + str(self.data.shape),
+            'terms={\n    ' + '  '.join(terms_str.splitlines(True))+ '\n  }'
+        ]
+        return 'CommonEffectsMatrix(\n  ' + ',\n  '.join(string_list) + '\n)'
 
 
-class GroupEffectsMatrix(DesignMatrix):
+class GroupEffectsMatrix:
     """Representation of the design matrix for the group specific effects of a model.
     """
 
     def __init__(self, term, data):
-        super().__init__(term, data)
+        pass
 
     def evaluate(self):
         pass

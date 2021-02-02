@@ -160,7 +160,6 @@ class Term(BaseTerm):
 
     def eval_categoric(self, x):
         if hasattr(x, 'ordered') and x.dtype.ordered:
-            print('xxxxx')
             reference = x.min()
         else:
             reference = x[0]
