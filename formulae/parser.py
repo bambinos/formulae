@@ -151,6 +151,6 @@ class Parser:
             # {x + 1} is translated to I(x + 1) and then we resolve the latter.
             expr = self.expression()
             self.consume('RIGHT_BRACE', "Expect '}' after expression.")
-            return Call(Variable(Token('IDENTIFIER', 'I')), expr)
+            return Call(Variable(Token('IDENTIFIER', 'I')), [expr])
         else:
             raise ParseError("Expect expression.")
