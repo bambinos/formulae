@@ -1,4 +1,6 @@
 import numpy as np
+import scipy as sp
+
 from .terms import ModelTerms
 
 class DesignMatrices:
@@ -68,14 +70,14 @@ class CommonEffectsMatrix:
     """
 
     def __init__(self, terms, data):
-        self.data = None
-        self._terms_info = None
+        self.design_matrix = None
+        self.terms_info = None
         self.terms = terms
         self.evaluate(data)
 
     def evaluate(self, data):
         d = self.terms.eval(data)
-        self.data = np.column_stack([d[key]['value'] for key in d.keys()])
+        self.design_matrix = np.column_stack([d[key]['value'] for key in d.keys()])
         self.terms_info = {}
         # Get types and column slices
         start = 0
@@ -91,7 +93,7 @@ class CommonEffectsMatrix:
         if term not in self.terms_info.keys():
             raise ValueError(f"'{term}' is not a valid term name")
         else:
-            return self.data[:, self.terms_info[term]['cols']]
+            return self.design_matrix[:, self.terms_info[term]['cols']]
 
     def __repr__(self):
         return self.__str__()
@@ -102,7 +104,7 @@ class CommonEffectsMatrix:
             terms_list.append(f"'{key}': {{type={value['type']}, cols={str(value['cols'])}}}")
         terms_str = ',\n  '.join(terms_list)
         string_list = [
-            'shape=' + str(self.data.shape),
+            'shape=' + str(self.design_matrix.shape),
             'terms={\n    ' + '  '.join(terms_str.splitlines(True))+ '\n  }'
         ]
         return 'CommonEffectsMatrix(\n  ' + ',\n  '.join(string_list) + '\n)'
@@ -112,8 +114,16 @@ class GroupEffectsMatrix:
     """Representation of the design matrix for the group specific effects of a model.
     """
 
-    def __init__(self, term, data):
-        pass
+    def __init__(self, terms, data):
+        self._design_matrix = None
+        self.terms_info = None
+        self.terms = terms
+        self.evaluate(data)
 
-    def evaluate(self):
-        pass
+    def evaluate(self, data):
+        Z = [term.eval(data) for term in self.terms]
+        self._design_matrix = sp.sparse.block_diag(Z)
+
+    @property
+    def design_matrix(self):
+        return self._design_matrix.toarray()

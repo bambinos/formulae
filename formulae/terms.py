@@ -4,6 +4,7 @@ import pandas as pd
 from itertools import product, combinations
 from functools import reduce
 from pandas.api.types import is_string_dtype, is_numeric_dtype, is_categorical_dtype
+from scipy import linalg, sparse
 
 from .eval_in_data_mask import eval_in_data_mask
 from .print_call import CallEvalPrinter, CallNamePrinter
@@ -51,7 +52,7 @@ class BaseTerm:
         return NotImplemented
 
 class Term(BaseTerm):
-    """Representation of a model term.
+    """Representation of (common) term in the model.
 
     Parameters
     ----------
@@ -125,11 +126,11 @@ class Term(BaseTerm):
     def __or__(self, other):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
             # implicit intercept
-            terms = [RandomTerm(InterceptTerm(), other), RandomTerm(self, other)]
+            terms = [GroupSpecTerm(InterceptTerm(), other), GroupSpecTerm(self, other)]
             return ModelTerms(*terms)
         elif isinstance(other, ModelTerms):
-            iterms = [RandomTerm(InterceptTerm(), p[1]) for p in product([self], other.common_terms)]
-            terms = [RandomTerm(p[0], p[1]) for p in product([self], other.common_terms)]
+            iterms = [GroupSpecTerm(InterceptTerm(), p[1]) for p in product([self], other.common_terms)]
+            terms = [GroupSpecTerm(p[0], p[1]) for p in product([self], other.common_terms)]
             return ModelTerms(*iterms) + ModelTerms(*terms)
         else:
             return NotImplemented
@@ -249,10 +250,10 @@ class InteractionTerm(BaseTerm):
 
     def __or__(self, other):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
-            return RandomTerm(self, other)
+            return GroupSpecTerm(self, other)
         elif isinstance(other, ModelTerms):
             products = product([self], other.common_terms)
-            terms = [RandomTerm(p[0], p[1]) for p in products]
+            terms = [GroupSpecTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
         else:
             return NotImplemented
@@ -319,10 +320,10 @@ class LiteralTerm(BaseTerm):
         if self.value != 1:
             raise ValueError("Numeric expression is not equal to 1 in random term.")
         if isinstance(other, (Term, CallTerm)):
-            return RandomTerm(self, other)
+            return GroupSpecTerm(self, other)
         elif isinstance(other, ModelTerms):
             products = product([self], other.common_terms)
-            terms = [RandomTerm(p[0], p[1]) for p in products]
+            terms = [GroupSpecTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
         else:
             raise ValueError("'factor' must be a single term.")
@@ -353,10 +354,10 @@ class InterceptTerm(BaseTerm):
 
     def __or__(self, other):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
-            return RandomTerm(self, other)
+            return GroupSpecTerm(self, other)
         elif isinstance(other, ModelTerms):
             products = product([self], other.common_terms)
-            terms = [RandomTerm(p[0], p[1]) for p in products]
+            terms = [GroupSpecTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
 
     def __repr__(self):
@@ -436,10 +437,10 @@ class CallTerm(BaseTerm):
 
     def __or__(self, other):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
-            return RandomTerm(self, other)
+            return GroupSpecTerm(self, other)
         elif isinstance(other, ModelTerms):
             products = product([self], other.common_terms)
-            terms = [RandomTerm(p[0], p[1]) for p in products]
+            terms = [GroupSpecTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
         else:
             return NotImplemented
@@ -465,6 +466,7 @@ class CallTerm(BaseTerm):
         return CallNamePrinter(self).print()
 
     def eval(self, data, is_response=False):
+        # is_response is not used but may be passed by ResponseTerm.eval()
         x = eval_in_data_mask(self.get_eval_str(), data)
         out = {
             'value': np.atleast_2d(x.to_numpy()).T,
@@ -472,12 +474,12 @@ class CallTerm(BaseTerm):
         }
         return out
 
-class RandomTerm(BaseTerm):
-    """Representation of random effects term
+class GroupSpecTerm(BaseTerm):
+    """Representation of group specific effects term
     """
 
     def __init__(self, expr, factor):
-        # 'expr' and 'factor' names are taken from lme4
+        # 'expr' and 'factor' names are equivalent to those in from lme4
         self.expr = expr
         self.factor = factor
 
@@ -489,7 +491,21 @@ class RandomTerm(BaseTerm):
             "expr= " + '  '.join(str(self.expr).splitlines(True)),
             "factor= " + '  '.join(str(self.factor).splitlines(True)),
         ]
-        return 'RandomTerm(\n  ' + ',\n  '.join(strlist) + '\n)'
+        return 'GroupSpecTerm(\n  ' + ',\n  '.join(strlist) + '\n)'
+
+    def eval(self, data):
+        if isinstance(self.factor, Term):
+            factor = data[self.factor.variable]
+        else:
+            raise ValueError(
+                "Factor on right hand side of group specific term can only be a term."
+            )
+
+        # Notation as in lme4 paper
+        Ji = pd.get_dummies(factor).to_numpy() # note we don't use `drop_first=True`.
+        Xi = self.expr.eval(data)
+        Zi = linalg.khatri_rao(Ji.T, Xi['value'].T).T
+        return sparse.coo_matrix(Zi)
 
 class ResponseTerm:
     """Representation of a response term
@@ -536,8 +552,8 @@ class ModelTerms:
             raise ValueError("bad ResponseTerm")
 
         if all([isinstance(term, ATOMIC_TERMS) for term in terms]):
-            self.common_terms = [term for term in terms if not isinstance(term, RandomTerm)]
-            self.group_terms = [term for term in terms if isinstance(term, RandomTerm)]
+            self.common_terms = [term for term in terms if not isinstance(term, GroupSpecTerm)]
+            self.group_terms = [term for term in terms if isinstance(term, GroupSpecTerm)]
         else:
             raise ValueError("Can't understand Term")
 
@@ -565,7 +581,7 @@ class ModelTerms:
             if other in self.common_terms:
                 self.common_terms.remove(other)
             return self
-        elif isinstance(other, RandomTerm):
+        elif isinstance(other, GroupSpecTerm):
             if other in self.group_terms:
                 self.group_terms.remove(other)
             return self
@@ -620,10 +636,10 @@ class ModelTerms:
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
             if NegatedIntercept() in self.common_terms:
                 self.common_terms.remove(NegatedIntercept())
-                return RandomTerm(self, other)
+                return GroupSpecTerm(self, other)
             else:
                 terms = InterceptTerm() + self
-                return RandomTerm(terms, other)
+                return GroupSpecTerm(terms, other)
         else:
             return NotImplemented
 
@@ -649,7 +665,7 @@ class ModelTerms:
             raise ValueError("not ResponseTerm")
 
     def add_term(self, term):
-        if isinstance(term, RandomTerm):
+        if isinstance(term, GroupSpecTerm):
             if term not in self.group_terms:
                 self.group_terms.append(term)
             return self
@@ -668,4 +684,12 @@ class ModelTerms:
         return {term.name:term.eval(data) for term in self.terms}
         # return np.vstack([term.eval(data) for term in self.terms]).T
 
-ATOMIC_TERMS = (Term, InteractionTerm, CallTerm, InterceptTerm, NegatedIntercept, LiteralTerm, RandomTerm)
+ATOMIC_TERMS = (
+    Term,
+    InteractionTerm,
+    CallTerm,
+    InterceptTerm,
+    NegatedIntercept,
+    LiteralTerm,
+    GroupSpecTerm
+)
