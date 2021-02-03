@@ -1,9 +1,11 @@
-from .expr import (Python, QuotedName, Grouping, Binary, Unary, Call, Variable, Literal)
+from .expr import Python, QuotedName, Grouping, Binary, Unary, Call, Variable, Literal
 from .token import Token
 from .utils import listify
 
+
 class ParseError(Exception):
     pass
+
 
 class Parser:
     """Consume sequences of Tokens"""
@@ -14,7 +16,7 @@ class Parser:
         # pass options to understand custom functionality
 
     def at_end(self):
-        return self.peek().type == 'EOF'
+        return self.peek().type == "EOF"
 
     def advance(self):
         if not self.at_end():
@@ -63,7 +65,7 @@ class Parser:
 
     def tilde(self):
         expr = self.random_effect()
-        if self.match('TILDE'):
+        if self.match("TILDE"):
             operator = self.previous()
             right = self.addition()
             expr = Binary(expr, operator, right)
@@ -71,7 +73,7 @@ class Parser:
 
     def random_effect(self):
         expr = self.addition()
-        while self.match(['PIPE']):
+        while self.match(["PIPE"]):
             operator = self.previous()
             right = self.addition()
             expr = Binary(expr, operator, right)
@@ -79,7 +81,7 @@ class Parser:
 
     def addition(self):
         expr = self.multiplication()
-        while self.match(['MINUS', 'PLUS']):
+        while self.match(["MINUS", "PLUS"]):
             operator = self.previous()
             right = self.multiplication()
             expr = Binary(expr, operator, right)
@@ -87,7 +89,7 @@ class Parser:
 
     def multiplication(self):
         expr = self.interaction()
-        while self.match(['STAR', 'SLASH']):
+        while self.match(["STAR", "SLASH"]):
             operator = self.previous()
             right = self.interaction()
             expr = Binary(expr, operator, right)
@@ -95,7 +97,7 @@ class Parser:
 
     def interaction(self):
         expr = self.multiple_interaction()
-        while self.match(['COLON']):
+        while self.match(["COLON"]):
             operator = self.previous()
             right = self.multiple_interaction()
             expr = Binary(expr, operator, right)
@@ -103,14 +105,14 @@ class Parser:
 
     def multiple_interaction(self):
         expr = self.unary()
-        while self.match(['STAR_STAR']):
+        while self.match(["STAR_STAR"]):
             operator = self.previous()
             right = self.unary()
             expr = Binary(expr, operator, right)
         return expr
 
     def unary(self):
-        if self.match(['PLUS', 'MINUS']):
+        if self.match(["PLUS", "MINUS"]):
             operator = self.previous()
             right = self.unary()
             return Unary(operator, right)
@@ -119,7 +121,7 @@ class Parser:
     def call(self):
         expr = self.primary()
         while True:
-            if self.match('LEFT_PAREN'):
+            if self.match("LEFT_PAREN"):
                 expr = self.finishcall(expr)
             else:
                 break
@@ -127,38 +129,38 @@ class Parser:
 
     def finishcall(self, expr):
         args = []
-        if not self.check('RIGHT_PAREN'):
+        if not self.check("RIGHT_PAREN"):
             while True:
                 args.append(self.expression())
-                if not self.match('COMMA'):
+                if not self.match("COMMA"):
                     break
-        self.consume('RIGHT_PAREN', "Expect ')' after arguments.")
+        self.consume("RIGHT_PAREN", "Expect ')' after arguments.")
         expr = Call(expr, args)
         return expr
 
     def primary(self):
-        if self.match('NUMBER'):
+        if self.match("NUMBER"):
             return Literal(self.previous().literal)
-        elif self.match('IDENTIFIER'):
+        elif self.match("IDENTIFIER"):
             identifier = self.previous()
-            if self.match('LEFT_BRACKET'):
+            if self.match("LEFT_BRACKET"):
                 level = self.expression()
                 if not isinstance(level, Variable):
-                    raise ValueError('Subset notation only allows a level name.')
-                self.consume('RIGHT_BRACKET', "Expect ']' after level name.")
+                    raise ValueError("Subset notation only allows a level name.")
+                self.consume("RIGHT_BRACKET", "Expect ']' after level name.")
                 return Variable(identifier, level)
             else:
                 return Variable(self.previous())
-        elif self.match('BQNAME'):
+        elif self.match("BQNAME"):
             return QuotedName(self.previous())
-        elif self.match('LEFT_PAREN'):
+        elif self.match("LEFT_PAREN"):
             expr = self.expression()
-            self.consume('RIGHT_PAREN', "Expect ')' after expression.")
+            self.consume("RIGHT_PAREN", "Expect ')' after expression.")
             return Grouping(expr)
-        elif self.match('LEFT_BRACE'):
+        elif self.match("LEFT_BRACE"):
             # {x + 1} is translated to I(x + 1) and then we resolve the latter.
             expr = self.expression()
-            self.consume('RIGHT_BRACE', "Expect '}' after expression.")
-            return Call(Variable(Token('IDENTIFIER', 'I')), [expr])
+            self.consume("RIGHT_BRACE", "Expect '}' after expression.")
+            return Call(Variable(Token("IDENTIFIER", "I")), [expr])
         else:
             raise ParseError("Expect expression.")

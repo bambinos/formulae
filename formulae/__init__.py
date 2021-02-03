@@ -9,11 +9,14 @@ from .design_matrices import DesignMatrices
 
 from .model_description import model_description
 
-__all__ = ["model_description", "Scanner", "Parser", "Resolver",
-           "Term",
-           "Evaluator",
-           "eval_in_data_mask",
-           "DesignMatrices",
-           "__version__"
-        ]
-
+__all__ = [
+    "model_description",
+    "Scanner",
+    "Parser",
+    "Resolver",
+    "Term",
+    "Evaluator",
+    "eval_in_data_mask",
+    "DesignMatrices",
+    "__version__",
+]

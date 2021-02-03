@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.lib.arraysetops import isin
 import pandas as pd
 
 from itertools import product, combinations
@@ -11,9 +12,9 @@ from .print_call import CallEvalPrinter, CallNamePrinter
 
 import operator
 
+
 class BaseTerm:
-    """Base Class created to share some common methods
-    """
+    """Base Class created to share some common methods"""
 
     def __init__(self):
         pass
@@ -51,6 +52,7 @@ class BaseTerm:
     def __or__(self, other):
         return NotImplemented
 
+
 class Term(BaseTerm):
     """Representation of (common) term in the model.
 
@@ -79,8 +81,11 @@ class Term(BaseTerm):
         return hash((self.name, self.variable, self.kind))
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)): return False
-        return self.name == other.name and self.variable == other.variable and self.kind == other.kind
+        if not isinstance(other, type(self)):
+            return False
+        return (
+            self.name == other.name and self.variable == other.variable and self.kind == other.kind
+        )
 
     def __mul__(self, other):
         if isinstance(other, (Term, InteractionTerm, CallTerm)):
@@ -129,7 +134,9 @@ class Term(BaseTerm):
             terms = [GroupSpecTerm(InterceptTerm(), other), GroupSpecTerm(self, other)]
             return ModelTerms(*terms)
         elif isinstance(other, ModelTerms):
-            iterms = [GroupSpecTerm(InterceptTerm(), p[1]) for p in product([self], other.common_terms)]
+            iterms = [
+                GroupSpecTerm(InterceptTerm(), p[1]) for p in product([self], other.common_terms)
+            ]
             terms = [GroupSpecTerm(p[0], p[1]) for p in product([self], other.common_terms)]
             return ModelTerms(*iterms) + ModelTerms(*terms)
         else:
@@ -142,11 +149,11 @@ class Term(BaseTerm):
         string_list = [
             "name= " + self.name,
             "variable= " + self.variable,
-            "kind= " + str(self.kind)
+            "kind= " + str(self.kind),
         ]
         if self.level is not None:
             string_list.append("level= " + self.level)
-        return 'Term(\n  ' + '\n  '.join(string_list) + '\n)'
+        return "Term(\n  " + "\n  ".join(string_list) + "\n)"
 
     def eval(self, data, is_response=False):
         # We don't support multiple level categoric responses yet.
@@ -166,38 +173,23 @@ class Term(BaseTerm):
     def eval_numeric(self, x):
         if self.level is not None:
             raise ValueError("Subset notation can't be used with a numeric variable.")
-        out = {
-            'value': np.atleast_2d(x.to_numpy()).T,
-            'type': 'numeric'
-        }
+        out = {"value": np.atleast_2d(x.to_numpy()).T, "type": "numeric"}
         return out
 
     def eval_categoric(self, x, is_response):
+        levels = x.unique().tolist()
+        reference = levels[0]  # consistent for orderder=True and False
         if is_response:
-            value, reference = self.eval_categoric_response(x)
+            if self.level is not None:
+                reference = self.level
+            value = np.atleast_2d(np.where(x == reference, 1, 0)).T
         else:
-            if hasattr(x, 'ordered') and x.dtype.ordered:
-                reference = x.min()
-            else:
-                reference = x[0]
             # .to_numpy() returns 2d array
             value = pd.get_dummies(x, drop_first=True).to_numpy()
 
-        out = {
-            'value': value,
-            'type': 'categoric',
-            'reference': reference
-        }
+        out = {"value": value, "type": "categoric", "levels": levels, "reference": reference}
         return out
 
-    def eval_categoric_response(self, x):
-        if self.level is not None:
-            x = np.where(x == self.level, 1, 0)
-            reference = self.level
-        else:
-            reference = x[0]
-            x = np.where(x == reference, 1, 0)
-        return np.atleast_2d(x).T, reference
 
 class InteractionTerm(BaseTerm):
     """Representation of an interaction term
@@ -223,8 +215,13 @@ class InteractionTerm(BaseTerm):
         return hash((self.name))
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)): return False
-        return self.name == other.name and self.terms == other.terms and self.variables == other.variables
+        if not isinstance(other, type(self)):
+            return False
+        return (
+            self.name == other.name
+            and self.terms == other.terms
+            and self.variables == other.variables
+        )
 
     def __mul__(self, other):
         if isinstance(other, (Term, CallTerm)):
@@ -262,11 +259,8 @@ class InteractionTerm(BaseTerm):
         return self.__str__()
 
     def __str__(self):
-        string_list = [
-            "name= " + self.name,
-            "variables= " + str(self.variables)
-        ]
-        return 'InteractionTerm(\n  ' + '\n  '.join(string_list) + '\n)'
+        string_list = ["name= " + self.name, "variables= " + str(self.variables)]
+        return "InteractionTerm(\n  " + "\n  ".join(string_list) + "\n)"
 
     @property
     def name(self):
@@ -296,13 +290,10 @@ class InteractionTerm(BaseTerm):
         # again on terms that are highly likely to be in the model
         # Also, 'vars' should be a dictionary with richer information about the
         # terms involved
-        value = reduce(operator.mul, [term.eval(data)['value'] for term in self.terms])
-        out = {
-            'value': value,
-            'type': 'interaction',
-            'vars': [term.name for term in self.terms]
-        }
+        value = reduce(operator.mul, [term.eval(data)["value"] for term in self.terms])
+        out = {"value": value, "type": "interaction", "vars": [term.name for term in self.terms]}
         return out
+
 
 class LiteralTerm(BaseTerm):
     def __init__(self, value):
@@ -313,7 +304,8 @@ class LiteralTerm(BaseTerm):
         return hash((self.value, self.name))
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)): return False
+        if not isinstance(other, type(self)):
+            return False
         return self.value == other.value and self.name == other.name
 
     def __or__(self, other):
@@ -335,11 +327,9 @@ class LiteralTerm(BaseTerm):
         return f"LiteralTerm(value={self.value})"
 
     def eval(self, data):
-        out = {
-            'value': np.ones((data.shape[0], 1)) * self.value,
-            'type': 'Literal'
-        }
+        out = {"value": np.ones((data.shape[0], 1)) * self.value, "type": "Literal"}
         return out
+
 
 class InterceptTerm(BaseTerm):
     def __init__(self):
@@ -349,7 +339,8 @@ class InterceptTerm(BaseTerm):
         return hash((self.name))
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)): return False
+        if not isinstance(other, type(self)):
+            return False
         return self.name == other.name
 
     def __or__(self, other):
@@ -368,10 +359,7 @@ class InterceptTerm(BaseTerm):
 
     def eval(self, data):
         # Only works with DataFrames or Series so far
-        out = {
-            'value': np.ones((data.shape[0], 1)),
-            'type': 'Intercept'
-        }
+        out = {"value": np.ones((data.shape[0], 1)), "type": "Intercept"}
         return out
 
 
@@ -383,7 +371,8 @@ class NegatedIntercept(BaseTerm):
         return hash((self.name))
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)): return False
+        if not isinstance(other, type(self)):
+            return False
         return self.name == other.name
 
     def __or__(self, other):
@@ -395,9 +384,9 @@ class NegatedIntercept(BaseTerm):
     def __str__(self):
         return "NegatedIntercept()"
 
+
 class CallTerm(BaseTerm):
-    """Representation of a call term
-    """
+    """Representation of a call term"""
 
     def __init__(self, expr):
         self.callee = expr.callee.name.lexeme
@@ -409,7 +398,8 @@ class CallTerm(BaseTerm):
         return hash((self.name, self.args, self.special))
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)): return False
+        if not isinstance(other, type(self)):
+            return False
         return self.name == other.name, self.args == other.args and self.special == other.special
 
     def __mul__(self, other):
@@ -451,10 +441,10 @@ class CallTerm(BaseTerm):
     def __str__(self):
         strlist = [
             "call=" + self.name,
-            "args=" + '  '.join(str(self.args).splitlines(True)),
-            "special=" + str(self.special)
+            "args=" + "  ".join(str(self.args).splitlines(True)),
+            "special=" + str(self.special),
         ]
-        return 'CallTerm(\n  ' + ',\n  '.join(strlist) + '\n)'
+        return "CallTerm(\n  " + ",\n  ".join(strlist) + "\n)"
 
     def accept(self, visitor):
         return visitor.visitCallTerm(self)
@@ -468,19 +458,19 @@ class CallTerm(BaseTerm):
     def eval(self, data, is_response=False):
         # is_response is not used but may be passed by ResponseTerm.eval()
         x = eval_in_data_mask(self.get_eval_str(), data)
-        out = {
-            'value': np.atleast_2d(x.to_numpy()).T,
-            'type': 'call'
-        }
+        out = {"value": np.atleast_2d(x.to_numpy()).T, "type": "call"}
         return out
 
+
 class GroupSpecTerm(BaseTerm):
-    """Representation of group specific effects term
-    """
+    """Representation of group specific effects term"""
 
     def __init__(self, expr, factor):
-        # 'expr' and 'factor' names are equivalent to those in from lme4
-        self.expr = expr
+        if isinstance(expr, ModelTerms):
+            # This happens when we use `0 + x | g1`
+            self.expr = expr.terms[0]
+        else:
+            self.expr = expr
         self.factor = factor
 
     def __repr__(self):
@@ -488,28 +478,46 @@ class GroupSpecTerm(BaseTerm):
 
     def __str__(self):
         strlist = [
-            "expr= " + '  '.join(str(self.expr).splitlines(True)),
-            "factor= " + '  '.join(str(self.factor).splitlines(True)),
+            "expr= " + "  ".join(str(self.expr).splitlines(True)),
+            "factor= " + "  ".join(str(self.factor).splitlines(True)),
         ]
-        return 'GroupSpecTerm(\n  ' + ',\n  '.join(strlist) + '\n)'
+        return "GroupSpecTerm(\n  " + ",\n  ".join(strlist) + "\n)"
+
+    def to_string(self):
+        string = ""
+        if isinstance(self.expr, InterceptTerm):
+            string += "1|"
+        elif isinstance(self.expr, (Term, CallTerm)):
+            string += self.expr.name + "|"
+        else:
+            raise ValueError("Invalid LHS expression for group specific term")
+
+        if isinstance(self.factor, Term):
+            string += self.factor.name
+        else:
+            raise ValueError("Invalid RHS expression for group specific term")
+
+        return string
 
     def eval(self, data):
         if isinstance(self.factor, Term):
             factor = data[self.factor.variable]
         else:
-            raise ValueError(
-                "Factor on right hand side of group specific term can only be a term."
-            )
+            raise ValueError("Factor on right hand side of group specific term can only be a term.")
 
         # Notation as in lme4 paper
-        Ji = pd.get_dummies(factor).to_numpy() # note we don't use `drop_first=True`.
+        Ji = pd.get_dummies(factor).to_numpy()  # note we don't use `drop_first=True`.
         Xi = self.expr.eval(data)
-        Zi = linalg.khatri_rao(Ji.T, Xi['value'].T).T
-        return sparse.coo_matrix(Zi)
+        Zi = linalg.khatri_rao(Ji.T, Xi["value"].T).T
+        out = {"type": Xi["type"], "Zi": sparse.coo_matrix(Zi)}
+        if Xi["type"] == "categoric":
+            out["levels"] = Xi["levels"]
+            out["reference"] = Xi["reference"]
+        return out
+
 
 class ResponseTerm:
-    """Representation of a response term
-    """
+    """Representation of a response term"""
 
     # TODO: things like {x - y} must be a Term and not ModelTerms
     def __init__(self, term):
@@ -522,7 +530,8 @@ class ResponseTerm:
         return hash((self.term))
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)): return False
+        if not isinstance(other, type(self)):
+            return False
         return self.term == other.term
 
     def __add__(self, other):
@@ -537,14 +546,13 @@ class ResponseTerm:
         return self.__str__()
 
     def __str__(self):
-        return 'ResponseTerm(\n  ' + '  '.join(str(self.term).splitlines(True)) + '\n)'
+        return "ResponseTerm(\n  " + "  ".join(str(self.term).splitlines(True)) + "\n)"
 
     def eval(self, data):
         return self.term.eval(data, is_response=True)
 
 
 class ModelTerms:
-
     def __init__(self, *terms, response=None):
         if isinstance(response, ResponseTerm) or response is None:
             self.response = response
@@ -616,7 +624,11 @@ class ModelTerms:
 
     def __pow__(self, other):
         if isinstance(other, LiteralTerm) and isinstance(other.value, int) and other.value >= 1:
-            comb = [list(p) for i in range(2, other.value + 1) for p in combinations(self.common_terms, i)]
+            comb = [
+                list(p)
+                for i in range(2, other.value + 1)
+                for p in combinations(self.common_terms, i)
+            ]
             iterms = [InteractionTerm(*terms) for terms in comb]
             return self + ModelTerms(*iterms)
         else:
@@ -644,18 +656,18 @@ class ModelTerms:
             return NotImplemented
 
     def __repr__(self):
-        terms = ',\n'.join([repr(term) for term in self.common_terms])
+        terms = ",\n".join([repr(term) for term in self.common_terms])
         if self.response is None:
-            string = '  '.join(terms.splitlines(True))
+            string = "  ".join(terms.splitlines(True))
         else:
-            string = '  '.join(str(self.response).splitlines(True))
-            string += ',\n  ' + '  '.join(terms.splitlines(True))
+            string = "  ".join(str(self.response).splitlines(True))
+            string += ",\n  " + "  ".join(terms.splitlines(True))
 
         if self.group_terms:
-            group_terms = ',\n'.join([repr(term) for term in self.group_terms])
-            string += ',\n  ' + '  '.join(group_terms.splitlines(True))
+            group_terms = ",\n".join([repr(term) for term in self.group_terms])
+            string += ",\n  " + "  ".join(group_terms.splitlines(True))
 
-        return 'ModelTerms(\n  ' + string + '\n)'
+        return "ModelTerms(\n  " + string + "\n)"
 
     def add_response(self, term):
         if isinstance(term, ResponseTerm):
@@ -681,8 +693,9 @@ class ModelTerms:
         return self.common_terms + self.group_terms
 
     def eval(self, data):
-        return {term.name:term.eval(data) for term in self.terms}
+        return {term.name: term.eval(data) for term in self.terms}
         # return np.vstack([term.eval(data) for term in self.terms]).T
+
 
 ATOMIC_TERMS = (
     Term,
@@ -691,5 +704,5 @@ ATOMIC_TERMS = (
     InterceptTerm,
     NegatedIntercept,
     LiteralTerm,
-    GroupSpecTerm
+    GroupSpecTerm,
 )

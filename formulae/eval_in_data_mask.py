@@ -5,6 +5,7 @@
 import inspect
 import pandas as pd
 
+
 class VarLookupDict(object):
     def __init__(self, dicts):
         self._dicts = [{}] + list(dicts)
@@ -44,6 +45,7 @@ class VarLookupDict(object):
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self._dicts)
 
+
 class EvalEnvironment:
     def __init__(self, n=0):
         self.n = self._check_n(n)
@@ -76,6 +78,7 @@ class EvalEnvironment:
             raise ValueError(msg)
         return n
 
+
 def eval_in_data_mask(expr, data=None, n=1):
     data_dict = {}
     names_conflict = False
@@ -84,10 +87,10 @@ def eval_in_data_mask(expr, data=None, n=1):
 
     if data is not None:
         if isinstance(data, pd.DataFrame):
-           data_dict_inner = data.reset_index(drop=True).to_dict('series')
-           data_dict = {'__DATA__': data_dict_inner}
-           env_modules = env.namespace.find_modules()
-           names_conflict = any(key in env_modules for key in data_dict.keys())
+            data_dict_inner = data.reset_index(drop=True).to_dict("series")
+            data_dict = {"__DATA__": data_dict_inner}
+            env_modules = env.namespace.find_modules()
+            names_conflict = any(key in env_modules for key in data_dict.keys())
         else:
             raise ValueError("data must be a pandas DataFrame")
 
@@ -95,4 +98,3 @@ def eval_in_data_mask(expr, data=None, n=1):
         raise ValueError("At least one column has a name conflicting with an imported module")
 
     return eval(expr, {}, VarLookupDict([data_dict] + env._namespaces))
-

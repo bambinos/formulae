@@ -8,14 +8,14 @@ class Token:
         string_list = [
             "'type': " + str(self.type),
             "'lexeme': " + str(self.lexeme),
-            "'literal': " + str(self.literal)
+            "'literal': " + str(self.literal),
         ]
-        return '{' + ', '.join(string_list) + '}'
+        return "{" + ", ".join(string_list) + "}"
 
     def __str__(self):
         string_list = [
             "type= " + str(self.type),
             "lexeme= " + str(self.lexeme),
-            "literal= " + str(self.literal)
+            "literal= " + str(self.literal),
         ]
-        return 'Token(' + ', '.join(string_list) + ')'
+        return "Token(" + ", ".join(string_list) + ")"

@@ -3,6 +3,7 @@ import scipy as sp
 
 from .terms import ModelTerms
 
+
 class DesignMatrices:
     """Wraps ResponseVector CommonEffectsMatrix and GroupEffectsMatrix
 
@@ -24,21 +25,21 @@ class DesignMatrices:
         if self.model.response is not None:
             self.response = ResponseVector(self.model.response, data)
 
-        if self.model.common_terms is not None:
+        if self.model.common_terms:
             self.common = CommonEffectsMatrix(ModelTerms(*self.model.common_terms), data)
 
-        if self.model.group_terms is not None:
+        if self.model.group_terms:
             self.group = GroupEffectsMatrix(self.model.group_terms, data)
 
+
 class ResponseVector:
-    """Representation of the respose vector of a model
-    """
+    """Representation of the respose vector of a model"""
 
     def __init__(self, term, data):
-        self.name = None # a string
-        self.data = None # 1d numpy array
-        self.type = None # either numeric or categorical
-        self.refclass = None # Not None for categorical variables
+        self.name = None  # a string
+        self.data = None  # 1d numpy array
+        self.type = None  # either numeric or categorical
+        self.refclass = None  # Not None for categorical variables
         self.term = term
         self.evaluate(data)
 
@@ -47,27 +48,27 @@ class ResponseVector:
         updates `self.y` and `self.name`
         """
         d = self.term.eval(data)
-        self.data = d['value']
-        self.type = d['type']
-        if self.type == 'categoric':
-            self.refclass = d['reference']
+        self.data = d["value"]
+        self.type = d["type"]
+        if self.type == "categoric":
+            self.refclass = d["reference"]
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
         string_list = [
-            'name=' + self.term.term.name,
-            'type=' + self.type,
-            "length=" + str(len(self.data))
+            "name=" + self.term.term.name,
+            "type=" + self.type,
+            "length=" + str(len(self.data)),
         ]
-        if self.type == 'categoric':
-            string_list += ['refclass=' + self.refclass]
-        return 'ResponseVector(' + ', '.join(string_list) + ')'
+        if self.type == "categoric":
+            string_list += ["refclass=" + self.refclass]
+        return "ResponseVector(" + ", ".join(string_list) + ")"
+
 
 class CommonEffectsMatrix:
-    """Representation of the design matrix for the common effects of a model.
-    """
+    """Representation of the design matrix for the common effects of a model."""
 
     def __init__(self, terms, data):
         self.design_matrix = None
@@ -77,42 +78,38 @@ class CommonEffectsMatrix:
 
     def evaluate(self, data):
         d = self.terms.eval(data)
-        self.design_matrix = np.column_stack([d[key]['value'] for key in d.keys()])
+        self.design_matrix = np.column_stack([d[key]["value"] for key in d.keys()])
         self.terms_info = {}
         # Get types and column slices
         start = 0
         for key in d.keys():
-            delta = d[key]['value'].shape[1]
-            self.terms_info[key] = {
-                'type': d[key]['type'],
-                'cols': slice(start, start + delta)
-            }
+            delta = d[key]["value"].shape[1]
+            self.terms_info[key] = {"type": d[key]["type"], "cols": slice(start, start + delta)}
+            if d[key]["type"] == "categoric":
+                self.terms_info[key]["levels"] = d[key]["levels"]
+                self.terms_info[key]["reference"] = d[key]["reference"]
             start += delta
 
     def __getitem__(self, term):
         if term not in self.terms_info.keys():
             raise ValueError(f"'{term}' is not a valid term name")
         else:
-            return self.design_matrix[:, self.terms_info[term]['cols']]
+            return self.design_matrix[:, self.terms_info[term]["cols"]]
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        terms_list = []
-        for key, value in self.terms_info.items():
-            terms_list.append(f"'{key}': {{type={value['type']}, cols={str(value['cols'])}}}")
-        terms_str = ',\n  '.join(terms_list)
+        terms_str = ",\n  ".join([f"'{k}': {{{term_str(v)}}}" for k, v in self.terms_info.items()])
         string_list = [
-            'shape=' + str(self.design_matrix.shape),
-            'terms={\n    ' + '  '.join(terms_str.splitlines(True))+ '\n  }'
+            "shape: " + str(self.design_matrix.shape),
+            "terms: {\n    " + "  ".join(terms_str.splitlines(True)) + "\n  }",
         ]
-        return 'CommonEffectsMatrix(\n  ' + ',\n  '.join(string_list) + '\n)'
+        return "CommonEffectsMatrix(\n  " + ",\n  ".join(string_list) + "\n)"
 
 
 class GroupEffectsMatrix:
-    """Representation of the design matrix for the group specific effects of a model.
-    """
+    """Representation of the design matrix for the group specific effects of a model."""
 
     def __init__(self, terms, data):
         self._design_matrix = None
@@ -121,9 +118,51 @@ class GroupEffectsMatrix:
         self.evaluate(data)
 
     def evaluate(self, data):
-        Z = [term.eval(data) for term in self.terms]
+        start_row = 0
+        start_col = 0
+        Z = []
+        self.terms_info = {}
+        for term in self.terms:
+            d = term.eval(data)
+            Zi = d["Zi"]
+            delta_row = Zi.shape[0]
+            delta_col = Zi.shape[1]
+            Z.append(Zi)
+            self.terms_info[term.to_string()] = {
+                "type": d["type"],
+                "idxs": (
+                    slice(start_row, start_row + delta_row),
+                    slice(start_col, start_col + delta_col),
+                ),
+            }
+            if d["type"] == "categoric":
+                self.terms_info[term.to_string()]["levels"] = d["levels"]
+                self.terms_info[term.to_string()]["reference"] = d["reference"]
+            start_row += delta_row
+            start_col += delta_col
         self._design_matrix = sp.sparse.block_diag(Z)
 
     @property
     def design_matrix(self):
         return self._design_matrix.toarray()
+
+    def __getitem__(self, term):
+        if term not in self.terms_info.keys():
+            raise ValueError(f"'{term}' is not a valid term name")
+        else:
+            return self.design_matrix[self.terms_info[term]["idxs"]]
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        terms_str = ",\n  ".join([f"'{k}': {{{term_str(v)}}}" for k, v in self.terms_info.items()])
+        string_list = [
+            "shape: " + str(self.design_matrix.shape),
+            "terms: {\n    " + "  ".join(terms_str.splitlines(True)) + "\n  }",
+        ]
+        return "GroupEffectsMatrix(\n  " + ",\n  ".join(string_list) + "\n)"
+
+
+def term_str(term):
+    return ", ".join([k + "=" + str(v) for k, v in term.items()])

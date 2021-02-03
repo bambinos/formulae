@@ -1,11 +1,20 @@
-from .terms import Term, InteractionTerm, CallTerm, LiteralTerm, ResponseTerm, InterceptTerm, NegatedIntercept
+from .terms import (
+    Term,
+    InteractionTerm,
+    CallTerm,
+    LiteralTerm,
+    ResponseTerm,
+    InterceptTerm,
+    NegatedIntercept,
+)
 from .expr import Literal
+
 
 class ResolverError(Exception):
     pass
 
-class Resolver:
 
+class Resolver:
     def __init__(self, expr):
         self.expr = expr
 
@@ -17,31 +26,31 @@ class Resolver:
 
     def visitBinaryExpr(self, expr):
         otype = expr.operator.type
-        if otype == 'TILDE':
+        if otype == "TILDE":
             return ResponseTerm(expr.left.accept(self)) + expr.right.accept(self)
-        if otype == 'PLUS':
+        if otype == "PLUS":
             return expr.left.accept(self) + expr.right.accept(self)
-        elif otype == 'MINUS':
+        elif otype == "MINUS":
             return expr.left.accept(self) - expr.right.accept(self)
-        elif otype == 'STAR_STAR':
+        elif otype == "STAR_STAR":
             return expr.left.accept(self) ** expr.right.accept(self)
-        elif otype == 'COLON':
+        elif otype == "COLON":
             # there is not __colon__ method
             return expr.left.accept(self) @ expr.right.accept(self)
-        elif otype == 'STAR':
+        elif otype == "STAR":
             return expr.left.accept(self) * expr.right.accept(self)
-        elif otype == 'SLASH':
+        elif otype == "SLASH":
             return expr.left.accept(self) / expr.right.accept(self)
-        elif otype == 'PIPE':
+        elif otype == "PIPE":
             return expr.left.accept(self) | expr.right.accept(self)
         else:
             raise ResolverError("Couldn't resolve BinaryExpr with otype '" + otype + "'")
 
     def visitUnaryExpr(self, expr):
         otype = expr.operator.type
-        if otype == 'PLUS':
+        if otype == "PLUS":
             return expr.right.accept(self)
-        elif otype == 'MINUS':
+        elif otype == "MINUS":
             expr = expr.right.accept(self)
             if isinstance(expr, InterceptTerm):
                 return NegatedIntercept()
@@ -69,6 +78,7 @@ class Resolver:
     def visitQuotedNameExpr(self, expr):
         # delete backquotes in 'variable'
         return Term(expr.expression.lexeme, expr.expression.lexeme[1:-1])
+
 
 # When evaluating ModelTerms object we'll have to "evaluate" CallTerms in a different manner
 # because the arguments is expressed as an AST and not as a ModelTerms object.
