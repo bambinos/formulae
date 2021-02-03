@@ -1,11 +1,11 @@
 # formulae
 
-**UNDER DEVELOPMENT**
-
 The formula language is fully implemented (with a lot of bugs of course!) and you can generate
-model matrices for models that only contain common effects (a.k.a. fixed effects).
+model matrices for models with both common and group specific effects
+(a.k.a. fixed and random effects, respectively)
 
-You can check existing features in `Features.ipynb`.
+If you want to see some quick examples in action, see the [Examples]('examples/Examples.ipynb').
+To check how a formula is parsed into a model description object, see [Features]['examples/Features.ipynb'].
 
 ## Misc notes
 
@@ -16,7 +16,6 @@ to include it in the future.
 
 The following are things that are not available yet, but are a work in progress.
 
-- [ ] Implement group specific effects matrix
 - [ ] Incorporate built-in functions like `center(x)`, `standardize(x)`, `C(x)`, etc.
 - [ ] Write language syntax
 - [ ] Create some basic documentation

@@ -2,6 +2,7 @@ import numpy as np
 import scipy as sp
 
 from .terms import ModelTerms
+from .model_description import model_description
 
 
 class DesignMatrices:
@@ -166,3 +167,6 @@ class GroupEffectsMatrix:
 
 def term_str(term):
     return ", ".join([k + "=" + str(v) for k, v in term.items()])
+
+def design_matrices(formula, data):
+    return DesignMatrices(model_description(formula), data)
