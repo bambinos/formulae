@@ -4,8 +4,8 @@ The formula language is fully implemented (with a lot of bugs of course!) and yo
 model matrices for models with both common and group specific effects
 (a.k.a. fixed and random effects, respectively)
 
-If you want to see some quick examples in action, see the [Examples]('./examples/Examples.ipynb').
-To check how a formula is parsed into a model description object, see [Features]['examples/Features.ipynb'].
+If you want to see some quick examples in action, see the [Examples]('https://github.com/bambinos/formulae/blob/master/examples/Examples.ipynb').
+To check how a formula is parsed into a model description object, see [Features]('https://github.com/bambinos/formulae/blob/master/examples/Features.ipynb').
 
 ## Misc notes
 
