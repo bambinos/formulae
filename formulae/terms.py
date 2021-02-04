@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.lib.arraysetops import isin
 import pandas as pd
 
 from itertools import product, combinations
@@ -181,8 +180,15 @@ class Term(BaseTerm):
         return out
 
     def eval_categoric(self, x, is_response):
-        levels = x.unique().tolist()
-        reference = levels[0]  # consistent for orderder=True and False
+        # If not ordered, we make it ordered
+        # x.unique() preservese order of appearence
+        if not hasattr(x, "ordered") or not x.ordered:
+            cat_type = pd.api.types.CategoricalDtype(categories=x.unique().tolist(), ordered=True)
+            x = x.astype(cat_type)
+
+        reference = x.min()
+        levels = x.cat.categories.tolist()
+
         if is_response:
             if self.level is not None:
                 reference = self.level
@@ -728,13 +734,12 @@ class ModelTerms:
     def vars(self):
         vars = set()
         for term in self.terms:
-            vars = vars.union(term.vars)
+            vars = vars.union({term.vars})
         if self.response is not None:
-            vars = vars.union(self.response.vars)
-        vars = list(vars)
+            vars = vars.union({self.response.vars})
+
         # Some terms return '' for vars
-        if "" in vars:
-            vars.remove("")
+        vars = vars - {''}
         return vars
 
     def eval(self, data):

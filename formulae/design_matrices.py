@@ -198,11 +198,11 @@ def design_matrices(formula, data, na_action="drop"):
     description = model_description(formula)
     formula_vars = description.vars
 
-    if not set(formula_vars) <= set(data.columns):
-        column_diff = list(set(formula_vars) - set(data.columns))
+    if not formula_vars <= set(data.columns):
+        column_diff = list(formula_vars - set(data.columns))
         raise ValueError(f"Variable(s) {', '.join(column_diff)} are not in 'data'")
 
-    data = data[formula_vars]
+    data = data[list(formula_vars)]
 
     incomplete_rows = data.isna().any(axis=1)
     incomplete_rows_n = incomplete_rows.sum()
