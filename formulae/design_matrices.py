@@ -51,20 +51,30 @@ class ResponseVector:
 
     def evaluate(self, data):
         """Evaluates `self.term` inside the data mask provided by `data` and
-        updates `self.y` and `self.name`
+        updates `self.data` and `self.name`
         """
         d = self.term.eval(data)
+        self.name = self.term.term.name
         self.data = d["value"]
         self.type = d["type"]
         if self.type == "categoric":
             self.refclass = d["reference"]
+
+    def as_dataframe(self):
+        data = pd.DataFrame(self.data)
+        if self.type == "categoric":
+            colname = f"{self.name}[{self.refclass}]"
+        else:
+            colname = self.name
+        data.columns = [colname]
+        return data
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
         string_list = [
-            "name=" + self.term.term.name,
+            "name=" + self.name,
             "type=" + self.type,
             "length=" + str(len(self.data)),
         ]
@@ -131,7 +141,7 @@ class GroupEffectsMatrix:
     """Representation of the design matrix for the group specific effects of a model."""
 
     def __init__(self, terms, data):
-        self._design_matrix = None
+        self.design_matrix = None
         self.terms_info = None
         self.terms = terms
         self.evaluate(data)
@@ -159,17 +169,14 @@ class GroupEffectsMatrix:
                 self.terms_info[term.to_string()]["reference"] = d["reference"]
             start_row += delta_row
             start_col += delta_col
-        self._design_matrix = sp.sparse.block_diag(Z)
-
-    @property
-    def design_matrix(self):
-        return self._design_matrix.toarray()
+        # Stored in Compressed Sparse Column format
+        self.design_matrix = sp.sparse.block_diag(Z).tocsc()
 
     def __getitem__(self, term):
         if term not in self.terms_info.keys():
             raise ValueError(f"'{term}' is not a valid term name")
         else:
-            return self.design_matrix[self.terms_info[term]["idxs"]]
+            return self.design_matrix[self.terms_info[term]["idxs"]].toarray()
 
     def __repr__(self):
         return self.__str__()
