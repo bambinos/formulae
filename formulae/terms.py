@@ -8,7 +8,7 @@ from pandas.api.types import is_string_dtype, is_numeric_dtype, is_categorical_d
 from scipy import linalg, sparse
 
 from .eval_in_data_mask import eval_in_data_mask
-from .print_call import CallEvalPrinter, CallNamePrinter
+from .call_utils import CallEvalPrinter, CallNamePrinter, CallVarsExtractor
 
 import operator
 
@@ -155,6 +155,10 @@ class Term(BaseTerm):
             string_list.append("level= " + self.level)
         return "Term(\n  " + "\n  ".join(string_list) + "\n)"
 
+    @property
+    def vars(self):
+        return self.variable
+
     def eval(self, data, is_response=False):
         # We don't support multiple level categoric responses yet.
         # `is_response` flags whether the term evaluated is response
@@ -266,6 +270,10 @@ class InteractionTerm(BaseTerm):
     def name(self):
         return ":".join([term.name for term in self.terms])
 
+    @property
+    def vars(self):
+        return [term.vars for term in self.terms]
+
     def add_term(self, term):
         if isinstance(term, Term):
             if term.variable not in self.variables:
@@ -326,6 +334,10 @@ class LiteralTerm(BaseTerm):
     def __str__(self):
         return f"LiteralTerm(value={self.value})"
 
+    @property
+    def vars(self):
+        return ""
+
     def eval(self, data):
         out = {"value": np.ones((data.shape[0], 1)) * self.value, "type": "Literal"}
         return out
@@ -357,6 +369,10 @@ class InterceptTerm(BaseTerm):
     def __str__(self):
         return "InterceptTerm()"
 
+    @property
+    def vars(self):
+        return ""
+
     def eval(self, data):
         # Only works with DataFrames or Series so far
         out = {"value": np.ones((data.shape[0], 1)), "type": "Intercept"}
@@ -383,6 +399,10 @@ class NegatedIntercept(BaseTerm):
 
     def __str__(self):
         return "NegatedIntercept()"
+
+    @property
+    def vars(self):
+        return ""
 
 
 class CallTerm(BaseTerm):
@@ -455,6 +475,10 @@ class CallTerm(BaseTerm):
     def get_name_str(self):
         return CallNamePrinter(self).print()
 
+    @property
+    def vars(self):
+        return CallVarsExtractor(self).get()
+
     def eval(self, data, is_response=False):
         # is_response is not used but may be passed by ResponseTerm.eval()
         x = eval_in_data_mask(self.get_eval_str(), data)
@@ -498,6 +522,10 @@ class GroupSpecTerm(BaseTerm):
             raise ValueError("Invalid RHS expression for group specific term")
 
         return string
+
+    @property
+    def vars(self):
+        return [self.expr.vars] + [self.factor.vars]
 
     def eval(self, data):
         if isinstance(self.factor, Term):
@@ -547,6 +575,10 @@ class ResponseTerm:
 
     def __str__(self):
         return "ResponseTerm(\n  " + "  ".join(str(self.term).splitlines(True)) + "\n)"
+
+    @property
+    def vars(self):
+        return self.term.vars
 
     def eval(self, data):
         return self.term.eval(data, is_response=True)
@@ -692,9 +724,21 @@ class ModelTerms:
     def terms(self):
         return self.common_terms + self.group_terms
 
+    @property
+    def vars(self):
+        vars = set()
+        for term in self.terms:
+            vars = vars.union(term.vars)
+        if self.response is not None:
+            vars = vars.union(self.response.vars)
+        vars = list(vars)
+        # Some terms return '' for vars
+        if "" in vars:
+            vars.remove("")
+        return vars
+
     def eval(self, data):
         return {term.name: term.eval(data) for term in self.terms}
-        # return np.vstack([term.eval(data) for term in self.terms]).T
 
 
 ATOMIC_TERMS = (

@@ -1,12 +1,14 @@
 import logging
 
 import numpy as np
+import pandas as pd
 import scipy as sp
 
 from .terms import ModelTerms
 from .model_description import model_description
 
 _log = logging.getLogger("formulae")
+
 
 class DesignMatrices:
     """Wraps ResponseVector CommonEffectsMatrix and GroupEffectsMatrix
@@ -171,6 +173,47 @@ class GroupEffectsMatrix:
 def term_str(term):
     return ", ".join([k + "=" + str(v) for k, v in term.items()])
 
+
 def design_matrices(formula, data, na_action="drop"):
+
+    if not isinstance(formula, str):
+        raise ValueError("'formula' must be a string.")
+
+    if len(formula) == 0:
+        raise ValueError("'formula' cannot be an empty string.")
+
+    if not isinstance(data, pd.DataFrame):
+        raise ValueError("'data' must be a pandas.DataFrame.")
+
+    if data.shape[0] == 0:
+        raise ValueError("'data' does not contain any observation.")
+
+    if data.shape[1] == 0:
+        raise ValueError("'data' does not contain any variable.")
+
+    if na_action not in ["drop", "error"]:
+        raise ValueError("'na_action' must be either 'drop' or 'error'")
+
+    # Model description is obtained to check variables and subset data.
+    description = model_description(formula)
+    formula_vars = description.vars
+
+    if not set(formula_vars) <= set(data.columns):
+        column_diff = list(set(formula_vars) - set(data.columns))
+        raise ValueError(f"Variable(s) {', '.join(column_diff)} are not in 'data'")
+
+    data = data[formula_vars]
+
+    incomplete_rows = data.isna().any(axis=1)
+    incomplete_rows_n = incomplete_rows.sum()
+
+    if incomplete_rows_n > 0:
+        if na_action == "drop":
+            _log.info(
+                f"Automatically removing {incomplete_rows_n}/{data.shape[0]} rows from the dataset."
+            )
+            data = data[~incomplete_rows]
+        else:
+            raise ValueError(f"'data' contains {incomplete_rows_n} incomplete rows.")
 
     return DesignMatrices(model_description(formula), data)
