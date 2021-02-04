@@ -1,9 +1,12 @@
+import logging
+
 import numpy as np
 import scipy as sp
 
 from .terms import ModelTerms
 from .model_description import model_description
 
+_log = logging.getLogger("formulae")
 
 class DesignMatrices:
     """Wraps ResponseVector CommonEffectsMatrix and GroupEffectsMatrix
@@ -168,5 +171,6 @@ class GroupEffectsMatrix:
 def term_str(term):
     return ", ".join([k + "=" + str(v) for k, v in term.items()])
 
-def design_matrices(formula, data):
+def design_matrices(formula, data, na_action="drop"):
+
     return DesignMatrices(model_description(formula), data)
