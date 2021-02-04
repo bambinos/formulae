@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.lib.arraysetops import isin
 import pandas as pd
 
 from itertools import product, combinations
@@ -197,8 +198,7 @@ class Term(BaseTerm):
             # .to_numpy() returns 2d array
             value = pd.get_dummies(x, drop_first=True).to_numpy()
 
-        out = {"value": value, "type": "categoric", "levels": levels, "reference": reference}
-        return out
+        return {"value": value, "type": "categoric", "levels": levels, "reference": reference}
 
 
 class InteractionTerm(BaseTerm):
@@ -734,7 +734,10 @@ class ModelTerms:
     def vars(self):
         vars = set()
         for term in self.terms:
-            vars = vars.union({term.vars})
+            if isinstance(term, (CallTerm, InteractionTerm, GroupSpecTerm)):
+                vars = vars.union(set(term.vars))
+            else:
+                vars = vars.union({term.vars})
         if self.response is not None:
             vars = vars.union({self.response.vars})
 

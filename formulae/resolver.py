@@ -76,8 +76,8 @@ class Resolver:
             return LiteralTerm(expr.value)
 
     def visitQuotedNameExpr(self, expr):
-        # delete backquotes in 'variable'
-        return Term(expr.expression.lexeme, expr.expression.lexeme[1:-1])
+        # delete backquotes in 'variable' and 'name'
+        return Term(expr.expression.lexeme[1:-1], expr.expression.lexeme[1:-1])
 
 
 # When evaluating ModelTerms object we'll have to "evaluate" CallTerms in a different manner

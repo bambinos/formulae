@@ -96,6 +96,19 @@ class CommonEffectsMatrix:
                 self.terms_info[key]["reference"] = d[key]["reference"]
             start += delta
 
+    def as_dataframe(self):
+        data = pd.DataFrame(self.design_matrix)
+        colnames = []
+        for k, v in self.terms_info.items():
+            if v['type'] == 'Intercept':
+                colnames.append('Intercept')
+            elif v['type'] in ['numeric', 'call']:
+                colnames.append(k)
+            elif v['type'] == 'categoric':
+                colnames += [f"{k}[{level}]" for level in v['levels'][1:]]
+        data.columns = colnames
+        return data
+
     def __getitem__(self, term):
         if term not in self.terms_info.keys():
             raise ValueError(f"'{term}' is not a valid term name")
