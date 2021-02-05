@@ -106,23 +106,24 @@ class CommonEffectsMatrix:
         # Get types and column slices
         start = 0
         for key in d.keys():
+            self.terms_info[key] = {k: v for k, v in d[key].items() if k != "value"}
             delta = d[key]["value"].shape[1]
-            self.terms_info[key] = {"type": d[key]["type"], "cols": slice(start, start + delta)}
-            if d[key]["type"] == "categoric":
-                self.terms_info[key]["levels"] = d[key]["levels"]
-                self.terms_info[key]["reference"] = d[key]["reference"]
+            self.terms_info[key]["cols"] = slice(start, start + delta)
             start += delta
 
     def as_dataframe(self):
         data = pd.DataFrame(self.design_matrix)
         colnames = []
         for k, v in self.terms_info.items():
-            if v['type'] == 'Intercept':
-                colnames.append('Intercept')
-            elif v['type'] in ['numeric', 'call']:
+            if v["type"] == "Intercept":
+                colnames.append("Intercept")
+            elif v["type"] in ["numeric", "call", "interaction"]:
                 colnames.append(k)
-            elif v['type'] == 'categoric':
-                colnames += [f"{k}[{level}]" for level in v['levels'][1:]]
+            elif v["type"] == "categoric":
+                if "levels" in v.keys():
+                    colnames += [f"{k}[{level}]" for level in v["levels"][1:]]
+                else:
+                    colnames.append(f"{k}[{v['reference']}]")
         data.columns = colnames
         return data
 

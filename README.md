@@ -11,13 +11,13 @@ To check how a formula is parsed into a model description object, see [Features]
 
 * `y ~ .` is not implemented and won't be implemented in a first version. However, it is planned
 to include it in the future.
+* Model matrices for common effects are full rank.
 
 ## WIP
 
 The following are things that are not available yet, but are a work in progress.
 
-- [ ] Incorporate built-in functions like `center(x)`, `standardize(x)`, `C(x)`, etc.
-- [ ] Write language syntax
 - [ ] Create some basic documentation
 - [ ] Add tests
+- [ ] Write language syntax
 

@@ -50,7 +50,9 @@ class Scanner:
 
     def scan_token(self):
         char = self.advance()
-        if char == "(":
+        if char == "'" or char == '"':
+            self.char()
+        elif char == "(":
             self.add_token("LEFT_PAREN")
         elif char == ")":
             self.add_token("RIGHT_PAREN")
@@ -178,6 +180,20 @@ class Scanner:
         else:
             _type = "IDENTIFIER"
         self.add_token(_type)
+
+    def char(self):
+        while self.peek() not in ["'", '"'] and not self.at_end():
+            self.advance()
+
+        if self.at_end():
+            raise ScanError("Unterminated string.")
+
+        # The closing quotation mark.
+        self.advance()
+
+        # Trim the surrounding quotes.
+        value = self.code[self.start + 1 : self.current - 1]
+        self.add_token("STRING", value)
 
     def backquote(self):
         while True:

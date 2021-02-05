@@ -8,32 +8,20 @@ class Expr:
         pass
 
 
-class Python(Expr):
-    def __init__(self, expression):
-        self.expression = expression
+class Assign(Expr):
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        return "Python(\n  " + "  ".join(str(self.expression).splitlines(True)) + "\n)"
+        right = "  ".join(str(self.value).splitlines(True))
+        return f"Assign(\n  name= {self.name}, \n  value= {right}\n)"
 
     def accept(self, visitor):
-        return visitor.visitPythonExpr(self)
-
-
-class QuotedName(Expr):
-    def __init__(self, expression):
-        self.expression = expression
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        return "QuotedName(" + self.expression.lexeme + ")"
-
-    def accept(self, visitor):
-        return visitor.visitQuotedNameExpr(self)
+        return visitor.visitAssignExpr(self)
 
 
 class Grouping(Expr):
@@ -125,6 +113,20 @@ class Variable(Expr):
 
     def accept(self, visitor):
         return visitor.visitVariableExpr(self)
+
+
+class QuotedName(Expr):
+    def __init__(self, expression):
+        self.expression = expression
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return "QuotedName(" + self.expression.lexeme + ")"
+
+    def accept(self, visitor):
+        return visitor.visitQuotedNameExpr(self)
 
 
 class Literal(Expr):

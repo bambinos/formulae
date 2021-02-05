@@ -165,8 +165,7 @@ class Term(BaseTerm):
         # and returns a 1d array of 0-1 encoding instead of a matrix in case there are
         # multiple levels.
         # In the future, we can support multiple levels.
-        # x = data[self.variable]
-        x = eval_in_data_mask(self.variable, data, eval_env)
+        x = data[self.variable]
 
         if is_numeric_dtype(x):
             return self.eval_numeric(x)
@@ -422,12 +421,17 @@ class CallTerm(BaseTerm):
         self.name = self.get_name_str()
 
     def __hash__(self):
-        return hash((self.name, self.args, self.special))
+        return hash((self.callee, self.name, self.args, self.special))
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return self.name == other.name, self.args == other.args and self.special == other.special
+        return (
+            self.callee == other.callee
+            and self.name == other.name
+            and self.args == other.args
+            and self.special == other.special
+        )
 
     def __mul__(self, other):
         if isinstance(other, (Term, InteractionTerm, CallTerm)):
@@ -476,8 +480,8 @@ class CallTerm(BaseTerm):
     def accept(self, visitor):
         return visitor.visitCallTerm(self)
 
-    def get_eval_str(self):
-        return CallEvalPrinter(self).print()
+    def get_eval_str(self, data_cols):
+        return CallEvalPrinter(self, data_cols).print()
 
     def get_name_str(self):
         return CallNamePrinter(self).print()
@@ -487,19 +491,22 @@ class CallTerm(BaseTerm):
         return CallVarsExtractor(self).get()
 
     def eval(self, data, eval_env, is_response=False):
-        # is_response is not used but may be passed by ResponseTerm.eval()
-        # x = eval_in_data_mask(self.get_eval_str(), data)
-        x = eval_in_data_mask(self.get_eval_str(), data, eval_env)
+        # Workaround: var names present in 'data' are taken from '__DATA__['col']
+        # the rest are left as they are and looked up in the upper namespace
+        data_cols = data.columns.tolist()
 
-        if is_categorical_dtype(x):
-            if not hasattr(x, "ordered") or not x.ordered:
-                cat_type = pd.api.types.CategoricalDtype(categories=x.unique().tolist(), ordered=True)
+        x = eval_in_data_mask(self.get_eval_str(data_cols), data, eval_env)
+        if isinstance(x, dict):
+            return {"value": x["value"], "type": "categoric", "reference": x["reference"]}
+        elif is_categorical_dtype(x) or is_string_dtype(x):
+            if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
+                cat_type = pd.api.types.CategoricalDtype(
+                    categories=x.unique().tolist(), ordered=True
+                )
                 x = x.astype(cat_type)
-
-            reference = x.min()
             levels = x.cat.categories.tolist()
             value = pd.get_dummies(x, drop_first=True).to_numpy()
-            return {"value": value, "type": "categoric", "levels": levels, "reference": reference}
+            return {"value": value, "type": "categoric", "levels": levels}
         else:
             return {"value": np.atleast_2d(x.to_numpy()).T, "type": "call"}
 
@@ -548,7 +555,7 @@ class GroupSpecTerm(BaseTerm):
     def eval(self, data, eval_env):
         if isinstance(self.factor, Term):
             factor = data[self.factor.variable]
-            factor = eval_in_data_mask(self.factor.variable, data, eval_env)
+            # factor = eval_in_data_mask(self.factor.variable, data, eval_env)
         else:
             raise ValueError("Factor on right hand side of group specific term can only be a term.")
 
@@ -755,7 +762,7 @@ class ModelTerms:
             vars = vars.union({self.response.vars})
 
         # Some terms return '' for vars
-        vars = vars - {''}
+        vars = vars - {""}
         return vars
 
     def eval(self, data, eval_env):

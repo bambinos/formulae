@@ -1,4 +1,4 @@
-from .expr import Python, QuotedName, Grouping, Binary, Unary, Call, Variable, Literal
+from .expr import Assign, Grouping, Binary, Unary, Call, Variable, QuotedName, Literal
 from .token import Token
 from .utils import listify
 
@@ -61,7 +61,18 @@ class Parser:
         return self.expression()
 
     def expression(self):
-        return self.tilde()
+        return self.assignment()
+
+    def assignment(self):
+        expr = self.tilde()
+        if self.match("EQUAL"):
+            right = self.addition()
+            if isinstance(expr, Variable):
+                return Assign(expr, right)
+            else:
+                print(expr)
+                raise ParseError("Invalid assignment target.")
+        return expr
 
     def tilde(self):
         expr = self.random_effect()
@@ -151,6 +162,8 @@ class Parser:
                 return Variable(identifier, level)
             else:
                 return Variable(self.previous())
+        elif self.match("STRING"):
+            return Literal(self.previous().lexeme)
         elif self.match("BQNAME"):
             return QuotedName(self.previous())
         elif self.match("LEFT_PAREN"):

@@ -2,15 +2,19 @@ from .utils import flatten_list
 
 
 class CallEvalPrinter:
-    def __init__(self, expr):
+    def __init__(self, expr, data_cols=None):
         self.expr = expr
+        self.data_cols = data_cols
 
     def print(self):
         return self.expr.accept(self)
 
     def visitCallTerm(self, term):
-        args = ", ".join([arg.accept(self) for arg in term.args])
+        args = ", ".join([str(arg.accept(self)) for arg in term.args])
         return term.callee + "(" + args + ")"
+
+    def visitAssignExpr(self, expr):
+        return expr.name.name.lexeme + " = " + str(expr.value.accept(self))
 
     def visitGroupingExpr(self, expr):
         return expr.expression.accept(self)
@@ -32,14 +36,18 @@ class CallEvalPrinter:
         return expr.callee.name.lexeme + "(" + args + ")"
 
     def visitVariableExpr(self, expr):
-        return expr.name.lexeme
+        col = expr.name.lexeme
+        if col in self.data_cols:
+            return "__DATA__['" + col + "']"
+        else:
+            return col
 
     def visitLiteralExpr(self, expr):
         return expr.value
 
     def visitQuotedNameExpr(self, expr):
         # delete backquotes in 'variable'
-        return expr.expression.lexeme[1:-1]
+        return "__DATA__['" + expr.expression.lexeme[1:-1] + "']"
 
 
 class CallNamePrinter(CallEvalPrinter):
