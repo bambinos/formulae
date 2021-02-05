@@ -5,6 +5,7 @@
 import inspect
 import pandas as pd
 
+from .transformations import TRANSFORMATIONS
 
 class VarLookupDict(object):
     def __init__(self, dicts):
@@ -92,9 +93,10 @@ def eval_in_data_mask(expr, data=None, n=1):
             env_modules = env.namespace.find_modules()
             names_conflict = any(key in env_modules for key in data_dict.keys())
         else:
-            raise ValueError("data must be a pandas DataFrame")
+            raise ValueError("data must be a pandas.DataFrame")
 
     if names_conflict:
         raise ValueError("At least one column has a name conflicting with an imported module")
-
-    return eval(expr, {}, VarLookupDict([data_dict] + env._namespaces))
+    # TODO: Check name conflicts between TRANSOFRMATIONS and loaded namespace.
+    # Do not raise an error. Override package function with namespace function and inform the user.
+    return eval(expr, {}, VarLookupDict([data_dict] + [TRANSFORMATIONS] + env._namespaces))
