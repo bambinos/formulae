@@ -7,7 +7,7 @@ from functools import reduce
 from pandas.api.types import is_string_dtype, is_numeric_dtype, is_categorical_dtype
 from scipy import linalg, sparse
 
-from .eval_in_data_mask import eval_in_data_mask
+from .eval import eval_in_data_mask
 from .call_utils import CallEvalPrinter, CallNamePrinter, CallVarsExtractor
 
 import operator
@@ -159,13 +159,14 @@ class Term(BaseTerm):
     def vars(self):
         return self.variable
 
-    def eval(self, data, is_response=False):
+    def eval(self, data, eval_env, is_response=False):
         # We don't support multiple level categoric responses yet.
         # `is_response` flags whether the term evaluated is response
         # and returns a 1d array of 0-1 encoding instead of a matrix in case there are
         # multiple levels.
         # In the future, we can support multiple levels.
-        x = data[self.variable]
+        # x = data[self.variable]
+        x = eval_in_data_mask(self.variable, data, eval_env)
 
         if is_numeric_dtype(x):
             return self.eval_numeric(x)
@@ -299,12 +300,12 @@ class InteractionTerm(BaseTerm):
         else:
             return NotImplemented
 
-    def eval(self, data):
+    def eval(self, data, eval_env):
         # I'm not very happy with this implementation since we call `.eval()`
         # again on terms that are highly likely to be in the model
         # Also, 'vars' should be a dictionary with richer information about the
         # terms involved
-        value = reduce(operator.mul, [term.eval(data)["value"] for term in self.terms])
+        value = reduce(operator.mul, [term.eval(data, eval_env)["value"] for term in self.terms])
         out = {"value": value, "type": "interaction", "vars": [term.name for term in self.terms]}
         return out
 
@@ -344,7 +345,7 @@ class LiteralTerm(BaseTerm):
     def vars(self):
         return ""
 
-    def eval(self, data):
+    def eval(self, data, eval_env):
         out = {"value": np.ones((data.shape[0], 1)) * self.value, "type": "Literal"}
         return out
 
@@ -379,7 +380,7 @@ class InterceptTerm(BaseTerm):
     def vars(self):
         return ""
 
-    def eval(self, data):
+    def eval(self, data, eval_env):
         # Only works with DataFrames or Series so far
         out = {"value": np.ones((data.shape[0], 1)), "type": "Intercept"}
         return out
@@ -485,11 +486,22 @@ class CallTerm(BaseTerm):
     def vars(self):
         return CallVarsExtractor(self).get()
 
-    def eval(self, data, is_response=False):
+    def eval(self, data, eval_env, is_response=False):
         # is_response is not used but may be passed by ResponseTerm.eval()
-        x = eval_in_data_mask(self.get_eval_str(), data)
-        out = {"value": np.atleast_2d(x.to_numpy()).T, "type": "call"}
-        return out
+        # x = eval_in_data_mask(self.get_eval_str(), data)
+        x = eval_in_data_mask(self.get_eval_str(), data, eval_env)
+
+        if is_categorical_dtype(x):
+            if not hasattr(x, "ordered") or not x.ordered:
+                cat_type = pd.api.types.CategoricalDtype(categories=x.unique().tolist(), ordered=True)
+                x = x.astype(cat_type)
+
+            reference = x.min()
+            levels = x.cat.categories.tolist()
+            value = pd.get_dummies(x, drop_first=True).to_numpy()
+            return {"value": value, "type": "categoric", "levels": levels, "reference": reference}
+        else:
+            return {"value": np.atleast_2d(x.to_numpy()).T, "type": "call"}
 
 
 class GroupSpecTerm(BaseTerm):
@@ -533,15 +545,16 @@ class GroupSpecTerm(BaseTerm):
     def vars(self):
         return [self.expr.vars] + [self.factor.vars]
 
-    def eval(self, data):
+    def eval(self, data, eval_env):
         if isinstance(self.factor, Term):
             factor = data[self.factor.variable]
+            factor = eval_in_data_mask(self.factor.variable, data, eval_env)
         else:
             raise ValueError("Factor on right hand side of group specific term can only be a term.")
 
         # Notation as in lme4 paper
         Ji = pd.get_dummies(factor).to_numpy()  # note we don't use `drop_first=True`.
-        Xi = self.expr.eval(data)
+        Xi = self.expr.eval(data, eval_env)
         Zi = linalg.khatri_rao(Ji.T, Xi["value"].T).T
         out = {"type": Xi["type"], "Zi": sparse.coo_matrix(Zi)}
         if Xi["type"] == "categoric":
@@ -586,8 +599,8 @@ class ResponseTerm:
     def vars(self):
         return self.term.vars
 
-    def eval(self, data):
-        return self.term.eval(data, is_response=True)
+    def eval(self, data, eval_env):
+        return self.term.eval(data, eval_env, is_response=True)
 
 
 class ModelTerms:
@@ -745,8 +758,8 @@ class ModelTerms:
         vars = vars - {''}
         return vars
 
-    def eval(self, data):
-        return {term.name: term.eval(data) for term in self.terms}
+    def eval(self, data, eval_env):
+        return {term.name: term.eval(data, eval_env) for term in self.terms}
 
 
 ATOMIC_TERMS = (

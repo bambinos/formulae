@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import scipy as sp
 
+from .eval import EvalEnvironment
 from .terms import ModelTerms
 from .model_description import model_description
 
@@ -18,50 +19,54 @@ class DesignMatrices:
 
     model : ModelTerms
         The model description.
-    data: DataFrame or dict
-        The data object where we take values from.
+    eval_env: DataFrame or dict
+        The evaluation environment object where we take values from.
     """
 
-    def __init__(self, model, data):
+    def __init__(self, model, data, eval_env):
+        self.data = data
+        self.eval_env = eval_env
         self.response = None
         self.common = None
         self.group = None
         self.model = model
 
         if self.model.response is not None:
-            self.response = ResponseVector(self.model.response, data)
+            self.response = ResponseVector(self.model.response, data, eval_env)
 
         if self.model.common_terms:
-            self.common = CommonEffectsMatrix(ModelTerms(*self.model.common_terms), data)
+            self.common = CommonEffectsMatrix(ModelTerms(*self.model.common_terms), data, eval_env)
 
         if self.model.group_terms:
-            self.group = GroupEffectsMatrix(self.model.group_terms, data)
+            self.group = GroupEffectsMatrix(self.model.group_terms, data, eval_env)
 
 
 class ResponseVector:
     """Representation of the respose vector of a model"""
 
-    def __init__(self, term, data):
+    def __init__(self, term, data, eval_env):
+        self.data = data
+        self.eval_env = eval_env
+        self.design_vector = None
         self.name = None  # a string
-        self.data = None  # 1d numpy array
         self.type = None  # either numeric or categorical
         self.refclass = None  # Not None for categorical variables
         self.term = term
-        self.evaluate(data)
+        self.evaluate()
 
-    def evaluate(self, data):
+    def evaluate(self):
         """Evaluates `self.term` inside the data mask provided by `data` and
-        updates `self.data` and `self.name`
+        updates `self.design_vector` and `self.name`
         """
-        d = self.term.eval(data)
+        d = self.term.eval(self.data, self.eval_env)
         self.name = self.term.term.name
-        self.data = d["value"]
+        self.design_vector = d["value"]
         self.type = d["type"]
         if self.type == "categoric":
             self.refclass = d["reference"]
 
     def as_dataframe(self):
-        data = pd.DataFrame(self.data)
+        data = pd.DataFrame(self.design_vector)
         if self.type == "categoric":
             colname = f"{self.name}[{self.refclass}]"
         else:
@@ -76,7 +81,7 @@ class ResponseVector:
         string_list = [
             "name=" + self.name,
             "type=" + self.type,
-            "length=" + str(len(self.data)),
+            "length=" + str(len(self.design_vector)),
         ]
         if self.type == "categoric":
             string_list += ["refclass=" + self.refclass]
@@ -86,14 +91,16 @@ class ResponseVector:
 class CommonEffectsMatrix:
     """Representation of the design matrix for the common effects of a model."""
 
-    def __init__(self, terms, data):
+    def __init__(self, terms, data, eval_env):
+        self.data = data
+        self.eval_env = eval_env
         self.design_matrix = None
         self.terms_info = None
         self.terms = terms
-        self.evaluate(data)
+        self.evaluate()
 
-    def evaluate(self, data):
-        d = self.terms.eval(data)
+    def evaluate(self):
+        d = self.terms.eval(self.data, self.eval_env)
         self.design_matrix = np.column_stack([d[key]["value"] for key in d.keys()])
         self.terms_info = {}
         # Get types and column slices
@@ -140,19 +147,21 @@ class CommonEffectsMatrix:
 class GroupEffectsMatrix:
     """Representation of the design matrix for the group specific effects of a model."""
 
-    def __init__(self, terms, data):
+    def __init__(self, terms, data, eval_env):
+        self.data = data
+        self.eval_env = eval_env
         self.design_matrix = None
         self.terms_info = None
         self.terms = terms
-        self.evaluate(data)
+        self.evaluate()
 
-    def evaluate(self, data):
+    def evaluate(self):
         start_row = 0
         start_col = 0
         Z = []
         self.terms_info = {}
         for term in self.terms:
-            d = term.eval(data)
+            d = term.eval(self.data, self.eval_env)
             Zi = d["Zi"]
             delta_row = Zi.shape[0]
             delta_col = Zi.shape[1]
@@ -194,7 +203,7 @@ def term_str(term):
     return ", ".join([k + "=" + str(v) for k, v in term.items()])
 
 
-def design_matrices(formula, data, na_action="drop"):
+def design_matrices(formula, data, na_action="drop", eval_env=0):
 
     if not isinstance(formula, str):
         raise ValueError("'formula' must be a string.")
@@ -215,6 +224,10 @@ def design_matrices(formula, data, na_action="drop"):
         raise ValueError("'na_action' must be either 'drop' or 'error'")
 
     # Model description is obtained to check variables and subset data.
+
+    eval_env = EvalEnvironment.capture(eval_env, reference=1)
+
+    """
     description = model_description(formula)
     formula_vars = description.vars
 
@@ -223,6 +236,7 @@ def design_matrices(formula, data, na_action="drop"):
         raise ValueError(f"Variable(s) {', '.join(column_diff)} are not in 'data'")
 
     data = data[list(formula_vars)]
+    """
 
     incomplete_rows = data.isna().any(axis=1)
     incomplete_rows_n = incomplete_rows.sum()
@@ -236,4 +250,4 @@ def design_matrices(formula, data, na_action="drop"):
         else:
             raise ValueError(f"'data' contains {incomplete_rows_n} incomplete rows.")
 
-    return DesignMatrices(model_description(formula), data)
+    return DesignMatrices(model_description(formula), data, eval_env)

@@ -32,14 +32,14 @@ class CallEvalPrinter:
         return expr.callee.name.lexeme + "(" + args + ")"
 
     def visitVariableExpr(self, expr):
-        return "__DATA__['" + expr.name.lexeme + "']"
+        return expr.name.lexeme
 
     def visitLiteralExpr(self, expr):
         return expr.value
 
     def visitQuotedNameExpr(self, expr):
         # delete backquotes in 'variable'
-        return "__DATA__['" + expr.expression.lexeme[1:-1] + "']"
+        return expr.expression.lexeme[1:-1]
 
 
 class CallNamePrinter(CallEvalPrinter):
