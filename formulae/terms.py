@@ -1,20 +1,19 @@
+import operator
+
 import numpy as np
-from numpy.lib.arraysetops import isin
 import pandas as pd
 
-from itertools import product, combinations
 from functools import reduce
-from pandas.api.types import is_string_dtype, is_numeric_dtype, is_categorical_dtype
+from itertools import combinations, product
+from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
 from scipy import linalg, sparse
 
-from .eval import eval_in_data_mask
 from .call_utils import CallEvalPrinter, CallNamePrinter, CallVarsExtractor
-
-import operator
+from .eval import eval_in_data_mask
 
 
 class BaseTerm:
-    """Base Class created to share some common methods"""
+    """Base class for terms created to share some common methods"""
 
     def __init__(self):
         pass
@@ -54,7 +53,7 @@ class BaseTerm:
 
 
 class Term(BaseTerm):
-    """Representation of (common) term in the model.
+    """Representation of a (common) term in the model.
 
     Parameters
     ----------
@@ -65,7 +64,6 @@ class Term(BaseTerm):
         The name of the variable(s) involved in the term.
     kind : str
         An optional type for the Term. Possible values are 'numeric' and 'categoric'.
-        TODO: Add kind 'ordinal'.
     """
 
     def __init__(self, name, variable, level=None, kind=None):
@@ -90,9 +88,12 @@ class Term(BaseTerm):
     def __mul__(self, other):
         if isinstance(other, (Term, InteractionTerm, CallTerm)):
             if self == other:
+                # x * x -> x + x + x:x -> x
                 return self
+            # x * y -> x + y + x:y
             return ModelTerms(self, other, InteractionTerm(self, other))
         elif isinstance(other, ModelTerms):
+            # x * (y + z) -> x + y + z + x:y + x:z
             products = product([self], other.common_terms)
             terms = [self] + other.common_terms
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
@@ -103,25 +104,32 @@ class Term(BaseTerm):
     def __matmul__(self, other):
         if isinstance(other, (Term, CallTerm)):
             if self == other:
+                # x:x -> x
                 return self
+            # x:y -> x:y
             return InteractionTerm(self, other)
         if isinstance(other, InteractionTerm):
+            # x : (y:z) -> x:y:z
             return other.add_term(self)
 
     def __pow__(self, other):
+        # x ** n -> x
         if isinstance(other, LiteralTerm) and isinstance(other.value, int) and other.value >= 1:
             return self
         else:
             raise ValueError("Power must be a positive integer")
 
     def __truediv__(self, other):
+        # x / y -> x + x:y
         if isinstance(other, (Term, CallTerm)):
             if self == other:
                 return self
             return ModelTerms(self, InteractionTerm(self, other))
         elif isinstance(other, InteractionTerm):
+            # x / z:y -> x + x:z:y
             return ModelTerms(self, other.add_term(self))
         elif isinstance(other, ModelTerms):
+            # x / (z + y) -> x + x:z + x:y
             products = product([self], other.common_terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(self) + ModelTerms(*iterms)
@@ -130,10 +138,12 @@ class Term(BaseTerm):
 
     def __or__(self, other):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
+            # (x | g) -> (1|g) + (x|g)
             # implicit intercept
             terms = [GroupSpecTerm(InterceptTerm(), other), GroupSpecTerm(self, other)]
             return ModelTerms(*terms)
         elif isinstance(other, ModelTerms):
+            # (x | g + h) -> (x|g) + (x|h) -> (1|g) + (1|h) + (x|g) + (x|h)
             iterms = [
                 GroupSpecTerm(InterceptTerm(), p[1]) for p in product([self], other.common_terms)
             ]
@@ -206,16 +216,12 @@ class InteractionTerm(BaseTerm):
 
     Parameters
     ----------
-    name : str
-        Name of the term.
     terms: list
         list of Terms taking place in the interaction
     """
 
     def __init__(self, *terms):
-        # self.terms is a list because I have to admit repeated terms -> why?
-        # self.variables is a set because i want to store each variable once
-        # but there must be a better way to do this
+        # Maybe we don't need both variables and terms.
         self.variables = set()
         self.terms = []
         for term in terms:
@@ -235,20 +241,25 @@ class InteractionTerm(BaseTerm):
 
     def __mul__(self, other):
         if isinstance(other, (Term, CallTerm)):
+            # x:y * u -> x:y + u + x:y:u
             return ModelTerms(self, other, InteractionTerm(self, other))
         elif isinstance(other, InteractionTerm):
+            # x:y * u:v -> x:y + u:v + x:y:u:v
             return ModelTerms(self, other, other.add_term(self))
         elif isinstance(other, ModelTerms):
+            # x:y * (u + v) -> x:y + u + v + x:y:u + x:y:v
             products = product([self], other.common_terms)
-            terms = [InteractionTerm(p[0], p[1]) for p in products]
-            return ModelTerms(*terms)
+            iterms = [InteractionTerm(p[0], p[1]) for p in products]
+            return ModelTerms(self) + other + ModelTerms(*iterms)
         else:
             return NotImplemented
 
     def __matmul__(self, other):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
+            # (x:y) : u -> x:y:u
             return self.add_term(other)
         elif isinstance(other, ModelTerms):
+            # (x:y) : (u + v) -> x:y:u + x:y:v
             products = product([self], other.common_terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*iterms)
@@ -257,11 +268,16 @@ class InteractionTerm(BaseTerm):
 
     def __or__(self, other):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
-            return GroupSpecTerm(self, other)
-        elif isinstance(other, ModelTerms):
-            products = product([self], other.common_terms)
-            terms = [GroupSpecTerm(p[0], p[1]) for p in products]
+            # (x:y | u) -> (1 | u) + (x:y | u)
+            terms = [GroupSpecTerm(InterceptTerm(), other), GroupSpecTerm(self, other)]
             return ModelTerms(*terms)
+        elif isinstance(other, ModelTerms):
+            # (x:y | u + v) -> (1 | u) + (1 | v) + (x:y|u) + (x:y|v)
+            iterms = [
+                GroupSpecTerm(InterceptTerm(), p[1]) for p in product([self], other.common_terms)
+            ]
+            terms = [GroupSpecTerm(p[0], p[1]) for p in product([self], other.common_terms)]
+            return ModelTerms(*iterms) + ModelTerms(*terms)
         else:
             return NotImplemented
 
@@ -289,7 +305,6 @@ class InteractionTerm(BaseTerm):
         elif isinstance(term, CallTerm):
             if term not in self.terms:
                 self.terms.append(term)
-                # self.variables.add(term.call)
             return self
         elif isinstance(term, InteractionTerm):
             terms = [term for term in term.terms if term not in self.terms]
@@ -301,9 +316,8 @@ class InteractionTerm(BaseTerm):
 
     def eval(self, data, eval_env):
         # I'm not very happy with this implementation since we call `.eval()`
-        # again on terms that are highly likely to be in the model
-        # Also, 'vars' should be a dictionary with richer information about the
-        # terms involved
+        # again on terms that are highly likely to be in the model.
+        # But it works and it's fine for now.
         value = reduce(operator.mul, [term.eval(data, eval_env)["value"] for term in self.terms])
         out = {"value": value, "type": "interaction", "vars": [term.name for term in self.terms]}
         return out
@@ -324,10 +338,13 @@ class LiteralTerm(BaseTerm):
 
     def __or__(self, other):
         if self.value != 1:
-            raise ValueError("Numeric expression is not equal to 1 in random term.")
-        if isinstance(other, (Term, CallTerm)):
+            # (n | g) does not make sense for n != 0 or 1. Case n=0 handled in NegatedIntercept
+            raise ValueError("Numeric in LHS of group specific term must be 0, -1, or 1.")
+        if isinstance(other, (Term, CallTerm, InteractionTerm)):
+            # (1|g) -> (1|g); (1|g:h) -> (1|g:h)
             return GroupSpecTerm(self, other)
         elif isinstance(other, ModelTerms):
+            # (1 | g + h) -> (1|g) + (1|h)
             products = product([self], other.common_terms)
             terms = [GroupSpecTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
@@ -345,8 +362,7 @@ class LiteralTerm(BaseTerm):
         return ""
 
     def eval(self, data, eval_env):
-        out = {"value": np.ones((data.shape[0], 1)) * self.value, "type": "Literal"}
-        return out
+        return {"value": np.ones((data.shape[0], 1)) * self.value, "type": "Literal"}
 
 
 class InterceptTerm(BaseTerm):
@@ -363,8 +379,10 @@ class InterceptTerm(BaseTerm):
 
     def __or__(self, other):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
+            # (1|g) -> (1|g); (1|g:h) -> (1|g:h)
             return GroupSpecTerm(self, other)
         elif isinstance(other, ModelTerms):
+            # (1 | g + h) -> (1|g) + (1|h)
             products = product([self], other.common_terms)
             terms = [GroupSpecTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms)
@@ -381,8 +399,7 @@ class InterceptTerm(BaseTerm):
 
     def eval(self, data, eval_env):
         # Only works with DataFrames or Series so far
-        out = {"value": np.ones((data.shape[0], 1)), "type": "Intercept"}
-        return out
+        return {"value": np.ones((data.shape[0], 1)), "type": "Intercept"}
 
 
 class NegatedIntercept(BaseTerm):
@@ -435,8 +452,10 @@ class CallTerm(BaseTerm):
 
     def __mul__(self, other):
         if isinstance(other, (Term, InteractionTerm, CallTerm)):
+            # f(x)*y -> f(x) + y + f(x):y
             return ModelTerms(self, other, InteractionTerm(self, other))
         elif isinstance(other, ModelTerms):
+            # f(x)*(y + z) -> f(x) + y + z + f(x):y + f(x):z
             products = product([self], other.common_terms)
             terms = [self] + list(other.common_terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
@@ -446,10 +465,13 @@ class CallTerm(BaseTerm):
 
     def __matmul__(self, other):
         if isinstance(other, (Term, CallTerm)):
+            # f(x):y -> f(x):y
             return InteractionTerm(self, other)
         elif isinstance(other, InteractionTerm):
+            # f(x):y:z -> f(x):y:z
             return other.add_term(self)
         elif isinstance(other, ModelTerms):
+            # f(x):(y:z) -> f(x):y:z
             products = product([self], other.common_terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*iterms)
@@ -458,11 +480,16 @@ class CallTerm(BaseTerm):
 
     def __or__(self, other):
         if isinstance(other, (Term, CallTerm, InteractionTerm)):
-            return GroupSpecTerm(self, other)
-        elif isinstance(other, ModelTerms):
-            products = product([self], other.common_terms)
-            terms = [GroupSpecTerm(p[0], p[1]) for p in products]
+            # (f(x) | u) -> (1 | u) + (f(x) | u)
+            terms = [GroupSpecTerm(InterceptTerm(), other), GroupSpecTerm(self, other)]
             return ModelTerms(*terms)
+        elif isinstance(other, ModelTerms):
+            # (f(x) | u + v) -> (1 | u) + (1 | v) + (f(x) | u) + (f(x) | v)
+            iterms = [
+                GroupSpecTerm(InterceptTerm(), p[1]) for p in product([self], other.common_terms)
+            ]
+            terms = [GroupSpecTerm(p[0], p[1]) for p in product([self], other.common_terms)]
+            return ModelTerms(*iterms) + ModelTerms(*terms)
         else:
             return NotImplemented
 
@@ -515,11 +542,14 @@ class GroupSpecTerm(BaseTerm):
     """Representation of group specific effects term"""
 
     def __init__(self, expr, factor):
+        """
         if isinstance(expr, ModelTerms):
             # This happens when we use `0 + x | g1`
             self.expr = expr.terms[0]
         else:
             self.expr = expr
+        """
+        self.expr = expr
         self.factor = factor
 
     def __repr__(self):
@@ -573,7 +603,6 @@ class GroupSpecTerm(BaseTerm):
 class ResponseTerm:
     """Representation of a response term"""
 
-    # TODO: things like {x - y} must be a Term and not ModelTerms
     def __init__(self, term):
         if isinstance(term, (Term, CallTerm)):
             self.term = term
@@ -589,6 +618,7 @@ class ResponseTerm:
         return self.term == other.term
 
     def __add__(self, other):
+        # ~ is interpreted as __add__
         if isinstance(other, ATOMIC_TERMS):
             return ModelTerms(other, response=self)
         elif isinstance(other, ModelTerms):
@@ -611,24 +641,29 @@ class ResponseTerm:
 
 
 class ModelTerms:
+    """Representation of the terms in a model"""
+
     def __init__(self, *terms, response=None):
         if isinstance(response, ResponseTerm) or response is None:
             self.response = response
         else:
-            raise ValueError("bad ResponseTerm")
+            raise ValueError("Response must be of class ResponseTerm.")
 
         if all([isinstance(term, ATOMIC_TERMS) for term in terms]):
             self.common_terms = [term for term in terms if not isinstance(term, GroupSpecTerm)]
             self.group_terms = [term for term in terms if isinstance(term, GroupSpecTerm)]
         else:
-            raise ValueError("Can't understand Term")
+            raise ValueError("There is a least one term of an unexpected class.")
 
     def __add__(self, other):
+        # (1 + x + y) + 0 -> (x + y)
         if isinstance(other, NegatedIntercept):
             return self - InterceptTerm()
         elif isinstance(other, ATOMIC_TERMS):
+            # (x + y) + z -> x + y + z
             return self.add_term(other)
         elif isinstance(other, type(self)):
+            # (x + y) + (u + v) -> x + y + u + v
             for term in other.terms:
                 self.add_term(term)
             return self
@@ -637,6 +672,7 @@ class ModelTerms:
 
     def __sub__(self, other):
         if isinstance(other, type(self)):
+            # (x + y) - (x + u) -> y + u
             for term in other.terms:
                 if term in self.common_terms:
                     self.common_terms.remove(term)
@@ -644,10 +680,12 @@ class ModelTerms:
                     self.group_terms.remove(term)
             return self
         elif isinstance(other, (Term, CallTerm, InteractionTerm, InterceptTerm)):
+            # (x + y) - x -> y
             if other in self.common_terms:
                 self.common_terms.remove(other)
             return self
         elif isinstance(other, GroupSpecTerm):
+            # (x + y + (1 | g)) - (1 | g) -> x + y
             if other in self.group_terms:
                 self.group_terms.remove(other)
             return self
@@ -656,11 +694,13 @@ class ModelTerms:
 
     def __mul__(self, other):
         if isinstance(other, type(self)):
+            # (x + y) * (u + v) -> x + y + u + v + x:u + x:v + y:u + y:v
             products = product(self.common_terms, other.common_terms)
             terms = list(self.common_terms) + list(other.common_terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*terms) + ModelTerms(*iterms)
         elif isinstance(other, (Term, CallTerm)):
+            # (x + y) * u -> x + y + u + x:u + y:u
             products = product(self.common_terms, [other])
             terms = [term for term in self.common_terms] + [other]
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
@@ -670,10 +710,12 @@ class ModelTerms:
 
     def __matmul__(self, other):
         if isinstance(other, type(self)):
+            # (x + y) : (u + v) -> x:u + x:v + y:u + y:v
             products = product(self.common_terms, other.common_terms)
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*iterms)
         elif isinstance(other, (Term, CallTerm)):
+            # (x + y) : u -> x:u + y:u
             products = product(self.common_terms, [other])
             iterms = [InteractionTerm(p[0], p[1]) for p in products]
             return ModelTerms(*iterms)
@@ -682,6 +724,7 @@ class ModelTerms:
 
     def __pow__(self, other):
         if isinstance(other, LiteralTerm) and isinstance(other.value, int) and other.value >= 1:
+            # (x + y + z) ** 2 -> x + y + z + x:y + x:z + y:z
             comb = [
                 list(p)
                 for i in range(2, other.value + 1)
@@ -695,23 +738,30 @@ class ModelTerms:
     def __truediv__(self, other):
         # See https://patsy.readthedocs.io/en/latest/formulas.html
         if isinstance(other, (Term, CallTerm)):
+            # (x + y) / z -> x + y + x:y:z
             return self.add_term(InteractionTerm(*self.common_terms + [other]))
         elif isinstance(other, ModelTerms):
+            # (x + y) / (u + v) -> x + y + x:y:u + x:y:v
             iterms = [InteractionTerm(*self.common_terms + [term]) for term in other.common_terms]
             return self + ModelTerms(*iterms)
         else:
             return NotImplemented
 
     def __or__(self, other):
-        if isinstance(other, (Term, CallTerm, InteractionTerm)):
-            if NegatedIntercept() in self.common_terms:
-                self.common_terms.remove(NegatedIntercept())
-                return GroupSpecTerm(self, other)
+        # Only negated intercept + one term
+        if NegatedIntercept() in self.common_terms and len(self.common_terms) == 2:
+            self.common_terms.remove(NegatedIntercept())
+            if isinstance(other, (Term, CallTerm, InteractionTerm)):
+                # (0 + x | g) -> (x|g)
+                return GroupSpecTerm(self.common_terms[0], other)
+            elif isinstance(other, ModelTerms):
+                # (0 + x | g + y) -> (x|g) + (x|y)
+                terms = [GroupSpecTerm(p[0], p[1]) for p in product([self], other.common_terms)]
+                return ModelTerms(*terms)
             else:
-                terms = InterceptTerm() + self
-                return GroupSpecTerm(terms, other)
+                return NotImplemented
         else:
-            return NotImplemented
+            raise ValueError("LHS of group specific term cannot have more than one term.")
 
     def __repr__(self):
         terms = ",\n".join([repr(term) for term in self.common_terms])

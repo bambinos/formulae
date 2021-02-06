@@ -112,6 +112,25 @@ class EvalEnvironment(object):
 
 
 def eval_in_data_mask(expr, data=None, eval_env=None):
+    """Evaluates expression in a given environment and data mask.
+
+    Variable names are first looked up in `data`.
+    If they are not found, they are looked up in `eval_env`.
+
+    Parameters
+    ----------
+    expr: string
+        A string with Python code, usually a function call.
+    data: pandas.DataFrame or None
+        A data frame where variables are looked up.
+    eval_env: EvalEnvironment
+        An execution environment where values and functions are taken from.
+
+    Returns
+    ----------
+    The result of the evaluation of `expr`.
+    """
+
     # TODO: Check name conflicts
     if data is not None:
         if isinstance(data, pd.DataFrame):

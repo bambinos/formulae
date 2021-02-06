@@ -14,6 +14,7 @@ class Assign(Expr):
     This type of expressions can be parsed anywhere, but can only be resolved
     within function call arguments.
     """
+
     def __init__(self, name, value):
         self.name = name
         self.value = value
@@ -122,6 +123,7 @@ class Variable(Expr):
 
 class QuotedName(Expr):
     """Expressions for back-quoted names (i.e. `@1wrid_name!!`)"""
+
     def __init__(self, expression):
         self.expression = expression
 

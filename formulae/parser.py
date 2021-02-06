@@ -168,7 +168,7 @@ class Parser:
             if self.match("LEFT_BRACKET"):
                 level = self.expression()
                 if not isinstance(level, Variable):
-                    raise ValueError("Subset notation only allows a level name.")
+                    raise ParseError("Subset notation only allows a level name.")
                 self.consume("RIGHT_BRACKET", "Expect ']' after level name.")
                 return Variable(identifier, level)
             else:

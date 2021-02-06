@@ -13,6 +13,7 @@ def listify(obj):
 
 
 def flatten_list(nested_list):
+    """Flatten a nested list"""
     nested_list = deepcopy(nested_list)
     while nested_list:
         sublist = nested_list.pop(0)

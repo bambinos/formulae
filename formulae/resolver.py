@@ -15,6 +15,8 @@ class ResolverError(Exception):
 
 
 class Resolver:
+    """Visitor that walks through the AST and returns a model description"""
+
     def __init__(self, expr):
         self.expr = expr
 

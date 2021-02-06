@@ -192,7 +192,6 @@ class GroupEffectsMatrix:
         The evaluation environment object where we take values and functions from.
     """
 
-
     def __init__(self, terms, data, eval_env):
         self.data = data
         self.eval_env = eval_env
@@ -253,6 +252,29 @@ def term_str(term):
 
 
 def design_matrices(formula, data, na_action="drop", eval_env=0):
+    """Obtain design matrices.
+
+    Parameters
+    ----------
+    formula : string
+        A model description written in the formula language
+    data: pandas.DataFrame
+        The data frame where variables are taken from
+    na_action: string
+        Describes what to do with missing values in `data`. 'drop' means to drop
+        all rows with a missing value, 'error' means to raise an error. Defaults
+        to 'drop'.
+    eval_env: integer
+        The number of environments we walk up in the stack starting from the function's caller
+        to capture the environment where formula is evaluated. Defaults to 0 which means
+        the evaluation environment is the environment where `design_matrices` is called.
+
+    Returns
+    ----------
+    design: DesignMatrices
+        An instance of DesignMatrices that contains the design matrice(s) described by
+        `formula`.
+    """
 
     if not isinstance(formula, str):
         raise ValueError("'formula' must be a string.")
@@ -272,20 +294,13 @@ def design_matrices(formula, data, na_action="drop", eval_env=0):
     if na_action not in ["drop", "error"]:
         raise ValueError("'na_action' must be either 'drop' or 'error'")
 
-    # Model description is obtained to check variables and subset data.
-
     eval_env = EvalEnvironment.capture(eval_env, reference=1)
 
-    """
     description = model_description(formula)
-    formula_vars = description.vars
 
-    if not formula_vars <= set(data.columns):
-        column_diff = list(formula_vars - set(data.columns))
-        raise ValueError(f"Variable(s) {', '.join(column_diff)} are not in 'data'")
-
-    data = data[list(formula_vars)]
-    """
+    # Incomplete rows are calculated using columns involved in model formula only
+    cols_to_select = description.vars.intersection(set(data.columns))
+    data = data[list(cols_to_select)]
 
     incomplete_rows = data.isna().any(axis=1)
     incomplete_rows_n = incomplete_rows.sum()
@@ -299,4 +314,5 @@ def design_matrices(formula, data, na_action="drop", eval_env=0):
         else:
             raise ValueError(f"'data' contains {incomplete_rows_n} incomplete rows.")
 
-    return DesignMatrices(model_description(formula), data, eval_env)
+    design = DesignMatrices(description, data, eval_env)
+    return design
