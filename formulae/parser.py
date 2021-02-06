@@ -8,7 +8,13 @@ class ParseError(Exception):
 
 
 class Parser:
-    """Consume sequences of Tokens"""
+    """Parses a sequence of Tokens and returns an abstract syntax tree.
+
+    Parameters
+    ----------
+    tokens : list
+        A list populated with objects of class Token as returned by scanner.Scanner.
+    """
 
     def __init__(self, tokens):
         self.current = 0
@@ -56,8 +62,13 @@ class Parser:
         else:
             raise ParseError(message)
 
-    # Here we start walking through the grammar
     def parse(self):
+        """Parse a sequence of Tokens
+
+        Returns
+        -------
+        An object of class expr.Expr describing the parsed AST.
+        """
         return self.expression()
 
     def expression(self):

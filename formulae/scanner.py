@@ -9,6 +9,13 @@ class Scanner:
     """Scan formula string and returns Tokens"""
 
     def __init__(self, code):
+        """Scans a model formula and returns a list of Tokens
+
+        Parameters
+        ----------
+        code : string
+            The code to be scanned.
+        """
         self.code = code
         self.start = 0
         self.current = 0
@@ -125,6 +132,18 @@ class Scanner:
             raise ValueError("Unexpected character: " + str(char))
 
     def scan(self, add_intercept=True):
+        """Scan formula string.
+
+        Parameters
+        ----------
+        add_intercept : bool
+            Indicates if an implicit intercept should be included. Defaults to True.
+
+        Returns
+        -------
+        tokens : list
+            A list of objects of class Token
+        """
         while not self.at_end():
             self.start = self.current
             self.scan_token()

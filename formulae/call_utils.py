@@ -2,6 +2,7 @@ from .utils import flatten_list
 
 
 class CallEvalPrinter:
+    """Visitor that generates function calls code to be evaluated in Python"""
     def __init__(self, expr, data_cols=None):
         self.expr = expr
         self.data_cols = data_cols
@@ -59,6 +60,7 @@ class CallNamePrinter(CallEvalPrinter):
 
 
 class CallVarsExtractor:
+    """Visitor that extracts variable names present in a model formula"""
     def __init__(self, expr):
         self.expr = expr
 

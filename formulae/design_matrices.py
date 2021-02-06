@@ -12,15 +12,17 @@ _log = logging.getLogger("formulae")
 
 
 class DesignMatrices:
-    """Wraps ResponseVector CommonEffectsMatrix and GroupEffectsMatrix
+    """A wrapper of ResponseVector, CommonEffectsMatrix and GroupEffectsMatrix
 
     Parameters
     ----------
 
     model : ModelTerms
         The model description.
-    eval_env: DataFrame or dict
-        The evaluation environment object where we take values from.
+    data: pandas.DataFrame
+        The data frame where variables are taken from
+    eval_env: EvalEnvironment
+        The evaluation environment object where we take values and functions from.
     """
 
     def __init__(self, model, data, eval_env):
@@ -42,7 +44,18 @@ class DesignMatrices:
 
 
 class ResponseVector:
-    """Representation of the respose vector of a model"""
+    """Representation of the respose vector of a model
+
+    Parameters
+    ----------
+
+    term : ResponseTerm
+        The description and data of the response term.
+    data: pandas.DataFrame
+        The data frame where variables are taken from
+    eval_env: EvalEnvironment
+        The evaluation environment object where we take values and functions from.
+    """
 
     def __init__(self, term, data, eval_env):
         self.data = data
@@ -66,6 +79,7 @@ class ResponseVector:
             self.refclass = d["reference"]
 
     def as_dataframe(self):
+        """Returns `self.design_vector` as a pandas.DataFrame"""
         data = pd.DataFrame(self.design_vector)
         if self.type == "categoric":
             colname = f"{self.name}[{self.refclass}]"
@@ -89,7 +103,18 @@ class ResponseVector:
 
 
 class CommonEffectsMatrix:
-    """Representation of the design matrix for the common effects of a model."""
+    """Representation of the design matrix for the common effects of a model.
+
+    Parameters
+    ----------
+
+    terms : ModelTerms
+        An ModelTerms object containing terms for the common effects of the model.
+    data: pandas.DataFrame
+        The data frame where variables are taken from
+    eval_env: EvalEnvironment
+        The evaluation environment object where we take values and functions from.
+    """
 
     def __init__(self, terms, data, eval_env):
         self.data = data
@@ -100,6 +125,9 @@ class CommonEffectsMatrix:
         self.evaluate()
 
     def evaluate(self):
+        """Evaluates `self.terms` inside the data mask provided by `data` and
+        updates `self.design_matrix`.
+        """
         d = self.terms.eval(self.data, self.eval_env)
         self.design_matrix = np.column_stack([d[key]["value"] for key in d.keys()])
         self.terms_info = {}
@@ -112,6 +140,7 @@ class CommonEffectsMatrix:
             start += delta
 
     def as_dataframe(self):
+        """Returns `self.design_matrix` as a pandas.DataFrame"""
         data = pd.DataFrame(self.design_matrix)
         colnames = []
         for k, v in self.terms_info.items():
@@ -146,7 +175,23 @@ class CommonEffectsMatrix:
 
 
 class GroupEffectsMatrix:
-    """Representation of the design matrix for the group specific effects of a model."""
+    """Representation of the design matrix for the group specific effects of a model.
+
+    In this case, `self.design_matrix` is a sparse matrix in CSC format.
+    The sub-matrix that corresponds to a specific group effect can be accessed by
+    `self['1|g']`.
+
+    Parameters
+    ----------
+
+    terms : ModelTerms
+        An ModelTerms object containing terms for the group effects of the model.
+    data: pandas.DataFrame
+        The data frame where variables are taken from
+    eval_env: EvalEnvironment
+        The evaluation environment object where we take values and functions from.
+    """
+
 
     def __init__(self, terms, data, eval_env):
         self.data = data
@@ -157,6 +202,9 @@ class GroupEffectsMatrix:
         self.evaluate()
 
     def evaluate(self):
+        """Evaluates `self.terms` inside the data mask provided by `data` and
+        updates `self.design_matrix`.
+        """
         start_row = 0
         start_col = 0
         Z = []

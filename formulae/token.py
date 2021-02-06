@@ -1,4 +1,5 @@
 class Token:
+    """Representation of a single Token"""
     def __init__(self, _type, lexeme, literal=None):
         self.type = _type
         self.lexeme = lexeme

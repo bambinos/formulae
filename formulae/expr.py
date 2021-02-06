@@ -2,13 +2,18 @@ class Expr:
     """Abstract class"""
 
     def __init__(self):
-        raise ValueError("Abstract class!!!")
+        raise ValueError("Abstract class")
 
     def accept(self):
         pass
 
 
 class Assign(Expr):
+    """Expr for Asssignments.
+
+    This type of expressions can be parsed anywhere, but can only be resolved
+    within function call arguments.
+    """
     def __init__(self, name, value):
         self.name = name
         self.value = value
@@ -75,7 +80,7 @@ class Unary(Expr):
 
 
 class Call(Expr):
-    """Represents built-in or added functions in formulae"""
+    """Function call expressions"""
 
     def __init__(self, callee, args, special=False):
         self.callee = callee
@@ -116,6 +121,7 @@ class Variable(Expr):
 
 
 class QuotedName(Expr):
+    """Expressions for back-quoted names (i.e. `@1wrid_name!!`)"""
     def __init__(self, expression):
         self.expression = expression
 
