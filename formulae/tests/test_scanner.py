@@ -199,7 +199,7 @@ def test_scan_assign():
     ]
     assert compare_two_lists(sc, comp)
 
-def test_intercept_disabled():
+def test_scan_intercept_disabled():
     sc = Scanner("x + y").scan(add_intercept=False)
     comp = [
         Token("IDENTIFIER", "x"),

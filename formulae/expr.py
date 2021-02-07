@@ -19,6 +19,14 @@ class Assign(Expr):
         self.name = name
         self.value = value
 
+    def __hash__(self):
+        return hash((self.name, self.value))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.name == other.name and self.value == other.value
+
     def __repr__(self):
         return self.__str__()
 
@@ -33,6 +41,14 @@ class Assign(Expr):
 class Grouping(Expr):
     def __init__(self, expression):
         self.expression = expression
+
+    def __hash__(self):
+        return hash((self.expression, self.expression))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.expression == other.expression
 
     def __repr__(self):
         return self.__str__()
@@ -49,6 +65,14 @@ class Binary(Expr):
         self.left = left
         self.operator = operator
         self.right = right
+
+    def __hash__(self):
+        return hash((self.left, self.operator, self.right))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.left == other.left and self.operator == other.operator and self.right == other.right
 
     def __repr__(self):
         return self.__str__()
@@ -67,6 +91,14 @@ class Unary(Expr):
     def __init__(self, operator, right):
         self.operator = operator
         self.right = right
+
+    def __hash__(self):
+        return hash((self.operator, self.right))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.operator == other.operator and self.right == other.right
 
     def __repr__(self):
         return self.__str__()
@@ -88,6 +120,14 @@ class Call(Expr):
         self.args = args
         self.special = special
 
+    def __hash__(self):
+        return hash((self.callee, self.args, self.special))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.callee == other.callee and self.args == other.args and self.special == other.special
+
     def __repr__(self):
         return self.__str__()
 
@@ -108,6 +148,14 @@ class Variable(Expr):
         self.name = name
         self.level = level
 
+    def __hash__(self):
+        return hash((self.name, self.level))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.name == other.name and self.level == other.level
+
     def __repr__(self):
         return self.__str__()
 
@@ -127,6 +175,14 @@ class QuotedName(Expr):
     def __init__(self, expression):
         self.expression = expression
 
+    def __hash__(self):
+        return hash((self.expression))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.expression == other.expression
+
     def __repr__(self):
         return self.__str__()
 
@@ -140,6 +196,14 @@ class QuotedName(Expr):
 class Literal(Expr):
     def __init__(self, value):
         self.value = value
+
+    def __hash__(self):
+        return hash((self.value))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.value == other.value
 
     def __repr__(self):
         return self.__str__()
