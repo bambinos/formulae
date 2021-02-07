@@ -6,6 +6,18 @@ class Token:
         self.lexeme = lexeme
         self.literal = literal
 
+    def __hash__(self):
+        return hash((self.type, self.lexeme, self.literal))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return (
+            self.type == other.type
+            and self.lexeme == other.lexeme
+            and self.literal == other.literal
+        )
+
     def __repr__(self):
         string_list = [
             "'type': " + str(self.type),
