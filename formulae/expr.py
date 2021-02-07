@@ -72,7 +72,11 @@ class Binary(Expr):
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return self.left == other.left and self.operator == other.operator and self.right == other.right
+        return (
+            self.left == other.left
+            and self.operator == other.operator
+            and self.right == other.right
+        )
 
     def __repr__(self):
         return self.__str__()
@@ -126,7 +130,11 @@ class Call(Expr):
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return self.callee == other.callee and self.args == other.args and self.special == other.special
+        return (
+            self.callee == other.callee
+            and self.args == other.args
+            and self.special == other.special
+        )
 
     def __repr__(self):
         return self.__str__()

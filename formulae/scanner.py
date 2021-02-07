@@ -190,7 +190,7 @@ class Scanner:
 
     def identifier(self):
         # 'mod.function' is also an identifier
-        while self.peek().isalnum() or self.peek() == ".":
+        while self.peek().isalnum() or self.peek() in [".", "_"]:
             self.advance()
         # Check if the identifier is a reserved word
         identifier = self.code[self.start : self.current]

@@ -1,6 +1,7 @@
 import operator
 
 import numpy as np
+from numpy.lib.arraysetops import isin
 import pandas as pd
 
 from functools import reduce
@@ -108,9 +109,15 @@ class Term(BaseTerm):
                 return self
             # x:y -> x:y
             return InteractionTerm(self, other)
-        if isinstance(other, InteractionTerm):
+        elif isinstance(other, InteractionTerm):
             # x : (y:z) -> x:y:z
             return other.add_term(self)
+        elif isinstance(other, ModelTerms):
+            products = product([self], other.common_terms)
+            iterms = [InteractionTerm(p[0], p[1]) for p in products]
+            return ModelTerms(*iterms)
+        else:
+            return NotImplemented
 
     def __pow__(self, other):
         # x ** n -> x
@@ -552,6 +559,14 @@ class GroupSpecTerm(BaseTerm):
         self.expr = expr
         self.factor = factor
 
+    def __hash__(self):
+        return hash((self.expr, self.factor))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.expr == other.expr and self.factor == other.factor
+
     def __repr__(self):
         return self.__str__()
 
@@ -655,6 +670,13 @@ class ModelTerms:
         else:
             raise ValueError("There is a least one term of an unexpected class.")
 
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        equal_terms = all([t1 == t2 for t1, t2 in zip(self.terms, other.terms)])
+        equal_responses = self.response == other.response
+        return equal_terms and equal_responses
+
     def __add__(self, other):
         # (1 + x + y) + 0 -> (x + y)
         if isinstance(other, NegatedIntercept):
@@ -679,7 +701,7 @@ class ModelTerms:
                 if term in self.group_terms:
                     self.group_terms.remove(term)
             return self
-        elif isinstance(other, (Term, CallTerm, InteractionTerm, InterceptTerm)):
+        elif isinstance(other, (Term, CallTerm, InteractionTerm, InterceptTerm, LiteralTerm)):
             # (x + y) - x -> y
             if other in self.common_terms:
                 self.common_terms.remove(other)
