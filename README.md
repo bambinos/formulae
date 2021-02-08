@@ -245,11 +245,11 @@ design.group['x|g']
 
 ### Example 2
 
-A categorical response and a linear predictor with a function call. In this example we use the `variable[level]` notation that is taken from [Bambi](https://github.com/bambinos/bambi) that makes it easier to indicate which level represents a success in a categorical response.
+A categorical response and a linear predictor that has an interaction between a categorical variable and a function call. In this example we use the `variable[level]` notation that is taken from [Bambi](https://github.com/bambinos/bambi) that makes it easier to indicate which level represents a success in a categorical response.
 
 
 ```python
-design = design_matrices("y_cat[A] ~ np.exp(x) + g", df)
+design = design_matrices("y_cat[A] ~ np.exp(x) * g", df)
 ```
 
 
@@ -273,6 +273,29 @@ print(design.response.design_vector)
 
 
 ```python
+design.common
+```
+
+
+
+
+    CommonEffectsMatrix(
+      shape: (10, 6),
+      terms: {
+        'Intercept': {type=Intercept, cols=slice(0, 1, None)},
+        'np.exp(x)': {type=call, cols=slice(1, 2, None)},
+        'g': {type=categoric, levels=['Group 1', 'Group 3', 'Group 2'], reference=Group 1, cols=slice(2, 4, None)},
+        'np.exp(x):g': {type=interaction, vars={
+          np.exp(x): {type=call},
+          g: {type=categoric, levels=['Group 1', 'Group 3', 'Group 2'], reference=Group 1}
+        }}
+      }
+    )
+
+
+
+
+```python
 design.common.as_dataframe()
 ```
 
@@ -288,6 +311,8 @@ design.common.as_dataframe()
       <th>np.exp(x)</th>
       <th>g[Group 3]</th>
       <th>g[Group 2]</th>
+      <th>np.exp(x):g[Group 3]</th>
+      <th>np.exp(x):g[Group 2]</th>
     </tr>
   </thead>
   <tbody>
@@ -297,6 +322,8 @@ design.common.as_dataframe()
       <td>0.737669</td>
       <td>0.0</td>
       <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
     </tr>
     <tr>
       <th>1</th>
@@ -304,6 +331,8 @@ design.common.as_dataframe()
       <td>2.367089</td>
       <td>1.0</td>
       <td>0.0</td>
+      <td>2.367089</td>
+      <td>0.000000</td>
     </tr>
     <tr>
       <th>2</th>
@@ -311,6 +340,8 @@ design.common.as_dataframe()
       <td>0.501613</td>
       <td>1.0</td>
       <td>0.0</td>
+      <td>0.501613</td>
+      <td>0.000000</td>
     </tr>
     <tr>
       <th>3</th>
@@ -318,6 +349,8 @@ design.common.as_dataframe()
       <td>1.206227</td>
       <td>0.0</td>
       <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
     </tr>
     <tr>
       <th>4</th>
@@ -325,6 +358,8 @@ design.common.as_dataframe()
       <td>1.829987</td>
       <td>0.0</td>
       <td>1.0</td>
+      <td>0.000000</td>
+      <td>1.829987</td>
     </tr>
     <tr>
       <th>5</th>
@@ -332,6 +367,8 @@ design.common.as_dataframe()
       <td>0.832756</td>
       <td>0.0</td>
       <td>1.0</td>
+      <td>0.000000</td>
+      <td>0.832756</td>
     </tr>
     <tr>
       <th>6</th>
@@ -339,6 +376,8 @@ design.common.as_dataframe()
       <td>0.324165</td>
       <td>0.0</td>
       <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
     </tr>
     <tr>
       <th>7</th>
@@ -346,6 +385,8 @@ design.common.as_dataframe()
       <td>5.253386</td>
       <td>0.0</td>
       <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
     </tr>
     <tr>
       <th>8</th>
@@ -353,6 +394,8 @@ design.common.as_dataframe()
       <td>0.516623</td>
       <td>0.0</td>
       <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
     </tr>
     <tr>
       <th>9</th>
@@ -360,6 +403,8 @@ design.common.as_dataframe()
       <td>2.832291</td>
       <td>0.0</td>
       <td>1.0</td>
+      <td>0.000000</td>
+      <td>2.832291</td>
     </tr>
   </tbody>
 </table>
