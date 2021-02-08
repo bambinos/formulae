@@ -8,7 +8,7 @@ This package has been written to make it easier to specify models with group eff
 
 ## Installation
 
-formulae requires a working Python interpreter (3.7+) and the libraries numpy, scipy and pandas with versions specifiec in the [requirements.txt](https://github.com/bambinos/formulae/blob/master/requirements.txt) file.
+formulae requires a working Python interpreter (3.7+) and the libraries numpy, scipy and pandas with versions specified in the [requirements.txt](https://github.com/bambinos/formulae/blob/master/requirements.txt) file.
 
 Assuming a standard Python environment is installed on your machine (including pip), the development version of formulae can be installed in one line using pip:
 
@@ -35,7 +35,112 @@ df = pd.DataFrame({
     'x': np.random.normal(size=10),
     'g': np.random.choice(['Group 1', 'Group 2', 'Group 3'], size=10)
 })
+df
 ```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>y_num</th>
+      <th>y_cat</th>
+      <th>x</th>
+      <th>g</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.471435</td>
+      <td>B</td>
+      <td>-0.304260</td>
+      <td>Group 1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>-1.190976</td>
+      <td>A</td>
+      <td>0.861661</td>
+      <td>Group 3</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1.432707</td>
+      <td>B</td>
+      <td>-0.689927</td>
+      <td>Group 3</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>-0.312652</td>
+      <td>B</td>
+      <td>0.187497</td>
+      <td>Group 1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>-0.720589</td>
+      <td>A</td>
+      <td>0.604309</td>
+      <td>Group 2</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>0.887163</td>
+      <td>A</td>
+      <td>-0.183014</td>
+      <td>Group 2</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>0.859588</td>
+      <td>B</td>
+      <td>-1.126502</td>
+      <td>Group 1</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>-0.636524</td>
+      <td>A</td>
+      <td>1.658873</td>
+      <td>Group 1</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>0.015696</td>
+      <td>A</td>
+      <td>-0.660441</td>
+      <td>Group 1</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>-2.242685</td>
+      <td>B</td>
+      <td>1.041086</td>
+      <td>Group 2</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
 
 
 ### Example 1
@@ -153,7 +258,7 @@ design.group['x|g']
 
 ### Example 2
 
-A categorical response and a linear predictor with a function calls. In this example we are going to use a custom notation that is taken from [Bambi](https://github.com/bambinos/bambi) that makes it easier to indicate which level represents a success in a categorical response. We just say `variable[level]` and that's enough.
+A categorical response and a linear predictor with a function call. In this example we use the `variable[level]` notation that is taken from [Bambi](https://github.com/bambinos/bambi) that makes it easier to indicate which level represents a success in a categorical response.
 
 
 ```python
