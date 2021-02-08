@@ -1,3 +1,4 @@
+import itertools
 import logging
 
 import numpy as np
@@ -146,8 +147,10 @@ class CommonEffectsMatrix:
         for k, v in self.terms_info.items():
             if v["type"] == "Intercept":
                 colnames.append("Intercept")
-            elif v["type"] in ["numeric", "call", "interaction"]:
+            elif v["type"] in ["numeric", "call"]:
                 colnames.append(k)
+            elif v["type"] == "interaction":
+                colnames += interaction_label(v)
             elif v["type"] == "categoric":
                 if "levels" in v.keys():
                     colnames += [f"{k}[{level}]" for level in v["levels"][1:]]
@@ -247,10 +250,6 @@ class GroupEffectsMatrix:
         return "GroupEffectsMatrix(\n  " + ",\n  ".join(string_list) + "\n)"
 
 
-def term_str(term):
-    return ", ".join([k + "=" + str(v) for k, v in term.items()])
-
-
 def design_matrices(formula, data, na_action="drop", eval_env=0):
     """Obtain design matrices.
 
@@ -316,3 +315,37 @@ def design_matrices(formula, data, na_action="drop", eval_env=0):
 
     design = DesignMatrices(description, data, eval_env)
     return design
+
+
+# Utils
+def term_str(term):
+    x = None
+    if term["type"] == "interaction":
+        terms = term["terms"]
+        vars = []
+        for k, v in terms.items():
+            if v["type"] in ["numeric", "call"]:
+                vars.append(f"    {k}: {{type={v['type']}}}")
+            elif v["type"] == "categoric":
+                str_l = [k2 + "=" + str(v2) for k2, v2 in v.items() if k2 != "value"]
+                vars.append(f"    {k}: {{" + ", ".join(str_l) + "}")
+        x = "type=interaction, vars={\n" + ",\n".join(vars) + "\n  }"
+    else:
+        x = ", ".join([k + "=" + str(v) for k, v in term.items()])
+    return x
+
+
+def interaction_label(x):
+    terms = x["terms"]
+    colnames = []
+
+    for k, v in terms.items():
+        if v["type"] in ["numeric", "call"]:
+            colnames.append([k])
+        if v["type"] == "categoric":
+            if "levels" in v.keys():
+                colnames.append([f"{k}[{level}]" for level in v["levels"][1:]])
+            else:
+                colnames.append([f"{k}[{v['reference']}]"])
+
+    return [":".join(str_tuple) for str_tuple in list(itertools.product(*colnames))]

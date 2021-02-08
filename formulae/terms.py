@@ -1,5 +1,3 @@
-import operator
-
 import numpy as np
 from numpy.lib.arraysetops import isin
 import pandas as pd
@@ -11,6 +9,7 @@ from scipy import linalg, sparse
 
 from .call_utils import CallEvalPrinter, CallNamePrinter, CallVarsExtractor
 from .eval import eval_in_data_mask
+from .utils import get_interaction_matrix
 
 
 class BaseTerm:
@@ -325,8 +324,12 @@ class InteractionTerm(BaseTerm):
         # I'm not very happy with this implementation since we call `.eval()`
         # again on terms that are highly likely to be in the model.
         # But it works and it's fine for now.
-        value = reduce(operator.mul, [term.eval(data, eval_env)["value"] for term in self.terms])
-        out = {"value": value, "type": "interaction", "vars": [term.name for term in self.terms]}
+        evaluated_terms = {term.name: term.eval(data, eval_env) for term in self.terms}
+
+        value = reduce(
+            get_interaction_matrix, [evaluated_terms[k]["value"] for k in evaluated_terms.keys()]
+        )
+        out = {"value": value, "type": "interaction", "terms": evaluated_terms}
         return out
 
 

@@ -1,3 +1,4 @@
+import numpy as np
 from copy import deepcopy
 
 
@@ -21,3 +22,11 @@ def flatten_list(nested_list):
             nested_list = sublist + nested_list
         else:
             yield sublist
+
+
+def get_interaction_matrix(x, y):
+    l = []
+    for j1 in range(x.shape[1]):
+        for j2 in range(y.shape[1]):
+            l.append(x[:, j1] * y[:, j2])
+    return np.column_stack(l)
