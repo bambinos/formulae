@@ -9,7 +9,7 @@ from scipy import linalg, sparse
 
 from .call_utils import CallEvalPrinter, CallNamePrinter, CallVarsExtractor
 from .eval import eval_in_data_mask
-from .utils import get_interaction_matrix
+from .utils import flatten_list, get_interaction_matrix
 
 
 class BaseTerm:
@@ -830,7 +830,11 @@ class ModelTerms:
         vars = set()
         for term in self.terms:
             if isinstance(term, (CallTerm, InteractionTerm, GroupSpecTerm)):
-                vars = vars.union(set(term.vars))
+                v = term.vars
+                if isinstance(v, list):
+                    # make sure it is flattened
+                    v = flatten_list(v)
+                vars = vars.union(set(v))
             else:
                 vars = vars.union({term.vars})
         if self.response is not None:
