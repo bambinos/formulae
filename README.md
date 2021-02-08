@@ -1,6 +1,6 @@
 # formulae
 
-formulae is a Python library that implements Wilkinson's formulas for statistical models à la lme4. The main difference with other implementations like [Patsy](https://github.com/pydata/patsy) or [formulaic](https://github.com/matthewwardrop/formulaic) is that formulaic can work with formulas describing a model with both common and group specific effects (a.k.a. fixed and random effects, respectively). 
+formulae is a Python library that implements Wilkinson's formulas for statistical models à la lme4. The main difference with other implementations like [Patsy](https://github.com/pydata/patsy) or [formulaic](https://github.com/matthewwardrop/formulaic) is that formulaic can work with formulas describing a model with both common and group specific effects (a.k.a. fixed and random effects, respectively).
 
 This package has been written to make it easier to specify models with group effects in [Bambi](https://github.com/bambinos/bambi), a package that makes it easy to work with Bayesian GLMMs in Python, but it could be used independently as a backend for another library.
 
@@ -20,7 +20,7 @@ The main function you encounter in this library is `design_matrices()`. It retur
 
 
 ```python
-import numpy as np 
+import numpy as np
 import pandas as pd
 
 from formulae import design_matrices
@@ -42,19 +42,6 @@ df
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -293,19 +280,6 @@ design.common.as_dataframe()
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
