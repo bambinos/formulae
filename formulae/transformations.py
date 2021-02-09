@@ -31,7 +31,7 @@ def C(x, ref=None, levels=None):
     """Make a variable categorical
 
     This is an internal function only accesible through the formula interface.
-    `levels` takes precedence over `ref`
+    `ref` takes precedence over `levels`
 
     Parameters
     ----------
@@ -55,10 +55,12 @@ def C(x, ref=None, levels=None):
 
     if ref is not None and levels is not None:
         raise ValueError("At least one of 'ref' or 'levels' must be None.")
-    if levels is not None:
+    elif ref is not None:
+        print("ref")
         value = np.atleast_2d(np.where(x == ref, 1, 0)).T
         return {"value": value, "reference": ref}
-    elif ref is not None:
+    elif levels is not None:
+        print("levels")
         cat_type = pd.api.types.CategoricalDtype(categories=levels, ordered=True)
         x = x.astype(cat_type)
     elif not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
