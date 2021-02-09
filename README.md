@@ -10,7 +10,11 @@ This package has been written to make it easier to specify models with group eff
 
 formulae requires a working Python interpreter (3.7+) and the libraries numpy, scipy and pandas with versions specified in the [requirements.txt](https://github.com/bambinos/formulae/blob/master/requirements.txt) file.
 
-Assuming a standard Python environment is installed on your machine (including pip), the development version of formulae can be installed in one line using pip:
+Assuming a standard Python environment is installed on your machine (including pip), you can install formulae with
+
+`pip install formulae`
+
+And the development version can be installed via
 
 `pip install git+https://github.com/bambinos/formulae.git`
 

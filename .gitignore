@@ -1,0 +1,8 @@
+*.pyc
+*.egg-info/
+.ipynb_checkpoints/
+.vscode/
+formulae/__pycache__/
+build/
+dist/
+
