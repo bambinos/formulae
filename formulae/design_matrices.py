@@ -2,12 +2,14 @@ import itertools
 import logging
 
 import numpy as np
+from numpy.testing._private.utils import raises
 import pandas as pd
 import scipy as sp
 
 from .eval import EvalEnvironment
 from .terms import ModelTerms
 from .model_description import model_description
+from .utils import flatten_list
 
 _log = logging.getLogger("formulae")
 
@@ -142,22 +144,28 @@ class CommonEffectsMatrix:
 
     def as_dataframe(self):
         """Returns `self.design_matrix` as a pandas.DataFrame"""
+        colnames = [self.get_term_full_names(name) for name in self.terms_info.keys()]
         data = pd.DataFrame(self.design_matrix)
-        colnames = []
-        for k, v in self.terms_info.items():
-            if v["type"] == "Intercept":
-                colnames.append("Intercept")
-            elif v["type"] in ["numeric", "call"]:
-                colnames.append(k)
-            elif v["type"] == "interaction":
-                colnames += interaction_label(v)
-            elif v["type"] == "categoric":
-                if "levels" in v.keys():
-                    colnames += [f"{k}[{level}]" for level in v["levels"][1:]]
-                else:
-                    colnames.append(f"{k}[{v['reference']}]")
-        data.columns = colnames
+        data.columns = list(flatten_list(colnames))
         return data
+
+    def get_term_full_names(self, name):
+        # Always returns a list
+        term = self.terms_info[name]
+        _type = term["type"]
+        if _type == "Intercept":
+            return "Intercept"
+        elif _type in ["numeric", "call"]:
+            return [name]
+        elif _type == "interaction":
+            return interaction_label(term)
+        elif _type == "categoric":
+            # "levels" is present when we have dummy encoding (not just a vector of 0-1)
+            if "levels" in term.keys():
+                # drops first level because of full-rank matrix
+                return [f"{name}[{level}]" for level in term["levels"][1:]]
+            else:
+                return [f"{name}[{term['reference']}]"]
 
     def __getitem__(self, term):
         if term not in self.terms_info.keys():
@@ -219,6 +227,7 @@ class GroupEffectsMatrix:
             Z.append(Zi)
             self.terms_info[term.to_string()] = {
                 "type": d["type"],
+                "groups": d["groups"],
                 "idxs": (
                     slice(start_row, start_row + delta_row),
                     slice(start_col, start_col + delta_col),
@@ -231,6 +240,24 @@ class GroupEffectsMatrix:
             start_col += delta_col
         # Stored in Compressed Sparse Column format
         self.design_matrix = sp.sparse.block_diag(Z).tocsc()
+
+    def get_term_full_names(self, name):
+        # Always returns a list
+        term = self.terms_info[name]
+        _type = term["type"]
+        if _type == "Intercept":
+            return "Intercept"
+        elif _type in ["numeric", "call"]:
+            return [name]
+        elif _type == "interaction":
+            return interaction_label(term)
+        elif _type == "categoric":
+            # "levels" is present when we have dummy encoding (not just a vector of 0-1)
+            if "levels" in term.keys():
+                # drops first level because of full-rank matrix
+                return [f"{name}[{level}]" for level in term["levels"][1:]]
+            else:
+                return [f"{name}[{term['reference']}]"]
 
     def __getitem__(self, term):
         if term not in self.terms_info.keys():

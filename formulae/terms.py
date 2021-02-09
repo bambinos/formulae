@@ -603,15 +603,26 @@ class GroupSpecTerm(BaseTerm):
     def eval(self, data, eval_env):
         if isinstance(self.factor, Term):
             factor = data[self.factor.variable]
-            # factor = eval_in_data_mask(self.factor.variable, data, eval_env)
+            if is_categorical_dtype(factor) or is_string_dtype(factor):
+                if not hasattr(factor.dtype, "ordered") or not factor.dtype.ordered:
+                    cat_type = pd.api.types.CategoricalDtype(
+                        categories=factor.unique().tolist(), ordered=True
+                    )
+                    factor = factor.astype(cat_type)
         else:
-            raise ValueError("Factor on right hand side of group specific term can only be a term.")
+            raise ValueError(
+                "Factor on right hand side of group specific term must be a single term."
+            )
 
         # Notation as in lme4 paper
         Ji = pd.get_dummies(factor).to_numpy()  # note we don't use `drop_first=True`.
         Xi = self.expr.eval(data, eval_env)
         Zi = linalg.khatri_rao(Ji.T, Xi["value"].T).T
-        out = {"type": Xi["type"], "Zi": sparse.coo_matrix(Zi)}
+        out = {
+            "type": Xi["type"],
+            "Zi": sparse.coo_matrix(Zi),
+            "groups": factor.cat.categories.tolist(),
+        }
         if Xi["type"] == "categoric":
             out["levels"] = Xi["levels"]
             out["reference"] = Xi["reference"]
