@@ -8,6 +8,7 @@ from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_d
 from scipy import linalg, sparse
 
 from .call_utils import CallEvalPrinter, CallNamePrinter, CallVarsExtractor
+from .contrasts import pick_contrasts
 from .eval import eval_in_data_mask
 from .utils import flatten_list, get_interaction_matrix
 
@@ -175,7 +176,18 @@ class Term(BaseTerm):
     def vars(self):
         return self.variable
 
-    def eval(self, data, eval_env, is_response=False):
+    def components(self, data, eval_env):
+        # Returns components and whether they are categoric or numeric
+        x = data[self.variable]
+        if is_numeric_dtype(x):
+            type_ = "numeric"
+        elif is_string_dtype(x) or is_categorical_dtype(x):
+            type_ = "categoric"
+        else:
+            raise NotImplementedError
+        return {self.name: type_}
+
+    def eval(self, data, eval_env, encoding, is_response=False):
         # We don't support multiple level categoric responses yet.
         # `is_response` flags whether the term evaluated is response
         # and returns a 1d array of 0-1 encoding instead of a matrix in case there are
@@ -183,10 +195,10 @@ class Term(BaseTerm):
         # In the future, we can support multiple levels.
         x = data[self.variable]
 
-        if is_numeric_dtype(x):
+        if is_numeric_dtype(x):  # If numerical, evaluate as it is, no encoding needed.
             return self.eval_numeric(x)
         elif is_string_dtype(x) or is_categorical_dtype(x):
-            return self.eval_categoric(x, is_response)
+            return self.eval_categoric(x, encoding, is_response)
         else:
             raise NotImplementedError
 
@@ -196,9 +208,10 @@ class Term(BaseTerm):
         out = {"value": np.atleast_2d(x.to_numpy()).T, "type": "numeric"}
         return out
 
-    def eval_categoric(self, x, is_response):
+    def eval_categoric(self, x, encoding, is_response):
         # If not ordered, we make it ordered
         # x.unique() preservese order of appearence
+
         if not hasattr(x, "ordered") or not x.ordered:
             cat_type = pd.api.types.CategoricalDtype(categories=x.unique().tolist(), ordered=True)
             x = x.astype(cat_type)
@@ -211,10 +224,23 @@ class Term(BaseTerm):
                 reference = self.level
             value = np.atleast_2d(np.where(x == reference, 1, 0)).T
         else:
-            # .to_numpy() returns 2d array
-            value = pd.get_dummies(x, drop_first=True).to_numpy()
-
-        return {"value": value, "type": "categoric", "levels": levels, "reference": reference}
+            if isinstance(encoding, list):
+                encoding = encoding[0]
+            if isinstance(encoding, dict):
+                encoding = encoding[self.name]
+            if encoding:
+                value = pd.get_dummies(x).to_numpy()
+                encoding = "full"
+            else:
+                value = pd.get_dummies(x, drop_first=True).to_numpy()
+                encoding = "reduced"
+        return {
+            "value": value,
+            "type": "categoric",
+            "levels": levels,
+            "reference": reference,
+            "encoding": encoding,
+        }
 
 
 class InteractionTerm(BaseTerm):
@@ -302,6 +328,13 @@ class InteractionTerm(BaseTerm):
     def vars(self):
         return [term.vars for term in self.terms]
 
+    def get_term(self, name):
+        idx = [t.name == name for t in self.terms].index(True)
+        return self.terms[idx]
+
+    def components(self, data, eval_env):
+        return {term.name: term.components(data, eval_env)[term.name] for term in self.terms}
+
     def add_term(self, term):
         if isinstance(term, Term):
             if term.variable not in self.variables:
@@ -320,11 +353,14 @@ class InteractionTerm(BaseTerm):
         else:
             return NotImplemented
 
-    def eval(self, data, eval_env):
+    def eval(self, data, eval_env, encoding):
         # I'm not very happy with this implementation since we call `.eval()`
         # again on terms that are highly likely to be in the model.
         # But it works and it's fine for now.
-        evaluated_terms = {term.name: term.eval(data, eval_env) for term in self.terms}
+        print(encoding)
+        evaluated_terms = {term.name: term.eval(data, eval_env, encoding[term.name]) for term in self.terms}
+        print(self.terms)
+        print(evaluated_terms)
 
         value = reduce(
             get_interaction_matrix, [evaluated_terms[k]["value"] for k in evaluated_terms.keys()]
@@ -407,7 +443,10 @@ class InterceptTerm(BaseTerm):
     def vars(self):
         return ""
 
-    def eval(self, data, eval_env):
+    def components(self, data, eval_env):
+        return {self.name: "Intercept"}
+
+    def eval(self, data, eval_env, encoding):
         # Only works with DataFrames or Series so far
         return {"value": np.ones((data.shape[0], 1)), "type": "Intercept"}
 
@@ -527,6 +566,17 @@ class CallTerm(BaseTerm):
     def vars(self):
         return CallVarsExtractor(self).get()
 
+    def components(self, data, eval_env):
+        data_cols = data.columns.tolist()
+        x = eval_in_data_mask(self.get_eval_str(data_cols), data, eval_env)
+        if is_numeric_dtype(x):
+            type_ = "numeric"
+        elif is_string_dtype(x) or is_categorical_dtype(x):
+            type_ = "categoric"
+        else:
+            raise NotImplementedError
+        return {self.name: type_}
+
     def eval(self, data, eval_env, is_response=False):
         # Workaround: var names present in 'data' are taken from '__DATA__['col']
         # the rest are left as they are and looked up in the upper namespace
@@ -603,12 +653,11 @@ class GroupSpecTerm(BaseTerm):
     def eval(self, data, eval_env):
         if isinstance(self.factor, Term):
             factor = data[self.factor.variable]
-            if is_categorical_dtype(factor) or is_string_dtype(factor):
-                if not hasattr(factor.dtype, "ordered") or not factor.dtype.ordered:
-                    cat_type = pd.api.types.CategoricalDtype(
-                        categories=factor.unique().tolist(), ordered=True
-                    )
-                    factor = factor.astype(cat_type)
+            if not hasattr(factor.dtype, "ordered") or not factor.dtype.ordered:
+                cat_type = pd.api.types.CategoricalDtype(
+                    categories=factor.unique().tolist(), ordered=True
+                )
+                factor = factor.astype(cat_type)
         else:
             raise ValueError(
                 "Factor on right hand side of group specific term must be a single term."
@@ -620,12 +669,17 @@ class GroupSpecTerm(BaseTerm):
         Zi = linalg.khatri_rao(Ji.T, Xi["value"].T).T
         out = {
             "type": Xi["type"],
+            "Xi": Xi["value"],
+            "Ji": Ji,
             "Zi": sparse.coo_matrix(Zi),
             "groups": factor.cat.categories.tolist(),
         }
         if Xi["type"] == "categoric":
-            out["levels"] = Xi["levels"]
-            out["reference"] = Xi["reference"]
+            if "levels" in Xi.keys():
+                out["levels"] = Xi["levels"]
+                out["reference"] = Xi["reference"]
+            else:
+                out["reference"] = Xi["reference"]
         return out
 
 
@@ -855,8 +909,88 @@ class ModelTerms:
         vars = vars - {""}
         return vars
 
+    def components(self, data, eval_env):
+        d = dict()
+        for term in self.common_terms:
+            if isinstance(term, (InterceptTerm, Term, CallTerm, InteractionTerm)):
+                d[term.name] = term.components(data, eval_env)
+        return d
+
+    def _encoding_groups(self, data, eval_env):
+        """Obtain groups to determine encoding"""
+
+        components = self.components(data, eval_env)
+
+        # First, group with only categoric terms
+        categoric_group = dict()
+        for k, v in components.items():
+            all_categoric = all([t == "categoric" for t in v.values()])
+            is_intercept = len(v) == 1 and "Intercept" in v.keys()
+            if all_categoric:
+                categoric_group[k] = [k_ for k_ in v.keys()]
+            if is_intercept:
+                categoric_group[k] = []
+
+        # Determine groups of numerics
+        numeric_group_sets = []
+        numeric_groups = []
+        for k, v in components.items():
+            categoric = [k_ for k_, v_ in v.items() if v_ == "categoric"]
+            numeric = [k_ for k_, v_ in v.items() if v_ == "numeric"]
+            if categoric and numeric:
+                numeric_set = set(numeric)
+                if numeric_set not in numeric_group_sets:
+                    numeric_group_sets.append(numeric_set)
+                    numeric_groups.append(dict())
+                idx = numeric_group_sets.index(numeric_set)
+                numeric_groups[idx][k] = categoric
+
+        return [categoric_group] + numeric_groups
+
+    def _encoding_bools(self, data, eval_env):
+        """Determine encodings for terms containing at least one categorical variable.
+
+        This method returns dictionaries with True/False values.
+        True means the categorical variable uses 'levels' dummies.
+        False means the categorial variable uses 'levels - 1' dummies.
+        """
+        groups = self._encoding_groups(data, eval_env)
+        l = [pick_contrasts(group) for group in groups]
+        result = dict()
+        for d in l:
+            result.update(d)
+        return result
+
     def eval(self, data, eval_env):
-        return {term.name: term.eval(data, eval_env) for term in self.terms}
+        encoding = self._encoding_bools(data, eval_env)
+        result = dict()
+
+        for term in self.terms:
+            if term.name in encoding.keys():
+                term_encoding = encoding[term.name]
+
+                # we're in an interaction that added terms
+                # we need to create and evaluate this extra terms
+                if len(term_encoding) > 1:
+                    for term_ in term_encoding:
+                        if len(term_) == 1:
+                            name = list(term_.keys())[0]
+                            encoding = list(term_.values())[0]
+                            result[name] = Term(name, name).eval(data, eval_env, encoding)
+                        # elif len(term_) < len(term.terms):
+                        else:
+                            l = [term.get_term(name) for name in term_.keys()]
+                            iterm_ = InteractionTerm(*l)
+                            result[iterm_.name] = iterm_.eval(data, eval_env, term_)
+
+
+                    # {'a2': False}, {'a1': False, 'a2': True}
+
+
+            else:
+                term_encoding = None
+            result[term.name] = term.eval(data, eval_env, term_encoding)
+        return result
 
 
 ATOMIC_TERMS = (

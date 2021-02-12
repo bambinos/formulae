@@ -1,6 +1,8 @@
 import itertools
 import logging
 
+from itertools import product
+
 import numpy as np
 from numpy.testing._private.utils import raises
 import pandas as pd
@@ -140,6 +142,7 @@ class CommonEffectsMatrix:
             self.terms_info[key] = {k: v for k, v in d[key].items() if k != "value"}
             delta = d[key]["value"].shape[1]
             self.terms_info[key]["cols"] = slice(start, start + delta)
+            self.terms_info[key]["full_names"] = self.get_term_full_names(key)
             start += delta
 
     def as_dataframe(self):
@@ -154,7 +157,7 @@ class CommonEffectsMatrix:
         term = self.terms_info[name]
         _type = term["type"]
         if _type == "Intercept":
-            return "Intercept"
+            return ["Intercept"]
         elif _type in ["numeric", "call"]:
             return [name]
         elif _type == "interaction":
@@ -225,17 +228,13 @@ class GroupEffectsMatrix:
             delta_row = Zi.shape[0]
             delta_col = Zi.shape[1]
             Z.append(Zi)
-            self.terms_info[term.to_string()] = {
-                "type": d["type"],
-                "groups": d["groups"],
-                "idxs": (
-                    slice(start_row, start_row + delta_row),
-                    slice(start_col, start_col + delta_col),
-                ),
-            }
-            if d["type"] == "categoric":
-                self.terms_info[term.to_string()]["levels"] = d["levels"]
-                self.terms_info[term.to_string()]["reference"] = d["reference"]
+            term_name = term.to_string()
+            self.terms_info[term_name] = {k: v for k, v in d.items() if k != "Zi"}
+            self.terms_info[term_name]["idxs"] = (
+                slice(start_row, start_row + delta_row),
+                slice(start_col, start_col + delta_col),
+            )
+            self.terms_info[term_name]["full_names"] = self.get_term_full_names(term_name)
             start_row += delta_row
             start_col += delta_col
         # Stored in Compressed Sparse Column format
@@ -245,19 +244,16 @@ class GroupEffectsMatrix:
         # Always returns a list
         term = self.terms_info[name]
         _type = term["type"]
-        if _type == "Intercept":
-            return "Intercept"
-        elif _type in ["numeric", "call"]:
-            return [name]
+        if _type in ["Intercept", "numeric", "call"]:
+            return [f"{name}[{group}]" for group in term["groups"]]
         elif _type == "interaction":
             return interaction_label(term)
         elif _type == "categoric":
-            # "levels" is present when we have dummy encoding (not just a vector of 0-1)
             if "levels" in term.keys():
-                # drops first level because of full-rank matrix
-                return [f"{name}[{level}]" for level in term["levels"][1:]]
+                products = product(term["levels"][1:], term["groups"])
             else:
-                return [f"{name}[{term['reference']}]"]
+                products = product([term["reference"]], term["groups"])
+            return [f"{name}[{p[0]}|{p[1]}]" for p in products]
 
     def __getitem__(self, term):
         if term not in self.terms_info.keys():
@@ -358,7 +354,7 @@ def term_str(term):
                 vars.append(f"    {k}: {{" + ", ".join(str_l) + "}")
         x = "type=interaction, vars={\n" + ",\n".join(vars) + "\n  }"
     else:
-        x = ", ".join([k + "=" + str(v) for k, v in term.items()])
+        x = ", ".join([k + "=" + str(v) for k, v in term.items() if k not in ["Xi", "Ji"]])
     return x
 
 
