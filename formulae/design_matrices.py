@@ -165,8 +165,11 @@ class CommonEffectsMatrix:
         elif _type == "categoric":
             # "levels" is present when we have dummy encoding (not just a vector of 0-1)
             if "levels" in term.keys():
-                # drops first level because of full-rank matrix
-                return [f"{name}[{level}]" for level in term["levels"][1:]]
+                # Ask if encoding is "full" or "reduced"
+                if term["encoding"] == "full":
+                    return [f"{name}[{level}]" for level in term["levels"]]
+                else:
+                    return [f"{name}[{level}]" for level in term["levels"][1:]]
             else:
                 return [f"{name}[{term['reference']}]"]
 
@@ -250,7 +253,11 @@ class GroupEffectsMatrix:
             return interaction_label(term)
         elif _type == "categoric":
             if "levels" in term.keys():
-                products = product(term["levels"][1:], term["groups"])
+                # Ask if encoding is "full" or "reduced"
+                if term["encoding"] == "full":
+                    products = product(term["levels"], term["groups"])
+                else:
+                    products = product(term["levels"][1:], term["groups"])
             else:
                 products = product([term["reference"]], term["groups"])
             return [f"{name}[{p[0]}|{p[1]}]" for p in products]
@@ -367,7 +374,11 @@ def interaction_label(x):
             colnames.append([k])
         if v["type"] == "categoric":
             if "levels" in v.keys():
-                colnames.append([f"{k}[{level}]" for level in v["levels"][1:]])
+                # ask whether encoding is full or reduced
+                if v["encoding"] == "full":
+                    colnames.append([f"{k}[{level}]" for level in v["levels"]])
+                else:
+                    colnames.append([f"{k}[{level}]" for level in v["levels"][1:]])
             else:
                 colnames.append([f"{k}[{v['reference']}]"])
 

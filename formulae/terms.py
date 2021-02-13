@@ -357,10 +357,19 @@ class InteractionTerm(BaseTerm):
         # I'm not very happy with this implementation since we call `.eval()`
         # again on terms that are highly likely to be in the model.
         # But it works and it's fine for now.
-        print(encoding)
-        evaluated_terms = {term.name: term.eval(data, eval_env, encoding[term.name]) for term in self.terms}
-        print(self.terms)
-        print(evaluated_terms)
+
+        if isinstance(encoding, list) and len(encoding) == 1:
+            encoding = encoding[0]
+        else:
+            ValueError("encoding is a list of len > 1")
+
+        evaluated_terms = dict()
+        for term in self.terms:
+            if term.name in encoding.keys():
+                encoding_ = encoding[term.name]
+            else:
+                encoding_ = []
+            evaluated_terms[term.name] = term.eval(data, eval_env, encoding_)
 
         value = reduce(
             get_interaction_matrix, [evaluated_terms[k]["value"] for k in evaluated_terms.keys()]
@@ -651,6 +660,7 @@ class GroupSpecTerm(BaseTerm):
         return [self.expr.vars] + [self.factor.vars]
 
     def eval(self, data, eval_env):
+        # TODO: factor can't be a call or interaction yet.
         if isinstance(self.factor, Term):
             factor = data[self.factor.variable]
             if not hasattr(factor.dtype, "ordered") or not factor.dtype.ordered:
@@ -665,7 +675,7 @@ class GroupSpecTerm(BaseTerm):
 
         # Notation as in lme4 paper
         Ji = pd.get_dummies(factor).to_numpy()  # note we don't use `drop_first=True`.
-        Xi = self.expr.eval(data, eval_env)
+        Xi = ModelTerms(self.expr).eval(data, eval_env)[self.expr.name]
         Zi = linalg.khatri_rao(Ji.T, Xi["value"].T).T
         out = {
             "type": Xi["type"],
@@ -678,6 +688,7 @@ class GroupSpecTerm(BaseTerm):
             if "levels" in Xi.keys():
                 out["levels"] = Xi["levels"]
                 out["reference"] = Xi["reference"]
+                out["encoding"] = Xi["encoding"]
             else:
                 out["reference"] = Xi["reference"]
         return out
@@ -719,8 +730,8 @@ class ResponseTerm:
     def vars(self):
         return self.term.vars
 
-    def eval(self, data, eval_env):
-        return self.term.eval(data, eval_env, is_response=True)
+    def eval(self, data, eval_env, encoding=None):
+        return self.term.eval(data, eval_env, encoding, is_response=True)
 
 
 class ModelTerms:
@@ -966,30 +977,26 @@ class ModelTerms:
         result = dict()
 
         for term in self.terms:
+            term_encoding = None
+
             if term.name in encoding.keys():
                 term_encoding = encoding[term.name]
-
-                # we're in an interaction that added terms
-                # we need to create and evaluate this extra terms
-                if len(term_encoding) > 1:
-                    for term_ in term_encoding:
-                        if len(term_) == 1:
-                            name = list(term_.keys())[0]
-                            encoding = list(term_.values())[0]
-                            result[name] = Term(name, name).eval(data, eval_env, encoding)
-                        # elif len(term_) < len(term.terms):
-                        else:
-                            l = [term.get_term(name) for name in term_.keys()]
-                            iterm_ = InteractionTerm(*l)
-                            result[iterm_.name] = iterm_.eval(data, eval_env, term_)
-
-
-                    # {'a2': False}, {'a1': False, 'a2': True}
-
-
             else:
-                term_encoding = None
-            result[term.name] = term.eval(data, eval_env, term_encoding)
+                term_encoding = []
+
+            # we're in an interaction that added terms
+            # we need to create and evaluate these extra terms
+            if len(term_encoding) > 1:
+                for term_ in term_encoding:
+                    if len(term_) == 1:
+                        name = list(term_.keys())[0]
+                        encoding = list(term_.values())[0]
+                        result[name] = Term(name, name).eval(data, eval_env, encoding)
+                    else:
+                        iterm_ = InteractionTerm(*[term.get_term(name) for name in term_.keys()])
+                        result[iterm_.name] = iterm_.eval(data, eval_env, term_)
+            else:
+                result[term.name] = term.eval(data, eval_env, term_encoding)
         return result
 
 
