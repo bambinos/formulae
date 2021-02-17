@@ -212,7 +212,7 @@ class Term(BaseTerm):
         # If not ordered, we make it ordered
         # x.unique() preservese order of appearence
 
-        if not hasattr(x, "ordered") or not x.ordered:
+        if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
             cat_type = pd.api.types.CategoricalDtype(categories=x.unique().tolist(), ordered=True)
             x = x.astype(cat_type)
 
@@ -606,8 +606,7 @@ class CallTerm(BaseTerm):
         return {"value": value, "type": "call"}
 
     def eval_categoric(self, x, encoding):
-
-        if not hasattr(x, "ordered") or not x.ordered:
+        if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
             cat_type = pd.api.types.CategoricalDtype(categories=x.unique().tolist(), ordered=True)
             x = x.astype(cat_type)
 
