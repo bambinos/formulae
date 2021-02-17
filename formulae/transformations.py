@@ -56,8 +56,11 @@ def C(x, ref=None, levels=None):
     if ref is not None and levels is not None:
         raise ValueError("At least one of 'ref' or 'levels' must be None.")
     elif ref is not None:
-        value = np.atleast_2d(np.where(x == ref, 1, 0)).T
-        return {"value": value, "reference": ref}
+        bool_ = x == ref
+        if sum(bool_) == 0:
+            raise ValueError(f"No value in 'x' is equal to 'ref' \"{ref}\"")
+        value = np.atleast_2d(np.where(bool_, 1, 0)).T
+        return value
     elif levels is not None:
         cat_type = pd.api.types.CategoricalDtype(categories=levels, ordered=True)
         x = x.astype(cat_type)

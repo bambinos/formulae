@@ -580,32 +580,58 @@ class CallTerm(BaseTerm):
         x = eval_in_data_mask(self.get_eval_str(data_cols), data, eval_env)
         if is_numeric_dtype(x):
             type_ = "numeric"
-        elif is_string_dtype(x) or is_categorical_dtype(x):
+        elif is_string_dtype(x) or is_categorical_dtype(x) or isinstance(x, dict):
             type_ = "categoric"
         else:
             raise NotImplementedError
         return {self.name: type_}
 
-    def eval(self, data, eval_env, is_response=False):
+    def eval(self, data, eval_env, encoding):
         # Workaround: var names present in 'data' are taken from '__DATA__['col']
         # the rest are left as they are and looked up in the upper namespace
         data_cols = data.columns.tolist()
-
         x = eval_in_data_mask(self.get_eval_str(data_cols), data, eval_env)
-        if isinstance(x, dict):
-            return {"value": x["value"], "type": "categoric", "reference": x["reference"]}
-        elif is_categorical_dtype(x) or is_string_dtype(x):
-            if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
-                cat_type = pd.api.types.CategoricalDtype(
-                    categories=x.unique().tolist(), ordered=True
-                )
-                x = x.astype(cat_type)
-            levels = x.cat.categories.tolist()
-            value = pd.get_dummies(x, drop_first=True).to_numpy()
-            return {"value": value, "type": "categoric", "levels": levels}
+        if is_categorical_dtype(x) or is_string_dtype(x):
+            return self.eval_categoric(x, encoding)
+        elif is_numeric_dtype(x):
+            return self.eval_numeric(x)
         else:
-            return {"value": np.atleast_2d(x.to_numpy()).T, "type": "call"}
+            return NotImplemented
 
+    def eval_numeric(self, x):
+        if isinstance(x, np.ndarray):
+            value = np.atleast_2d(x)
+        else:
+            value = np.atleast_2d(x.to_numpy()).T
+        return {"value": value, "type": "call"}
+
+    def eval_categoric(self, x, encoding):
+
+        if not hasattr(x, "ordered") or not x.ordered:
+            cat_type = pd.api.types.CategoricalDtype(categories=x.unique().tolist(), ordered=True)
+            x = x.astype(cat_type)
+
+        reference = x.min()
+        levels = x.cat.categories.tolist()
+
+        if isinstance(encoding, list):
+            encoding = encoding[0]
+        if isinstance(encoding, dict):
+            encoding = encoding[self.name]
+
+        if encoding:
+            value = pd.get_dummies(x).to_numpy()
+            encoding = "full"
+        else:
+            value = pd.get_dummies(x, drop_first=True).to_numpy()
+            encoding = "reduced"
+        return {
+            "value": value,
+            "type": "categoric",
+            "levels": levels,
+            "reference": reference,
+            "encoding": encoding,
+        }
 
 class GroupSpecTerm(BaseTerm):
     """Representation of group specific effects term"""
