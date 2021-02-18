@@ -8,8 +8,10 @@ from numpy.testing._private.utils import raises
 import pandas as pd
 import scipy as sp
 
+from scipy import linalg
+
 from .eval import EvalEnvironment
-from .terms import ModelTerms
+from .terms import ModelTerms, InterceptTerm
 from .model_description import model_description
 from .utils import flatten_list
 
@@ -201,8 +203,8 @@ class GroupEffectsMatrix:
     Parameters
     ----------
 
-    terms : ModelTerms
-        An ModelTerms object containing terms for the group effects of the model.
+    terms : list
+        A list of GroupSpecTerm objects.
     data: pandas.DataFrame
         The data frame where variables are taken from
     eval_env: EvalEnvironment
@@ -226,22 +228,60 @@ class GroupEffectsMatrix:
         Z = []
         self.terms_info = {}
         for term in self.terms:
-            d = term.eval(self.data, self.eval_env)
-            Zi = d["Zi"]
-            delta_row = Zi.shape[0]
-            delta_col = Zi.shape[1]
-            Z.append(Zi)
-            term_name = term.to_string()
-            self.terms_info[term_name] = {k: v for k, v in d.items() if k != "Zi"}
-            self.terms_info[term_name]["idxs"] = (
-                slice(start_row, start_row + delta_row),
-                slice(start_col, start_col + delta_col),
-            )
-            self.terms_info[term_name]["full_names"] = self.get_term_full_names(term_name)
-            start_row += delta_row
-            start_col += delta_col
+
+            encoding = True
+            if not isinstance(term.expr, InterceptTerm):
+                for term_ in self.terms:
+                    if term_.factor == term.factor and isinstance(term_.expr, InterceptTerm):
+                        encoding = False
+            d = term.eval(self.data, self.eval_env, encoding)
+
+            if d["type"] == "categoric":
+                levels = d["levels"] if d["encoding"] == "full" else d["levels"][1:]
+                for idx, level in enumerate(levels):
+                    Xi = np.atleast_2d(d["Xi"][:, idx]).T
+                    Ji = d["Ji"]
+                    Zi = linalg.khatri_rao(Ji.T, Xi.T).T
+                    delta_row = Zi.shape[0]
+                    delta_col = Zi.shape[1]
+                    Z.append(Zi)
+                    term_name = term.to_string(level)
+                    self.terms_info[term_name] = {
+                        "type": "categoric",
+                        "Xi": Xi,
+                        "Ji": Ji,
+                        "groups": d["groups"],
+                        "encoding": d["encoding"],
+                        "levels": d["levels"],
+                        "reference": d["reference"],
+                        "full_names": [f"{term_name}[{group}]" for group in d["groups"]],
+                    }
+                    self.terms_info[term_name]["idxs"] = (
+                        slice(start_row, start_row + delta_row),
+                        slice(start_col, start_col + delta_col),
+                    )
+                    start_row += delta_row
+                    start_col += delta_col
+            else:
+                Zi = d["Zi"]
+                delta_row = Zi.shape[0]
+                delta_col = Zi.shape[1]
+                Z.append(Zi)
+                term_name = term.to_string()
+                self.terms_info[term_name] = {k: v for k, v in d.items() if k != "Zi"}
+                self.terms_info[term_name]["idxs"] = (
+                    slice(start_row, start_row + delta_row),
+                    slice(start_col, start_col + delta_col),
+                )
+                self.terms_info[term_name]["full_names"] = self.get_term_full_names(term_name)
+                start_row += delta_row
+                start_col += delta_col
+
         # Stored in Compressed Sparse Column format
-        self.design_matrix = sp.sparse.block_diag(Z).tocsc()
+        if Z:
+            self.design_matrix = sp.sparse.block_diag(Z).tocsc()
+        else:
+            self.design_matrix = np.zeros((0, 0))
 
     def get_term_full_names(self, name):
         # Always returns a list
@@ -252,6 +292,7 @@ class GroupEffectsMatrix:
         elif _type == "interaction":
             return interaction_label(term)
         elif _type == "categoric":
+            # not used anymore?
             if "levels" in term.keys():
                 # Ask if encoding is "full" or "reduced"
                 if term["encoding"] == "full":

@@ -632,17 +632,11 @@ class CallTerm(BaseTerm):
             "encoding": encoding,
         }
 
+
 class GroupSpecTerm(BaseTerm):
     """Representation of group specific effects term"""
 
     def __init__(self, expr, factor):
-        """
-        if isinstance(expr, ModelTerms):
-            # This happens when we use `0 + x | g1`
-            self.expr = expr.terms[0]
-        else:
-            self.expr = expr
-        """
         self.expr = expr
         self.factor = factor
 
@@ -664,12 +658,15 @@ class GroupSpecTerm(BaseTerm):
         ]
         return "GroupSpecTerm(\n  " + ",\n  ".join(strlist) + "\n)"
 
-    def to_string(self):
+    def to_string(self, level=None):
         string = ""
         if isinstance(self.expr, InterceptTerm):
             string += "1|"
         elif isinstance(self.expr, (Term, CallTerm)):
-            string += self.expr.name + "|"
+            if level is not None:
+                string += f"{self.expr.name}[{level}]|"
+            else:
+                string += f"{self.expr.name}|"
         else:
             raise ValueError("Invalid LHS expression for group specific term")
 
@@ -684,7 +681,7 @@ class GroupSpecTerm(BaseTerm):
     def vars(self):
         return [self.expr.vars] + [self.factor.vars]
 
-    def eval(self, data, eval_env):
+    def eval(self, data, eval_env, encoding):
         # TODO: factor can't be a call or interaction yet.
         if isinstance(self.factor, Term):
             factor = data[self.factor.variable]
@@ -700,7 +697,7 @@ class GroupSpecTerm(BaseTerm):
 
         # Notation as in lme4 paper
         Ji = pd.get_dummies(factor).to_numpy()  # note we don't use `drop_first=True`.
-        Xi = ModelTerms(self.expr).eval(data, eval_env)[self.expr.name]
+        Xi = self.expr.eval(data, eval_env, encoding)
         Zi = linalg.khatri_rao(Ji.T, Xi["value"].T).T
         out = {
             "type": Xi["type"],
@@ -1000,8 +997,8 @@ class ModelTerms:
     def eval(self, data, eval_env):
         encoding = self._encoding_bools(data, eval_env)
         result = dict()
-
-        for term in self.terms:
+        # Group specific effects aren't evaluated here -- this may change
+        for term in self.common_terms:
             term_encoding = None
 
             if term.name in encoding.keys():
