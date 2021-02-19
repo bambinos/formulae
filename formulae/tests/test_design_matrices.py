@@ -1,3 +1,4 @@
+from numpy.core.numeric import allclose
 import pytest
 
 import numpy as np
@@ -253,6 +254,11 @@ def test_interactions(data):
     assert dm.common.terms_info["x1:g"]["terms"]["g"]["encoding"] == "full"
     assert dm.common.terms_info["x1:x2:g"]["terms"]["g"]["encoding"] == "full"
 
+    # Two numerics
+    dm = design_matrices("y ~ x1:x2", data)
+    assert "x1:x2" in dm.common.terms_info.keys()
+    assert np.allclose(dm.common["x1:x2"][:, 0], data["x1"] * data["x2"])
+
 
 def test_built_in_transformations(data):
     # {...} gets translated to I(...)
@@ -323,6 +329,10 @@ def test_built_in_transformations(data):
     assert dm.common.terms_info["C(x3, levels = lvls)"]["reference"] == 3
     assert dm.common.terms_info["C(x3, levels = lvls)"]["levels"] == lvls
 
+    # Pass a reference not in the data
+    with pytest.raises(ValueError):
+        dm = design_matrices("y ~ C(x3, 5)", data)
+
     # Pass categoric, remains unchanged
     dm = design_matrices("y ~ C(f)", data)
     dm2 = design_matrices("y ~ f", data)
@@ -334,3 +344,38 @@ def test_built_in_transformations(data):
     assert d1["encoding"] == d2["encoding"]
     assert not d1["full_names"] == d2["full_names"]  # because one is 'C(f)' and other is 'f'
     assert all(dm.common["C(f)"] == dm2.common["f"])
+
+
+def test_external_transformations(data):
+    dm = design_matrices("y ~ np.exp(x1)", data)
+    assert np.allclose(dm.common["np.exp(x1)"][:, 0], np.exp(data["x1"]))
+
+    def add_ten(x):
+        return x + 10
+
+    dm = design_matrices("y ~ add_ten(x1)", data)
+    assert np.allclose(dm.common["add_ten(x1)"][:, 0], data["x1"] + 10)
+
+
+def test_non_syntactic_names():
+    data = pd.DataFrame(
+        {
+            "My response": np.random.normal(size=10),
+            "$$#1@@": np.random.normal(size=10),
+            "-- ! Hi there!": np.random.normal(size=10),
+        }
+    )
+
+    dm = design_matrices("`My response` ~ `$$#1@@`*`-- ! Hi there!`", data)
+    assert list(dm.common.terms_info.keys()) == [
+        "Intercept",
+        "$$#1@@",
+        "-- ! Hi there!",
+        "$$#1@@:-- ! Hi there!",
+    ]
+    assert np.allclose(dm.common["$$#1@@"][:, 0], data["$$#1@@"])
+    assert np.allclose(dm.common["-- ! Hi there!"][:, 0], data["-- ! Hi there!"])
+    assert np.allclose(dm.common["-- ! Hi there!"][:, 0], data["-- ! Hi there!"])
+    assert np.allclose(
+        dm.common["$$#1@@:-- ! Hi there!"][:, 0], data["$$#1@@"] * data["-- ! Hi there!"]
+    )

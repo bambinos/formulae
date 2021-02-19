@@ -365,10 +365,11 @@ class InteractionTerm(BaseTerm):
 
         evaluated_terms = dict()
         for term in self.terms:
-            if term.name in encoding.keys():
-                encoding_ = encoding[term.name]
-            else:
-                encoding_ = []
+            encoding_ = []
+            # encoding is emtpy list when all numerics
+            if isinstance(encoding, dict):
+                if term.name in encoding.keys():
+                    encoding_ = encoding[term.name]
             evaluated_terms[term.name] = term.eval(data, eval_env, encoding_)
 
         value = reduce(
