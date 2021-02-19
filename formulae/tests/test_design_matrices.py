@@ -15,11 +15,34 @@ def data():
             "y": np.random.uniform(size=size),
             "x1": np.random.uniform(size=size),
             "x2": np.random.uniform(size=size),
+            "x3": [1, 2, 3, 4] * 5,
             "f": np.random.choice(["A", "B"], size=size),
             "g": np.random.choice(["A", "B"], size=size),
         }
     )
     return data
+
+
+def compare_dicts(d1, d2):
+    if len(d1) != len(d2):
+        return False
+    if set(d1.keys()) != set(d2.keys()):
+        return False
+
+    for key in d1.keys():
+        if type(d1[key]) != type(d2[key]):
+            return False
+        elif isinstance(d1[key], dict):
+            outcome = compare_dicts(d1[key], d2[key])
+            if not outcome:
+                return False
+        elif isinstance(d1[key], np.ndarray):
+            if not all(d1[key] == d2[key]):
+                return False
+        else:
+            if d1[key] != d2[key]:
+                return False
+    return True
 
 
 def test_empty_formula(data):
@@ -192,3 +215,122 @@ def test_categoric_encoding(data):
     assert dm.common.terms_info["f:g"]["terms"]["g"]["encoding"] == "full"
     assert dm.common.terms_info["f:g"]["full_names"] == ["f[A]:g[A]", "f[A]:g[B]"]
     assert dm.common.design_matrix.shape == (20, 4)
+
+
+def test_interactions(data):
+    # These two models are the same
+    dm = design_matrices("y ~ f * g", data)
+    dm2 = design_matrices("y ~ f + g + f:g", data)
+    assert compare_dicts(dm2.common.terms_info, dm.common.terms_info)
+
+    # When no intercept too
+    dm = design_matrices("y ~ 0 + f * g", data)
+    dm2 = design_matrices("y ~ 0 + f + g + f:g", data)
+    assert compare_dicts(dm2.common.terms_info, dm.common.terms_info)
+
+    # Mix of numeric/categoric
+    # "g" in "g" -> reduced
+    # "g" in "x1:g" -> full
+    dm = design_matrices("y ~ x1 + g + x1:g", data)
+    assert list(dm.common.terms_info.keys()) == ["Intercept", "x1", "g", "x1:g"]
+    assert dm.common.terms_info["g"]["type"] == "categoric"
+    assert dm.common.terms_info["g"]["encoding"] == "reduced"
+    assert dm.common.terms_info["x1:g"]["terms"]["g"]["encoding"] == "full"
+
+    # "g" in "x1:x2:g" is also full, because x1:x2 is a new group
+    dm = design_matrices("y ~ x1 + g + x1:g + x1:x2:g", data)
+    assert list(dm.common.terms_info.keys()) == ["Intercept", "x1", "g", "x1:g", "x1:x2:g"]
+    assert dm.common.terms_info["g"]["type"] == "categoric"
+    assert dm.common.terms_info["g"]["encoding"] == "reduced"
+    assert dm.common.terms_info["x1:g"]["terms"]["g"]["encoding"] == "full"
+    assert dm.common.terms_info["x1:x2:g"]["terms"]["g"]["encoding"] == "full"
+
+    # And now, since we don't have intercept, all "g" are full
+    dm = design_matrices("y ~ 0 + x1 + g + x1:g + x1:x2:g", data)
+    assert list(dm.common.terms_info.keys()) == ["x1", "g", "x1:g", "x1:x2:g"]
+    assert dm.common.terms_info["g"]["type"] == "categoric"
+    assert dm.common.terms_info["g"]["encoding"] == "full"
+    assert dm.common.terms_info["x1:g"]["terms"]["g"]["encoding"] == "full"
+    assert dm.common.terms_info["x1:x2:g"]["terms"]["g"]["encoding"] == "full"
+
+
+def test_built_in_transformations(data):
+    # {...} gets translated to I(...)
+    dm = design_matrices("y ~ {x1 + x2}", data)
+    assert list(dm.common.terms_info.keys()) == ["Intercept", "I(x1 + x2)"]
+    assert dm.common.terms_info["I(x1 + x2)"]["type"] == "call"
+    assert np.allclose(
+        dm.common["I(x1 + x2)"], np.atleast_2d((data["x1"] + data["x2"]).to_numpy()).T
+    )
+
+    dm2 = design_matrices("y ~ I(x1 + x2)", data)
+    assert compare_dicts(dm.common.terms_info, dm2.common.terms_info)
+
+    # center()
+    dm = design_matrices("y ~ center(x1)", data)
+    assert list(dm.common.terms_info.keys()) == ["Intercept", "center(x1)"]
+    assert dm.common.terms_info["center(x1)"]["type"] == "call"
+    assert np.allclose(dm.common["center(x1)"].mean(), 0)
+
+    # scale()
+    dm = design_matrices("y ~ scale(x1)", data)
+    assert list(dm.common.terms_info.keys()) == ["Intercept", "scale(x1)"]
+    assert dm.common.terms_info["scale(x1)"]["type"] == "call"
+    assert np.allclose(dm.common["scale(x1)"].mean(), 0)
+    assert np.allclose(dm.common["scale(x1)"].std(), 1)
+
+    # standardize(), alias of scale()
+    dm = design_matrices("y ~ standardize(x1)", data)
+    assert list(dm.common.terms_info.keys()) == ["Intercept", "standardize(x1)"]
+    assert dm.common.terms_info["standardize(x1)"]["type"] == "call"
+    assert np.allclose(dm.common["standardize(x1)"].mean(), 0)
+    assert np.allclose(dm.common["standardize(x1)"].std(), 1)
+
+    # C()
+    # Intercept, no extra arguments, reference is first value observed
+    dm = design_matrices("y ~ C(x3)", data)
+    assert list(dm.common.terms_info.keys()) == ["Intercept", "C(x3)"]
+    assert dm.common.terms_info["C(x3)"]["type"] == "categoric"
+    assert dm.common.terms_info["C(x3)"]["encoding"] == "reduced"
+    assert dm.common.terms_info["C(x3)"]["reference"] == 1
+    assert dm.common.terms_info["C(x3)"]["levels"] == [1, 2, 3, 4]
+    assert dm.common.terms_info["C(x3)"]["full_names"] == ["C(x3)[2]", "C(x3)[3]", "C(x3)[4]"]
+
+    # No intercept, no extra arguments
+    dm = design_matrices("y ~ 0 + C(x3)", data)
+    assert list(dm.common.terms_info.keys()) == ["C(x3)"]
+    assert dm.common.terms_info["C(x3)"]["type"] == "categoric"
+    assert dm.common.terms_info["C(x3)"]["encoding"] == "full"
+    assert dm.common.terms_info["C(x3)"]["reference"] == 1
+    assert dm.common.terms_info["C(x3)"]["levels"] == [1, 2, 3, 4]
+    assert dm.common.terms_info["C(x3)"]["full_names"] == [
+        "C(x3)[1]",
+        "C(x3)[2]",
+        "C(x3)[3]",
+        "C(x3)[4]",
+    ]
+
+    # Specify reference -> it is converted into 0-1 variable
+    dm = design_matrices("y ~ C(x3, 3)", data)
+    assert dm.common.terms_info["C(x3, 3)"]["type"] == "call"
+    assert dm.common.terms_info["C(x3, 3)"]["full_names"] == ["C(x3, 3)"]
+    assert all(dm.common["C(x3, 3)"][:, 0] == np.where(data["x3"] == 3, 1, 0))
+
+    # Specify levels, different to observed
+    lvls = [3, 2, 4, 1]
+    dm = design_matrices("y ~ C(x3, levels=lvls)", data)
+    assert dm.common.terms_info["C(x3, levels = lvls)"]["type"] == "categoric"
+    assert dm.common.terms_info["C(x3, levels = lvls)"]["reference"] == 3
+    assert dm.common.terms_info["C(x3, levels = lvls)"]["levels"] == lvls
+
+    # Pass categoric, remains unchanged
+    dm = design_matrices("y ~ C(f)", data)
+    dm2 = design_matrices("y ~ f", data)
+    d1 = dm.common.terms_info["C(f)"]
+    d2 = dm2.common.terms_info["f"]
+    assert d1["type"] == d2["type"]
+    assert d1["levels"] == d2["levels"]
+    assert d1["reference"] == d2["reference"]
+    assert d1["encoding"] == d2["encoding"]
+    assert not d1["full_names"] == d2["full_names"]  # because one is 'C(f)' and other is 'f'
+    assert all(dm.common["C(f)"] == dm2.common["f"])
