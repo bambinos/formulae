@@ -164,7 +164,12 @@ def test_categoric_encoding(data):
     assert dm.common.terms_info["f:g"]["type"] == "interaction"
     assert dm.common.terms_info["f:g"]["terms"]["f"]["encoding"] == "full"
     assert dm.common.terms_info["f:g"]["terms"]["g"]["encoding"] == "full"
-    assert dm.common.terms_info["f:g"]["full_names"] == ['f[B]:g[A]', 'f[B]:g[B]', 'f[A]:g[A]', 'f[A]:g[B]']
+    assert dm.common.terms_info["f:g"]["full_names"] == [
+        "f[B]:g[A]",
+        "f[B]:g[B]",
+        "f[A]:g[A]",
+        "f[A]:g[B]",
+    ]
     assert dm.common.design_matrix.shape == (20, 4)
 
     # Intercept, interaction between two categorics
@@ -175,7 +180,7 @@ def test_categoric_encoding(data):
     assert dm.common.terms_info["f:g"]["type"] == "interaction"
     assert dm.common.terms_info["f:g"]["terms"]["f"]["encoding"] == "reduced"
     assert dm.common.terms_info["f:g"]["terms"]["g"]["encoding"] == "full"
-    assert dm.common.terms_info["f:g"]["full_names"] == ['f[A]:g[A]', 'f[A]:g[B]']
+    assert dm.common.terms_info["f:g"]["full_names"] == ["f[A]:g[A]", "f[A]:g[B]"]
     assert dm.common.design_matrix.shape == (20, 4)
 
     # Same than before
@@ -185,5 +190,5 @@ def test_categoric_encoding(data):
     assert dm.common.terms_info["f:g"]["type"] == "interaction"
     assert dm.common.terms_info["f:g"]["terms"]["f"]["encoding"] == "reduced"
     assert dm.common.terms_info["f:g"]["terms"]["g"]["encoding"] == "full"
-    assert dm.common.terms_info["f:g"]["full_names"] == ['f[A]:g[A]', 'f[A]:g[B]']
+    assert dm.common.terms_info["f:g"]["full_names"] == ["f[A]:g[A]", "f[A]:g[B]"]
     assert dm.common.design_matrix.shape == (20, 4)

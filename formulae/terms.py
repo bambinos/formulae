@@ -1018,7 +1018,9 @@ class ModelTerms:
                         # Hack to keep original order, there's somethin happening with sets
                         # in 'contrasts.py'
                         terms_ = term.name.split(":")
-                        iterm_ = InteractionTerm(*[term.get_term(name) for name in terms_ if name in term_.keys()])
+                        iterm_ = InteractionTerm(
+                            *[term.get_term(name) for name in terms_ if name in term_.keys()]
+                        )
                         result[iterm_.name] = iterm_.eval(data, eval_env, term_)
             else:
                 result[term.name] = term.eval(data, eval_env, term_encoding)
