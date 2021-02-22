@@ -90,7 +90,9 @@ def test_common_predictor(data):
     assert dm.common.terms_info["f"]["levels"] == sorted(list(data["f"].unique()))
     assert dm.common.terms_info["f"]["reference"] == sorted(list(data["f"].unique()))[0]
     assert dm.common.terms_info["f"]["encoding"] == "reduced"
-    assert dm.common.terms_info["f"]["full_names"] == [f"f[{l}]" for l in sorted(data["f"].unique())[1:]]
+    assert dm.common.terms_info["f"]["full_names"] == [
+        f"f[{l}]" for l in sorted(data["f"].unique())[1:]
+    ]
 
 
 def test_categoric_encoding(data):
@@ -101,7 +103,9 @@ def test_categoric_encoding(data):
     assert dm.common.terms_info["f"]["levels"] == sorted(list(data["f"].unique()))
     assert dm.common.terms_info["f"]["reference"] == sorted(list(data["f"].unique()))[0]
     assert dm.common.terms_info["f"]["encoding"] == "full"
-    assert dm.common.terms_info["f"]["full_names"] == [f"f[{l}]" for l in sorted(data["f"].unique())]
+    assert dm.common.terms_info["f"]["full_names"] == [
+        f"f[{l}]" for l in sorted(data["f"].unique())
+    ]
     assert dm.common.design_matrix.shape == (20, 2)
 
     # Intercept, one categoric predictor
@@ -111,7 +115,9 @@ def test_categoric_encoding(data):
     assert dm.common.terms_info["f"]["levels"] == sorted(list(data["f"].unique()))
     assert dm.common.terms_info["f"]["reference"] == sorted(list(data["f"].unique()))[0]
     assert dm.common.terms_info["f"]["encoding"] == "reduced"
-    assert dm.common.terms_info["f"]["full_names"] == [f"f[{l}]" for l in sorted(data["f"].unique())[1:]]
+    assert dm.common.terms_info["f"]["full_names"] == [
+        f"f[{l}]" for l in sorted(data["f"].unique())[1:]
+    ]
     assert dm.common.design_matrix.shape == (20, 2)
 
     # No intercept, two additive categoric predictors
@@ -125,8 +131,12 @@ def test_categoric_encoding(data):
     assert dm.common.terms_info["g"]["reference"] == sorted(list(data["g"].unique()))[0]
     assert dm.common.terms_info["f"]["encoding"] == "full"
     assert dm.common.terms_info["g"]["encoding"] == "reduced"
-    assert dm.common.terms_info["f"]["full_names"] == [f"f[{l}]" for l in sorted(data["f"].unique())]
-    assert dm.common.terms_info["g"]["full_names"] == [f"g[{l}]" for l in sorted(data["g"].unique())[1:]]
+    assert dm.common.terms_info["f"]["full_names"] == [
+        f"f[{l}]" for l in sorted(data["f"].unique())
+    ]
+    assert dm.common.terms_info["g"]["full_names"] == [
+        f"g[{l}]" for l in sorted(data["g"].unique())[1:]
+    ]
     assert dm.common.design_matrix.shape == (20, 3)
 
     # Intercept, two additive categoric predictors
@@ -140,8 +150,12 @@ def test_categoric_encoding(data):
     assert dm.common.terms_info["g"]["reference"] == sorted(list(data["g"].unique()))[0]
     assert dm.common.terms_info["f"]["encoding"] == "reduced"
     assert dm.common.terms_info["g"]["encoding"] == "reduced"
-    assert dm.common.terms_info["f"]["full_names"] == [f"f[{l}]" for l in sorted(data["f"].unique())[1:]]
-    assert dm.common.terms_info["g"]["full_names"] == [f"g[{l}]" for l in sorted(data["g"].unique())[1:]]
+    assert dm.common.terms_info["f"]["full_names"] == [
+        f"f[{l}]" for l in sorted(data["f"].unique())[1:]
+    ]
+    assert dm.common.terms_info["g"]["full_names"] == [
+        f"g[{l}]" for l in sorted(data["g"].unique())[1:]
+    ]
     assert dm.common.design_matrix.shape == (20, 3)
 
     # No intercept, two categoric predictors with interaction
@@ -158,8 +172,12 @@ def test_categoric_encoding(data):
     assert dm.common.terms_info["g"]["encoding"] == "reduced"
     assert dm.common.terms_info["f:g"]["terms"]["f"]["encoding"] == "reduced"
     assert dm.common.terms_info["f:g"]["terms"]["g"]["encoding"] == "reduced"
-    assert dm.common.terms_info["f"]["full_names"] == [f"f[{l}]" for l in sorted(data["f"].unique())]
-    assert dm.common.terms_info["g"]["full_names"] == [f"g[{l}]" for l in sorted(data["g"].unique())[1:]]
+    assert dm.common.terms_info["f"]["full_names"] == [
+        f"f[{l}]" for l in sorted(data["f"].unique())
+    ]
+    assert dm.common.terms_info["g"]["full_names"] == [
+        f"g[{l}]" for l in sorted(data["g"].unique())[1:]
+    ]
     assert dm.common.terms_info["f:g"]["full_names"] == ["f[B]:g[B]"]
     assert dm.common.design_matrix.shape == (20, 4)
 
@@ -177,8 +195,12 @@ def test_categoric_encoding(data):
     assert dm.common.terms_info["g"]["encoding"] == "reduced"
     assert dm.common.terms_info["f:g"]["terms"]["f"]["encoding"] == "reduced"
     assert dm.common.terms_info["f:g"]["terms"]["g"]["encoding"] == "reduced"
-    assert dm.common.terms_info["f"]["full_names"] == [f"f[{l}]" for l in sorted(data["f"].unique())[1:]]
-    assert dm.common.terms_info["g"]["full_names"] == [f"g[{l}]" for l in sorted(data["g"].unique())[1:]]
+    assert dm.common.terms_info["f"]["full_names"] == [
+        f"f[{l}]" for l in sorted(data["f"].unique())[1:]
+    ]
+    assert dm.common.terms_info["g"]["full_names"] == [
+        f"g[{l}]" for l in sorted(data["g"].unique())[1:]
+    ]
     assert dm.common.terms_info["f:g"]["full_names"] == ["f[B]:g[B]"]
     assert dm.common.design_matrix.shape == (20, 4)
 
