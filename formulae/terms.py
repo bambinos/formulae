@@ -213,7 +213,8 @@ class Term(BaseTerm):
         # x.unique() preservese order of appearence
 
         if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
-            cat_type = pd.api.types.CategoricalDtype(categories=x.unique().tolist(), ordered=True)
+            categories = sorted(x.unique().tolist())
+            cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
             x = x.astype(cat_type)
 
         reference = x.min()
@@ -608,7 +609,8 @@ class CallTerm(BaseTerm):
 
     def eval_categoric(self, x, encoding):
         if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
-            cat_type = pd.api.types.CategoricalDtype(categories=x.unique().tolist(), ordered=True)
+            categories = sorted(x.unique().tolist())
+            cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
             x = x.astype(cat_type)
 
         reference = x.min()
@@ -687,9 +689,8 @@ class GroupSpecTerm(BaseTerm):
         if isinstance(self.factor, Term):
             factor = data[self.factor.variable]
             if not hasattr(factor.dtype, "ordered") or not factor.dtype.ordered:
-                cat_type = pd.api.types.CategoricalDtype(
-                    categories=factor.unique().tolist(), ordered=True
-                )
+                categories = sorted(factor.unique().tolist())
+                cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
                 factor = factor.astype(cat_type)
         else:
             raise ValueError(

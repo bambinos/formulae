@@ -65,7 +65,8 @@ def C(x, ref=None, levels=None):
         cat_type = pd.api.types.CategoricalDtype(categories=levels, ordered=True)
         x = x.astype(cat_type)
     elif not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
-        cat_type = pd.api.types.CategoricalDtype(categories=x.unique().tolist(), ordered=True)
+        categories = sorted(x.unique().tolist())
+        cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
         x = x.astype(cat_type)
     return x
 
