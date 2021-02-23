@@ -70,10 +70,9 @@ class Term(BaseTerm):
     def __init__(self, name, variable, level=None, kind=None):
         self.name = name
         self.variable = variable
+        self.level = None
         if level is not None:
-            self.level = level.name.lexeme
-        else:
-            self.level = level
+            self.level = level.value
         self.kind = kind
 
     def __hash__(self):
@@ -169,7 +168,7 @@ class Term(BaseTerm):
             "kind= " + str(self.kind),
         ]
         if self.level is not None:
-            string_list.append("level= " + self.level)
+            string_list.append("level= " + str(self.level))
         return "Term(\n  " + "\n  ".join(string_list) + "\n)"
 
     @property
@@ -588,13 +587,13 @@ class CallTerm(BaseTerm):
             raise NotImplementedError
         return {self.name: type_}
 
-    def eval(self, data, eval_env, encoding):
+    def eval(self, data, eval_env, encoding, is_response=False):
         # Workaround: var names present in 'data' are taken from '__DATA__['col']
         # the rest are left as they are and looked up in the upper namespace
         data_cols = data.columns.tolist()
         x = eval_in_data_mask(self.get_eval_str(data_cols), data, eval_env)
         if is_categorical_dtype(x) or is_string_dtype(x):
-            return self.eval_categoric(x, encoding)
+            return self.eval_categoric(x, encoding, is_response)
         elif is_numeric_dtype(x):
             return self.eval_numeric(x)
         else:
@@ -607,7 +606,7 @@ class CallTerm(BaseTerm):
             value = np.atleast_2d(x.to_numpy()).T
         return {"value": value, "type": "call"}
 
-    def eval_categoric(self, x, encoding):
+    def eval_categoric(self, x, encoding, is_response):
         if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
             categories = sorted(x.unique().tolist())
             cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
@@ -616,17 +615,22 @@ class CallTerm(BaseTerm):
         reference = x.min()
         levels = x.cat.categories.tolist()
 
-        if isinstance(encoding, list):
-            encoding = encoding[0]
-        if isinstance(encoding, dict):
-            encoding = encoding[self.name]
-
-        if encoding:
-            value = pd.get_dummies(x).to_numpy()
-            encoding = "full"
+        if is_response:
+            if self.level is not None:
+                reference = self.level
+            value = np.atleast_2d(np.where(x == reference, 1, 0)).T
+            encoding = None
         else:
-            value = pd.get_dummies(x, drop_first=True).to_numpy()
-            encoding = "reduced"
+            if isinstance(encoding, list):
+                encoding = encoding[0]
+            if isinstance(encoding, dict):
+                encoding = encoding[self.name]
+            if encoding:
+                value = pd.get_dummies(x).to_numpy()
+                encoding = "full"
+            else:
+                value = pd.get_dummies(x, drop_first=True).to_numpy()
+                encoding = "reduced"
         return {
             "value": value,
             "type": "categoric",
@@ -938,7 +942,11 @@ class ModelTerms:
             else:
                 vars = vars.union({term.vars})
         if self.response is not None:
-            vars = vars.union({self.response.vars})
+            vars_ = self.response.vars
+            if isinstance(vars_, list):
+                vars = vars.union(set(vars_))
+            else:
+                vars = vars.union({vars_})
 
         # Some terms return '' for vars
         vars = vars - {""}

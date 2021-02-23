@@ -170,7 +170,7 @@ class Variable(Expr):
     def __str__(self):
         string_list = ["name=" + self.name.lexeme]
         if self.level is not None:
-            string_list.append("level=" + self.level.lexeme)
+            string_list.append("level=" + self.level.value)
         return "Variable(" + ",\n  ".join(string_list) + ")"
 
     def accept(self, visitor):

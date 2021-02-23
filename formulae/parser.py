@@ -167,14 +167,14 @@ class Parser:
             identifier = self.previous()
             if self.match("LEFT_BRACKET"):
                 level = self.expression()
-                if not isinstance(level, Variable):
-                    raise ParseError("Subset notation only allows a level name.")
+                if not isinstance(level, Literal):
+                    raise ParseError("Subset notation only allows a string or a number.")
                 self.consume("RIGHT_BRACKET", "Expect ']' after level name.")
                 return Variable(identifier, level)
             else:
                 return Variable(self.previous())
         elif self.match("STRING"):
-            return Literal(self.previous().lexeme)
+            return Literal(self.previous().literal)
         elif self.match("BQNAME"):
             return QuotedName(self.previous())
         elif self.match("LEFT_PAREN"):
@@ -187,4 +187,4 @@ class Parser:
             self.consume("RIGHT_BRACE", "Expect '}' after expression.")
             return Call(Variable(Token("IDENTIFIER", "I")), [expr])
         else:
-            raise ParseError("Expect expression.")
+            raise ParseError(f"Don't know how to parse '{self.peek().lexeme}'")

@@ -36,8 +36,8 @@ if "setuptools" in sys.modules:
 
 setup(
     name="formulae",
-    version="0.0.3",
-    description="An implementation of the Wilkinson formula language for statistical models à la lme4",
+    version="0.0.5",
+    description="An implementation of Wilkinson's formula language for statistical models à la lme4",
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
     url="https://github.com/bambinos/formulae",
