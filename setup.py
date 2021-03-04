@@ -36,7 +36,7 @@ if "setuptools" in sys.modules:
 
 setup(
     name="formulae",
-    version="0.0.5",
+    version="0.0.6",
     description="An implementation of Wilkinson's formula language for statistical models à la lme4",
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
