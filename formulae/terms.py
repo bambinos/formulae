@@ -978,18 +978,17 @@ class ModelTerms:
         numeric_group_sets = []
         numeric_groups = []
         for k, v in components.items():
-            #print(k)
             categoric = [k_ for k_, v_ in v.items() if v_ == "categoric"]
             numeric = [k_ for k_, v_ in v.items() if v_ == "numeric"]
             # if it is an interaction both categoric and numeric terms...
             if categoric and numeric:
                 numeric_set = set(numeric)
                 numeric_part = ":".join(numeric)
-                #print(numeric_part)
                 if numeric_set not in numeric_group_sets:
                     numeric_group_sets.append(numeric_set)
                     numeric_groups.append(dict())
                 idx = numeric_group_sets.index(numeric_set)
+                # Prevent full encoding when numeric part is present outside this num/cat interaction
                 if numeric_part in components.keys():
                     numeric_groups[idx][numeric_part] = []
                 numeric_groups[idx][k] = categoric
@@ -1004,12 +1003,10 @@ class ModelTerms:
         False means the categorial variable uses 'levels - 1' dummies.
         """
         groups = self._encoding_groups(data, eval_env)
-        print(groups)
         l = [pick_contrasts(group) for group in groups]
         result = dict()
         for d in l:
             result.update(d)
-        print(result)
         return result
 
     def eval(self, data, eval_env):
