@@ -253,24 +253,40 @@ def test_interactions(data):
 
     # Mix of numeric/categoric
     # "g" in "g" -> reduced
-    # "g" in "x1:g" -> full
+    # "g" in "x1:g" -> reduced because x1 is present in formula
     dm = design_matrices("y ~ x1 + g + x1:g", data)
     assert list(dm.common.terms_info.keys()) == ["Intercept", "x1", "g", "x1:g"]
     assert dm.common.terms_info["g"]["type"] == "categoric"
     assert dm.common.terms_info["g"]["encoding"] == "reduced"
+    assert dm.common.terms_info["x1:g"]["terms"]["g"]["encoding"] == "reduced"
+
+    # "g" in "g" -> reduced
+    # "g" in "x1:g" -> full because x1 is not present in formula
+    dm = design_matrices("y ~ g + x1:g", data)
+    assert list(dm.common.terms_info.keys()) == ["Intercept", "g", "x1:g"]
+    assert dm.common.terms_info["g"]["type"] == "categoric"
+    assert dm.common.terms_info["g"]["encoding"] == "reduced"
     assert dm.common.terms_info["x1:g"]["terms"]["g"]["encoding"] == "full"
 
-    # "g" in "x1:x2:g" is also full, because x1:x2 is a new group
+    # "g" in "x1:x2:g" is full, because x1:x2 is a new group and we don't have x1:x2 in the model
     dm = design_matrices("y ~ x1 + g + x1:g + x1:x2:g", data)
     assert list(dm.common.terms_info.keys()) == ["Intercept", "x1", "g", "x1:g", "x1:x2:g"]
     assert dm.common.terms_info["g"]["type"] == "categoric"
     assert dm.common.terms_info["g"]["encoding"] == "reduced"
-    assert dm.common.terms_info["x1:g"]["terms"]["g"]["encoding"] == "full"
+    assert dm.common.terms_info["x1:g"]["terms"]["g"]["encoding"] == "reduced"
     assert dm.common.terms_info["x1:x2:g"]["terms"]["g"]["encoding"] == "full"
 
-    # And now, since we don't have intercept, all "g" are full
-    dm = design_matrices("y ~ 0 + x1 + g + x1:g + x1:x2:g", data)
-    assert list(dm.common.terms_info.keys()) == ["x1", "g", "x1:g", "x1:x2:g"]
+    # "g" in "x1:x2:g" is reduced, because x1:x2 is a new group and we have x1:x2 in the model
+    dm = design_matrices("y ~ x1 + g + x1:x2 + x1:g + x1:x2:g", data)
+    assert list(dm.common.terms_info.keys()) == ["Intercept", "x1", "g", "x1:x2", "x1:g", "x1:x2:g"]
+    assert dm.common.terms_info["g"]["type"] == "categoric"
+    assert dm.common.terms_info["g"]["encoding"] == "reduced"
+    assert dm.common.terms_info["x1:g"]["terms"]["g"]["encoding"] == "reduced"
+    assert dm.common.terms_info["x1:x2:g"]["terms"]["g"]["encoding"] == "reduced"
+
+    # And now, since we don't have intercept, x1 and x1:x2 all "g" are full
+    dm = design_matrices("y ~ 0 + g + x1:g + x1:x2:g", data)
+    assert list(dm.common.terms_info.keys()) == ["g", "x1:g", "x1:x2:g"]
     assert dm.common.terms_info["g"]["type"] == "categoric"
     assert dm.common.terms_info["g"]["encoding"] == "full"
     assert dm.common.terms_info["x1:g"]["terms"]["g"]["encoding"] == "full"
