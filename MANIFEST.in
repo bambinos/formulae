@@ -1,0 +1,10 @@
+include *.txt
+include README.md
+
+graft formulae
+
+prune *.egg-info
+
+exclude *.yml
+exclude *.yaml
+exclude .gitignore
