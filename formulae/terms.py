@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.lib.arraysetops import isin
 import pandas as pd
 
 from functools import reduce
