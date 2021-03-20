@@ -1,11 +1,17 @@
+from formulae.terms import InterceptTerm
 from formulae.expr import Literal
 from itertools import combinations, product
 
 class Variable:
     """Atomic component of a Term"""
 
-    def __init__(self, expr):
+    def __init__(self, expr, is_call=False, level=None):
         self.expr = expr
+        self.is_call = is_call
+        self.level = level
+
+    def __hash__(self):
+        return hash((self.expr, self.is_call, self.level))
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -25,12 +31,14 @@ class Term:
     involving components and/or function calls or a group specific term.
     """
 
-    def __init__(self, *components, is_call=False):
+    def __init__(self, *components):
         self.components = []
-        self.is_call = is_call
         for component in components:
             if component not in self.components:
                 self.components.append(component)
+
+    def __hash__(self):
+        return hash(*self.components)
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -46,7 +54,7 @@ class Term:
         elif isinstance(other, ModelTerms):
             return ModelTerms(self) + other
         else:
-            raise ValueError("Unsupported RHS in '+' operation.")
+            return NotImplemented
 
     def __sub__(self, other):
         if isinstance(other, type(self)):
@@ -60,7 +68,7 @@ class Term:
             else:
                 return self
         else:
-            raise ValueError("Unsupported RHS in '-' operation.")
+            return NotImplemented
 
     def __mul__(self, other):
         """Full interaction.
@@ -83,7 +91,7 @@ class Term:
             iterms = [Term(*p[0].components, *p[1].components) for p in products]
             return ModelTerms(*terms) + ModelTerms(*iterms)
         else:
-            raise ValueError("Unsupported RHS in '*' operation.")
+            return NotImplemented
 
     def __matmul__(self, other):
         """Simple interaction.
@@ -106,7 +114,7 @@ class Term:
             iterms = [Term(*p[0].components, *p[1].components) for p in products]
             return ModelTerms(*iterms)
         else:
-            raise ValueError("Unsupported RHS in ':' operation.")
+            return NotImplemented
 
     def __pow__(self, other):
         """Power of a Term.
@@ -118,7 +126,7 @@ class Term:
             if isinstance(expr, int) and expr >= 1:
                 return self
         else:
-            raise ValueError("Power must be a positive integer.")
+            return NotImplemented
 
     def __truediv__(self, other):
         """Division interaction.
@@ -137,7 +145,7 @@ class Term:
             iterms = [Term(*p[0].components, *p[1].components) for p in products]
             return self + ModelTerms(*iterms)
         else:
-            raise ValueError("Unsupported RHS in '/' operation.")
+            return NotImplemented
 
     def __or__(self, other):
         """Group specific term
@@ -148,17 +156,17 @@ class Term:
         if isinstance(other, Term):
             # Only accepts terms, call terms and interactions.
             # Adds implicit intercept.
-            terms = [GroupSpecTerm(Term(Variable([])), other), GroupSpecTerm(self, other)]
+            terms = [GroupSpecTerm(Intercept(), other), GroupSpecTerm(self, other)]
             return ModelTerms(*terms)
         elif isinstance(other, ModelTerms):
             intercepts = [
-                GroupSpecTerm(Term(Variable([])), p[1])
+                GroupSpecTerm(Intercept(), p[1])
                  for p in product([self], other.common_terms)
             ]
             slopes = [GroupSpecTerm(p[0], p[1]) for p in product([self], other.common_terms)]
             return ModelTerms(*intercepts, *slopes)
         else:
-            raise ValueError("Unsupported RHS in '|' operation.")
+            return NotImplemented
 
     def __repr__(self):
         return self.__str__()
@@ -166,6 +174,96 @@ class Term:
     def __str__(self):
         string = "[" + ", ".join([repr(component) for component in self.components]) + "]"
         return f"{self.__class__.__name__}({string})"
+
+class Intercept:
+    def __init__(self):
+        self.name = "Intercept"
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.name == other.name
+
+    def __add__(self, other):
+        if isinstance(other, NegatedIntercept):
+            return ModelTerms()
+        elif isinstance(other, type(self)):
+            return self
+        elif isinstance(other, (Term, GroupSpecTerm)):
+            return ModelTerms(self, other)
+        elif isinstance(other, ModelTerms):
+            return ModelTerms(self) + other
+        else:
+            return NotImplemented
+
+    def __sub__(self, other):
+        if isinstance(other, type(self)):
+            if self.components == other.components:
+                return ModelTerms()
+            else:
+                return self
+        elif isinstance(other, ModelTerms):
+            if self in other.common_terms:
+                return ModelTerms()
+            else:
+                return self
+        else:
+            return NotImplemented
+
+    def __or__(self, other):
+        """
+        (1|g) -> (1|g); (1|g:h) -> (1|g:h)
+        (1 | g + h) -> (1|g) + (1|h)
+        """
+        if isinstance(other, Term):
+            return GroupSpecTerm(self, other)
+        elif isinstance(other, ModelTerms):
+            products = product([self], other.common_terms)
+            terms = [GroupSpecTerm(p[0], p[1]) for p in products]
+            return ModelTerms(*terms)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return f"{self.__class__.__name__}()"
+
+
+class NegatedIntercept:
+    def __init__(self):
+        self.name = "Intercept"
+
+    def __add__(self, other):
+        if isinstance(other, type(self)):
+            return self
+        elif isinstance(other, Intercept):
+            return ModelTerms()
+        elif isinstance(other, (Term, GroupSpecTerm)):
+            return ModelTerms(self, other)
+        elif isinstance(other, ModelTerms):
+            return ModelTerms(self) + other
+        else:
+            return NotImplemented
+
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        else:
+            return self.name == other.name
+
+    def __or__(self, other):
+        raise ValueError("At least include an intercept in '|' operation")
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return f"{self.__class__.__name__}()"
+
+    @property
+    def vars(self):
+        return ""
 
 
 class GroupSpecTerm:
@@ -187,6 +285,7 @@ class GroupSpecTerm:
             f"factor= {'  '.join(str(self.factor).splitlines(True))}",
         ]
         return self.__class__.__name__ + "(\n  " + ',\n  '.join(strlist) + "\n)"
+
 
 class ResponseTerm:
     """Representation of a response term"""
@@ -234,8 +333,8 @@ class ModelTerms:
             self.response = response
         else:
             raise ValueError("Response must be of class ResponseTerm.")
-
-        if all(isinstance(term, (Term, GroupSpecTerm)) for term in terms):
+        ACCEPTED_TERMS = (Term, GroupSpecTerm, Intercept, NegatedIntercept)
+        if all(isinstance(term, ACCEPTED_TERMS) for term in terms):
             self.common_terms = [term for term in terms if not isinstance(term, GroupSpecTerm)]
             self.group_terms = [term for term in terms if isinstance(term, GroupSpecTerm)]
         else:
@@ -250,18 +349,27 @@ class ModelTerms:
 
     def __add__(self, other):
         """Set union.
+        (1 + x + y) + 0 -> (x + y)
+        (x + y) + z -> x + y + z
+        (x + y) + (u + v) -> x + y + u + v
         """
-        if isinstance(other, Term):
+        if isinstance(other, NegatedIntercept):
+            return self - InterceptTerm()
+        elif isinstance(other, (Term, GroupSpecTerm, Intercept)):
             return self.add_term(other)
         elif isinstance(other, type(self)):
             for term in other.terms:
                 self.add_term(term)
             return self
         else:
-            raise ValueError("Unsupported RHS in '+' operation.")
+            return NotImplemented
 
     def __sub__(self, other):
         """Set difference.
+
+        (x + y) - (x + u) -> y + u
+        (x + y) - x -> y
+        (x + y + (1 | g)) - (1 | g) -> x + y
         """
         if isinstance(other, type(self)):
             for term in other.terms:
@@ -270,7 +378,7 @@ class ModelTerms:
                 if term in self.group_terms:
                     self.group_terms.remove(term)
             return self
-        elif isinstance(other, Term):
+        elif isinstance(other, (Term, Intercept)):
             if other in self.common_terms:
                 self.common_terms.remove(other)
             return self
@@ -279,7 +387,7 @@ class ModelTerms:
                 self.group_terms.remove(other)
             return self
         else:
-            raise ValueError("Unsupported RHS in '-' operation.")
+            return NotImplemented
 
     def __matmul__(self, other):
         """Simple interaction.
@@ -297,7 +405,7 @@ class ModelTerms:
             iterms = [Term(*p[0].components, *p[1].components) for p in products]
             return ModelTerms(*iterms)
         else:
-            raise ValueError("Unsupported RHS in ':' operation.")
+            return NotImplemented
 
     def __pow__(self, other):
         """Power of a set of Terms
@@ -332,14 +440,21 @@ class ModelTerms:
             iterms = [Term(*self.common_components, comp) for comp in other.common_components]
             return self + ModelTerms(*iterms)
         else:
-            raise ValueError("Unsupported RHS in '/' operation.")
+            return NotImplemented
 
     def __or__(self, other):
         """
+        Only terms like (0 + x | g) arrive here
         (0 + x | g) -> (x|g)
         (0 + x | g + y) -> (x|g) + (x|y)
         """
+        # Only negated intercept + one term
         if len(self.common_terms) <= 2:
+            if len(self.common_terms) == 1:
+                return self.common_terms[0] | other
+            if NegatedIntercept() in self.common_terms:
+                self.common_terms.remove(NegatedIntercept())
+
             if isinstance(other, Term):
                 products = product(self.common_terms, [other])
                 terms = [GroupSpecTerm(p[0], p[1]) for p in products]
@@ -349,12 +464,10 @@ class ModelTerms:
                 terms = [GroupSpecTerm(p[0], p[1]) for p in products]
                 return ModelTerms(*terms)
             else:
-                raise ValueError("Unsupported RHS in '|' operation.")
+                return NotImplemented
         else:
-            # If more than two terms, raise error
-            raise ValueError(
-                "LHS of group specific term cannot have more than intercept and one term."
-            )
+            raise ValueError("LHS of group specific term cannot have more than one term.")
+
 
     def add_response(self, term):
         if isinstance(term, ResponseTerm):
@@ -368,7 +481,7 @@ class ModelTerms:
             if term not in self.group_terms:
                 self.group_terms.append(term)
             return self
-        elif isinstance(term, Term):
+        elif isinstance(term, (Term, Intercept)):
             if term not in self.common_terms:
                 self.common_terms.append(term)
             return self
