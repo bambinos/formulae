@@ -1,5 +1,6 @@
 from .term import (
     Variable,
+    Call,
     Term,
     Intercept,
     NegatedIntercept,
@@ -61,10 +62,10 @@ class Resolver:
             raise ResolverError("Couldn't resolve UnaryExpr with otype '" + otype + "'")
 
     def visitCallExpr(self, expr):
-        return Term(Variable(expr, is_call=True))
+        return Term(Call(expr))
 
     def visitVariableExpr(self, expr):
-        return Term(Variable(expr.name.lexeme, level=expr.level))
+        return Term(Variable(expr.name.lexeme, expr.level))
 
     def visitLiteralExpr(self, expr):
         if expr.value == 0:

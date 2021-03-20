@@ -1,28 +1,219 @@
-from formulae.terms import InterceptTerm
-from formulae.expr import Literal
+import numpy as np
+import pandas as pd
+
 from itertools import combinations, product
+from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
+
+from .call_utils import CallEvalPrinter, CallNamePrinter, CallVarsExtractor
+from .eval import eval_in_data_mask
 
 class Variable:
     """Atomic component of a Term"""
 
-    def __init__(self, expr, is_call=False, level=None):
-        self.expr = expr
-        self.is_call = is_call
+    def __init__(self, name, level=None):
+        self.name = name
         self.level = level
+        self.data = None
 
     def __hash__(self):
-        return hash((self.expr, self.is_call, self.level))
+        return hash((self.name, self.level))
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return self.expr == other.expr
+        return self.name == other.name and self.level == other.level
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        return f"{self.__class__.__name__}({self.expr})"
+        return f"{self.__class__.__name__}({self.name}, level='{self.level}')"
+
+    @property
+    def vars(self):
+        return self.name
+
+    def component(self, data, eval_env):
+        """Returns components and whether they are categoric or numeric."""
+        x = data[self.name]
+        if is_numeric_dtype(x):
+            type_ = "numeric"
+        elif is_string_dtype(x) or is_categorical_dtype(x):
+            type_ = "categoric"
+        else:
+            raise ValueError(f"Variable is of an unrecognized type ({type(x)}).")
+        return {self.name: type_}
+
+    def components(self, data, eval_env):
+        # Returns components and whether they are categoric or numeric
+        x = data[self.variable]
+        if is_numeric_dtype(x):
+            type_ = "numeric"
+        elif is_string_dtype(x) or is_categorical_dtype(x):
+            type_ = "categoric"
+        else:
+            raise NotImplementedError
+        return {self.name: type_}
+
+    def eval(self, data, eval_env, encoding, is_response=False):
+        """Evaluates the variable.
+
+        `is_response` flags whether the term evaluated is the response term.
+        It does not support multiple level categoric responses yet.
+        If `is_response` is `True` and the variable is of a categoric type, this method
+        returns a 1d array of 0-1 instead of a matrix.
+        """
+        x = data[self.variable]
+
+        if is_numeric_dtype(x):
+            data = self.eval_numeric(x)
+        elif is_string_dtype(x) or is_categorical_dtype(x):
+            data = self.eval_categoric(x, encoding, is_response)
+        else:
+            raise ValueError(f"Variable is of an unrecognized type ({type(data)}).")
+        self.data = data
+        return self.data
+
+    def eval_numeric(self, x):
+        if self.level is not None:
+            raise ValueError("Subset notation can't be used with a numeric variable.")
+        out = {"value": np.atleast_2d(x.to_numpy()).T, "type": "numeric"}
+        return out
+
+    def eval_categoric(self, x, encoding, is_response):
+        # If not ordered, we make it ordered
+        # x.unique() preservese order of appearence
+
+        if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
+            categories = sorted(x.unique().tolist())
+            cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
+            x = x.astype(cat_type)
+
+        reference = x.min()
+        levels = x.cat.categories.tolist()
+
+        if is_response:
+            if self.level is not None:
+                reference = self.level
+            value = np.atleast_2d(np.where(x == reference, 1, 0)).T
+        else:
+            if isinstance(encoding, list):
+                encoding = encoding[0]
+            if isinstance(encoding, dict):
+                encoding = encoding[self.name]
+            if encoding:
+                value = pd.get_dummies(x).to_numpy()
+                encoding = "full"
+            else:
+                value = pd.get_dummies(x, drop_first=True).to_numpy()
+                encoding = "reduced"
+        return {
+            "value": value,
+            "type": "categoric",
+            "levels": levels,
+            "reference": reference,
+            "encoding": encoding,
+        }
+
+
+class Call:
+    """Atomic component of a Term that is a call"""
+
+    def __init__(self, expr):
+        self.callee = expr.callee.name.lexeme
+        self.args = expr.args
+        self.name = self._name_str()
+        self.data = None
+
+    def __hash__(self):
+        return hash((self.callee, self.name, self.args))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.callee == other.callee and self.name == other.name and self.args == other.args
+
+    def accept(self, visitor):
+        return visitor.visitCallTerm(self)
+
+    def _eval_str(self, data_cols):
+        return CallEvalPrinter(self, data_cols).print()
+
+    def _name_str(self):
+        return CallNamePrinter(self).print()
+
+    @property
+    def vars(self):
+        return CallVarsExtractor(self).get()
+
+    def component(self, data, eval_env):
+        data_cols = data.columns.tolist()
+        x = eval_in_data_mask(self._eval_str(data_cols), data, eval_env)
+        if is_numeric_dtype(x):
+            type_ = "numeric"
+        elif is_string_dtype(x) or is_categorical_dtype(x) or isinstance(x, dict):
+            type_ = "categoric"
+        else:
+            raise ValueError("Result to call is of unexpected type.")
+        return {self.name: type_}
+
+    def eval(self, data, eval_env, encoding, is_response=False):
+        """Evaluates the call.
+
+        This method evaluates the call, updates self.data and finally returns self.data.
+        """
+        # Workaround: var names present in 'data' are taken from '__DATA__['col']
+        # the rest are left as they are and looked up in the upper namespace
+        data_cols = data.columns.tolist()
+        x = eval_in_data_mask(self._eval_str(data_cols), data, eval_env)
+        if is_categorical_dtype(x) or is_string_dtype(x):
+            data = self.eval_categoric(x, encoding, is_response)
+        elif is_numeric_dtype(x):
+            data = self.eval_numeric(x)
+        else:
+            raise ValueError("Result to call is of unexpected type.")
+        self.data = data
+        return self.data
+
+    def eval_numeric(self, x):
+        if isinstance(x, np.ndarray):
+            value = np.atleast_2d(x)
+        else:
+            value = np.atleast_2d(x.to_numpy()).T
+        return {"value": value, "type": "call"}
+
+    def eval_categoric(self, x, encoding, is_response):
+        if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
+            categories = sorted(x.unique().tolist())
+            cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
+            x = x.astype(cat_type)
+
+        reference = x.min()
+        levels = x.cat.categories.tolist()
+
+        if is_response:
+            if self.level is not None:
+                reference = self.level
+            value = np.atleast_2d(np.where(x == reference, 1, 0)).T
+            encoding = None
+        else:
+            if isinstance(encoding, list):
+                encoding = encoding[0]
+            if isinstance(encoding, dict):
+                encoding = encoding[self.name]
+            if encoding:
+                value = pd.get_dummies(x).to_numpy()
+                encoding = "full"
+            else:
+                value = pd.get_dummies(x, drop_first=True).to_numpy()
+                encoding = "reduced"
+        return {
+            "value": value,
+            "type": "categoric",
+            "levels": levels,
+            "reference": reference,
+            "encoding": encoding,
+        }
 
 class Term:
     """Representation of a single term in a ModelTerms.
@@ -175,6 +366,7 @@ class Term:
         string = "[" + ", ".join([repr(component) for component in self.components]) + "]"
         return f"{self.__class__.__name__}({string})"
 
+
 class Intercept:
     def __init__(self):
         self.name = "Intercept"
@@ -228,6 +420,8 @@ class Intercept:
     def __str__(self):
         return f"{self.__class__.__name__}()"
 
+    def components(self, data, eval_env):
+        return {self.name: "Intercept"}
 
 class NegatedIntercept:
     def __init__(self):
@@ -305,7 +499,7 @@ class ResponseTerm:
 
     def __add__(self, other):
         # ~ is interpreted as __add__
-        if isinstance(other, Term):
+        if isinstance(other, (Term, Intercept)):
             return ModelTerms(other, response=self)
         elif isinstance(other, ModelTerms):
             return other.add_response(self)
@@ -354,7 +548,7 @@ class ModelTerms:
         (x + y) + (u + v) -> x + y + u + v
         """
         if isinstance(other, NegatedIntercept):
-            return self - InterceptTerm()
+            return self - Intercept()
         elif isinstance(other, (Term, GroupSpecTerm, Intercept)):
             return self.add_term(other)
         elif isinstance(other, type(self)):
