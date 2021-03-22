@@ -160,7 +160,7 @@ class CommonEffectsMatrix:
         _type = term["type"]
         if _type == "Intercept":
             return ["Intercept"]
-        elif _type in ["numeric", "call"]:
+        elif _type == "numeric":
             return [name]
         elif _type == "interaction":
             return interaction_label(term)
@@ -287,7 +287,7 @@ class GroupEffectsMatrix:
         # Always returns a list
         term = self.terms_info[name]
         _type = term["type"]
-        if _type in ["Intercept", "numeric", "call"]:
+        if _type in ["Intercept", "numeric"]:
             return [f"{name}[{group}]" for group in term["groups"]]
         elif _type == "interaction":
             return interaction_label(term)
@@ -395,7 +395,7 @@ def term_str(term):
         terms = term["terms"]
         vars = []
         for k, v in terms.items():
-            if v["type"] in ["numeric", "call"]:
+            if v["type"] == "numeric":
                 vars.append(f"    {k}: {{type={v['type']}}}")
             elif v["type"] == "categoric":
                 str_l = [k2 + "=" + str(v2) for k2, v2 in v.items() if k2 != "value"]
@@ -411,7 +411,7 @@ def interaction_label(x):
     colnames = []
 
     for k, v in terms.items():
-        if v["type"] in ["numeric", "call"]:
+        if v["type"] == "numeric":
             colnames.append([k])
         if v["type"] == "categoric":
             if "levels" in v.keys():

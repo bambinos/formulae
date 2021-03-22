@@ -6,22 +6,24 @@ from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_d
 
 from .call_utils import CallEvalPrinter, CallNamePrinter, CallVarsExtractor
 from .eval import eval_in_data_mask
+from .transforms import STATEFUL_TRANSFORMS
 
 class Variable:
     """Atomic component of a Term"""
 
     def __init__(self, name, level=None):
+        self.data = None
+        self.type_ = None
         self.name = name
         self.level = level
-        self.data = None
 
     def __hash__(self):
-        return hash((self.name, self.level))
+        return hash((self.type_, self.name, self.level))
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return self.name == other.name and self.level == other.level
+        return self.type_ == other.type_ and self.name == other.name and self.level == other.level
 
     def __repr__(self):
         return self.__str__()
@@ -33,46 +35,40 @@ class Variable:
     def vars(self):
         return self.name
 
-    def component(self, data, eval_env):
-        """Returns components and whether they are categoric or numeric."""
-        x = data[self.name]
+    def set_type(self, data_mask):
+        # TODO: Drop `eval_env` argument
+        """Detemines the type of the variable.
+
+        Looks for the name of the variable in ``data`` and sets the ``.type_`` property to
+        ``"numeric"`` or ``"categoric"`` depending on the type of the variable.
+        """
+        x = data_mask[self.name]
         if is_numeric_dtype(x):
-            type_ = "numeric"
+            self.type_ = "numeric"
         elif is_string_dtype(x) or is_categorical_dtype(x):
-            type_ = "categoric"
+            self.type_ = "categoric"
         else:
             raise ValueError(f"Variable is of an unrecognized type ({type(x)}).")
-        return {self.name: type_}
 
-    def components(self, data, eval_env):
-        # Returns components and whether they are categoric or numeric
-        x = data[self.variable]
-        if is_numeric_dtype(x):
-            type_ = "numeric"
-        elif is_string_dtype(x) or is_categorical_dtype(x):
-            type_ = "categoric"
-        else:
-            raise NotImplementedError
-        return {self.name: type_}
+    def set_data(self, data_mask, encoding, is_response=False):
+        """Obtains and stores the final data object related to this variable.
 
-    def eval(self, data, eval_env, encoding, is_response=False):
-        """Evaluates the variable.
-
-        `is_response` flags whether the term evaluated is the response term.
-        It does not support multiple level categoric responses yet.
-        If `is_response` is `True` and the variable is of a categoric type, this method
-        returns a 1d array of 0-1 instead of a matrix.
+        Evaluates the variable according to its type and stores the result in ``.data_mask``. It
+        does not support multi-level categoric responses yet. If ``is_response`` is ``True`` and the
+        variable is of a categoric type, this method returns a 1d array of 0-1 instead of a matrix.
         """
-        x = data[self.variable]
 
-        if is_numeric_dtype(x):
-            data = self.eval_numeric(x)
-        elif is_string_dtype(x) or is_categorical_dtype(x):
-            data = self.eval_categoric(x, encoding, is_response)
+        if self.type_ is None:
+            raise ValueError("Variable type is not set.")
+        if self.type_ not in ["numeric", "categoric"]:
+            raise ValueError(f"Variable is of an unrecognized type ({self.type_}).")
+        x = data_mask[self.name]
+        if self.type_ == "numeric":
+            self.data = self.eval_numeric(x)
+        elif self.type_ == "categoric":
+            self.data = self.eval_categoric(x, encoding, is_response)
         else:
-            raise ValueError(f"Variable is of an unrecognized type ({type(data)}).")
-        self.data = data
-        return self.data
+            raise ValueError("Unexpected error while trying to evaluate a Variable.")
 
     def eval_numeric(self, x):
         if self.level is not None:
@@ -83,7 +79,6 @@ class Variable:
     def eval_categoric(self, x, encoding, is_response):
         # If not ordered, we make it ordered
         # x.unique() preservese order of appearence
-
         if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
             categories = sorted(x.unique().tolist())
             cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
@@ -120,18 +115,27 @@ class Call:
     """Atomic component of a Term that is a call"""
 
     def __init__(self, expr):
+        self.data = None
+        self._raw_data = None
+        self.type_ = None
         self.callee = expr.callee.name.lexeme
         self.args = expr.args
         self.name = self._name_str()
-        self.data = None
+        if self.callee in STATEFUL_TRANSFORMS.keys():
+            self.stateful_transform = STATEFUL_TRANSFORMS[self.callee]
 
     def __hash__(self):
-        return hash((self.callee, self.name, self.args))
+        return hash((self.callee, self.args, self.name, self.stateful_transform))
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return self.callee == other.callee and self.name == other.name and self.args == other.args
+        return (
+            self.callee == other.callee
+            and self.name == other.name
+            and self.args == other.args
+            and self.stateful_transform == other.stateful_transform
+            )
 
     def accept(self, visitor):
         return visitor.visitCallTerm(self)
@@ -146,41 +150,56 @@ class Call:
     def vars(self):
         return CallVarsExtractor(self).get()
 
-    def component(self, data, eval_env):
-        data_cols = data.columns.tolist()
-        x = eval_in_data_mask(self._eval_str(data_cols), data, eval_env)
-        if is_numeric_dtype(x):
-            type_ = "numeric"
-        elif is_string_dtype(x) or is_categorical_dtype(x) or isinstance(x, dict):
-            type_ = "categoric"
+    def set_type(self, data_mask, eval_env):
+        """Detemines the type of the result of the call.
+
+        Evaluates the function call and sets the ``.type_`` property to ``"numeric"`` or
+        ``"categoric"`` depending on the type of the result. It also stores the intermediate result
+        of the evaluation in ``._raw_data`` to prevent us from computing the same thing more than
+        once.
+        """
+        names = data_mask.columns.tolist()
+        if self.stateful_transform is not None:
+            # Q: How to set non data dependent parameters?
+            self.stateful_transform.set_params()
+            x = self.stateful_transform.call()
         else:
-            raise ValueError("Result to call is of unexpected type.")
-        return {self.name: type_}
+            x = eval_in_data_mask(self._eval_str(names), data_mask, eval_env)
+        if is_numeric_dtype(x):
+            self.type_ = "numeric"
+            self._raw_data = x
+        elif is_string_dtype(x) or is_categorical_dtype(x) or isinstance(x, dict):
+            self.type_ = "categoric"
+            self._raw_data = x
+        else:
+            raise ValueError(f"Call result is of an unrecognized type ({type(x)}).")
 
-    def eval(self, data, eval_env, encoding, is_response=False):
-        """Evaluates the call.
+    def set_data(self, encoding, is_response=False):
+        """Obtains and stores the final data object related to this call.
 
-        This method evaluates the call, updates self.data and finally returns self.data.
+        Evaluates the call according to its type and stores the result in ``.data``. It does not
+        support multi-level categoric responses yet. If ``is_response`` is ``True`` and the variable
+        is of a categoric type, this method returns a 1d array of 0-1 instead of a matrix.
+
+        In practice it completes the evaluation that started with ``self.set_type()``.
         """
         # Workaround: var names present in 'data' are taken from '__DATA__['col']
         # the rest are left as they are and looked up in the upper namespace
-        data_cols = data.columns.tolist()
-        x = eval_in_data_mask(self._eval_str(data_cols), data, eval_env)
-        if is_categorical_dtype(x) or is_string_dtype(x):
-            data = self.eval_categoric(x, encoding, is_response)
-        elif is_numeric_dtype(x):
-            data = self.eval_numeric(x)
+        if self.type_ is None:
+            raise ValueError("Call result type is not set.")
+        if self.type_ not in ["numeric", "categoric"]:
+            raise ValueError(f"Call result is of an unrecognized type ({self.type_}).")
+        if self.type_ == "numeric":
+            self.data = self.eval_numeric(self._raw_data)
         else:
-            raise ValueError("Result to call is of unexpected type.")
-        self.data = data
-        return self.data
+            self.data = self.eval_categoric(self._raw_data, encoding, is_response)
 
     def eval_numeric(self, x):
         if isinstance(x, np.ndarray):
             value = np.atleast_2d(x)
         else:
             value = np.atleast_2d(x.to_numpy()).T
-        return {"value": value, "type": "call"}
+        return {"value": value, "type": "numeric"}
 
     def eval_categoric(self, x, encoding, is_response):
         if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:

@@ -298,7 +298,7 @@ def test_interactions(data):
     assert np.allclose(dm.common["x1:x2"][:, 0], data["x1"] * data["x2"])
 
 
-def test_built_in_transformations(data):
+def test_built_in_transforms(data):
     # {...} gets translated to I(...)
     dm = design_matrices("y ~ {x1 + x2}", data)
     assert list(dm.common.terms_info.keys()) == ["Intercept", "I(x1 + x2)"]
@@ -384,7 +384,7 @@ def test_built_in_transformations(data):
     assert all(dm.common["C(f)"] == dm2.common["f"])
 
 
-def test_external_transformations(data):
+def test_external_transforms(data):
     dm = design_matrices("y ~ np.exp(x1)", data)
     assert np.allclose(dm.common["np.exp(x1)"][:, 0], np.exp(data["x1"]))
 

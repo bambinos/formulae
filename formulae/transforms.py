@@ -1,11 +1,47 @@
 import numpy as np
 import pandas as pd
 
+# Stateful transformations.
+# These transformations have memory about the state of parameters that are
+# required to compute the transformation and are obtained as a subproduct of the
+# data that is used to compute the transform.
+class Center:
+    def __init__(self):
+        self.params_set = False
+        self.mean = None
 
+    def set_params(self, x):
+        self.mean = np.mean(x)
+        self.params_set = True
+
+    def call(self, x):
+        if not self.params_set:
+            raise ValueError("Parameters for transformation are not set.")
+        return x - self.mean
+
+class Scale:
+    def __init__(self):
+        self.params_set = False
+        self.mean = None
+        self.std = None
+
+    def set_params(self, x):
+        self.mean = np.mean(x)
+        self.std = np.std(x)
+        self.params_set = True
+
+    def call(self, x):
+        if not self.params_set:
+            raise ValueError("Parameters for transformation are not set.")
+        return (x - self.mean) / self.std
+
+# The following are just regular functions that are made available
+# in the environment where the formula is evaluated.
 def I(x):
-    """Returns its argument as it is.
+    """Identity function. Returns its argument as it is.
 
-    This allows to call Python code  within the formula interface.
+    This allows to call Python code within the formula interface.
+    This is an allias for ``{x}``, which does exactly the same, but in a more concise manner.
 
     Examples
     ----------
@@ -15,16 +51,6 @@ def I(x):
     >>> {(x + y) / z}
     """
     return x
-
-
-def center(x):
-    """Centers a numerical variable"""
-    return x - np.mean(x)
-
-
-def scale(x):
-    """Standardize a numerical variable"""
-    return (x - np.mean(x)) / np.std(x)
 
 
 def C(x, ref=None, levels=None):
@@ -71,4 +97,5 @@ def C(x, ref=None, levels=None):
     return x
 
 
-TRANSFORMATIONS = {"I": I, "center": center, "scale": scale, "standardize": scale, "C": C}
+TRANSFORMS = {"I": I, "C": C}
+STATEFUL_TRANSFORMS = {"center": Center, "scale": Scale, "standardize": Scale}
