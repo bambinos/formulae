@@ -24,10 +24,11 @@ class Call:
         The call expression returned by the parser.
     """
 
-    def __init__(self, expr):
+    def __init__(self, expr, is_response=False):
         self.data = None
         self._intermediate_data = None
         self._type = None
+        self.is_response = is_response
         self.callee = expr.callee.name.lexeme
         self.args = expr.args
         self.name = self._name_str()
@@ -86,12 +87,12 @@ class Call:
             raise ValueError(f"Call result is of an unrecognized type ({type(x)}).")
         self._intermediate_data = x
 
-    def set_data(self, encoding, is_response=False):
+    def set_data(self, encoding=False):
         """Completes evaluation of the call according to its type.
 
         Evaluates the call according to its type and stores the result in ``.data``. It does not
-        support multi-level categoric responses yet. If ``is_response`` is ``True`` and the variable
-        is of a categoric type, this method returns a 1d array of 0-1 instead of a matrix.
+        support multi-level categoric responses yet. If ``self.is_response`` is ``True`` and the
+        variable is of a categoric type, this method returns a 1d array of 0-1 instead of a matrix.
 
         In practice, it just completes the evaluation that started with ``self.set_type()``.
         """
@@ -104,7 +105,7 @@ class Call:
         if self._type == "numeric":
             self.data = self._eval_numeric(self._intermediate_data)
         else:
-            self.data = self._eval_categoric(self._intermediate_data, encoding, is_response)
+            self.data = self._eval_categoric(self._intermediate_data, encoding)
 
     def _eval_numeric(self, x):
         """Finishes evaluation of a numeric call.
@@ -121,7 +122,7 @@ class Call:
             raise ValueError(f"Call result is of an unrecognized type ({type(x)}).")
         return {"value": value, "type": "numeric"}
 
-    def _eval_categoric(self, x, encoding, is_response):
+    def _eval_categoric(self, x, encoding):
         # TODO: Finish docs
         """Finishes evaluation of categoric call.
 
@@ -129,8 +130,6 @@ class Call:
         ----------
          encoding: list or bool
             Determines whether to use reduced or full rank encoding.
-        is_response: bool
-            Determines whether to treat the variable as a response variable.
 
         First, it checks whether the intermediate evaluation returned is ordered. If not, it
         creates a category where the levels are the observed in the variable. They are sorted
@@ -150,7 +149,7 @@ class Call:
         reference = x.min()
         levels = x.cat.categories.tolist()
 
-        if is_response:
+        if self.is_response:
             if self.level is not None:
                 reference = self.level
             value = np.atleast_2d(np.where(x == reference, 1, 0)).T
@@ -174,7 +173,7 @@ class Call:
             "encoding": encoding,
         }
 
-    def eval_new_data(self, data_mask, eval_env, encoding=None, is_response=False):
+    def eval_new_data(self, data_mask, eval_env):
         """Evaluates the function call with new data.
 
         This method evaluates the function call within a new data mask. If the transformation
@@ -188,6 +187,12 @@ class Call:
         if self._type == "numeric":
             return self._eval_numeric(x)["value"]
         else:
-            # TODO: This doesn't work, or shouldn't work because we should remember
-            # encoding and all that.
-            return self._eval_categoric(x, encoding, is_response)["value"]
+            return self._eval_new_data_categoric(x)
+
+    def _eval_new_data_categoric(self, x):
+        if self.is_response:
+            return np.atleast_2d(np.where(x == self.data["reference"], 1, 0)).T
+        else:
+            series = pd.Categorical(x, categories=self.data["levels"])
+            drop_first = self.data["encoding"] == "reduced"
+            return pd.get_dummies(series, drop_first=drop_first)

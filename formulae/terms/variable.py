@@ -6,10 +6,11 @@ from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_d
 class Variable:
     """Atomic component of a Term"""
 
-    def __init__(self, name, level=None):
+    def __init__(self, name, level=None, is_response=False):
         self.data = None
         self._intermediate_data = None
         self._type = None
+        self.is_response = is_response
         self.name = name
         self.level = level
 
@@ -44,13 +45,13 @@ class Variable:
             raise ValueError(f"Variable is of an unrecognized type ({type(x)}).")
         self._intermediate_data = x
 
-    def set_data(self, encoding=None, is_response=False):
+    def set_data(self, encoding=None):
         """Obtains and stores the final data object related to this variable.
 
         Evaluates the variable according to its type and stores the result in ``.data_mask``. It
-        does not support multi-level categoric responses yet, it is, If ``is_response`` is ``True``
-        and the variable is of a categoric type, this method returns a 1d array of 0-1 instead of a
-        matrix.
+        does not support multi-level categoric responses yet, it is, If ``self.is_response`` is
+        ``True`` and the variable is of a categoric type, this method returns a 1d array of 0-1
+        instead of a matrix.
         """
         if self._type is None:
             raise ValueError("Variable type is not set.")
@@ -59,7 +60,7 @@ class Variable:
         if self._type == "numeric":
             self.data = self._eval_numeric(self._intermediate_data)
         elif self._type == "categoric":
-            self.data = self._eval_categoric(self._intermediate_data, encoding, is_response)
+            self.data = self._eval_categoric(self._intermediate_data, encoding)
         else:
             raise ValueError("Unexpected error while trying to evaluate a Variable.")
 
@@ -72,10 +73,9 @@ class Variable:
             value = np.atleast_2d(x.to_numpy()).T
         else:
             raise ValueError(f"Variable is of an unrecognized type ({type(x)}).")
-        out = {"value": value, "type": "numeric"}
-        return out
+        return {"value": value, "type": "numeric"}
 
-    def _eval_categoric(self, x, encoding, is_response):
+    def _eval_categoric(self, x, encoding):
         # If not ordered, we make it ordered.
         if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
             categories = sorted(x.unique().tolist())
@@ -85,7 +85,7 @@ class Variable:
         reference = x.min()
         levels = x.cat.categories.tolist()
 
-        if is_response:
+        if self.is_response:
             if self.level is not None:
                 reference = self.level
             value = np.atleast_2d(np.where(x == reference, 1, 0)).T
@@ -108,17 +108,25 @@ class Variable:
             "encoding": encoding,
         }
 
-    def eval_new_data(self, data_mask, encoding=None, is_response=False):
+    def eval_new_data(self, data_mask):
         """Evaluates the function call with new data.
 
         This method evaluates the function call within a new data mask. If the transformation
         applied is a stateful transformation, it uses the proper object that remembers all
         parameters or settings that may have been set in a first pass.
         """
+        if self.data is None:
+            raise ValueError("self.data is None. This error shouldn't have happened!")
         x = data_mask[self.name]
         if self._type == "numeric":
             return self._eval_numeric(x)["value"]
         else:
-            # TODO: This doesn't work, or shouldn't work because we should remember
-            # encoding and all that.
-            return self._eval_categoric(x, encoding, is_response)["value"]
+            return self._eval_new_data_categoric(x)
+
+    def _eval_new_data_categoric(self, x):
+        if self.is_response:
+            return np.atleast_2d(np.where(x == self.data["reference"], 1, 0)).T
+        else:
+            series = pd.Categorical(x, categories=self.data["levels"])
+            drop_first = self.data["encoding"] == "reduced"
+            return pd.get_dummies(series, drop_first=drop_first)
