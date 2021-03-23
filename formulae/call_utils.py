@@ -2,7 +2,7 @@ from .utils import flatten_list
 
 
 class CallEvalPrinter:
-    """Visitor that generates function calls code to be evaluated in Python"""
+    """Visitor that generates function calls code to be evaluated in Python."""
 
     def __init__(self, expr, data_cols=None):
         self.expr = expr

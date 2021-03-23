@@ -5,19 +5,18 @@ import pandas as pd
 # These transformations have memory about the state of parameters that are
 # required to compute the transformation and are obtained as a subproduct of the
 # data that is used to compute the transform.
+
 class Center:
     def __init__(self):
         self.params_set = False
         self.mean = None
 
-    def set_params(self, x):
-        self.mean = np.mean(x)
-        self.params_set = True
-
-    def call(self, x):
+    def __call__(self, x):
         if not self.params_set:
-            raise ValueError("Parameters for transformation are not set.")
+            self.mean = np.mean(x)
+            self.params_set = True
         return x - self.mean
+
 
 class Scale:
     def __init__(self):
@@ -25,15 +24,13 @@ class Scale:
         self.mean = None
         self.std = None
 
-    def set_params(self, x):
-        self.mean = np.mean(x)
-        self.std = np.std(x)
-        self.params_set = True
-
-    def call(self, x):
+    def __call__(self, x):
         if not self.params_set:
-            raise ValueError("Parameters for transformation are not set.")
+            self.mean = np.mean(x)
+            self.std = np.std(x)
+            self.params_set = True
         return (x - self.mean) / self.std
+
 
 # The following are just regular functions that are made available
 # in the environment where the formula is evaluated.

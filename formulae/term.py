@@ -36,7 +36,6 @@ class Variable:
         return self.name
 
     def set_type(self, data_mask):
-        # TODO: Drop `eval_env` argument
         """Detemines the type of the variable.
 
         Looks for the name of the variable in ``data`` and sets the ``.type_`` property to
@@ -77,8 +76,7 @@ class Variable:
         return out
 
     def eval_categoric(self, x, encoding, is_response):
-        # If not ordered, we make it ordered
-        # x.unique() preservese order of appearence
+        # If not ordered, we make it ordered.
         if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
             categories = sorted(x.unique().tolist())
             cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
@@ -122,7 +120,10 @@ class Call:
         self.args = expr.args
         self.name = self._name_str()
         if self.callee in STATEFUL_TRANSFORMS.keys():
-            self.stateful_transform = STATEFUL_TRANSFORMS[self.callee]
+            # Initialices the stateful transform object
+            # This object defines its parametrs the first time it is called,
+            # then it just applies the transform with previously computed params
+            self.stateful_transform = STATEFUL_TRANSFORMS[self.callee]()
 
     def __hash__(self):
         return hash((self.callee, self.args, self.name, self.stateful_transform))
@@ -138,6 +139,10 @@ class Call:
             )
 
     def accept(self, visitor):
+        """Accept method called by a visitor.
+
+        Visitors are those available in call_utils.py, used to work with call terms.
+        """
         return visitor.visitCallTerm(self)
 
     def _eval_str(self, data_cols):
@@ -151,20 +156,19 @@ class Call:
         return CallVarsExtractor(self).get()
 
     def set_type(self, data_mask, eval_env):
-        """Detemines the type of the result of the call.
+        """Evaluates function and detemines the type of the result of the call.
 
         Evaluates the function call and sets the ``.type_`` property to ``"numeric"`` or
         ``"categoric"`` depending on the type of the result. It also stores the intermediate result
         of the evaluation in ``._raw_data`` to prevent us from computing the same thing more than
         once.
         """
+        # Q: How to set non data dependent parameters?
         names = data_mask.columns.tolist()
         if self.stateful_transform is not None:
-            # Q: How to set non data dependent parameters?
-            self.stateful_transform.set_params()
-            x = self.stateful_transform.call()
-        else:
-            x = eval_in_data_mask(self._eval_str(names), data_mask, eval_env)
+            # Adds the stateful transform to the environment this is evaluated
+            eval_env = eval_env.with_outer_namespace({self.callee: self.stateful_transform})
+        x = eval_in_data_mask(self._eval_str(names), data_mask, eval_env)
         if is_numeric_dtype(x):
             self.type_ = "numeric"
             self._raw_data = x
@@ -175,13 +179,13 @@ class Call:
             raise ValueError(f"Call result is of an unrecognized type ({type(x)}).")
 
     def set_data(self, encoding, is_response=False):
-        """Obtains and stores the final data object related to this call.
+        """Completes evaluation of the call according to its type.
 
         Evaluates the call according to its type and stores the result in ``.data``. It does not
         support multi-level categoric responses yet. If ``is_response`` is ``True`` and the variable
         is of a categoric type, this method returns a 1d array of 0-1 instead of a matrix.
 
-        In practice it completes the evaluation that started with ``self.set_type()``.
+        In practice, it just completes the evaluation that started with ``self.set_type()``.
         """
         # Workaround: var names present in 'data' are taken from '__DATA__['col']
         # the rest are left as they are and looked up in the upper namespace
@@ -233,6 +237,17 @@ class Call:
             "reference": reference,
             "encoding": encoding,
         }
+
+    def eval_new_data(self, data_mask, eval_env, encoding=None, is_response=False):
+        names = data_mask.columns.tolist()
+        if self.stateful_transform is not None:
+            eval_env = eval_env.with_outer_namespace({self.callee: self.stateful_transform})
+        x = eval_in_data_mask(self._eval_str(names), data_mask, eval_env)
+        if self.type_ == "numeric":
+            return self.eval_numeric(x)
+        else:
+            self.data = self.eval_categoric(x, encoding, is_response)
+
 
 class Term:
     """Representation of a single term in a ModelTerms.
