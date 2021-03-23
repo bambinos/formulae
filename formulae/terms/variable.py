@@ -127,6 +127,14 @@ class Variable:
         if self.is_response:
             return np.atleast_2d(np.where(x == self.data["reference"], 1, 0)).T
         else:
-            series = pd.Categorical(x, categories=self.data["levels"])
-            drop_first = self.data["encoding"] == "reduced"
-            return pd.get_dummies(series, drop_first=drop_first)
+            # Raise error if passing a level that was not observed.
+            new_data_levels = pd.Categorical(x).dtype.categories.tolist()
+            if set(new_data_levels).issubset(set(self.data["levels"])):
+                series = pd.Categorical(x, categories=self.data["levels"])
+                drop_first = self.data["encoding"] == "reduced"
+                return pd.get_dummies(series, drop_first=drop_first).to_numpy()
+            else:
+                raise ValueError(
+                    f"At least one of the levels for '{self.name}' in the new data was "
+                    "not present in the original data set."
+                )
