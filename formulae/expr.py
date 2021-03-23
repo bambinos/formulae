@@ -119,22 +119,17 @@ class Unary(Expr):
 class Call(Expr):
     """Function call expressions"""
 
-    def __init__(self, callee, args, special=False):
+    def __init__(self, callee, args):
         self.callee = callee
         self.args = args
-        self.special = special
 
     def __hash__(self):
-        return hash((self.callee, self.args, self.special))
+        return hash((self.callee, self.args))
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return (
-            self.callee == other.callee
-            and self.args == other.args
-            and self.special == other.special
-        )
+        return self.callee == other.callee and self.args == other.args
 
     def __repr__(self):
         return self.__str__()
@@ -142,8 +137,7 @@ class Call(Expr):
     def __str__(self):
         string_list = [
             "callee=" + str(self.callee),
-            "args=" + "  ".join(str(self.args).splitlines(True)),
-            "special=" + str(self.special),
+            "args=" + "  ".join(str(self.args).splitlines(True))
         ]
         return "Call(\n  " + ",\n  ".join(string_list) + "\n)"
 

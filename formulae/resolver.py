@@ -1,4 +1,4 @@
-from .term import (
+from .terms import (
     Variable,
     Call,
     Term,

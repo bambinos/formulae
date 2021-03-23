@@ -4,14 +4,13 @@ import logging
 from itertools import product
 
 import numpy as np
-from numpy.testing._private.utils import raises
 import pandas as pd
 import scipy as sp
 
 from scipy import linalg
 
 from .eval import EvalEnvironment
-from .terms import ModelTerms, InterceptTerm
+from .terms import ModelTerms, Intercept
 from .model_description import model_description
 from .utils import flatten_list
 
@@ -230,9 +229,9 @@ class GroupEffectsMatrix:
         for term in self.terms:
 
             encoding = True
-            if not isinstance(term.expr, InterceptTerm):
+            if not isinstance(term.expr, Intercept):
                 for term_ in self.terms:
-                    if term_.factor == term.factor and isinstance(term_.expr, InterceptTerm):
+                    if term_.factor == term.factor and isinstance(term_.expr, Intercept):
                         encoding = False
             d = term.eval(self.data, self.eval_env, encoding)
 

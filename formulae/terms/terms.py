@@ -1,253 +1,96 @@
-import numpy as np
-import pandas as pd
-
 from itertools import combinations, product
-from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
 
-from .call_utils import CallEvalPrinter, CallNamePrinter, CallVarsExtractor
-from .eval import eval_in_data_mask
-from .transforms import STATEFUL_TRANSFORMS
 
-class Variable:
-    """Atomic component of a Term"""
-
-    def __init__(self, name, level=None):
-        self.data = None
-        self.type_ = None
-        self.name = name
-        self.level = level
-
-    def __hash__(self):
-        return hash((self.type_, self.name, self.level))
+class Intercept:
+    def __init__(self):
+        self.name = "Intercept"
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return self.type_ == other.type_ and self.name == other.name and self.level == other.level
+        return self.name == other.name
+
+    def __add__(self, other):
+        if isinstance(other, NegatedIntercept):
+            return ModelTerms()
+        elif isinstance(other, type(self)):
+            return self
+        elif isinstance(other, (Term, GroupSpecTerm)):
+            return ModelTerms(self, other)
+        elif isinstance(other, ModelTerms):
+            return ModelTerms(self) + other
+        else:
+            return NotImplemented
+
+    def __sub__(self, other):
+        if isinstance(other, type(self)):
+            if self.components == other.components:
+                return ModelTerms()
+            else:
+                return self
+        elif isinstance(other, ModelTerms):
+            if self in other.common_terms:
+                return ModelTerms()
+            else:
+                return self
+        else:
+            return NotImplemented
+
+    def __or__(self, other):
+        """
+        (1|g) -> (1|g); (1|g:h) -> (1|g:h)
+        (1 | g + h) -> (1|g) + (1|h)
+        """
+        if isinstance(other, Term):
+            return GroupSpecTerm(self, other)
+        elif isinstance(other, ModelTerms):
+            products = product([self], other.common_terms)
+            terms = [GroupSpecTerm(p[0], p[1]) for p in products]
+            return ModelTerms(*terms)
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        return f"{self.__class__.__name__}({self.name}, level='{self.level}')"
+        return f"{self.__class__.__name__}()"
 
-    @property
-    def vars(self):
-        return self.name
+    def components(self, data, eval_env):
+        return {self.name: "Intercept"}
 
-    def set_type(self, data_mask):
-        """Detemines the type of the variable.
+class NegatedIntercept:
+    def __init__(self):
+        self.name = "Intercept"
 
-        Looks for the name of the variable in ``data`` and sets the ``.type_`` property to
-        ``"numeric"`` or ``"categoric"`` depending on the type of the variable.
-        """
-        x = data_mask[self.name]
-        if is_numeric_dtype(x):
-            self.type_ = "numeric"
-        elif is_string_dtype(x) or is_categorical_dtype(x):
-            self.type_ = "categoric"
+    def __add__(self, other):
+        if isinstance(other, type(self)):
+            return self
+        elif isinstance(other, Intercept):
+            return ModelTerms()
+        elif isinstance(other, (Term, GroupSpecTerm)):
+            return ModelTerms(self, other)
+        elif isinstance(other, ModelTerms):
+            return ModelTerms(self) + other
         else:
-            raise ValueError(f"Variable is of an unrecognized type ({type(x)}).")
-
-    def set_data(self, data_mask, encoding, is_response=False):
-        """Obtains and stores the final data object related to this variable.
-
-        Evaluates the variable according to its type and stores the result in ``.data_mask``. It
-        does not support multi-level categoric responses yet. If ``is_response`` is ``True`` and the
-        variable is of a categoric type, this method returns a 1d array of 0-1 instead of a matrix.
-        """
-
-        if self.type_ is None:
-            raise ValueError("Variable type is not set.")
-        if self.type_ not in ["numeric", "categoric"]:
-            raise ValueError(f"Variable is of an unrecognized type ({self.type_}).")
-        x = data_mask[self.name]
-        if self.type_ == "numeric":
-            self.data = self.eval_numeric(x)
-        elif self.type_ == "categoric":
-            self.data = self.eval_categoric(x, encoding, is_response)
-        else:
-            raise ValueError("Unexpected error while trying to evaluate a Variable.")
-
-    def eval_numeric(self, x):
-        if self.level is not None:
-            raise ValueError("Subset notation can't be used with a numeric variable.")
-        out = {"value": np.atleast_2d(x.to_numpy()).T, "type": "numeric"}
-        return out
-
-    def eval_categoric(self, x, encoding, is_response):
-        # If not ordered, we make it ordered.
-        if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
-            categories = sorted(x.unique().tolist())
-            cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
-            x = x.astype(cat_type)
-
-        reference = x.min()
-        levels = x.cat.categories.tolist()
-
-        if is_response:
-            if self.level is not None:
-                reference = self.level
-            value = np.atleast_2d(np.where(x == reference, 1, 0)).T
-        else:
-            if isinstance(encoding, list):
-                encoding = encoding[0]
-            if isinstance(encoding, dict):
-                encoding = encoding[self.name]
-            if encoding:
-                value = pd.get_dummies(x).to_numpy()
-                encoding = "full"
-            else:
-                value = pd.get_dummies(x, drop_first=True).to_numpy()
-                encoding = "reduced"
-        return {
-            "value": value,
-            "type": "categoric",
-            "levels": levels,
-            "reference": reference,
-            "encoding": encoding,
-        }
-
-
-class Call:
-    """Atomic component of a Term that is a call"""
-
-    def __init__(self, expr):
-        self.data = None
-        self._raw_data = None
-        self.type_ = None
-        self.callee = expr.callee.name.lexeme
-        self.args = expr.args
-        self.name = self._name_str()
-        if self.callee in STATEFUL_TRANSFORMS.keys():
-            # Initialices the stateful transform object
-            # This object defines its parametrs the first time it is called,
-            # then it just applies the transform with previously computed params
-            self.stateful_transform = STATEFUL_TRANSFORMS[self.callee]()
-
-    def __hash__(self):
-        return hash((self.callee, self.args, self.name, self.stateful_transform))
+            return NotImplemented
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return (
-            self.callee == other.callee
-            and self.name == other.name
-            and self.args == other.args
-            and self.stateful_transform == other.stateful_transform
-            )
+        else:
+            return self.name == other.name
 
-    def accept(self, visitor):
-        """Accept method called by a visitor.
+    def __or__(self, other):
+        raise ValueError("At least include an intercept in '|' operation")
 
-        Visitors are those available in call_utils.py, used to work with call terms.
-        """
-        return visitor.visitCallTerm(self)
+    def __repr__(self):
+        return self.__str__()
 
-    def _eval_str(self, data_cols):
-        return CallEvalPrinter(self, data_cols).print()
-
-    def _name_str(self):
-        return CallNamePrinter(self).print()
+    def __str__(self):
+        return f"{self.__class__.__name__}()"
 
     @property
     def vars(self):
-        return CallVarsExtractor(self).get()
-
-    def set_type(self, data_mask, eval_env):
-        """Evaluates function and detemines the type of the result of the call.
-
-        Evaluates the function call and sets the ``.type_`` property to ``"numeric"`` or
-        ``"categoric"`` depending on the type of the result. It also stores the intermediate result
-        of the evaluation in ``._raw_data`` to prevent us from computing the same thing more than
-        once.
-        """
-        # Q: How to set non data dependent parameters?
-        names = data_mask.columns.tolist()
-        if self.stateful_transform is not None:
-            # Adds the stateful transform to the environment this is evaluated
-            eval_env = eval_env.with_outer_namespace({self.callee: self.stateful_transform})
-        x = eval_in_data_mask(self._eval_str(names), data_mask, eval_env)
-        if is_numeric_dtype(x):
-            self.type_ = "numeric"
-            self._raw_data = x
-        elif is_string_dtype(x) or is_categorical_dtype(x) or isinstance(x, dict):
-            self.type_ = "categoric"
-            self._raw_data = x
-        else:
-            raise ValueError(f"Call result is of an unrecognized type ({type(x)}).")
-
-    def set_data(self, encoding, is_response=False):
-        """Completes evaluation of the call according to its type.
-
-        Evaluates the call according to its type and stores the result in ``.data``. It does not
-        support multi-level categoric responses yet. If ``is_response`` is ``True`` and the variable
-        is of a categoric type, this method returns a 1d array of 0-1 instead of a matrix.
-
-        In practice, it just completes the evaluation that started with ``self.set_type()``.
-        """
-        # Workaround: var names present in 'data' are taken from '__DATA__['col']
-        # the rest are left as they are and looked up in the upper namespace
-        if self.type_ is None:
-            raise ValueError("Call result type is not set.")
-        if self.type_ not in ["numeric", "categoric"]:
-            raise ValueError(f"Call result is of an unrecognized type ({self.type_}).")
-        if self.type_ == "numeric":
-            self.data = self.eval_numeric(self._raw_data)
-        else:
-            self.data = self.eval_categoric(self._raw_data, encoding, is_response)
-
-    def eval_numeric(self, x):
-        if isinstance(x, np.ndarray):
-            value = np.atleast_2d(x)
-        else:
-            value = np.atleast_2d(x.to_numpy()).T
-        return {"value": value, "type": "numeric"}
-
-    def eval_categoric(self, x, encoding, is_response):
-        if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
-            categories = sorted(x.unique().tolist())
-            cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
-            x = x.astype(cat_type)
-
-        reference = x.min()
-        levels = x.cat.categories.tolist()
-
-        if is_response:
-            if self.level is not None:
-                reference = self.level
-            value = np.atleast_2d(np.where(x == reference, 1, 0)).T
-            encoding = None
-        else:
-            if isinstance(encoding, list):
-                encoding = encoding[0]
-            if isinstance(encoding, dict):
-                encoding = encoding[self.name]
-            if encoding:
-                value = pd.get_dummies(x).to_numpy()
-                encoding = "full"
-            else:
-                value = pd.get_dummies(x, drop_first=True).to_numpy()
-                encoding = "reduced"
-        return {
-            "value": value,
-            "type": "categoric",
-            "levels": levels,
-            "reference": reference,
-            "encoding": encoding,
-        }
-
-    def eval_new_data(self, data_mask, eval_env, encoding=None, is_response=False):
-        names = data_mask.columns.tolist()
-        if self.stateful_transform is not None:
-            eval_env = eval_env.with_outer_namespace({self.callee: self.stateful_transform})
-        x = eval_in_data_mask(self._eval_str(names), data_mask, eval_env)
-        if self.type_ == "numeric":
-            return self.eval_numeric(x)
-        else:
-            self.data = self.eval_categoric(x, encoding, is_response)
-
+        return ""
 
 class Term:
     """Representation of a single term in a ModelTerms.
@@ -400,100 +243,6 @@ class Term:
         string = "[" + ", ".join([repr(component) for component in self.components]) + "]"
         return f"{self.__class__.__name__}({string})"
 
-
-class Intercept:
-    def __init__(self):
-        self.name = "Intercept"
-
-    def __eq__(self, other):
-        if not isinstance(other, type(self)):
-            return False
-        return self.name == other.name
-
-    def __add__(self, other):
-        if isinstance(other, NegatedIntercept):
-            return ModelTerms()
-        elif isinstance(other, type(self)):
-            return self
-        elif isinstance(other, (Term, GroupSpecTerm)):
-            return ModelTerms(self, other)
-        elif isinstance(other, ModelTerms):
-            return ModelTerms(self) + other
-        else:
-            return NotImplemented
-
-    def __sub__(self, other):
-        if isinstance(other, type(self)):
-            if self.components == other.components:
-                return ModelTerms()
-            else:
-                return self
-        elif isinstance(other, ModelTerms):
-            if self in other.common_terms:
-                return ModelTerms()
-            else:
-                return self
-        else:
-            return NotImplemented
-
-    def __or__(self, other):
-        """
-        (1|g) -> (1|g); (1|g:h) -> (1|g:h)
-        (1 | g + h) -> (1|g) + (1|h)
-        """
-        if isinstance(other, Term):
-            return GroupSpecTerm(self, other)
-        elif isinstance(other, ModelTerms):
-            products = product([self], other.common_terms)
-            terms = [GroupSpecTerm(p[0], p[1]) for p in products]
-            return ModelTerms(*terms)
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        return f"{self.__class__.__name__}()"
-
-    def components(self, data, eval_env):
-        return {self.name: "Intercept"}
-
-class NegatedIntercept:
-    def __init__(self):
-        self.name = "Intercept"
-
-    def __add__(self, other):
-        if isinstance(other, type(self)):
-            return self
-        elif isinstance(other, Intercept):
-            return ModelTerms()
-        elif isinstance(other, (Term, GroupSpecTerm)):
-            return ModelTerms(self, other)
-        elif isinstance(other, ModelTerms):
-            return ModelTerms(self) + other
-        else:
-            return NotImplemented
-
-
-    def __eq__(self, other):
-        if not isinstance(other, type(self)):
-            return False
-        else:
-            return self.name == other.name
-
-    def __or__(self, other):
-        raise ValueError("At least include an intercept in '|' operation")
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        return f"{self.__class__.__name__}()"
-
-    @property
-    def vars(self):
-        return ""
-
-
 class GroupSpecTerm:
     def __init__(self, expr, factor):
         self.expr = expr
@@ -513,7 +262,6 @@ class GroupSpecTerm:
             f"factor= {'  '.join(str(self.factor).splitlines(True))}",
         ]
         return self.__class__.__name__ + "(\n  " + ',\n  '.join(strlist) + "\n)"
-
 
 class ResponseTerm:
     """Representation of a response term"""
@@ -553,6 +301,8 @@ class ResponseTerm:
     def eval(self, data, eval_env, encoding=None):
         return self.term.eval(data, eval_env, encoding, is_response=True)
 
+ACCEPTED_TERMS = (Term, GroupSpecTerm, Intercept, NegatedIntercept)
+
 class ModelTerms:
     """Representation of the terms in a model"""
 
@@ -561,7 +311,6 @@ class ModelTerms:
             self.response = response
         else:
             raise ValueError("Response must be of class ResponseTerm.")
-        ACCEPTED_TERMS = (Term, GroupSpecTerm, Intercept, NegatedIntercept)
         if all(isinstance(term, ACCEPTED_TERMS) for term in terms):
             self.common_terms = [term for term in terms if not isinstance(term, GroupSpecTerm)]
             self.group_terms = [term for term in terms if isinstance(term, GroupSpecTerm)]
@@ -695,7 +444,6 @@ class ModelTerms:
                 return NotImplemented
         else:
             raise ValueError("LHS of group specific term cannot have more than one term.")
-
 
     def add_response(self, term):
         if isinstance(term, ResponseTerm):
