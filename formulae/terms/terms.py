@@ -1,14 +1,18 @@
+import numpy as np
+
+from functools import reduce
 from itertools import combinations, product
+
+from formulae.utils import get_interaction_matrix
 
 
 class Intercept:
     def __init__(self):
         self.name = "Intercept"
+        self._type = "Intercept"
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)):
-            return False
-        return self.name == other.name
+        return isinstance(other, type(self))
 
     def __add__(self, other):
         if isinstance(other, NegatedIntercept):
@@ -54,14 +58,27 @@ class Intercept:
     def __str__(self):
         return f"{self.__class__.__name__}()"
 
-    def components(self, data, eval_env):
-        return {self.name: "Intercept"}
+    @property
+    def vars(self):
+        return ""
+
+    def eval(self, data, eval_env, encoding):
+        # Only works with DataFrames or Series so far
+        return {"value": np.ones((data.shape[0], 1)), "type": "Intercept"}
 
 class NegatedIntercept:
     def __init__(self):
-        self.name = "Intercept"
+        self.name = "NegatedIntercept"
+        self._type = "Intercept"
 
     def __add__(self, other):
+        """
+        0 + 0 -> 0
+        0 + 1 -> <empty>
+        0 + a -> 0 + a
+        0 + (a|g) -> 0 + (a|g)
+        0 + (a + b) -> 0 + a + b
+        """
         if isinstance(other, type(self)):
             return self
         elif isinstance(other, Intercept):
@@ -74,10 +91,7 @@ class NegatedIntercept:
             return NotImplemented
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)):
-            return False
-        else:
-            return self.name == other.name
+        return isinstance(other, type(self))
 
     def __or__(self, other):
         raise ValueError("At least include an intercept in '|' operation")
@@ -93,10 +107,10 @@ class NegatedIntercept:
         return ""
 
 class Term:
-    """Representation of a single term in a ModelTerms.
+    """Representation of a single term.
 
-    A model term can be an intercept, a single component, a function call, an interaction
-    involving components and/or function calls or a group specific term.
+    A model term can be an intercept, a term made of a single component, a function call,
+    an interaction involving components and/or function calls.
     """
 
     def __init__(self, *components):
@@ -115,6 +129,17 @@ class Term:
             return self.components == other.components
 
     def __add__(self, other):
+        """Sum between of ``Term`` and other classes of terms.
+
+        Analogous to set union.
+        x + x -> x
+        x + y -> x + y
+        x:y + u -> x:y + u
+        x:y + u:v -> x:y + u:v
+        x:y + (u + v) -> x:y + u + v
+        f(x) + y -> f(x) + y
+        f(x) + (y + z) -> f(x) + y + z
+        """
         if self == other:
             return self
         elif isinstance(other, type(self)):
@@ -125,6 +150,17 @@ class Term:
             return NotImplemented
 
     def __sub__(self, other):
+        """Difference between a ``Term`` and other classes of terms.
+
+        Analogous to set difference.
+        x - x -> ()
+        x - y -> x
+        x:y - u -> x:y
+        x:y - u:v -> x:y
+        x:y - (u + v) -> x:y
+        f(x) - y -> f(x)
+        f(x) - (y + z) -> f(x)
+        """
         if isinstance(other, type(self)):
             if self.components == other.components:
                 return ModelTerms()
@@ -185,9 +221,9 @@ class Term:
             return NotImplemented
 
     def __pow__(self, other):
-        """Power of a Term.
+        """Power of a ``Term``.
 
-        It leaves the term as it is. For a mathematical power, do `I(x ** n)` or `{x ** n}`.
+        It leaves the term as it is. For a power in the math sense do ``I(x ** n)`` or ``{x ** n}``.
         """
         if len(other.components) == 1:
             expr = other.components[0].expr
@@ -203,6 +239,8 @@ class Term:
         x / y -> x + x:y
         x / z:y -> x + x:z:y
         x / (z + y) -> x + x:z + x:y
+        x:y / u:v -> x:y + x:y:u:v
+        x:y / (u + v) -> x:y + x:y:u + x:y:v
         """
         if self == other:
             return self
@@ -216,10 +254,11 @@ class Term:
             return NotImplemented
 
     def __or__(self, other):
-        """Group specific term
+        """Group specific term operation.
 
         (x|g) -> (1|g) + (x|g)
         (x|g + h) -> (x|g) + (x|h) -> (1|g) + (1|h) + (x|g) + (x|h)
+        (x|g:h) -> (1|g:h) + (x|g:h)
         """
         if isinstance(other, Term):
             # Only accepts terms, call terms and interactions.
@@ -242,6 +281,32 @@ class Term:
     def __str__(self):
         string = "[" + ", ".join([repr(component) for component in self.components]) + "]"
         return f"{self.__class__.__name__}({string})"
+
+    def eval(self, data, eval_env, encoding):
+        # TODO: Clean this implementation
+
+        if isinstance(encoding, list) and len(encoding) == 1:
+            encoding = encoding[0]
+        else:
+            ValueError("encoding is a list of len > 1")
+
+        evaluated_terms = dict()
+        for component in self.components:
+            encoding_ = []
+            # encoding is emtpy list when all numerics
+            if isinstance(encoding, dict):
+                if component.name in encoding.keys():
+                    encoding_ = encoding[component.name]
+            # Set type.
+            # Set data.
+            # And then extract that data.
+            evaluated_terms[component.name] = component.eval(data, eval_env, encoding_)
+
+        value = reduce(
+            get_interaction_matrix, [evaluated_terms[k]["value"] for k in evaluated_terms.keys()]
+        )
+        return {"value": value, "type": "interaction", "terms": evaluated_terms}
+
 
 class GroupSpecTerm:
     def __init__(self, expr, factor):

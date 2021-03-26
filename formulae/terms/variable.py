@@ -20,7 +20,7 @@ class Variable:
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return self._type == other.type_ and self.name == other.name and self.level == other.level
+        return self._type == other._type and self.name == other.name and self.level == other.level
 
     def __repr__(self):
         return self.__str__()
@@ -127,7 +127,6 @@ class Variable:
         if self.is_response:
             return np.atleast_2d(np.where(x == self.data["reference"], 1, 0)).T
         else:
-            # Raise error if passing a level that was not observed.
             new_data_levels = pd.Categorical(x).dtype.categories.tolist()
             if set(new_data_levels).issubset(set(self.data["levels"])):
                 series = pd.Categorical(x, categories=self.data["levels"])
