@@ -55,7 +55,7 @@ class ResponseVector:
     Parameters
     ----------
 
-    term : ResponseTerm
+    term : Response
         The description and data of the response term.
     data: pandas.DataFrame
         The data frame where variables are taken from

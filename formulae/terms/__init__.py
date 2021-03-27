@@ -1,5 +1,5 @@
 from .call import Call
-from .terms import Intercept, NegatedIntercept, Term, GroupSpecTerm, ResponseTerm, Model
+from .terms import Intercept, NegatedIntercept, Term, GroupSpecTerm, Response, Model
 from .variable import Variable
 
 __all__ = [
@@ -9,6 +9,6 @@ __all__ = [
     "NegatedIntercept",
     "Term",
     "GroupSpecTerm",
-    "ResponseTerm",
+    "Response",
     "Model"
 ]

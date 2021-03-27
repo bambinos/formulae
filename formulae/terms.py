@@ -900,7 +900,7 @@ class ModelTerms:
             string += ",\n  " + "  ".join(terms.splitlines(True))
 
         if self.group_terms:
-            group_terms = ",\n".join([repr(term) for term in self.group_terms])
+            group_terms = ",\n".join([str(term) for term in self.group_terms])
             string += ",\n  " + "  ".join(group_terms.splitlines(True))
 
         return "ModelTerms(\n  " + string + "\n)"

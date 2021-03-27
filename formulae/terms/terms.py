@@ -140,6 +140,7 @@ class Term:
         for component in components:
             if component not in self.components:
                 self.components.append(component)
+        self.name = ":".join([c.name for c in self.components])
 
     def __hash__(self):
         return hash(*self.components)
@@ -301,7 +302,7 @@ class Term:
         return self.__str__()
 
     def __str__(self):
-        string = "[" + ", ".join([repr(component) for component in self.components]) + "]"
+        string = "[" + ", ".join([str(component) for component in self.components]) + "]"
         return f"{self.__class__.__name__}({string})"
 
     def set_type(self, data, eval_env):
@@ -353,6 +354,7 @@ class Term:
 
     @property
     def var_names(self):
+        """Returns the name of the variables in the term as a set."""
         var_names = set()
         for component in self.components:
             var_names.update(component.var_names)
@@ -378,15 +380,18 @@ class GroupSpecTerm:
         ]
         return self.__class__.__name__ + "(\n  " + ',\n  '.join(strlist) + "\n)"
 
-class ResponseTerm:
+class Response:
     """Representation of a response term"""
 
     def __init__(self, term):
         if isinstance(term, Term):
-            # Check term is a unique term or a call, and not interaction or something different
-            self.term = term
+            n = len(term.components)
+            if n == 1:
+                self.term = term
+            else:
+                raise ValueError(f"The response term must contain only one component, not {n}.")
         else:
-            raise ValueError("Response Term must be univariate")
+            raise ValueError(f"The response term must be of class Term, not {type(term)}.")
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -396,7 +401,7 @@ class ResponseTerm:
 
     def __add__(self, other):
         # ~ is interpreted as __add__
-        if isinstance(other, (Term, Intercept)):
+        if isinstance(other, (Term, GroupSpecTerm, Intercept)):
             return Model(other, response=self)
         elif isinstance(other, Model):
             return other.add_response(self)
@@ -407,14 +412,19 @@ class ResponseTerm:
         return self.__str__()
 
     def __str__(self):
-        return "ResponseTerm(\n  " + "  ".join(str(self.term).splitlines(True)) + "\n)"
+        return f"{self.__class__.__name__}({self.term})"
 
     @property
-    def vars(self):
-        return self.term.vars
+    def var_names(self):
+        """Returns the name of the variables in the response as a set."""
+        return self.term.var_names
 
-    def eval(self, data, eval_env, encoding=None):
-        return self.term.eval(data, eval_env, encoding, is_response=True)
+    def set_type(self, data, eval_env):
+        """Set type of the response term."""
+        self.term.set_type(data, eval_env)
+
+    def set_data(self, encoding):
+        self.term.set_data(encoding)
 
 ACCEPTED_TERMS = (Term, GroupSpecTerm, Intercept, NegatedIntercept)
 
@@ -422,10 +432,10 @@ class Model:
     """Representation of the terms in a model"""
 
     def __init__(self, *terms, response=None):
-        if isinstance(response, ResponseTerm) or response is None:
+        if isinstance(response, Response) or response is None:
             self.response = response
         else:
-            raise ValueError("Response must be of class ResponseTerm.")
+            raise ValueError("Response must be of class Response.")
         if all(isinstance(term, ACCEPTED_TERMS) for term in terms):
             self.common_terms = [term for term in terms if not isinstance(term, GroupSpecTerm)]
             self.group_terms = [term for term in terms if isinstance(term, GroupSpecTerm)]
@@ -564,11 +574,13 @@ class Model:
         return self.__str__()
 
     def __str__(self):
-        terms = ",\n".join([repr(term) for term in self.common_terms])
-        string = "  ".join(terms.splitlines(True))
+        terms = [str(term) for term in self.common_terms]
+        if self.response is not None:
+            terms.insert(0, str(self.response))
+        string = ",\n  ".join([str(term) for term in terms])
 
         if self.group_terms:
-            group_terms = ",\n".join([repr(term) for term in self.group_terms])
+            group_terms = ",\n".join([str(term) for term in self.group_terms])
             if len(string) > 0:
                 string += ",\n  "
             string += "  ".join(group_terms.splitlines(True))
@@ -578,11 +590,11 @@ class Model:
     def add_response(self, term):
         """Add response term to model description.
         """
-        if isinstance(term, ResponseTerm):
+        if isinstance(term, Response):
             self.response = term
             return self
         else:
-            raise ValueError("not ResponseTerm")
+            raise ValueError("not Response")
 
     def add_term(self, term):
         """Add term to model description.
@@ -617,16 +629,34 @@ class Model:
         terms in the model.
         """
         # TODO: Check whether this method is really necessary.
-        return [comp for term in self.common_terms for comp in term.components]
+        return [comp for term in self.common_terms if isinstance(term, Term) for comp in term.components]
 
     @property
     def var_names(self):
+        """Returns the name of the variables in the model as a set."""
         var_names = set()
         for term in self.terms:
             var_names.update(term.var_names)
         if self.response is not None:
             var_names.update(self.response.var_names)
         return var_names
+
+    def set_types(self, data, eval_env):
+        """Set the type of the common terms in the model.
+        """
+        for term in self.common_terms:
+            term.set_type(data, eval_env)
+
+    def _encoding_groups(self):
+        components = {}
+        for term in self.common_terms:
+            if term._type == "interaction":
+                components[term.name] = {c.name: c._type for c in term.components}
+            else:
+                components[term.name] = term._type
+        # Proceed from here!
+        return components
+
 
 # IDEA: What if Variable, Call, Terms, etc... get frozen once set_type or similar is called?
 #       Then, all properties and alike are ensured to remain constant and not change...
