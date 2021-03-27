@@ -10,7 +10,7 @@ import scipy as sp
 from scipy import linalg
 
 from .eval import EvalEnvironment
-from .terms import ModelTerms, Intercept
+from .terms import Model, Intercept
 from .model_description import model_description
 from .utils import flatten_list
 
@@ -23,7 +23,7 @@ class DesignMatrices:
     Parameters
     ----------
 
-    model : ModelTerms
+    model : Model
         The model description.
     data: pandas.DataFrame
         The data frame where variables are taken from
@@ -43,7 +43,7 @@ class DesignMatrices:
             self.response = ResponseVector(self.model.response, data, eval_env)
 
         if self.model.common_terms:
-            self.common = CommonEffectsMatrix(ModelTerms(*self.model.common_terms), data, eval_env)
+            self.common = CommonEffectsMatrix(Model(*self.model.common_terms), data, eval_env)
 
         if self.model.group_terms:
             self.group = GroupEffectsMatrix(self.model.group_terms, data, eval_env)
@@ -114,8 +114,8 @@ class CommonEffectsMatrix:
     Parameters
     ----------
 
-    terms : ModelTerms
-        An ModelTerms object containing terms for the common effects of the model.
+    terms : Model
+        An Model object containing terms for the common effects of the model.
     data: pandas.DataFrame
         The data frame where variables are taken from
     eval_env: EvalEnvironment

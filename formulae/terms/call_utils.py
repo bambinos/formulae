@@ -68,7 +68,7 @@ class CallVarsExtractor:
 
     def get(self):
         x = self.expr.accept(self)
-        # make it a least to ensure 'x' is a list
+        # make sure it return a list
         return list(flatten_list(x))
 
     def visitCallTerm(self, term):

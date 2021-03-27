@@ -3,7 +3,12 @@ import numpy as np
 from functools import reduce
 from itertools import combinations, product
 
+from pandas.core.algorithms import isin
+
 from formulae.utils import get_interaction_matrix
+
+from .call import Call
+from .variable import Variable
 
 
 class Intercept:
@@ -16,25 +21,25 @@ class Intercept:
 
     def __add__(self, other):
         if isinstance(other, NegatedIntercept):
-            return ModelTerms()
+            return Model()
         elif isinstance(other, type(self)):
             return self
         elif isinstance(other, (Term, GroupSpecTerm)):
-            return ModelTerms(self, other)
-        elif isinstance(other, ModelTerms):
-            return ModelTerms(self) + other
+            return Model(self, other)
+        elif isinstance(other, Model):
+            return Model(self) + other
         else:
             return NotImplemented
 
     def __sub__(self, other):
         if isinstance(other, type(self)):
             if self.components == other.components:
-                return ModelTerms()
+                return Model()
             else:
                 return self
-        elif isinstance(other, ModelTerms):
+        elif isinstance(other, Model):
             if self in other.common_terms:
-                return ModelTerms()
+                return Model()
             else:
                 return self
         else:
@@ -47,10 +52,10 @@ class Intercept:
         """
         if isinstance(other, Term):
             return GroupSpecTerm(self, other)
-        elif isinstance(other, ModelTerms):
+        elif isinstance(other, Model):
             products = product([self], other.common_terms)
             terms = [GroupSpecTerm(p[0], p[1]) for p in products]
-            return ModelTerms(*terms)
+            return Model(*terms)
 
     def __repr__(self):
         return self.__str__()
@@ -59,12 +64,17 @@ class Intercept:
         return f"{self.__class__.__name__}()"
 
     @property
-    def vars(self):
-        return ""
+    def vars_names(self):
+        return set()
 
-    def eval(self, data, eval_env, encoding):
-        # Only works with DataFrames or Series so far
-        return {"value": np.ones((data.shape[0], 1)), "type": "Intercept"}
+    def set_type(self, *args, **kwargs):
+        # Nothing goes here as the type is given by the class.
+        pass
+
+    def set_data(self, *args, **kwargs):
+        # Here we have to set a vector of 1s of appropiate length.
+        pass
+
 
 class NegatedIntercept:
     def __init__(self):
@@ -82,11 +92,11 @@ class NegatedIntercept:
         if isinstance(other, type(self)):
             return self
         elif isinstance(other, Intercept):
-            return ModelTerms()
+            return Model()
         elif isinstance(other, (Term, GroupSpecTerm)):
-            return ModelTerms(self, other)
-        elif isinstance(other, ModelTerms):
-            return ModelTerms(self) + other
+            return Model(self, other)
+        elif isinstance(other, Model):
+            return Model(self) + other
         else:
             return NotImplemented
 
@@ -103,8 +113,17 @@ class NegatedIntercept:
         return f"{self.__class__.__name__}()"
 
     @property
-    def vars(self):
-        return ""
+    def var_names(self):
+        # This method should never be called. Leaving a set() to avoid harmless error.
+        return set()
+
+    def set_type(self, *args, **kwargs):
+        # This method should never be called. Leaving a pass to avoid harmless error.
+        pass
+
+    def set_data(self, *args, **kwargs):
+        # This method should never be called. Leaving a pass to avoid harmless error.
+        pass
 
 class Term:
     """Representation of a single term.
@@ -114,7 +133,10 @@ class Term:
     """
 
     def __init__(self, *components):
+        self.data = None
+        self._type = None
         self.components = []
+        self.component_types = None
         for component in components:
             if component not in self.components:
                 self.components.append(component)
@@ -143,9 +165,9 @@ class Term:
         if self == other:
             return self
         elif isinstance(other, type(self)):
-            return ModelTerms(self, other)
-        elif isinstance(other, ModelTerms):
-            return ModelTerms(self) + other
+            return Model(self, other)
+        elif isinstance(other, Model):
+            return Model(self) + other
         else:
             return NotImplemented
 
@@ -163,12 +185,12 @@ class Term:
         """
         if isinstance(other, type(self)):
             if self.components == other.components:
-                return ModelTerms()
+                return Model()
             else:
                 return self
-        elif isinstance(other, ModelTerms):
+        elif isinstance(other, Model):
             if self in other.terms:
-                return ModelTerms()
+                return Model()
             else:
                 return self
         else:
@@ -188,12 +210,12 @@ class Term:
         if self == other:
             return self
         elif isinstance(other, type(self)):
-            return ModelTerms(self, other, Term(*self.components, *other.components))
-        elif isinstance(other, ModelTerms):
+            return Model(self, other, Term(*self.components, *other.components))
+        elif isinstance(other, Model):
             products = product([self], other.common_terms)
             terms = [self] + other.common_terms
             iterms = [Term(*p[0].components, *p[1].components) for p in products]
-            return ModelTerms(*terms) + ModelTerms(*iterms)
+            return Model(*terms) + Model(*iterms)
         else:
             return NotImplemented
 
@@ -213,10 +235,10 @@ class Term:
             return self
         elif isinstance(other, type(self)):
             return Term(*self.components, *other.components)
-        elif isinstance(other, ModelTerms):
+        elif isinstance(other, Model):
             products = product([self], other.common_terms)
             iterms = [Term(*p[0].components, *p[1].components) for p in products]
-            return ModelTerms(*iterms)
+            return Model(*iterms)
         else:
             return NotImplemented
 
@@ -245,11 +267,11 @@ class Term:
         if self == other:
             return self
         elif isinstance(other, type(self)):
-            return ModelTerms(self, Term(*self.components, *other.components))
-        elif isinstance(other, ModelTerms):
+            return Model(self, Term(*self.components, *other.components))
+        elif isinstance(other, Model):
             products = product([self], other.common_terms)
             iterms = [Term(*p[0].components, *p[1].components) for p in products]
-            return self + ModelTerms(*iterms)
+            return self + Model(*iterms)
         else:
             return NotImplemented
 
@@ -264,14 +286,14 @@ class Term:
             # Only accepts terms, call terms and interactions.
             # Adds implicit intercept.
             terms = [GroupSpecTerm(Intercept(), other), GroupSpecTerm(self, other)]
-            return ModelTerms(*terms)
-        elif isinstance(other, ModelTerms):
+            return Model(*terms)
+        elif isinstance(other, Model):
             intercepts = [
                 GroupSpecTerm(Intercept(), p[1])
                  for p in product([self], other.common_terms)
             ]
             slopes = [GroupSpecTerm(p[0], p[1]) for p in product([self], other.common_terms)]
-            return ModelTerms(*intercepts, *slopes)
+            return Model(*intercepts, *slopes)
         else:
             return NotImplemented
 
@@ -282,31 +304,59 @@ class Term:
         string = "[" + ", ".join([repr(component) for component in self.components]) + "]"
         return f"{self.__class__.__name__}({string})"
 
-    def eval(self, data, eval_env, encoding):
-        # TODO: Clean this implementation
+    def set_type(self, data, eval_env):
+        """Set type of the components in the term.
 
+        Calls ``.set_type()`` method on each component in the term. For those components of class
+        ``Variable`` it only passes the data mask. For ``Call`` objects it also passes the
+        evaluation environment.
+        """
+        # Set the type of the components by calling their set_type method.
+        for component in self.components:
+            if isinstance(component, Variable):
+                component.set_type(data)
+            elif isinstance(component, Call):
+                component.set_type(data, eval_env)
+            else:
+                raise ValueError(
+                    "Can't set type on Term because at least one of the components "
+                    f"is of the unexpected type {type(component)}."
+                )
+        # Store the type of the components
+        self.component_types = {component.name: component._type for component in self.components}
+
+        # Determine whether this term is numeric, categoric, or an interaction.
+        if len(self.components) > 1:
+            self._type = "interaction"
+        else:
+            self._type = self.components[0]._type
+
+    def set_data(self, encoding):
+        """Obtains and stores the final data object related to this term
+        """
         if isinstance(encoding, list) and len(encoding) == 1:
             encoding = encoding[0]
         else:
             ValueError("encoding is a list of len > 1")
 
-        evaluated_terms = dict()
         for component in self.components:
-            encoding_ = []
-            # encoding is emtpy list when all numerics
             if isinstance(encoding, dict):
-                if component.name in encoding.keys():
-                    encoding_ = encoding[component.name]
-            # Set type.
-            # Set data.
-            # And then extract that data.
-            evaluated_terms[component.name] = component.eval(data, eval_env, encoding_)
+                encoding_ = encoding.get(component.name, False)
+            else:
+                encoding_ = False
+            component.set_data(encoding_)
 
-        value = reduce(
-            get_interaction_matrix, [evaluated_terms[k]["value"] for k in evaluated_terms.keys()]
-        )
-        return {"value": value, "type": "interaction", "terms": evaluated_terms}
+        if self._type == "interaction":
+            self.data = reduce(get_interaction_matrix, [c.data["value"] for c in self.components])
+        else:
+            self.data = self.components[0].data["value"]
 
+    @property
+    def var_names(self):
+        var_names = set()
+        for component in self.components:
+            var_names.update(component.var_names)
+        return var_names
 
 class GroupSpecTerm:
     def __init__(self, expr, factor):
@@ -347,8 +397,8 @@ class ResponseTerm:
     def __add__(self, other):
         # ~ is interpreted as __add__
         if isinstance(other, (Term, Intercept)):
-            return ModelTerms(other, response=self)
-        elif isinstance(other, ModelTerms):
+            return Model(other, response=self)
+        elif isinstance(other, Model):
             return other.add_response(self)
         else:
             return NotImplemented
@@ -368,7 +418,7 @@ class ResponseTerm:
 
 ACCEPTED_TERMS = (Term, GroupSpecTerm, Intercept, NegatedIntercept)
 
-class ModelTerms:
+class Model:
     """Representation of the terms in a model"""
 
     def __init__(self, *terms, response=None):
@@ -441,11 +491,11 @@ class ModelTerms:
         if isinstance(other, type(self)):
             products = product(self.common_terms, other.common_terms)
             iterms = [Term(*p[0].components, *p[1].components) for p in products]
-            return ModelTerms(*iterms)
+            return Model(*iterms)
         elif isinstance(other, Term):
             products = product(self.common_terms, [other])
             iterms = [Term(*p[0].components, *p[1].components) for p in products]
-            return ModelTerms(*iterms)
+            return Model(*iterms)
         else:
             return NotImplemented
 
@@ -464,7 +514,7 @@ class ModelTerms:
                     for p in combinations(self.common_terms, i)
                 ]
             iterms = [Term(*[comp for term in terms for comp in term.components]) for terms in comb]
-            return self + ModelTerms(*iterms)
+            return self + Model(*iterms)
         else:
             raise ValueError("Power must be a positive integer.")
 
@@ -478,9 +528,9 @@ class ModelTerms:
         """
         if isinstance(other, Term):
             return self.add_term(Term(*self.common_components + other.components))
-        elif isinstance(other, ModelTerms):
+        elif isinstance(other, Model):
             iterms = [Term(*self.common_components, comp) for comp in other.common_components]
-            return self + ModelTerms(*iterms)
+            return self + Model(*iterms)
         else:
             return NotImplemented
 
@@ -500,42 +550,15 @@ class ModelTerms:
             if isinstance(other, Term):
                 products = product(self.common_terms, [other])
                 terms = [GroupSpecTerm(p[0], p[1]) for p in products]
-                return ModelTerms(*terms)
+                return Model(*terms)
             elif isinstance(other, type(self)):
                 products = product(self.common_terms, other.common_terms)
                 terms = [GroupSpecTerm(p[0], p[1]) for p in products]
-                return ModelTerms(*terms)
+                return Model(*terms)
             else:
                 return NotImplemented
         else:
             raise ValueError("LHS of group specific term cannot have more than one term.")
-
-    def add_response(self, term):
-        if isinstance(term, ResponseTerm):
-            self.response = term
-            return self
-        else:
-            raise ValueError("not ResponseTerm")
-
-    def add_term(self, term):
-        if isinstance(term, GroupSpecTerm):
-            if term not in self.group_terms:
-                self.group_terms.append(term)
-            return self
-        elif isinstance(term, (Term, Intercept)):
-            if term not in self.common_terms:
-                self.common_terms.append(term)
-            return self
-        else:
-            raise ValueError("Not accepted term.")
-
-    @property
-    def terms(self):
-        return self.common_terms + self.group_terms
-
-    @property
-    def common_components(self):
-        return [comp for term in self.common_terms for comp in term.components]
 
     def __repr__(self):
         return self.__str__()
@@ -551,3 +574,60 @@ class ModelTerms:
             string += "  ".join(group_terms.splitlines(True))
 
         return f"{self.__class__.__name__}(\n  {string}\n)"
+
+    def add_response(self, term):
+        """Add response term to model description.
+        """
+        if isinstance(term, ResponseTerm):
+            self.response = term
+            return self
+        else:
+            raise ValueError("not ResponseTerm")
+
+    def add_term(self, term):
+        """Add term to model description.
+
+        The term added can be of class ``Intercept``, ``Term``, or ``GroupSpecTerm``. It appends
+        the new term object to the list of common terms or group specific terms as appropriate.
+        """
+        if isinstance(term, GroupSpecTerm):
+            if term not in self.group_terms:
+                self.group_terms.append(term)
+            return self
+        elif isinstance(term, (Term, Intercept)):
+            if term not in self.common_terms:
+                self.common_terms.append(term)
+            return self
+        else:
+            raise ValueError(f"Can't add an object of class {type(term)} to Model.")
+
+    @property
+    def terms(self):
+        """Terms in the model.
+
+        Returns a list of both common and group specific terms in the model description.
+        """
+        return self.common_terms + self.group_terms
+
+    @property
+    def common_components(self):
+        """Components in common terms in the model.
+
+        Returns a list with all components, ``Variable`` and ``Call`` instances, within common
+        terms in the model.
+        """
+        # TODO: Check whether this method is really necessary.
+        return [comp for term in self.common_terms for comp in term.components]
+
+    @property
+    def var_names(self):
+        var_names = set()
+        for term in self.terms:
+            var_names.update(term.var_names)
+        if self.response is not None:
+            var_names.update(self.response.var_names)
+        return var_names
+
+# IDEA: What if Variable, Call, Terms, etc... get frozen once set_type or similar is called?
+#       Then, all properties and alike are ensured to remain constant and not change...
+#       idk, may need to think about it more.

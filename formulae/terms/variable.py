@@ -28,6 +28,15 @@ class Variable:
     def __str__(self):
         return f"{self.__class__.__name__}({self.name}, level='{self.level}')"
 
+    @property
+    def var_names(self):
+        """Returns the name of the variable as a set.
+
+        This ends up being used in design_matrices.py to determine which variables of the data
+        passed are present in the model and subset and raise proper errors.
+        """
+        return {self.name}
+
     def set_type(self, data_mask):
         """Detemines the type of the variable.
 
@@ -48,10 +57,7 @@ class Variable:
     def set_data(self, encoding=None):
         """Obtains and stores the final data object related to this variable.
 
-        Evaluates the variable according to its type and stores the result in ``.data_mask``. It
-        does not support multi-level categoric responses yet, it is, If ``self.is_response`` is
-        ``True`` and the variable is of a categoric type, this method returns a 1d array of 0-1
-        instead of a matrix.
+        The result is stored in ``self.data``.
         """
         if self._type is None:
             raise ValueError("Variable type is not set.")
@@ -76,6 +82,11 @@ class Variable:
         return {"value": value, "type": "numeric"}
 
     def _eval_categoric(self, x, encoding):
+        """
+        It does not support multi-level categoric responses yet. If ``self.is_response`` is ``True``
+        and the variable is of a categoric type, the value element of the dictionary returned is a
+        1d array of 0-1 instead of a matrix.
+        """
         # If not ordered, we make it ordered.
         if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
             categories = sorted(x.unique().tolist())

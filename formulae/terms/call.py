@@ -45,6 +45,12 @@ class Call:
             return False
         return self.callee == other.callee and self.args == other.args
 
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return f"{self.__class__.__name__}({self.name})"
+
     def accept(self, visitor):
         """Accept method called by a visitor.
 
@@ -61,9 +67,9 @@ class Call:
         return CallNamePrinter(self).print()
 
     @property
-    def vars(self):
+    def var_names(self):
         """Returns the names of the variables involved in the call, not including the callee."""
-        return CallVarsExtractor(self).get()
+        return set(CallVarsExtractor(self).get())
 
     def set_type(self, data_mask, eval_env):
         """Evaluates function and determines the type of the result of the call.
