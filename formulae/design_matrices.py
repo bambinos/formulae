@@ -39,7 +39,7 @@ class DesignMatrices:
         self.group = None
         self.model = model
 
-        if self.model.response is not None:
+        if self.model.response:
             self.response = ResponseVector(self.model.response, data, eval_env)
 
         if self.model.common_terms:
@@ -131,19 +131,23 @@ class CommonEffectsMatrix:
         self.evaluate()
 
     def evaluate(self):
-        """Evaluates `self.terms` inside the data mask provided by `data` and
-        updates `self.design_matrix`.
+        """Obtain design matrix for common effects.
+
+        Evaluates ``self.terms`` inside the data mask provided by ``data`` and updates
+        ``self.design_matrix``. It also populates the dictionary ``self.terms_info`` with
+        information related to each term, such as the type, the columns they occupy in the design
+        matrix and the names of the columns.
         """
         d = self.terms.eval(self.data, self.eval_env)
-        self.design_matrix = np.column_stack([d[key]["value"] for key in d.keys()])
+        self.design_matrix = np.column_stack([d[key] for key in d.keys()])
         self.terms_info = {}
         # Get types and column slices
         start = 0
-        for key in d.keys():
-            self.terms_info[key] = {k: v for k, v in d[key].items() if k != "value"}
-            delta = d[key]["value"].shape[1]
-            self.terms_info[key]["cols"] = slice(start, start + delta)
-            self.terms_info[key]["full_names"] = self.get_term_full_names(key)
+        for term in self.terms.terms:
+            self.terms_info[term.name] = term.metadata
+            delta = d[term.name].shape[1]
+            self.terms_info[term.name]["cols"] = slice(start, start + delta)
+            self.terms_info[term.name]["full_names"] = self.get_term_full_names(term.name)
             start += delta
 
     def as_dataframe(self):
@@ -157,7 +161,7 @@ class CommonEffectsMatrix:
         # Always returns a list
         term = self.terms_info[name]
         _type = term["type"]
-        if _type == "Intercept":
+        if _type == "intercept":
             return ["Intercept"]
         elif _type == "numeric":
             return [name]
@@ -368,7 +372,7 @@ def design_matrices(formula, data, na_action="drop", eval_env=0):
     description = model_description(formula)
 
     # Incomplete rows are calculated using columns involved in model formula only
-    cols_to_select = description.vars.intersection(set(data.columns))
+    cols_to_select = description.var_names.intersection(set(data.columns))
     data = data[list(cols_to_select)]
 
     incomplete_rows = data.isna().any(axis=1)

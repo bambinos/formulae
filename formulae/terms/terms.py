@@ -16,6 +16,8 @@ class Intercept:
     def __init__(self):
         self.name = "Intercept"
         self._type = "Intercept"
+        self.data = None
+        self.metadata = {"type": "intercept"}
 
     def __eq__(self, other):
         return isinstance(other, type(self))
@@ -65,16 +67,16 @@ class Intercept:
         return f"{self.__class__.__name__}()"
 
     @property
-    def vars_names(self):
+    def var_names(self):
         return set()
 
-    def set_type(self, *args, **kwargs):
+    def set_type(self, data, eval_env):
         # Nothing goes here as the type is given by the class.
-        pass
+        # Only works with DataFrames or Series so far
+        self.len = data.shape[0]
 
-    def set_data(self, *args, **kwargs):
-        # Here we have to set a vector of 1s of appropiate length.
-        pass
+    def set_data(self, encoding):
+        self.data = np.ones((self.len, 1))
 
 
 class NegatedIntercept:
@@ -135,6 +137,7 @@ class Term:
 
     def __init__(self, *components):
         self.data = None
+        self.metadata = {}
         self._type = None
         self.components = []
         self.component_types = None
@@ -350,8 +353,12 @@ class Term:
 
         if self._type == "interaction":
             self.data = reduce(get_interaction_matrix, [c.data["value"] for c in self.components])
+            self.metadata["type"] = "interaction"
+            self.metadata["terms"] = {c.name: {k:v for k, v in c.data.items() if k != "value"} for c in self.components}
         else:
-            self.data = self.components[0].data["value"]
+            component = self.components[0]
+            self.data = component.data["value"]
+            self.metadata = {k: v for k, v in component.data.items() if k != "value"}
 
     @property
     def var_names(self):
