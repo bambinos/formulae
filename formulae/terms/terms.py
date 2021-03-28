@@ -6,6 +6,7 @@ from itertools import combinations, product
 from pandas.core.algorithms import isin
 
 from formulae.utils import get_interaction_matrix
+from formulae.contrasts import pick_contrasts
 
 from .call import Call
 from .variable import Variable
@@ -360,6 +361,16 @@ class Term:
             var_names.update(component.var_names)
         return var_names
 
+    def get_component(self, name):
+        """Returns a component by name
+
+        This method receives a component name and returns the component, either a Variable or Call.
+        """
+
+        for component in self.components:
+            if component.name == name:
+                return component
+
 class GroupSpecTerm:
     def __init__(self, expr, factor):
         self.expr = expr
@@ -654,9 +665,97 @@ class Model:
                 components[term.name] = {c.name: c._type for c in term.components}
             else:
                 components[term.name] = term._type
-        # Proceed from here!
-        return components
 
+        # First, group with only categoric terms
+        categoric_group = dict()
+        for k, v in components.items():
+            if v == "categoric":
+                categoric_group[k] = [k]
+            elif v == "Intercept":
+                categoric_group[k] = []
+            elif isinstance(v, dict): # interaction
+                # If all categoric terms in the interaction
+                if all(v_ == "categoric" for v_ in v.values()):
+                    categoric_group[k] = [k_ for k_ in v.keys()]
+
+        # Determine groups of numerics
+        numeric_group_sets = []
+        numeric_groups = []
+        for k, v in components.items():
+            # v is dict when interaction, otherwise is string.
+            if isinstance(v, dict):
+                categoric = [k_ for k_, v_ in v.items() if v_ == "categoric"]
+                numeric = [k_ for k_, v_ in v.items() if v_ == "numeric"]
+                # if it is an interaction with both categoric and numeric terms
+                if categoric and numeric:
+                    numeric_set = set(numeric)
+                    numeric_part = ":".join(numeric)
+                    if numeric_set not in numeric_group_sets:
+                        numeric_group_sets.append(numeric_set)
+                        numeric_groups.append(dict())
+                    idx = numeric_group_sets.index(numeric_set)
+                    # Prevent full encoding when numeric part is present outside
+                    # this numeric-categoric interaction
+                    if numeric_part in components.keys():
+                        numeric_groups[idx][numeric_part] = []
+                    numeric_groups[idx][k] = categoric
+
+        return [categoric_group] + numeric_groups
+
+    def _encoding_bools(self):
+        """Determine encodings for terms containing at least one categorical variable.
+
+        This method returns dictionaries with True/False values.
+        True means the categorical variable uses 'levels' dummies.
+        False means the categorial variable uses 'levels - 1' dummies.
+        """
+        groups = self._encoding_groups()
+        l = [pick_contrasts(group) for group in groups]
+        result = dict()
+        for d in l:
+            result.update(d)
+        return result
+
+    def eval(self, data, eval_env):
+        self.set_types(data, eval_env)
+        encodings = self._encoding_bools()
+        result = dict()
+
+        # Group specific effects aren't evaluated here -- this may change
+        for term in self.common_terms:
+            term_encoding = False
+
+            if term.name in encodings.keys():
+                term_encoding = encodings[term.name]
+
+            if hasattr(term_encoding, "len") and len(term_encoding) > 1:
+            # we're in an interaction that added terms.
+            # we need to create and evaluate these extra terms.
+            # i.e. "y ~ g1:g2", both g1 and g2 categoric, is equivalent to "y ~ g2 + g1:g2"
+                for encoding in term_encoding:
+                    if len(encoding) == 1:
+                        component_name = list(encoding.keys())[0]
+                        component_encoding = list(encoding.values())[0]
+                        component = term.get_component(component_name)
+                        extra_term = Term(component)
+
+                    else:
+                        # Hack to keep original order, there's somethin happening
+                        # with sets in 'contrasts.py'
+                        component_names = [c.name for c in term.components]
+                        components = [
+                                term.get_component(name) for name in component_names
+                                if component_name in encoding.keys()
+                            ]
+                        extra_term = Term(*components)
+                    extra_term.set_type(data, eval_env)
+                    extra_term.set_data(component_encoding)
+                    result[component_name] = extra_term.data
+            else:
+                term.set_type(data, eval_env)
+                term.set_data(term_encoding)
+                result[term.name] = term.data
+        return result
 
 # IDEA: What if Variable, Call, Terms, etc... get frozen once set_type or similar is called?
 #       Then, all properties and alike are ensured to remain constant and not change...
