@@ -77,12 +77,13 @@ class ResponseVector:
         """Evaluates `self.term` inside the data mask provided by `data` and
         updates `self.design_vector` and `self.name`
         """
-        d = self.term.eval(self.data, self.eval_env)
+        self.term.set_type(self.data, self.eval_env)
+        self.term.set_data()
         self.name = self.term.term.name
-        self.design_vector = d["value"]
-        self.type = d["type"]
+        self.design_vector = self.term.term.data
+        self.type = self.term.term.metadata["type"]
         if self.type == "categoric":
-            self.refclass = d["reference"]
+            self.refclass = self.term.term.metadata["reference"]
 
     def as_dataframe(self):
         """Returns `self.design_vector` as a pandas.DataFrame"""
@@ -403,7 +404,8 @@ def term_str(term):
             elif v["type"] == "categoric":
                 str_l = [k2 + "=" + str(v2) for k2, v2 in v.items() if k2 != "value"]
                 vars.append(f"    {k}: {{" + ", ".join(str_l) + "}")
-        x = "type=interaction, vars={\n" + ",\n".join(vars) + "\n  }"
+        x = f"type=interaction, cols={term['cols']}, full_names={term['full_names']}"
+        x += ",\n    vars={\n  " + ",\n  ".join(vars) + "\n  }"
     else:
         x = ", ".join([k + "=" + str(v) for k, v in term.items() if k not in ["Xi", "Ji"]])
     return x

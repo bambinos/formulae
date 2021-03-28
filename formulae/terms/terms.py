@@ -144,7 +144,7 @@ class Term:
         for component in components:
             if component not in self.components:
                 self.components.append(component)
-        self.name = ":".join([c.name for c in self.components])
+        self.name = ":".join([str(c.name) for c in self.components])
 
     def __hash__(self):
         return hash(*self.components)
@@ -253,8 +253,8 @@ class Term:
         It leaves the term as it is. For a power in the math sense do ``I(x ** n)`` or ``{x ** n}``.
         """
         if len(other.components) == 1:
-            expr = other.components[0].expr
-            if isinstance(expr, int) and expr >= 1:
+            value = other.components[0].name
+            if isinstance(value, int) and value >= 1:
                 return self
         else:
             return NotImplemented
@@ -406,6 +406,7 @@ class Response:
             n = len(term.components)
             if n == 1:
                 self.term = term
+                self.term.components[0].is_response = True
             else:
                 raise ValueError(f"The response term must contain only one component, not {n}.")
         else:
@@ -441,8 +442,9 @@ class Response:
         """Set type of the response term."""
         self.term.set_type(data, eval_env)
 
-    def set_data(self, encoding):
+    def set_data(self, encoding=False):
         self.term.set_data(encoding)
+
 
 ACCEPTED_TERMS = (Term, GroupSpecTerm, Intercept, NegatedIntercept)
 
@@ -532,13 +534,12 @@ class Model:
 
         (x + y + z) ** 2 -> x + y + z + x:y + x:z + y:z
         """
-
         if isinstance(other, Term) and len(other.components) == 1:
-            expr = other.components[0].expr
-            if isinstance(expr, int) and expr >= 1:
+            value = other.components[0].name
+            if isinstance(value, int) and value >= 1:
                 comb = [
                     list(p)
-                    for i in range(2, expr + 1)
+                    for i in range(2, value + 1)
                     for p in combinations(self.common_terms, i)
                 ]
             iterms = [Term(*[comp for term in terms for comp in term.components]) for terms in comb]

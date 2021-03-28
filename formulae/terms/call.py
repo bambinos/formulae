@@ -156,8 +156,6 @@ class Call:
         levels = x.cat.categories.tolist()
 
         if self.is_response:
-            if self.level is not None:
-                reference = self.level
             value = np.atleast_2d(np.where(x == reference, 1, 0)).T
             encoding = None
         else:
