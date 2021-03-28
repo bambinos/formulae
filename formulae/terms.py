@@ -680,7 +680,6 @@ class GroupSpecTerm(BaseTerm):
             string += self.factor.name
         else:
             raise ValueError("Invalid RHS expression for group specific term")
-
         return string
 
     @property

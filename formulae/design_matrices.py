@@ -208,7 +208,7 @@ class GroupEffectsMatrix:
     ----------
 
     terms : list
-        A list of GroupSpecTerm objects.
+        A list of GroupSpecificTerm objects.
     data: pandas.DataFrame
         The data frame where variables are taken from
     eval_env: EvalEnvironment
@@ -232,8 +232,8 @@ class GroupEffectsMatrix:
         Z = []
         self.terms_info = {}
         for term in self.terms:
-
             encoding = True
+            # If both (1|g) and (x|g) are in the model, then the encoding for x is False.
             if not isinstance(term.expr, Intercept):
                 for term_ in self.terms:
                     if term_.factor == term.factor and isinstance(term_.expr, Intercept):
@@ -291,7 +291,7 @@ class GroupEffectsMatrix:
         # Always returns a list
         term = self.terms_info[name]
         _type = term["type"]
-        if _type in ["Intercept", "numeric"]:
+        if _type in ["intercept", "numeric"]:
             return [f"{name}[{group}]" for group in term["groups"]]
         elif _type == "interaction":
             return interaction_label(term)

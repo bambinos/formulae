@@ -9,7 +9,7 @@ from formulae.terms import *
 
 # TODO:
 # test repeated terms
-# tests for CallTerms, ModelTerms, GroupSpecTerm and so on...
+# tests for CallTerms, ModelTerms, GroupSpecificTerm and so on...
 
 
 def test_empty_model_terms():
@@ -58,7 +58,7 @@ def test_term_add():
 
     desc = model_description("x + (1|g)")
     comp = ModelTerms(
-        InterceptTerm(), Term("x", "x"), GroupSpecTerm(InterceptTerm(), Term("g", "g"))
+        InterceptTerm(), Term("x", "x"), GroupSpecificTerm(InterceptTerm(), Term("g", "g"))
     )
     assert desc == comp
 

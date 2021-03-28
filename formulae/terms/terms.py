@@ -1,9 +1,9 @@
 import numpy as np
+import pandas as pd
 
 from functools import reduce
 from itertools import combinations, product
-
-from pandas.core.algorithms import isin
+from scipy import linalg, sparse
 
 from formulae.utils import get_interaction_matrix
 from formulae.contrasts import pick_contrasts
@@ -27,7 +27,7 @@ class Intercept:
             return Model()
         elif isinstance(other, type(self)):
             return self
-        elif isinstance(other, (Term, GroupSpecTerm)):
+        elif isinstance(other, (Term, GroupSpecificTerm)):
             return Model(self, other)
         elif isinstance(other, Model):
             return Model(self) + other
@@ -54,10 +54,10 @@ class Intercept:
         (1 | g + h) -> (1|g) + (1|h)
         """
         if isinstance(other, Term):
-            return GroupSpecTerm(self, other)
+            return GroupSpecificTerm(self, other)
         elif isinstance(other, Model):
             products = product([self], other.common_terms)
-            terms = [GroupSpecTerm(p[0], p[1]) for p in products]
+            terms = [GroupSpecificTerm(p[0], p[1]) for p in products]
             return Model(*terms)
 
     def __repr__(self):
@@ -96,7 +96,7 @@ class NegatedIntercept:
             return self
         elif isinstance(other, Intercept):
             return Model()
-        elif isinstance(other, (Term, GroupSpecTerm)):
+        elif isinstance(other, (Term, GroupSpecificTerm)):
             return Model(self, other)
         elif isinstance(other, Model):
             return Model(self) + other
@@ -290,14 +290,14 @@ class Term:
         if isinstance(other, Term):
             # Only accepts terms, call terms and interactions.
             # Adds implicit intercept.
-            terms = [GroupSpecTerm(Intercept(), other), GroupSpecTerm(self, other)]
+            terms = [GroupSpecificTerm(Intercept(), other), GroupSpecificTerm(self, other)]
             return Model(*terms)
         elif isinstance(other, Model):
             intercepts = [
-                GroupSpecTerm(Intercept(), p[1])
+                GroupSpecificTerm(Intercept(), p[1])
                  for p in product([self], other.common_terms)
             ]
-            slopes = [GroupSpecTerm(p[0], p[1]) for p in product([self], other.common_terms)]
+            slopes = [GroupSpecificTerm(p[0], p[1]) for p in product([self], other.common_terms)]
             return Model(*intercepts, *slopes)
         else:
             return NotImplemented
@@ -378,7 +378,7 @@ class Term:
             if component.name == name:
                 return component
 
-class GroupSpecTerm:
+class GroupSpecificTerm:
     def __init__(self, expr, factor):
         self.expr = expr
         self.factor = factor
@@ -397,6 +397,63 @@ class GroupSpecTerm:
             f"factor= {'  '.join(str(self.factor).splitlines(True))}",
         ]
         return self.__class__.__name__ + "(\n  " + ',\n  '.join(strlist) + "\n)"
+
+    def eval(self, data, eval_env, encoding):
+        # TODO: factor can't be a call or interaction yet.
+        if len(self.factor.components) == 1 and isinstance(self.factor.components[0], Variable):
+            factor = data[self.factor.name]
+            if not hasattr(factor.dtype, "ordered") or not factor.dtype.ordered:
+                categories = sorted(factor.unique().tolist())
+                cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
+                factor = factor.astype(cat_type)
+        else:
+            raise ValueError(
+                "Factor on right hand side of group specific term must be a single term."
+            )
+
+        # Notation as in lme4 paper
+        # Note we don't use `drop_first=True`.
+        self.expr.set_type(data, eval_env)
+        self.expr.set_data(encoding)
+        Xi = self.expr.data
+        Ji = pd.get_dummies(factor).to_numpy()
+        Zi = linalg.khatri_rao(Ji.T, Xi.T).T
+        out = {
+            "type": self.expr.metadata["type"],
+            "Xi": Xi,
+            "Ji": Ji,
+            "Zi": sparse.coo_matrix(Zi),
+            "groups": factor.cat.categories.tolist(),
+        }
+        if self.expr._type == "categoric":
+            out["levels"] = self.expr.metadata["levels"]
+            out["reference"] = self.expr.metadata["reference"]
+            out["encoding"] = self.expr.metadata["encoding"]
+        return out
+
+    @property
+    def var_names(self):
+        expr_names = self.expr.var_names.copy()
+        factor_names = self.factor.var_names.copy()
+        return expr_names.union(factor_names)
+
+    def to_string(self, level=None):
+        string = ""
+        if isinstance(self.expr, Intercept):
+            string += "1|"
+        elif isinstance(self.expr, Term):
+            if level is not None:
+                string += f"{self.expr.name}[{level}]|"
+            else:
+                string += f"{self.expr.name}|"
+        else:
+            raise ValueError("Invalid LHS expression for group specific term")
+
+        if isinstance(self.factor, Term):
+            string += self.factor.name
+        else:
+            raise ValueError("Invalid RHS expression for group specific term")
+        return string
 
 class Response:
     """Representation of a response term"""
@@ -420,7 +477,7 @@ class Response:
 
     def __add__(self, other):
         # ~ is interpreted as __add__
-        if isinstance(other, (Term, GroupSpecTerm, Intercept)):
+        if isinstance(other, (Term, GroupSpecificTerm, Intercept)):
             return Model(other, response=self)
         elif isinstance(other, Model):
             return other.add_response(self)
@@ -446,7 +503,7 @@ class Response:
         self.term.set_data(encoding)
 
 
-ACCEPTED_TERMS = (Term, GroupSpecTerm, Intercept, NegatedIntercept)
+ACCEPTED_TERMS = (Term, GroupSpecificTerm, Intercept, NegatedIntercept)
 
 class Model:
     """Representation of the terms in a model"""
@@ -457,8 +514,8 @@ class Model:
         else:
             raise ValueError("Response must be of class Response.")
         if all(isinstance(term, ACCEPTED_TERMS) for term in terms):
-            self.common_terms = [term for term in terms if not isinstance(term, GroupSpecTerm)]
-            self.group_terms = [term for term in terms if isinstance(term, GroupSpecTerm)]
+            self.common_terms = [term for term in terms if not isinstance(term, GroupSpecificTerm)]
+            self.group_terms = [term for term in terms if isinstance(term, GroupSpecificTerm)]
         else:
             raise ValueError("There is a least one term of an unexpected class.")
 
@@ -477,7 +534,7 @@ class Model:
         """
         if isinstance(other, NegatedIntercept):
             return self - Intercept()
-        elif isinstance(other, (Term, GroupSpecTerm, Intercept)):
+        elif isinstance(other, (Term, GroupSpecificTerm, Intercept)):
             return self.add_term(other)
         elif isinstance(other, type(self)):
             for term in other.terms:
@@ -504,7 +561,7 @@ class Model:
             if other in self.common_terms:
                 self.common_terms.remove(other)
             return self
-        elif isinstance(other, GroupSpecTerm):
+        elif isinstance(other, GroupSpecificTerm):
             if other in self.group_terms:
                 self.group_terms.remove(other)
             return self
@@ -578,11 +635,11 @@ class Model:
 
             if isinstance(other, Term):
                 products = product(self.common_terms, [other])
-                terms = [GroupSpecTerm(p[0], p[1]) for p in products]
+                terms = [GroupSpecificTerm(p[0], p[1]) for p in products]
                 return Model(*terms)
             elif isinstance(other, type(self)):
                 products = product(self.common_terms, other.common_terms)
-                terms = [GroupSpecTerm(p[0], p[1]) for p in products]
+                terms = [GroupSpecificTerm(p[0], p[1]) for p in products]
                 return Model(*terms)
             else:
                 return NotImplemented
@@ -618,10 +675,10 @@ class Model:
     def add_term(self, term):
         """Add term to model description.
 
-        The term added can be of class ``Intercept``, ``Term``, or ``GroupSpecTerm``. It appends
+        The term added can be of class ``Intercept``, ``Term``, or ``GroupSpecificTerm``. It appends
         the new term object to the list of common terms or group specific terms as appropriate.
         """
-        if isinstance(term, GroupSpecTerm):
+        if isinstance(term, GroupSpecificTerm):
             if term not in self.group_terms:
                 self.group_terms.append(term)
             return self
