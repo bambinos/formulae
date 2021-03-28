@@ -6,7 +6,7 @@ import pandas as pd
 from formulae.eval import EvalEnvironment
 from formulae.parser import Parser
 from formulae.scanner import Scanner
-from formulae.terms import Variable, Call, Term, ModelTerms
+from formulae.terms import Variable, Call, Term, Model
 
 
 def test_new_data_numeric():

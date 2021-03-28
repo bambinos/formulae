@@ -76,8 +76,8 @@ class Resolver:
             return Term(Variable(expr.value))
 
     def visitQuotedNameExpr(self, expr):
-        # delete backquotes in 'variable' and 'name'
-        return Term(expr.expression.lexeme[1:-1], expr.expression.lexeme[1:-1])
+        # TODO: Quoted names don't accept levels yet.
+        return Term(Variable(expr.expression.lexeme[1:-1]))
 
 
 # When evaluating ModelTerms object we'll have to "evaluate" CallTerms in a different manner

@@ -22,6 +22,9 @@ class Intercept:
     def __eq__(self, other):
         return isinstance(other, type(self))
 
+    def __hash__(self):
+        return hash(self._type)
+
     def __add__(self, other):
         if isinstance(other, NegatedIntercept):
             return Model()
@@ -147,7 +150,7 @@ class Term:
         self.name = ":".join([str(c.name) for c in self.components])
 
     def __hash__(self):
-        return hash(*self.components)
+        return hash(tuple(self.components))
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -387,6 +390,9 @@ class GroupSpecificTerm:
         if not isinstance(other, type(self)):
             return False
         return self.expr == other.expr and self.factor == other.factor
+
+    def __hash__(self):
+        return hash((self.expr, self.factor))
 
     def __repr__(self):
         return self.__str__()

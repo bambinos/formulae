@@ -34,15 +34,14 @@ def test_parse_call():
     assert p == Binary(
         Literal(1),
         Token("PLUS", "+"),
-        Call(Variable(Token("IDENTIFIER", "f")), [Variable(Token("IDENTIFIER", "x"))], False),
+        Call(Variable(Token("IDENTIFIER", "f")), [Variable(Token("IDENTIFIER", "x"))]),
     )
     p = parse("module.f(x)")
     assert p == Binary(
         Literal(1),
         Token("PLUS", "+"),
         Call(
-            Variable(Token("IDENTIFIER", "module.f")), [Variable(Token("IDENTIFIER", "x"))], False
-        ),
+            Variable(Token("IDENTIFIER", "module.f")), [Variable(Token("IDENTIFIER", "x"))]),
     )
     p = parse("{x + y}")
     p == Binary(
@@ -56,8 +55,7 @@ def test_parse_call():
                     Token("PLUS", "+"),
                     Variable(Token("IDENTIFIER", "y")),
                 )
-            ],
-            False,
+            ]
         ),
     )
 
@@ -215,7 +213,7 @@ def test_parse_complex_expressions():
 
     p = parse("np.log(y) ~ (`var 1` + `var 2` + `var 3`) ** 3 - `var 2`:`var 3`")
     ast = Binary(
-        Call(Variable(Token("IDENTIFIER", "np.log")), [Variable(Token("IDENTIFIER", "y"))], False),
+        Call(Variable(Token("IDENTIFIER", "np.log")), [Variable(Token("IDENTIFIER", "y"))]),
         Token("TILDE", "~"),
         Binary(
             Binary(

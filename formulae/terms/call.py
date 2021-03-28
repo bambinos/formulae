@@ -38,7 +38,7 @@ class Call:
             self.stateful_transform = None
 
     def __hash__(self):
-        return hash((self.callee, self.args, self.name, self.stateful_transform))
+        return hash((self.callee, self.name, self.stateful_transform))
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
