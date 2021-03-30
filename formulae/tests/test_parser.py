@@ -40,8 +40,7 @@ def test_parse_call():
     assert p == Binary(
         Literal(1),
         Token("PLUS", "+"),
-        Call(
-            Variable(Token("IDENTIFIER", "module.f")), [Variable(Token("IDENTIFIER", "x"))]),
+        Call(Variable(Token("IDENTIFIER", "module.f")), [Variable(Token("IDENTIFIER", "x"))]),
     )
     p = parse("{x + y}")
     p == Binary(
@@ -55,7 +54,7 @@ def test_parse_call():
                     Token("PLUS", "+"),
                     Variable(Token("IDENTIFIER", "y")),
                 )
-            ]
+            ],
         ),
     )
 

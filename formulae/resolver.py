@@ -1,11 +1,4 @@
-from .terms import (
-    Variable,
-    Call,
-    Term,
-    Intercept,
-    NegatedIntercept,
-    Response
-)
+from .terms import Variable, Call, Term, Intercept, NegatedIntercept, Response
 
 
 class ResolverError(Exception):

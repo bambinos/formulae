@@ -137,7 +137,7 @@ class Call(Expr):
     def __str__(self):
         string_list = [
             "callee=" + str(self.callee),
-            "args=" + "  ".join(str(self.args).splitlines(True))
+            "args=" + "  ".join(str(self.args).splitlines(True)),
         ]
         return "Call(\n  " + ",\n  ".join(string_list) + "\n)"
 

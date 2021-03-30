@@ -6,6 +6,7 @@ import pandas as pd
 # required to compute the transformation and are obtained as a subproduct of the
 # data that is used to compute the transform.
 
+
 class Center:
     def __init__(self):
         self.params_set = False

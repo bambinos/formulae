@@ -19,6 +19,7 @@ def test_new_data_numeric():
     data = pd.DataFrame({"x": [1, 2, 3]})
     assert (var_term.eval_new_data(data).T == [1, 2, 3]).all()
 
+
 def test_new_data_numeric_stateful_transform():
     # The center() transformation remembers the value of the mean
     # of the first dataset passed, which is 10.
@@ -30,6 +31,7 @@ def test_new_data_numeric_stateful_transform():
     assert (call_term.data["value"].T == [0, 0, 0]).all()
     data = pd.DataFrame({"x": [1, 2, 3]})
     assert (call_term.eval_new_data(data, eval_env).T == [-9.0, -8.0, -7.0]).all()
+
 
 def test_new_data_categoric():
     data = pd.DataFrame({"x": ["A", "B", "C"]})
@@ -66,6 +68,7 @@ def test_new_data_categoric():
     with pytest.raises(ValueError):
         data = pd.DataFrame({"x": ["B", "C", "D"]})
         var_term.eval_new_data(data)
+
 
 def test_new_data_categoric_stateful_transform():
     eval_env = EvalEnvironment.capture(0)

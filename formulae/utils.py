@@ -13,6 +13,7 @@ def listify(obj):
     else:
         return obj if isinstance(obj, (list, tuple, type(None))) else [obj]
 
+
 def flatten_list(nested_list):
     """Flatten a nested list"""
     nested_list = deepcopy(nested_list)
@@ -23,12 +24,14 @@ def flatten_list(nested_list):
         else:
             yield sublist
 
+
 def get_interaction_matrix(x, y):
     l = []
     for j1 in range(x.shape[1]):
         for j2 in range(y.shape[1]):
             l.append(x[:, j1] * y[:, j2])
     return np.column_stack(l)
+
 
 def get_data_mask_names(data_mask):
     if isinstance(data_mask, pd.DataFrame):

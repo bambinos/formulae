@@ -131,6 +131,7 @@ class NegatedIntercept:
         # This method should never be called. Leaving a pass to avoid harmless error.
         pass
 
+
 class Term:
     """Representation of a single term.
 
@@ -303,8 +304,7 @@ class Term:
             return Model(*terms)
         elif isinstance(other, Model):
             intercepts = [
-                GroupSpecificTerm(Intercept(), p[1])
-                 for p in product([self], other.common_terms)
+                GroupSpecificTerm(Intercept(), p[1]) for p in product([self], other.common_terms)
             ]
             slopes = [GroupSpecificTerm(p[0], p[1]) for p in product([self], other.common_terms)]
             return Model(*intercepts, *slopes)
@@ -346,8 +346,7 @@ class Term:
             self._type = self.components[0]._type
 
     def set_data(self, encoding):
-        """Obtains and stores the final data object related to this term
-        """
+        """Obtains and stores the final data object related to this term"""
         if isinstance(encoding, list) and len(encoding) == 1:
             encoding = encoding[0]
         else:
@@ -363,7 +362,9 @@ class Term:
         if self._type == "interaction":
             self.data = reduce(get_interaction_matrix, [c.data["value"] for c in self.components])
             self.metadata["type"] = "interaction"
-            self.metadata["terms"] = {c.name: {k:v for k, v in c.data.items() if k != "value"} for c in self.components}
+            self.metadata["terms"] = {
+                c.name: {k: v for k, v in c.data.items() if k != "value"} for c in self.components
+            }
         else:
             component = self.components[0]
             self.data = component.data["value"]
@@ -387,6 +388,7 @@ class Term:
             if component.name == name:
                 return component
 
+
 class GroupSpecificTerm:
     def __init__(self, expr, factor):
         self.expr = expr
@@ -408,7 +410,7 @@ class GroupSpecificTerm:
             f"expr= {'  '.join(str(self.expr).splitlines(True))}",
             f"factor= {'  '.join(str(self.factor).splitlines(True))}",
         ]
-        return self.__class__.__name__ + "(\n  " + ',\n  '.join(strlist) + "\n)"
+        return self.__class__.__name__ + "(\n  " + ",\n  ".join(strlist) + "\n)"
 
     def eval(self, data, eval_env, encoding):
         # TODO: factor can't be a call or interaction yet.
@@ -467,6 +469,7 @@ class GroupSpecificTerm:
             raise ValueError("Invalid RHS expression for group specific term")
         return string
 
+
 class Response:
     """Representation of a response term"""
 
@@ -516,6 +519,7 @@ class Response:
 
 
 ACCEPTED_TERMS = (Term, GroupSpecificTerm, Intercept, NegatedIntercept)
+
 
 class Model:
     """Representation of the terms in a model"""
@@ -634,9 +638,7 @@ class Model:
             value = other.components[0].name
             if isinstance(value, int) and value >= 1:
                 comb = [
-                    list(p)
-                    for i in range(2, value + 1)
-                    for p in combinations(self.common_terms, i)
+                    list(p) for i in range(2, value + 1) for p in combinations(self.common_terms, i)
                 ]
             iterms = [Term(*[comp for term in terms for comp in term.components]) for terms in comb]
             return self + Model(*iterms)
@@ -703,8 +705,7 @@ class Model:
         return f"{self.__class__.__name__}(\n  {string}\n)"
 
     def add_response(self, term):
-        """Add response term to model description.
-        """
+        """Add response term to model description."""
         if isinstance(term, Response):
             self.response = term
             return self
@@ -744,7 +745,9 @@ class Model:
         terms in the model.
         """
         # TODO: Check whether this method is really necessary.
-        return [comp for term in self.common_terms if isinstance(term, Term) for comp in term.components]
+        return [
+            comp for term in self.common_terms if isinstance(term, Term) for comp in term.components
+        ]
 
     @property
     def var_names(self):
@@ -757,8 +760,7 @@ class Model:
         return var_names
 
     def set_types(self, data, eval_env):
-        """Set the type of the common terms in the model.
-        """
+        """Set the type of the common terms in the model."""
         for term in self.common_terms:
             term.set_type(data, eval_env)
 
@@ -777,7 +779,7 @@ class Model:
                 categoric_group[k] = [k]
             elif v == "Intercept":
                 categoric_group[k] = []
-            elif isinstance(v, dict): # interaction
+            elif isinstance(v, dict):  # interaction
                 # If all categoric terms in the interaction
                 if all(v_ == "categoric" for v_ in v.values()):
                     categoric_group[k] = [k_ for k_ in v.keys()]
@@ -835,10 +837,10 @@ class Model:
             if term.name in encodings.keys():
                 term_encoding = encodings[term.name]
             if hasattr(term_encoding, "__len__") and len(term_encoding) > 1:
-            # we're in an interaction that added terms.
-            # we need to create and evaluate these extra terms.
-            # i.e. "y ~ g1:g2", both g1 and g2 categoric, is equivalent to "y ~ g2 + g1:g2"
-            # It is possible an interaction adds LOWER order terms, but NEVER HIGHER order terms.
+                # we're in an interaction that added terms.
+                # we need to create and evaluate these extra terms.
+                # i.e. "y ~ g1:g2", both g1 and g2 categoric, is equivalent to "y ~ g2 + g1:g2"
+                # It is possible an interaction adds LOWER order terms, but NEVER HIGHER order terms.
                 for (idx, encoding) in enumerate(term_encoding):
                     # Last term never adds any new term, it corresponds to the outer `term`.
                     if idx == len(term_encoding) - 1:
@@ -858,6 +860,7 @@ class Model:
                 result[term.name] = term.data
         return result
 
+
 def _create_and_eval_extra_term(term, encoding, data, eval_env):
     if len(encoding) == 1:
         component_name = list(encoding.keys())[0]
@@ -868,14 +871,12 @@ def _create_and_eval_extra_term(term, encoding, data, eval_env):
         component_names = [c.name for c in term.components]
         encoding_ = encoding
         components = [
-                term.get_component(name) for name in component_names
-                if name in encoding.keys()
-            ]
+            term.get_component(name) for name in component_names if name in encoding.keys()
+        ]
         extra_term = Term(*components)
     extra_term.set_type(data, eval_env)
     extra_term.set_data(encoding_)
     return extra_term
-
 
 
 # IDEA: What if Variable, Call, Terms, etc... get frozen once set_type or similar is called?
