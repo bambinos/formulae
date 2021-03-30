@@ -829,47 +829,54 @@ class Model:
 
         # Group specific effects aren't evaluated here -- this may change
         common_terms = self.common_terms.copy()
-        for (idx, term) in enumerate(common_terms):
+        for term in common_terms:
             term_encoding = False
 
             if term.name in encodings.keys():
                 term_encoding = encodings[term.name]
             if hasattr(term_encoding, "__len__") and len(term_encoding) > 1:
-            # TODO: CHANGE PARADIGM, ADD TERM AND THEN EVALUATE AS NORMAL SO WE SEE
-            #       CHANGES REFLECTED IN Model AND NOT ONLY IN THE RESULTS!
             # we're in an interaction that added terms.
             # we need to create and evaluate these extra terms.
             # i.e. "y ~ g1:g2", both g1 and g2 categoric, is equivalent to "y ~ g2 + g1:g2"
-                for (idx_, encoding) in enumerate(term_encoding):
-                    if len(encoding) == 1:
-                        component_name = list(encoding.keys())[0]
-                        encoding_ = list(encoding.values())[0]
-                        component = term.get_component(component_name)
-                        extra_term = Term(component)
+            # It is possible an interaction adds LOWER order terms, but NEVER HIGHER order terms.
+                for (idx, encoding) in enumerate(term_encoding):
+                    # Last term never adds any new term, it corresponds to the outer `term`.
+                    if idx == len(term_encoding) - 1:
+                        term.set_type(data, eval_env)
+                        term.set_data(encoding)
+                        result[term.name] = term.data
                     else:
-                        # Hack to keep original order, there's somethin happening
-                        # with sets in 'contrasts.py'
-                        component_names = [c.name for c in term.components]
-                        encoding_ = encoding
-                        components = [
-                                term.get_component(name) for name in component_names
-                                if name in encoding.keys()
-                            ]
-                        extra_term = Term(*components)
-
-                    extra_term.set_type(data, eval_env)
-                    extra_term.set_data(encoding_)
-                    result[extra_term.name] = extra_term.data
-                    # Finally, add term to self.common_terms object, replace if it is already there.
-                    if extra_term in self.common_terms:
-                        self.common_terms[self.common_terms.index(extra_term)] = extra_term
-                    else:
-                        self.common_terms.insert(idx + idx_, extra_term)
+                        extra_term = _create_and_eval_extra_term(term, encoding, data, eval_env)
+                        result[extra_term.name] = extra_term.data
+                        # Finally, add term to self.common_terms object, right before the term
+                        # that causes its addition.
+                        self.common_terms.insert(self.common_terms.index(term), extra_term)
             else:
+                # This term does not add any lower order term, so we just evaluate it as it is.
                 term.set_type(data, eval_env)
                 term.set_data(term_encoding)
                 result[term.name] = term.data
         return result
+
+def _create_and_eval_extra_term(term, encoding, data, eval_env):
+    if len(encoding) == 1:
+        component_name = list(encoding.keys())[0]
+        encoding_ = list(encoding.values())[0]
+        component = term.get_component(component_name)
+        extra_term = Term(component)
+    else:
+        component_names = [c.name for c in term.components]
+        encoding_ = encoding
+        components = [
+                term.get_component(name) for name in component_names
+                if name in encoding.keys()
+            ]
+        extra_term = Term(*components)
+    extra_term.set_type(data, eval_env)
+    extra_term.set_data(encoding_)
+    return extra_term
+
+
 
 # IDEA: What if Variable, Call, Terms, etc... get frozen once set_type or similar is called?
 #       Then, all properties and alike are ensured to remain constant and not change...
