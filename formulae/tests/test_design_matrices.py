@@ -60,7 +60,7 @@ def test_empty_model(data):
 def test_common_intercept_only_model(data):
     dm = design_matrices("y ~ 1", data)
     assert len(dm.common.terms_info) == 1
-    assert dm.common.terms_info["Intercept"]["type"] == "Intercept"
+    assert dm.common.terms_info["Intercept"]["type"] == "intercept"
     assert dm.common.terms_info["Intercept"]["full_names"] == ["Intercept"]
     assert all(dm.common.design_matrix == 1)
     assert dm.group == None
@@ -69,7 +69,7 @@ def test_common_intercept_only_model(data):
 def test_group_specific_intercept_only(data):
     dm = design_matrices("y ~ 0 + (1|g)", data)
     assert len(dm.group.terms_info) == 1
-    assert dm.group.terms_info["1|g"]["type"] == "Intercept"
+    assert dm.group.terms_info["1|g"]["type"] == "intercept"
     assert dm.group.terms_info["1|g"]["groups"] == ["A", "B"]
     assert dm.group.terms_info["1|g"]["full_names"] == ["1|g[A]", "1|g[B]"]
     assert dm.common == None
@@ -240,6 +240,33 @@ def test_categoric_encoding(data):
     assert dm.common.design_matrix.shape == (20, 4)
 
 
+def test_categoric_encoding_with_numeric_interaction():
+    np.random.seed(1234)
+    size = 20
+    data = pd.DataFrame(
+        {
+            "y": np.random.uniform(size=size),
+            "x1": np.random.uniform(size=size),
+            "x2": np.random.uniform(size=size),
+            "x3": [1, 2, 3, 4] * 5,
+            "f": np.random.choice(["A", "B"], size=size),
+            "g": np.random.choice(["A", "B"], size=size),
+            "h": np.random.choice(["A", "B"], size=size),
+            "j": np.random.choice(["A", "B"], size=size),
+        }
+    )
+    dm = design_matrices("y ~ x1 + x2 + f:g + h:j:x2", data)
+    assert list(dm.common.terms_info.keys()) == ['Intercept', 'x1', 'x2', 'g', 'f:g', 'j', 'h:j:x2']
+    assert dm.common.terms_info["g"]["encoding"] == "reduced"
+    assert dm.common.terms_info["f:g"]["type"] == "interaction"
+    assert dm.common.terms_info["f:g"]["terms"]["f"]["encoding"] == "reduced"
+    assert dm.common.terms_info["f:g"]["terms"]["g"]["encoding"] == "full"
+    assert dm.common.terms_info["f:g"]["full_names"] == ["f[B]:g[A]", "f[B]:g[B]"]
+    assert dm.common.terms_info["j"]["encoding"] == "reduced"
+    assert dm.common.terms_info["h:j:x2"]["terms"]["h"]["encoding"] == "reduced"
+    assert dm.common.terms_info["h:j:x2"]["terms"]["j"]["encoding"] == "full"
+    assert dm.common.terms_info["h:j:x2"]["terms"]["x2"]["type"] == "numeric"
+
 def test_interactions(data):
     # These two models are the same
     dm = design_matrices("y ~ f * g", data)
@@ -298,11 +325,11 @@ def test_interactions(data):
     assert np.allclose(dm.common["x1:x2"][:, 0], data["x1"] * data["x2"])
 
 
-def test_built_in_transformations(data):
+def test_built_in_transforms(data):
     # {...} gets translated to I(...)
     dm = design_matrices("y ~ {x1 + x2}", data)
     assert list(dm.common.terms_info.keys()) == ["Intercept", "I(x1 + x2)"]
-    assert dm.common.terms_info["I(x1 + x2)"]["type"] == "call"
+    assert dm.common.terms_info["I(x1 + x2)"]["type"] == "numeric"
     assert np.allclose(
         dm.common["I(x1 + x2)"], np.atleast_2d((data["x1"] + data["x2"]).to_numpy()).T
     )
@@ -313,20 +340,20 @@ def test_built_in_transformations(data):
     # center()
     dm = design_matrices("y ~ center(x1)", data)
     assert list(dm.common.terms_info.keys()) == ["Intercept", "center(x1)"]
-    assert dm.common.terms_info["center(x1)"]["type"] == "call"
+    assert dm.common.terms_info["center(x1)"]["type"] == "numeric"
     assert np.allclose(dm.common["center(x1)"].mean(), 0)
 
     # scale()
     dm = design_matrices("y ~ scale(x1)", data)
     assert list(dm.common.terms_info.keys()) == ["Intercept", "scale(x1)"]
-    assert dm.common.terms_info["scale(x1)"]["type"] == "call"
+    assert dm.common.terms_info["scale(x1)"]["type"] == "numeric"
     assert np.allclose(dm.common["scale(x1)"].mean(), 0)
     assert np.allclose(dm.common["scale(x1)"].std(), 1)
 
     # standardize(), alias of scale()
     dm = design_matrices("y ~ standardize(x1)", data)
     assert list(dm.common.terms_info.keys()) == ["Intercept", "standardize(x1)"]
-    assert dm.common.terms_info["standardize(x1)"]["type"] == "call"
+    assert dm.common.terms_info["standardize(x1)"]["type"] == "numeric"
     assert np.allclose(dm.common["standardize(x1)"].mean(), 0)
     assert np.allclose(dm.common["standardize(x1)"].std(), 1)
 
@@ -356,7 +383,7 @@ def test_built_in_transformations(data):
 
     # Specify reference -> it is converted into 0-1 variable
     dm = design_matrices("y ~ C(x3, 3)", data)
-    assert dm.common.terms_info["C(x3, 3)"]["type"] == "call"
+    assert dm.common.terms_info["C(x3, 3)"]["type"] == "numeric"
     assert dm.common.terms_info["C(x3, 3)"]["full_names"] == ["C(x3, 3)"]
     assert all(dm.common["C(x3, 3)"][:, 0] == np.where(data["x3"] == 3, 1, 0))
 
@@ -384,7 +411,7 @@ def test_built_in_transformations(data):
     assert all(dm.common["C(f)"] == dm2.common["f"])
 
 
-def test_external_transformations(data):
+def test_external_transforms(data):
     dm = design_matrices("y ~ np.exp(x1)", data)
     assert np.allclose(dm.common["np.exp(x1)"][:, 0], np.exp(data["x1"]))
 

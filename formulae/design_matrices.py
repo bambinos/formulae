@@ -4,14 +4,13 @@ import logging
 from itertools import product
 
 import numpy as np
-from numpy.testing._private.utils import raises
 import pandas as pd
 import scipy as sp
 
 from scipy import linalg
 
 from .eval import EvalEnvironment
-from .terms import ModelTerms, InterceptTerm
+from .terms import Model, Intercept
 from .model_description import model_description
 from .utils import flatten_list
 
@@ -24,7 +23,7 @@ class DesignMatrices:
     Parameters
     ----------
 
-    model : ModelTerms
+    model : Model
         The model description.
     data: pandas.DataFrame
         The data frame where variables are taken from
@@ -40,11 +39,11 @@ class DesignMatrices:
         self.group = None
         self.model = model
 
-        if self.model.response is not None:
+        if self.model.response:
             self.response = ResponseVector(self.model.response, data, eval_env)
 
         if self.model.common_terms:
-            self.common = CommonEffectsMatrix(ModelTerms(*self.model.common_terms), data, eval_env)
+            self.common = CommonEffectsMatrix(Model(*self.model.common_terms), data, eval_env)
 
         if self.model.group_terms:
             self.group = GroupEffectsMatrix(self.model.group_terms, data, eval_env)
@@ -56,7 +55,7 @@ class ResponseVector:
     Parameters
     ----------
 
-    term : ResponseTerm
+    term : Response
         The description and data of the response term.
     data: pandas.DataFrame
         The data frame where variables are taken from
@@ -78,12 +77,13 @@ class ResponseVector:
         """Evaluates `self.term` inside the data mask provided by `data` and
         updates `self.design_vector` and `self.name`
         """
-        d = self.term.eval(self.data, self.eval_env)
+        self.term.set_type(self.data, self.eval_env)
+        self.term.set_data()
         self.name = self.term.term.name
-        self.design_vector = d["value"]
-        self.type = d["type"]
+        self.design_vector = self.term.term.data
+        self.type = self.term.term.metadata["type"]
         if self.type == "categoric":
-            self.refclass = d["reference"]
+            self.refclass = self.term.term.metadata["reference"]
 
     def as_dataframe(self):
         """Returns `self.design_vector` as a pandas.DataFrame"""
@@ -115,8 +115,8 @@ class CommonEffectsMatrix:
     Parameters
     ----------
 
-    terms : ModelTerms
-        An ModelTerms object containing terms for the common effects of the model.
+    terms : Model
+        An Model object containing terms for the common effects of the model.
     data: pandas.DataFrame
         The data frame where variables are taken from
     eval_env: EvalEnvironment
@@ -132,19 +132,23 @@ class CommonEffectsMatrix:
         self.evaluate()
 
     def evaluate(self):
-        """Evaluates `self.terms` inside the data mask provided by `data` and
-        updates `self.design_matrix`.
+        """Obtain design matrix for common effects.
+
+        Evaluates ``self.terms`` inside the data mask provided by ``data`` and updates
+        ``self.design_matrix``. It also populates the dictionary ``self.terms_info`` with
+        information related to each term, such as the type, the columns they occupy in the design
+        matrix and the names of the columns.
         """
         d = self.terms.eval(self.data, self.eval_env)
-        self.design_matrix = np.column_stack([d[key]["value"] for key in d.keys()])
+        self.design_matrix = np.column_stack([d[key] for key in d.keys()])
         self.terms_info = {}
         # Get types and column slices
         start = 0
-        for key in d.keys():
-            self.terms_info[key] = {k: v for k, v in d[key].items() if k != "value"}
-            delta = d[key]["value"].shape[1]
-            self.terms_info[key]["cols"] = slice(start, start + delta)
-            self.terms_info[key]["full_names"] = self.get_term_full_names(key)
+        for term in self.terms.terms:
+            self.terms_info[term.name] = term.metadata
+            delta = d[term.name].shape[1]
+            self.terms_info[term.name]["cols"] = slice(start, start + delta)
+            self.terms_info[term.name]["full_names"] = self.get_term_full_names(term.name)
             start += delta
 
     def as_dataframe(self):
@@ -158,9 +162,9 @@ class CommonEffectsMatrix:
         # Always returns a list
         term = self.terms_info[name]
         _type = term["type"]
-        if _type == "Intercept":
+        if _type == "intercept":
             return ["Intercept"]
-        elif _type in ["numeric", "call"]:
+        elif _type == "numeric":
             return [name]
         elif _type == "interaction":
             return interaction_label(term)
@@ -204,7 +208,7 @@ class GroupEffectsMatrix:
     ----------
 
     terms : list
-        A list of GroupSpecTerm objects.
+        A list of GroupSpecificTerm objects.
     data: pandas.DataFrame
         The data frame where variables are taken from
     eval_env: EvalEnvironment
@@ -228,11 +232,11 @@ class GroupEffectsMatrix:
         Z = []
         self.terms_info = {}
         for term in self.terms:
-
             encoding = True
-            if not isinstance(term.expr, InterceptTerm):
+            # If both (1|g) and (x|g) are in the model, then the encoding for x is False.
+            if not isinstance(term.expr, Intercept):
                 for term_ in self.terms:
-                    if term_.factor == term.factor and isinstance(term_.expr, InterceptTerm):
+                    if term_.factor == term.factor and isinstance(term_.expr, Intercept):
                         encoding = False
             d = term.eval(self.data, self.eval_env, encoding)
 
@@ -287,7 +291,7 @@ class GroupEffectsMatrix:
         # Always returns a list
         term = self.terms_info[name]
         _type = term["type"]
-        if _type in ["Intercept", "numeric", "call"]:
+        if _type in ["intercept", "numeric"]:
             return [f"{name}[{group}]" for group in term["groups"]]
         elif _type == "interaction":
             return interaction_label(term)
@@ -369,7 +373,7 @@ def design_matrices(formula, data, na_action="drop", eval_env=0):
     description = model_description(formula)
 
     # Incomplete rows are calculated using columns involved in model formula only
-    cols_to_select = description.vars.intersection(set(data.columns))
+    cols_to_select = description.var_names.intersection(set(data.columns))
     data = data[list(cols_to_select)]
 
     incomplete_rows = data.isna().any(axis=1)
@@ -395,12 +399,13 @@ def term_str(term):
         terms = term["terms"]
         vars = []
         for k, v in terms.items():
-            if v["type"] in ["numeric", "call"]:
+            if v["type"] == "numeric":
                 vars.append(f"    {k}: {{type={v['type']}}}")
             elif v["type"] == "categoric":
                 str_l = [k2 + "=" + str(v2) for k2, v2 in v.items() if k2 != "value"]
                 vars.append(f"    {k}: {{" + ", ".join(str_l) + "}")
-        x = "type=interaction, vars={\n" + ",\n".join(vars) + "\n  }"
+        x = f"type=interaction, cols={term['cols']}, full_names={term['full_names']}"
+        x += ",\n    vars={\n  " + ",\n  ".join(vars) + "\n  }"
     else:
         x = ", ".join([k + "=" + str(v) for k, v in term.items() if k not in ["Xi", "Ji"]])
     return x
@@ -411,7 +416,7 @@ def interaction_label(x):
     colnames = []
 
     for k, v in terms.items():
-        if v["type"] in ["numeric", "call"]:
+        if v["type"] == "numeric":
             colnames.append([k])
         if v["type"] == "categoric":
             if "levels" in v.keys():

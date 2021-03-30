@@ -1,12 +1,12 @@
-from .utils import flatten_list
+from formulae.utils import flatten_list
 
 
 class CallEvalPrinter:
-    """Visitor that generates function calls code to be evaluated in Python"""
+    """Visitor that generates function calls code to be evaluated in Python."""
 
-    def __init__(self, expr, data_cols=None):
+    def __init__(self, expr, data_names=None):
         self.expr = expr
-        self.data_cols = data_cols
+        self.data_names = data_names
 
     def print(self):
         return self.expr.accept(self)
@@ -38,11 +38,11 @@ class CallEvalPrinter:
         return expr.callee.name.lexeme + "(" + args + ")"
 
     def visitVariableExpr(self, expr):
-        col = expr.name.lexeme
-        if col in self.data_cols:
-            return "__DATA__['" + col + "']"
+        name = expr.name.lexeme
+        if name in self.data_names:
+            return "__DATA__['" + name + "']"
         else:
-            return col
+            return name
 
     def visitLiteralExpr(self, expr):
         return expr.value
@@ -68,7 +68,7 @@ class CallVarsExtractor:
 
     def get(self):
         x = self.expr.accept(self)
-        # make it a least to ensure 'x' is a list
+        # make sure it return a list
         return list(flatten_list(x))
 
     def visitCallTerm(self, term):

@@ -6,7 +6,7 @@ import numbers
 
 import pandas as pd
 
-from .transformations import TRANSFORMATIONS
+from .transforms import TRANSFORMS
 
 
 class VarLookupDict(object):
@@ -140,4 +140,4 @@ def eval_in_data_mask(expr, data=None, eval_env=None):
             raise ValueError("data must be a pandas.DataFrame")
     else:
         data_dict = {}
-    return eval_env.eval(expr, {**data_dict, **TRANSFORMATIONS})
+    return eval_env.eval(expr, {**data_dict, **TRANSFORMS})

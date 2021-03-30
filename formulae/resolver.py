@@ -1,13 +1,11 @@
 from .terms import (
+    Variable,
+    Call,
     Term,
-    InteractionTerm,
-    CallTerm,
-    LiteralTerm,
-    ResponseTerm,
-    InterceptTerm,
+    Intercept,
     NegatedIntercept,
+    Response
 )
-from .expr import Literal
 
 
 class ResolverError(Exception):
@@ -29,7 +27,7 @@ class Resolver:
     def visitBinaryExpr(self, expr):
         otype = expr.operator.type
         if otype == "TILDE":
-            return ResponseTerm(expr.left.accept(self)) + expr.right.accept(self)
+            return Response(expr.left.accept(self)) + expr.right.accept(self)
         if otype == "PLUS":
             return expr.left.accept(self) + expr.right.accept(self)
         elif otype == "MINUS":
@@ -54,32 +52,32 @@ class Resolver:
             return expr.right.accept(self)
         elif otype == "MINUS":
             expr = expr.right.accept(self)
-            if isinstance(expr, InterceptTerm):
+            if isinstance(expr, Intercept):
                 return NegatedIntercept()
             elif isinstance(expr, NegatedIntercept):
-                return InterceptTerm()
+                return Intercept()
             else:
                 raise ResolverError("Unary negation can only be applied to '0' or '1'")
         else:
             raise ResolverError("Couldn't resolve UnaryExpr with otype '" + otype + "'")
 
     def visitCallExpr(self, expr):
-        return CallTerm(expr)
+        return Term(Call(expr))
 
     def visitVariableExpr(self, expr):
-        return Term(expr.name.lexeme, expr.name.lexeme, expr.level)
+        return Term(Variable(expr.name.lexeme, expr.level))
 
     def visitLiteralExpr(self, expr):
         if expr.value == 0:
             return NegatedIntercept()
         elif expr.value == 1:
-            return InterceptTerm()
+            return Intercept()
         else:
-            return LiteralTerm(expr.value)
+            return Term(Variable(expr.value))
 
     def visitQuotedNameExpr(self, expr):
-        # delete backquotes in 'variable' and 'name'
-        return Term(expr.expression.lexeme[1:-1], expr.expression.lexeme[1:-1])
+        # TODO: Quoted names don't accept levels yet.
+        return Term(Variable(expr.expression.lexeme[1:-1]))
 
 
 # When evaluating ModelTerms object we'll have to "evaluate" CallTerms in a different manner
