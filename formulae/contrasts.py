@@ -15,7 +15,7 @@ def _sorted_subsets(tupl):
     expanded_subsets.sort(key=len)
 
     for subset in expanded_subsets:
-        yield tuple([obj for (idx, obj) in subset])
+        yield tuple(obj for (idx, obj) in subset)
 
 
 class ExpandedFactor:
@@ -115,6 +115,7 @@ class ExpandedTerm:
     def __init__(self, name, components):
         self.name = name
         self.components = components
+        self.subterms = []
 
     def pick_contrast(self, used_subterms):
         """Obtain constrasts for a given term

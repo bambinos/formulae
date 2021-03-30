@@ -1,6 +1,7 @@
+from copy import deepcopy
+
 import numpy as np
 import pandas as pd
-from copy import deepcopy
 
 
 def listify(obj):
@@ -13,6 +14,7 @@ def listify(obj):
     else:
         return obj if isinstance(obj, (list, tuple, type(None))) else [obj]
 
+
 def flatten_list(nested_list):
     """Flatten a nested list"""
     nested_list = deepcopy(nested_list)
@@ -23,6 +25,7 @@ def flatten_list(nested_list):
         else:
             yield sublist
 
+
 def get_interaction_matrix(x, y):
     l = []
     for j1 in range(x.shape[1]):
@@ -30,10 +33,11 @@ def get_interaction_matrix(x, y):
             l.append(x[:, j1] * y[:, j2])
     return np.column_stack(l)
 
+
 def get_data_mask_names(data_mask):
     if isinstance(data_mask, pd.DataFrame):
         return data_mask.columns.tolist()
     elif isinstance(data_mask, dict):
         return list(dict.keys())
     else:
-        ValueError("'data_mask' must be a pandas DataFrame or a dictionary.")
+        raise ValueError("'data_mask' must be a pandas DataFrame or a dictionary.")

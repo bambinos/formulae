@@ -6,6 +6,7 @@ import pandas as pd
 # required to compute the transformation and are obtained as a subproduct of the
 # data that is used to compute the transform.
 
+
 class Center:
     def __init__(self):
         self.params_set = False
@@ -78,7 +79,7 @@ def C(x, ref=None, levels=None):
 
     if ref is not None and levels is not None:
         raise ValueError("At least one of 'ref' or 'levels' must be None.")
-    elif ref is not None:
+    if ref is not None:
         bool_ = x == ref
         if sum(bool_) == 0:
             raise ValueError(f"No value in 'x' is equal to 'ref' \"{ref}\"")

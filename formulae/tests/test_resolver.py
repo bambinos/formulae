@@ -48,7 +48,7 @@ def test_term_add():
             Call(
                 expr.Call(
                     expr.Variable(Token("IDENTIFIER", "f")),
-                    [expr.Variable(Token("IDENTIFIER", "x"))]
+                    [expr.Variable(Token("IDENTIFIER", "x"))],
                 )
             )
         ),
@@ -56,9 +56,7 @@ def test_term_add():
     assert desc == comp
 
     desc = model_description("x + y:z")
-    comp = Model(
-        Intercept(), Term(Variable("x")), Term(Variable("y"), Variable("z"))
-    )
+    comp = Model(Intercept(), Term(Variable("x")), Term(Variable("y"), Variable("z")))
     assert desc == comp
 
     desc = model_description("x + (1|g)")
@@ -114,7 +112,7 @@ def test_term_interaction():
             Call(
                 expr.Call(
                     expr.Variable(Token("IDENTIFIER", "f")),
-                    [expr.Variable(Token("IDENTIFIER", "x"))]
+                    [expr.Variable(Token("IDENTIFIER", "x"))],
                 )
             ),
         ),
@@ -122,9 +120,7 @@ def test_term_interaction():
     assert desc == comp
 
     desc = model_description("x:y:z")
-    comp = Model(
-        Intercept(), Term(Variable("x"), Variable("y"), Variable("z"))
-    )
+    comp = Model(Intercept(), Term(Variable("x"), Variable("y"), Variable("z")))
     assert desc == comp
 
     desc = model_description("x:y*z")
@@ -142,7 +138,7 @@ def test_term_interaction():
         Intercept(),
         Term(Variable("x"), Variable("y")),
         Term(Variable("x"), Variable("z")),
-        Term(Variable("x"), Variable("y"), Variable("z"))
+        Term(Variable("x"), Variable("y"), Variable("z")),
     )
     assert desc == comp
 
@@ -179,7 +175,7 @@ def test_term_power_interaction():
             Call(
                 expr.Call(
                     expr.Variable(Token("IDENTIFIER", "f")),
-                    [expr.Variable(Token("IDENTIFIER", "x"))]
+                    [expr.Variable(Token("IDENTIFIER", "x"))],
                 )
             )
         ),
@@ -188,7 +184,7 @@ def test_term_power_interaction():
             Call(
                 expr.Call(
                     expr.Variable(Token("IDENTIFIER", "f")),
-                    [expr.Variable(Token("IDENTIFIER", "x"))]
+                    [expr.Variable(Token("IDENTIFIER", "x"))],
                 )
             ),
         ),
@@ -248,9 +244,7 @@ def test_term_power_interaction():
 
 def test_term_slash():
     desc = model_description("x / y")
-    comp = Model(
-        Intercept(), Term(Variable("x")), Term(Variable("x"), Variable("y"))
-    )
+    comp = Model(Intercept(), Term(Variable("x")), Term(Variable("x"), Variable("y")))
     assert desc == comp
 
     with pytest.raises(TypeError):
@@ -265,7 +259,7 @@ def test_term_slash():
             Call(
                 expr.Call(
                     expr.Variable(Token("IDENTIFIER", "f")),
-                    [expr.Variable(Token("IDENTIFIER", "x"))]
+                    [expr.Variable(Token("IDENTIFIER", "x"))],
                 )
             ),
         ),

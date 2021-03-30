@@ -92,7 +92,7 @@ class CallVarsExtractor:
     def visitVariableExpr(self, expr):
         return expr.name.lexeme
 
-    def visitLiteralExpr(self, expr):
+    def visitLiteralExpr(self, expr):  # pylint: disable = unused-argument
         return ""
 
     def visitQuotedNameExpr(self, expr):

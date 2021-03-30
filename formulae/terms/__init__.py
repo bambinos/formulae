@@ -10,5 +10,5 @@ __all__ = [
     "Term",
     "GroupSpecificTerm",
     "Response",
-    "Model"
+    "Model",
 ]

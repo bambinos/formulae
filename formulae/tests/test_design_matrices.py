@@ -256,7 +256,7 @@ def test_categoric_encoding_with_numeric_interaction():
         }
     )
     dm = design_matrices("y ~ x1 + x2 + f:g + h:j:x2", data)
-    assert list(dm.common.terms_info.keys()) == ['Intercept', 'x1', 'x2', 'g', 'f:g', 'j', 'h:j:x2']
+    assert list(dm.common.terms_info.keys()) == ["Intercept", "x1", "x2", "g", "f:g", "j", "h:j:x2"]
     assert dm.common.terms_info["g"]["encoding"] == "reduced"
     assert dm.common.terms_info["f:g"]["type"] == "interaction"
     assert dm.common.terms_info["f:g"]["terms"]["f"]["encoding"] == "reduced"
@@ -266,6 +266,7 @@ def test_categoric_encoding_with_numeric_interaction():
     assert dm.common.terms_info["h:j:x2"]["terms"]["h"]["encoding"] == "reduced"
     assert dm.common.terms_info["h:j:x2"]["terms"]["j"]["encoding"] == "full"
     assert dm.common.terms_info["h:j:x2"]["terms"]["x2"]["type"] == "numeric"
+
 
 def test_interactions(data):
     # These two models are the same

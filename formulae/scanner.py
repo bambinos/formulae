@@ -1,3 +1,4 @@
+# pylint: disable=relative-beyond-top-level
 from .token import Token
 
 
@@ -57,7 +58,7 @@ class Scanner:
 
     def scan_token(self):
         char = self.advance()
-        if char == "'" or char == '"':
+        if char in ["'", '"']:
             self.char()
         elif char == "(":
             self.add_token("LEFT_PAREN")
@@ -123,7 +124,7 @@ class Scanner:
         elif char == "|":
             self.add_token("PIPE")
         elif char in [" ", "\n", "\t", "\r"]:
-            return None
+            pass
         elif char.isdigit():
             self.number()
         elif char.isalpha():
@@ -218,14 +219,10 @@ class Scanner:
         while True:
             if self.peek() == "`":
                 break
-            else:
-                self.advance()
+            self.advance()
         self.advance()
         self.add_token("BQNAME")
 
 
 def is_tilde(token):
-    if token.type == "TILDE":
-        return True
-    else:
-        return False
+    return token.type == "TILDE"

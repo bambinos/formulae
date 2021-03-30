@@ -1,6 +1,6 @@
 # VarLookUpDict and EvalEnvironment are taken from Patsy library.
 # For more info see: https://github.com/pydata/patsy/blob/master/patsy/eval.py
-
+# pylint: disable=relative-beyond-top-level
 import inspect
 import numbers
 
@@ -9,7 +9,7 @@ import pandas as pd
 from .transforms import TRANSFORMS
 
 
-class VarLookupDict(object):
+class VarLookupDict:
     def __init__(self, dicts):
         self._dicts = [{}] + list(dicts)
 
@@ -49,7 +49,7 @@ class VarLookupDict(object):
         return "%s(%r)" % (self.__class__.__name__, self._dicts)
 
 
-class EvalEnvironment(object):
+class EvalEnvironment:
     """Represents a Python execution environment.
     Encapsulates a namespace for variable lookup
     """
@@ -66,8 +66,12 @@ class EvalEnvironment(object):
     def with_outer_namespace(self, outer_namespace):
         return self.__class__(self._namespaces + [outer_namespace])
 
-    def eval(self, expr, inner_namespace={}):
-        return eval(expr, {}, VarLookupDict([inner_namespace] + self._namespaces))
+    def eval(self, expr, inner_namespace={}):  # pylint: disable = dangerous-default-value
+        return eval(  # pylint: disable = eval-used
+            expr,
+            {},
+            VarLookupDict([inner_namespace] + self._namespaces),
+        )
 
     @classmethod
     def capture(cls, eval_env=0, reference=0):
@@ -82,7 +86,7 @@ class EvalEnvironment(object):
             )
         frame = inspect.currentframe()
         try:
-            for i in range(depth + 1):
+            for _ in range(depth + 1):
                 if frame is None:
                     raise ValueError("call-stack is not that deep!")
                 frame = frame.f_back
@@ -94,7 +98,7 @@ class EvalEnvironment(object):
         """Creates a new, flat EvalEnvironment that contains only the variables specified."""
         vld = VarLookupDict(self._namespaces)
         new_ns = dict((name, vld[name]) for name in names)
-        return EvalEnvironment([new_ns], self.flags)
+        return EvalEnvironment([new_ns])
 
     def _namespace_ids(self):
         return [id(n) for n in self._namespaces]
@@ -108,7 +112,7 @@ class EvalEnvironment(object):
         return not self == other
 
     def __hash__(self):
-        return hash((EvalEnvironment, self.flags, tuple(self._namespace_ids())))
+        return hash((EvalEnvironment, tuple(self._namespace_ids())))
 
 
 def eval_in_data_mask(expr, data=None, eval_env=None):
@@ -131,7 +135,7 @@ def eval_in_data_mask(expr, data=None, eval_env=None):
     The result of the evaluation of `expr`.
     """
 
-    # TODO: Check name conflicts
+    # Still need to check name conflicts
     if data is not None:
         if isinstance(data, pd.DataFrame):
             data_dict_inner = data.reset_index(drop=True).to_dict("series")
