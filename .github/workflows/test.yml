@@ -41,7 +41,7 @@ jobs:
       - name: Run linters
         shell: bash -l {0}
         run: |
-          python -m black formulae --check
+          python -m black -l 100 formulae --check
           echo "Success!"
           echo "Checking code style with pylint..."
           python -m pylint formulae/
