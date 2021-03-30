@@ -825,36 +825,46 @@ class Model:
         encodings = self._encoding_bools()
         result = dict()
 
+        # First, we have to add terms if the encoding implies so.
+
         # Group specific effects aren't evaluated here -- this may change
-        for term in self.common_terms:
+        common_terms = self.common_terms.copy()
+        for (idx, term) in enumerate(common_terms):
             term_encoding = False
 
             if term.name in encodings.keys():
                 term_encoding = encodings[term.name]
-
-            if hasattr(term_encoding, "len") and len(term_encoding) > 1:
+            if hasattr(term_encoding, "__len__") and len(term_encoding) > 1:
+            # TODO: CHANGE PARADIGM, ADD TERM AND THEN EVALUATE AS NORMAL SO WE SEE
+            #       CHANGES REFLECTED IN Model AND NOT ONLY IN THE RESULTS!
             # we're in an interaction that added terms.
             # we need to create and evaluate these extra terms.
             # i.e. "y ~ g1:g2", both g1 and g2 categoric, is equivalent to "y ~ g2 + g1:g2"
-                for encoding in term_encoding:
+                for (idx_, encoding) in enumerate(term_encoding):
                     if len(encoding) == 1:
                         component_name = list(encoding.keys())[0]
-                        component_encoding = list(encoding.values())[0]
+                        encoding_ = list(encoding.values())[0]
                         component = term.get_component(component_name)
                         extra_term = Term(component)
-
                     else:
                         # Hack to keep original order, there's somethin happening
                         # with sets in 'contrasts.py'
                         component_names = [c.name for c in term.components]
+                        encoding_ = encoding
                         components = [
                                 term.get_component(name) for name in component_names
-                                if component_name in encoding.keys()
+                                if name in encoding.keys()
                             ]
                         extra_term = Term(*components)
+
                     extra_term.set_type(data, eval_env)
-                    extra_term.set_data(component_encoding)
-                    result[component_name] = extra_term.data
+                    extra_term.set_data(encoding_)
+                    result[extra_term.name] = extra_term.data
+                    # Finally, add term to self.common_terms object, replace if it is already there.
+                    if extra_term in self.common_terms:
+                        self.common_terms[self.common_terms.index(extra_term)] = extra_term
+                    else:
+                        self.common_terms.insert(idx + idx_, extra_term)
             else:
                 term.set_type(data, eval_env)
                 term.set_data(term_encoding)
