@@ -218,6 +218,8 @@ class Term:
         if self == other:
             return self
         elif isinstance(other, type(self)):
+            if len(other.components) == 1 and isinstance(other.components[0].name, (int, float)):
+                raise TypeError("Interaction with numeric does not make sense.")
             return Model(self, other, Term(*self.components, *other.components))
         elif isinstance(other, Model):
             products = product([self], other.common_terms)
@@ -242,6 +244,8 @@ class Term:
         if self == other:
             return self
         elif isinstance(other, type(self)):
+            if len(other.components) == 1 and isinstance(other.components[0].name, (int, float)):
+                raise TypeError("Interaction with numeric does not make sense.")
             return Term(*self.components, *other.components)
         elif isinstance(other, Model):
             products = product([self], other.common_terms)
@@ -275,6 +279,8 @@ class Term:
         if self == other:
             return self
         elif isinstance(other, type(self)):
+            if len(other.components) == 1 and isinstance(other.components[0].name, (int, float)):
+                raise TypeError("Interaction with numeric does not make sense.")
             return Model(self, Term(*self.components, *other.components))
         elif isinstance(other, Model):
             products = product([self], other.common_terms)
@@ -571,6 +577,33 @@ class Model:
             if other in self.group_terms:
                 self.group_terms.remove(other)
             return self
+        else:
+            return NotImplemented
+
+    def __mul__(self, other):
+        """Full interaction.
+
+        (x + y) * (u + v) -> x + y + u + v + x:u + x:v + y:u + y:v
+        (x + y) * u -> x + y + u + x:u + y:u
+        """
+        if self == other:
+            return self
+        elif isinstance(other, type(self)):
+            if len(other.common_terms) == 1:
+                components = other.common_terms[0].components
+                if len(components) == 1 and isinstance(components, (int, float)):
+                    raise TypeError("Interaction with numeric does not make sense.")
+            products = product(self.common_terms, other.common_terms)
+            terms = self.common_terms + other.common_terms
+            iterms = [Term(*p[0].components, *p[1].components) for p in products]
+            return Model(*terms) + Model(*iterms)
+        elif isinstance(other, Term):
+            if len(other.components) == 1 and isinstance(other.components[0].name, (int, float)):
+                raise TypeError("Interaction with numeric does not make sense.")
+            products = product(self.common_terms, [other])
+            terms = self.common_terms + [other]
+            iterms = [Term(*p[0].components, *p[1].components) for p in products]
+            return Model(*terms) + Model(*iterms)
         else:
             return NotImplemented
 

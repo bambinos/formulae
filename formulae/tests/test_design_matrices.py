@@ -60,7 +60,7 @@ def test_empty_model(data):
 def test_common_intercept_only_model(data):
     dm = design_matrices("y ~ 1", data)
     assert len(dm.common.terms_info) == 1
-    assert dm.common.terms_info["Intercept"]["type"] == "Intercept"
+    assert dm.common.terms_info["Intercept"]["type"] == "intercept"
     assert dm.common.terms_info["Intercept"]["full_names"] == ["Intercept"]
     assert all(dm.common.design_matrix == 1)
     assert dm.group == None
@@ -69,7 +69,7 @@ def test_common_intercept_only_model(data):
 def test_group_specific_intercept_only(data):
     dm = design_matrices("y ~ 0 + (1|g)", data)
     assert len(dm.group.terms_info) == 1
-    assert dm.group.terms_info["1|g"]["type"] == "Intercept"
+    assert dm.group.terms_info["1|g"]["type"] == "intercept"
     assert dm.group.terms_info["1|g"]["groups"] == ["A", "B"]
     assert dm.group.terms_info["1|g"]["full_names"] == ["1|g[A]", "1|g[B]"]
     assert dm.common == None
@@ -302,7 +302,7 @@ def test_built_in_transforms(data):
     # {...} gets translated to I(...)
     dm = design_matrices("y ~ {x1 + x2}", data)
     assert list(dm.common.terms_info.keys()) == ["Intercept", "I(x1 + x2)"]
-    assert dm.common.terms_info["I(x1 + x2)"]["type"] == "call"
+    assert dm.common.terms_info["I(x1 + x2)"]["type"] == "numeric"
     assert np.allclose(
         dm.common["I(x1 + x2)"], np.atleast_2d((data["x1"] + data["x2"]).to_numpy()).T
     )
@@ -313,20 +313,20 @@ def test_built_in_transforms(data):
     # center()
     dm = design_matrices("y ~ center(x1)", data)
     assert list(dm.common.terms_info.keys()) == ["Intercept", "center(x1)"]
-    assert dm.common.terms_info["center(x1)"]["type"] == "call"
+    assert dm.common.terms_info["center(x1)"]["type"] == "numeric"
     assert np.allclose(dm.common["center(x1)"].mean(), 0)
 
     # scale()
     dm = design_matrices("y ~ scale(x1)", data)
     assert list(dm.common.terms_info.keys()) == ["Intercept", "scale(x1)"]
-    assert dm.common.terms_info["scale(x1)"]["type"] == "call"
+    assert dm.common.terms_info["scale(x1)"]["type"] == "numeric"
     assert np.allclose(dm.common["scale(x1)"].mean(), 0)
     assert np.allclose(dm.common["scale(x1)"].std(), 1)
 
     # standardize(), alias of scale()
     dm = design_matrices("y ~ standardize(x1)", data)
     assert list(dm.common.terms_info.keys()) == ["Intercept", "standardize(x1)"]
-    assert dm.common.terms_info["standardize(x1)"]["type"] == "call"
+    assert dm.common.terms_info["standardize(x1)"]["type"] == "numeric"
     assert np.allclose(dm.common["standardize(x1)"].mean(), 0)
     assert np.allclose(dm.common["standardize(x1)"].std(), 1)
 
@@ -356,7 +356,7 @@ def test_built_in_transforms(data):
 
     # Specify reference -> it is converted into 0-1 variable
     dm = design_matrices("y ~ C(x3, 3)", data)
-    assert dm.common.terms_info["C(x3, 3)"]["type"] == "call"
+    assert dm.common.terms_info["C(x3, 3)"]["type"] == "numeric"
     assert dm.common.terms_info["C(x3, 3)"]["full_names"] == ["C(x3, 3)"]
     assert all(dm.common["C(x3, 3)"][:, 0] == np.where(data["x3"] == 3, 1, 0))
 

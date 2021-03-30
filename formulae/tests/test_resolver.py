@@ -175,10 +175,12 @@ def test_term_power_interaction():
     comp = Model(
         Intercept(),
         Term(Variable("x")),
-        Call(
-            expr.Call(
-                expr.Variable(Token("IDENTIFIER", "f")),
-                [expr.Variable(Token("IDENTIFIER", "x"))]
+        Term(
+            Call(
+                expr.Call(
+                    expr.Variable(Token("IDENTIFIER", "f")),
+                    [expr.Variable(Token("IDENTIFIER", "x"))]
+                )
             )
         ),
         Term(
@@ -274,7 +276,7 @@ def test_term_slash():
     comp = Model(
         Intercept(),
         Term(Variable("x")),
-        Term(Variable("y"), Variable("z"), Variable("x")),
+        Term(Variable("x"), Variable("y"), Variable("z")),
     )
     assert desc == comp
 
