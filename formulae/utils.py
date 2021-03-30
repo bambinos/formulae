@@ -1,6 +1,7 @@
+from copy import deepcopy
+
 import numpy as np
 import pandas as pd
-from copy import deepcopy
 
 
 def listify(obj):
@@ -39,4 +40,4 @@ def get_data_mask_names(data_mask):
     elif isinstance(data_mask, dict):
         return list(dict.keys())
     else:
-        ValueError("'data_mask' must be a pandas DataFrame or a dictionary.")
+        raise ValueError("'data_mask' must be a pandas DataFrame or a dictionary.")

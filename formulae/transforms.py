@@ -79,7 +79,7 @@ def C(x, ref=None, levels=None):
 
     if ref is not None and levels is not None:
         raise ValueError("At least one of 'ref' or 'levels' must be None.")
-    elif ref is not None:
+    if ref is not None:
         bool_ = x == ref
         if sum(bool_) == 0:
             raise ValueError(f"No value in 'x' is equal to 'ref' \"{ref}\"")

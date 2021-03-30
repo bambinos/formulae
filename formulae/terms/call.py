@@ -1,12 +1,12 @@
 import numpy as np
 import pandas as pd
 
-from formulae.eval import eval_in_data_mask
-from formulae.transforms import STATEFUL_TRANSFORMS
-from formulae.utils import get_data_mask_names
 from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
 
-from .call_utils import CallEvalPrinter, CallNamePrinter, CallVarsExtractor
+from formulae.eval import eval_in_data_mask
+from formulae.transforms import STATEFUL_TRANSFORMS
+from formulae.terms.call_utils import CallEvalPrinter, CallNamePrinter, CallVarsExtractor
+from formulae.utils import get_data_mask_names
 
 
 class Call:
@@ -129,7 +129,7 @@ class Call:
         return {"value": value, "type": "numeric"}
 
     def _eval_categoric(self, x, encoding):
-        # TODO: Finish docs
+        # Note: Uncompleted docs.
         """Finishes evaluation of categoric call.
 
         Parameters

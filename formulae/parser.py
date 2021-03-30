@@ -1,3 +1,5 @@
+# inconsistently raises this problem
+# pylint: disable=relative-beyond-top-level
 from .expr import Assign, Grouping, Binary, Unary, Call, Variable, QuotedName, Literal
 from .token import Token
 from .utils import listify
@@ -24,7 +26,7 @@ class Parser:
     def at_end(self):
         return self.peek().type == "EOF"
 
-    def advance(self):
+    def advance(self):  # pylint: disable=inconsistent-return-statements
         if not self.at_end():
             self.current += 1
             return self.tokens[self.current - 1]
@@ -160,7 +162,7 @@ class Parser:
         expr = Call(expr, args)
         return expr
 
-    def primary(self):
+    def primary(self):  # pylint: disable=too-many-return-statements
         if self.match("NUMBER"):
             return Literal(self.previous().literal)
         elif self.match("IDENTIFIER"):

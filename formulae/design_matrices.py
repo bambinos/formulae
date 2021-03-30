@@ -1,3 +1,4 @@
+# pylint: disable=relative-beyond-top-level
 import itertools
 import logging
 
@@ -153,12 +154,12 @@ class CommonEffectsMatrix:
 
     def as_dataframe(self):
         """Returns `self.design_matrix` as a pandas.DataFrame"""
-        colnames = [self.get_term_full_names(name) for name in self.terms_info.keys()]
+        colnames = [self.get_term_full_names(name) for name in self.terms_info]
         data = pd.DataFrame(self.design_matrix)
         data.columns = list(flatten_list(colnames))
         return data
 
-    def get_term_full_names(self, name):
+    def get_term_full_names(self, name):  # pylint: disable=inconsistent-return-statements
         # Always returns a list
         term = self.terms_info[name]
         _type = term["type"]
@@ -182,8 +183,7 @@ class CommonEffectsMatrix:
     def __getitem__(self, term):
         if term not in self.terms_info.keys():
             raise ValueError(f"'{term}' is not a valid term name")
-        else:
-            return self.design_matrix[:, self.terms_info[term]["cols"]]
+        return self.design_matrix[:, self.terms_info[term]["cols"]]
 
     def __repr__(self):
         return self.__str__()
@@ -287,7 +287,7 @@ class GroupEffectsMatrix:
         else:
             self.design_matrix = np.zeros((0, 0))
 
-    def get_term_full_names(self, name):
+    def get_term_full_names(self, name):  # pylint: disable=inconsistent-return-statements
         # Always returns a list
         term = self.terms_info[name]
         _type = term["type"]
@@ -310,8 +310,7 @@ class GroupEffectsMatrix:
     def __getitem__(self, term):
         if term not in self.terms_info.keys():
             raise ValueError(f"'{term}' is not a valid term name")
-        else:
-            return self.design_matrix[self.terms_info[term]["idxs"]].toarray()
+        return self.design_matrix[self.terms_info[term]["idxs"]].toarray()
 
     def __repr__(self):
         return self.__str__()
@@ -382,7 +381,9 @@ def design_matrices(formula, data, na_action="drop", eval_env=0):
     if incomplete_rows_n > 0:
         if na_action == "drop":
             _log.info(
-                f"Automatically removing {incomplete_rows_n}/{data.shape[0]} rows from the dataset."
+                "Automatically removing %s/%s rows from the dataset.",
+                incomplete_rows_n,
+                data.shape[0],
             )
             data = data[~incomplete_rows]
         else:
@@ -397,15 +398,15 @@ def term_str(term):
     x = None
     if term["type"] == "interaction":
         terms = term["terms"]
-        vars = []
+        vars_ = []
         for k, v in terms.items():
             if v["type"] == "numeric":
-                vars.append(f"    {k}: {{type={v['type']}}}")
+                vars_.append(f"    {k}: {{type={v['type']}}}")
             elif v["type"] == "categoric":
                 str_l = [k2 + "=" + str(v2) for k2, v2 in v.items() if k2 != "value"]
-                vars.append(f"    {k}: {{" + ", ".join(str_l) + "}")
+                vars_.append(f"    {k}: {{" + ", ".join(str_l) + "}")
         x = f"type=interaction, cols={term['cols']}, full_names={term['full_names']}"
-        x += ",\n    vars={\n  " + ",\n  ".join(vars) + "\n  }"
+        x += ",\n    vars={\n  " + ",\n  ".join(vars_) + "\n  }"
     else:
         x = ", ".join([k + "=" + str(v) for k, v in term.items() if k not in ["Xi", "Ji"]])
     return x

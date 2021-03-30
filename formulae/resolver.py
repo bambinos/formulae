@@ -17,7 +17,7 @@ class Resolver:
     def visitGroupingExpr(self, expr):
         return expr.expression.accept(self)
 
-    def visitBinaryExpr(self, expr):
+    def visitBinaryExpr(self, expr):  # pylint: disable=too-many-return-statements
         otype = expr.operator.type
         if otype == "TILDE":
             return Response(expr.left.accept(self)) + expr.right.accept(self)
@@ -69,7 +69,7 @@ class Resolver:
             return Term(Variable(expr.value))
 
     def visitQuotedNameExpr(self, expr):
-        # TODO: Quoted names don't accept levels yet.
+        # Quoted names don't accept levels yet.
         return Term(Variable(expr.expression.lexeme[1:-1]))
 
 

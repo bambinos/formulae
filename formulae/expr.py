@@ -1,14 +1,4 @@
-class Expr:
-    """Abstract class"""
-
-    def __init__(self):
-        raise ValueError("Abstract class")
-
-    def accept(self):
-        pass
-
-
-class Assign(Expr):
+class Assign:
     """Expr for Asssignments.
 
     This type of expressions can be parsed anywhere, but can only be resolved
@@ -38,7 +28,7 @@ class Assign(Expr):
         return visitor.visitAssignExpr(self)
 
 
-class Grouping(Expr):
+class Grouping:
     def __init__(self, expression):
         self.expression = expression
 
@@ -60,7 +50,7 @@ class Grouping(Expr):
         return visitor.visitGroupingExpr(self)
 
 
-class Binary(Expr):
+class Binary:
     def __init__(self, left, operator, right):
         self.left = left
         self.operator = operator
@@ -91,7 +81,7 @@ class Binary(Expr):
         return visitor.visitBinaryExpr(self)
 
 
-class Unary(Expr):
+class Unary:
     def __init__(self, operator, right):
         self.operator = operator
         self.right = right
@@ -116,7 +106,7 @@ class Unary(Expr):
         return visitor.visitUnaryExpr(self)
 
 
-class Call(Expr):
+class Call:
     """Function call expressions"""
 
     def __init__(self, callee, args):
@@ -145,7 +135,7 @@ class Call(Expr):
         return visitor.visitCallExpr(self)
 
 
-class Variable(Expr):
+class Variable:
     def __init__(self, name, level=None):
         self.name = name
         self.level = level
@@ -171,7 +161,7 @@ class Variable(Expr):
         return visitor.visitVariableExpr(self)
 
 
-class QuotedName(Expr):
+class QuotedName:
     """Expressions for back-quoted names (i.e. `@1wrid_name!!`)"""
 
     def __init__(self, expression):
@@ -195,7 +185,7 @@ class QuotedName(Expr):
         return visitor.visitQuotedNameExpr(self)
 
 
-class Literal(Expr):
+class Literal:
     def __init__(self, value):
         self.value = value
 
