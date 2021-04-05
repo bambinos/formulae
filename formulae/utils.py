@@ -1,7 +1,6 @@
 from copy import deepcopy
 
 import numpy as np
-import pandas as pd
 
 
 def listify(obj):
@@ -32,12 +31,3 @@ def get_interaction_matrix(x, y):
         for j2 in range(y.shape[1]):
             l.append(x[:, j1] * y[:, j2])
     return np.column_stack(l)
-
-
-def get_data_mask_names(data_mask):
-    if isinstance(data_mask, pd.DataFrame):
-        return data_mask.columns.tolist()
-    elif isinstance(data_mask, dict):
-        return list(dict.keys())
-    else:
-        raise ValueError("'data_mask' must be a pandas DataFrame or a dictionary.")

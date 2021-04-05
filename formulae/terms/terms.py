@@ -447,6 +447,8 @@ class GroupSpecificTerm:
             out["levels"] = self.expr.metadata["levels"]
             out["reference"] = self.expr.metadata["reference"]
             out["encoding"] = self.expr.metadata["encoding"]
+        elif self.expr._type == "interaction":  # pylint: disable = protected-access
+            out["terms"] = self.expr.metadata["terms"]
         return out
 
     @property
