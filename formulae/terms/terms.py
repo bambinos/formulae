@@ -1,3 +1,5 @@
+import logging
+
 from functools import reduce
 from itertools import combinations, product
 
@@ -10,6 +12,8 @@ from formulae.contrasts import pick_contrasts
 
 from formulae.terms.call import Call
 from formulae.terms.variable import Variable
+
+_log = logging.getLogger("formulae")
 
 
 class Intercept:
@@ -264,6 +268,14 @@ class Term:
         """
         c = other.components
         if len(c) == 1 and isinstance(c[0].name, int) and c[0].name >= 1:
+            _log.warning(
+                "Exponentiation on an individual variable returns the variable as it is.\n"
+                "Use {%s**%s} or I(%s**%s) to compute the math power.",
+                self.name,
+                c[0].name,
+                self.name,
+                c[0].name,
+            )
             return self
         else:
             return NotImplemented
