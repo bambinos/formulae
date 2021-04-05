@@ -4,7 +4,7 @@ from formulae.model_description import model_description
 from formulae.token import Token
 
 import formulae.expr as expr
-from formulae.terms import Variable, Call, Intercept, Term, GroupSpecificTerm, Model
+from formulae.terms import Variable, Call, Intercept, Term, GroupSpecificTerm, Model, Response
 
 
 # TODO:
@@ -311,4 +311,16 @@ def test_group_specific_interactions():
         GroupSpecificTerm(expr=Term(Variable("a"), Variable("b")), factor=Term(Variable("h"))),
         GroupSpecificTerm(Term(Variable("a"), Variable("b")), factor=Term(Variable("g"))),
     )
+    assert desc == comp
+
+
+def test_subset_index():
+
+    desc = model_description("threecats['b'] ~ continuous + dummy")
+    comp = Model(
+        Intercept(),
+        Term(Variable("continuous")),
+        Term(Variable("dummy")),
+    )
+    comp.add_response(Response(Term(Variable("threecats", level="b"))))
     assert desc == comp
