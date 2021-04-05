@@ -673,25 +673,31 @@ class Model:
         (0 + x | g) -> (x|g)
         (0 + x | g + y) -> (x|g) + (x|y)
         """
-        # Only negated intercept + one term
-        if len(self.common_terms) <= 2:
-            if len(self.common_terms) == 1:
-                return self.common_terms[0] | other
-            if NegatedIntercept() in self.common_terms:
-                self.common_terms.remove(NegatedIntercept())
+        # If only one term in the expr, resolve according to the type of the term.
+        if len(self.common_terms) == 1:
+            return self.common_terms[0] | other
 
-            if isinstance(other, Term):
-                products = product(self.common_terms, [other])
-                terms = [GroupSpecificTerm(p[0], p[1]) for p in products]
-                return Model(*terms)
-            elif isinstance(other, type(self)):
-                products = product(self.common_terms, other.common_terms)
-                terms = [GroupSpecificTerm(p[0], p[1]) for p in products]
-                return Model(*terms)
-            else:
-                return NotImplemented
+        # Handle intercept
+        if Intercept() in self.common_terms and NegatedIntercept() in self.common_terms:
+            # Explicit addition and negation -> remove both -> no intercept
+            self.common_terms.remove(Intercept())
+            self.common_terms.remove(NegatedIntercept())
+        elif NegatedIntercept() in self.common_terms:
+            # Negation -> remove negation and do not add intercept
+            self.common_terms.remove(NegatedIntercept())
+        elif Intercept() not in self.common_terms:
+            # No negation and no explicit intercept -> implicit intercept
+            self.common_terms.insert(0, Intercept())
+        if isinstance(other, Term):
+            products = product(self.common_terms, [other])
+            terms = [GroupSpecificTerm(p[0], p[1]) for p in products]
+            return Model(*terms)
+        elif isinstance(other, type(self)):
+            products = product(self.common_terms, other.common_terms)
+            terms = [GroupSpecificTerm(p[0], p[1]) for p in products]
+            return Model(*terms)
         else:
-            raise ValueError("LHS of group specific term cannot have more than one term.")
+            return NotImplemented
 
     def __repr__(self):
         return self.__str__()
