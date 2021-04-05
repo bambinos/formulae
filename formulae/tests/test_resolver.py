@@ -285,3 +285,30 @@ def test_term_slash():
         Term(Variable("x"), Variable("y")),
     )
     assert desc == comp
+
+
+def test_group_specific_interactions():
+
+    desc = model_description("0 + (a*b|h+g)")
+    comp = Model(
+        GroupSpecificTerm(expr=Intercept(), factor=Term(Variable("h"))),
+        GroupSpecificTerm(expr=Intercept(), factor=Term(Variable("g"))),
+        GroupSpecificTerm(expr=Term(Variable("a")), factor=Term(Variable("h"))),
+        GroupSpecificTerm(expr=Term(Variable("a")), factor=Term(Variable("g"))),
+        GroupSpecificTerm(expr=Term(Variable("b")), factor=Term(Variable("h"))),
+        GroupSpecificTerm(expr=Term(Variable("b")), factor=Term(Variable("g"))),
+        GroupSpecificTerm(expr=Term(Variable("a"), Variable("b")), factor=Term(Variable("h"))),
+        GroupSpecificTerm(Term(Variable("a"), Variable("b")), factor=Term(Variable("g"))),
+    )
+    assert desc == comp
+
+    desc = model_description("0 + (0 + a*b|h+g)")
+    comp = Model(
+        GroupSpecificTerm(expr=Term(Variable("a")), factor=Term(Variable("h"))),
+        GroupSpecificTerm(expr=Term(Variable("a")), factor=Term(Variable("g"))),
+        GroupSpecificTerm(expr=Term(Variable("b")), factor=Term(Variable("h"))),
+        GroupSpecificTerm(expr=Term(Variable("b")), factor=Term(Variable("g"))),
+        GroupSpecificTerm(expr=Term(Variable("a"), Variable("b")), factor=Term(Variable("h"))),
+        GroupSpecificTerm(Term(Variable("a"), Variable("b")), factor=Term(Variable("g"))),
+    )
+    assert desc == comp
