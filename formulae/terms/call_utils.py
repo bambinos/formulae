@@ -1,3 +1,4 @@
+import pandas as pd
 from formulae.utils import flatten_list
 
 
@@ -98,3 +99,12 @@ class CallVarsExtractor:
     def visitQuotedNameExpr(self, expr):
         # delete backquotes in 'variable'
         return expr.expression.lexeme[1:-1]
+
+
+def get_data_mask_names(data_mask):
+    if isinstance(data_mask, pd.DataFrame):
+        return data_mask.columns.tolist()
+    elif isinstance(data_mask, dict):
+        return list(dict.keys())
+    else:
+        raise ValueError("'data_mask' must be a pandas DataFrame or a dictionary.")

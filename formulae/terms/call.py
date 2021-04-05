@@ -5,8 +5,12 @@ from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_d
 
 from formulae.eval import eval_in_data_mask
 from formulae.transforms import STATEFUL_TRANSFORMS
-from formulae.terms.call_utils import CallEvalPrinter, CallNamePrinter, CallVarsExtractor
-from formulae.utils import get_data_mask_names
+from formulae.terms.call_utils import (
+    CallEvalPrinter,
+    CallNamePrinter,
+    CallVarsExtractor,
+    get_data_mask_names,
+)
 
 
 class Call:
