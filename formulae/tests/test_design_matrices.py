@@ -445,3 +445,22 @@ def test_non_syntactic_names():
     assert np.allclose(
         dm.common["$$#1@@:-- ! Hi there!"][:, 0], data["$$#1@@"] * data["-- ! Hi there!"]
     )
+
+
+def test_categoric_group_specific():
+    data = pd.DataFrame(
+        {
+            "BP": np.random.normal(size=30),
+            "BMI": np.random.normal(size=30),
+            "age_grp": np.random.choice([0, 1, 2], size=30),
+        }
+    )
+    dm = design_matrices("BP ~ 0 + (C(age_grp)|BMI)", data)
+    list(dm.group.terms_info.keys()) == ["1|BMI", "C(age_grp)[1]|BMI", "C(age_grp)[2]|BMI"]
+
+    dm = design_matrices("BP ~ 0 + (0 + C(age_grp)|BMI)", data)
+    list(dm.group.terms_info.keys()) == [
+        "C(age_grp)[0]|BMI",
+        "C(age_grp)[1]|BMI",
+        "C(age_grp)[2]|BMI",
+    ]

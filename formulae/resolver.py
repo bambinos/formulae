@@ -58,7 +58,11 @@ class Resolver:
         return Term(Call(expr))
 
     def visitVariableExpr(self, expr):
-        return Term(Variable(expr.name.lexeme, expr.level))
+        if expr.level:
+            level = expr.level.value
+        else:
+            level = None
+        return Term(Variable(expr.name.lexeme, level))
 
     def visitLiteralExpr(self, expr):
         if expr.value == 0:

@@ -367,12 +367,12 @@ class Term:
             encoding = encoding[0]
         else:
             ValueError("encoding is a list of len > 1")
-
         for component in self.components:
+            encoding_ = False
             if isinstance(encoding, dict):
                 encoding_ = encoding.get(component.name, False)
-            else:
-                encoding_ = False
+            elif isinstance(encoding, bool):
+                encoding_ = encoding
             component.set_data(encoding_)
 
         if self._type == "interaction":
@@ -442,7 +442,7 @@ class GroupSpecificTerm:
             )
 
         # Notation as in lme4 paper
-        # Note we don't use `drop_first=True`.
+        # Note we don't use `drop_first=True` for factor.
         self.expr.set_type(data, eval_env)
         self.expr.set_data(encoding)
         Xi = self.expr.data
@@ -797,7 +797,6 @@ class Model:
                 }
             else:
                 components[term.name] = term._type  # pylint: disable = protected-access
-
         # First, group with only categoric terms
         categoric_group = dict()
         for k, v in components.items():
