@@ -446,8 +446,8 @@ class GroupSpecificTerm:
             factor = data[self.factor.name]
             if not hasattr(factor.dtype, "ordered") or not factor.dtype.ordered:
                 categories = sorted(factor.unique().tolist())
-                cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
-                factor = factor.astype(cat_type)
+                type_ = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
+                factor = factor.astype(type_)
         else:
             raise ValueError(
                 "Factor on right hand side of group specific term must be a single term."
@@ -458,6 +458,34 @@ class GroupSpecificTerm:
         self.expr.set_type(data, eval_env)
         self.expr.set_data(encoding)
         Xi = self.expr.data
+        Ji = pd.get_dummies(factor).to_numpy()
+        Zi = linalg.khatri_rao(Ji.T, Xi.T).T
+        out = {
+            "type": self.expr.metadata["type"],
+            "Xi": Xi,
+            "Ji": Ji,
+            "Zi": sparse.coo_matrix(Zi),
+            "groups": factor.cat.categories.tolist(),
+        }
+        if self.expr._type == "categoric":  # pylint: disable = protected-access
+            out["levels"] = self.expr.metadata["levels"]
+            out["reference"] = self.expr.metadata["reference"]
+            out["encoding"] = self.expr.metadata["encoding"]
+        elif self.expr._type == "interaction":  # pylint: disable = protected-access
+            out["terms"] = self.expr.metadata["terms"]
+        return out
+
+    def eval_new_data(self, data):
+        """Evaluates the term with new data."""
+        # TO DO: check this function!!!
+        # TO DO: The following works, but we should ideally recover the factor type and apply it to
+        # the factor data here.
+        factor = data[self.factor.name]
+        if not hasattr(factor.dtype, "ordered") or not factor.dtype.ordered:
+            categories = sorted(factor.unique().tolist())
+            type_ = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
+            factor = factor.astype(type_)
+        Xi = self.expr.eval_new_data(data)
         Ji = pd.get_dummies(factor).to_numpy()
         Zi = linalg.khatri_rao(Ji.T, Xi.T).T
         out = {
