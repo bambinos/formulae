@@ -41,14 +41,16 @@ class DesignMatrices:
         self.model = model
 
         if self.model.response:
-            self.response = ResponseVector(self.model.response, data, eval_env)
+            self.response = ResponseVector(self.model.response)
+            self.response._evaluate(data, eval_env)
 
         if self.model.common_terms:
             self.common = CommonEffectsMatrix(Model(*self.model.common_terms))
             self.common._evaluate(data, eval_env)
 
         if self.model.group_terms:
-            self.group = GroupEffectsMatrix(self.model.group_terms, data, eval_env)
+            self.group = GroupEffectsMatrix(self.model.group_terms)
+            self.group._evaluate(data, eval_env)
 
 
 class ResponseVector:
@@ -65,20 +67,21 @@ class ResponseVector:
         The evaluation environment object where we take values and functions from.
     """
 
-    def __init__(self, term, data, eval_env):
-        self.data = data
-        self.eval_env = eval_env
+    def __init__(self, term):
+        self.term = term
+        self.data = None
+        self.eval_env = None
         self.design_vector = None
         self.name = None  # a string
         self.type = None  # either numeric or categorical
         self.refclass = None  # Not None for categorical variables
-        self.term = term
-        self.evaluate()
 
-    def evaluate(self):
+    def _evaluate(self, data, eval_env):
         """Evaluates `self.term` inside the data mask provided by `data` and
         updates `self.design_vector` and `self.name`
         """
+        self.data = data
+        self.eval_env = eval_env
         self.term.set_type(self.data, self.eval_env)
         self.term.set_data()
         self.name = self.term.term.name
@@ -235,18 +238,20 @@ class GroupEffectsMatrix:
         The evaluation environment object where we take values and functions from.
     """
 
-    def __init__(self, terms, data, eval_env):
-        self.data = data
-        self.eval_env = eval_env
+    def __init__(self, terms):
+        self.terms = terms
+        self.data = None
+        self.eval_env = None
         self.design_matrix = None
         self.terms_info = None
-        self.terms = terms
-        self.evaluate()
+        self.evaluated = False
 
-    def evaluate(self):
+    def _evaluate(self, data, eval_env):
         """Evaluates `self.terms` inside the data mask provided by `data` and
         updates `self.design_matrix`.
         """
+        self.data = data
+        self.eval_env = eval_env
         start_row = 0
         start_col = 0
         Z = []
@@ -306,6 +311,9 @@ class GroupEffectsMatrix:
             self.design_matrix = sp.sparse.block_diag(Z).tocsc()
         else:
             self.design_matrix = np.zeros((0, 0))
+
+    def _evaluate_new_data(self, data):
+        pass
 
     def get_term_full_names(self, name):  # pylint: disable=inconsistent-return-statements
         # Always returns a list
