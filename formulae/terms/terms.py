@@ -87,6 +87,10 @@ class Intercept:
     def set_data(self, encoding):  # pylint: disable = unused-argument
         self.data = np.ones((self.len, 1))
 
+    def eval_new_data(self, data):
+        # it assumes data is a pandas DataFrame now
+        return np.ones((data.shape[0], 1))
+
 
 class NegatedIntercept:
     def __init__(self):
@@ -386,18 +390,13 @@ class Term:
             self.data = component.data["value"]
             self.metadata = {k: v for k, v in component.data.items() if k != "value"}
 
-    def eval_new_data(self, data, eval_env):
+    def eval_new_data(self, data):
         """Evaluates the term with new data."""
         if self._type == "interaction":
-            data = reduce(get_interaction_matrix, [c.data["value"] for c in self.components])
-            self.metadata["type"] = "interaction"
-            self.metadata["terms"] = {
-                c.name: {k: v for k, v in c.data.items() if k != "value"} for c in self.components
-            }
+            data = reduce(get_interaction_matrix, [c.eval_new_data(data) for c in self.components])
         else:
-            component = self.components[0]
-            self.data = component.data["value"]
-            self.metadata = {k: v for k, v in component.data.items() if k != "value"}
+            data = self.components[0].eval_new_data(data)
+        return data
 
     @property
     def var_names(self):

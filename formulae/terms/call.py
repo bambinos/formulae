@@ -30,6 +30,7 @@ class Call:
 
     def __init__(self, expr, is_response=False):
         self.data = None
+        self.eval_env = None
         self._intermediate_data = None
         self._type = None
         self.is_response = is_response

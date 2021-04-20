@@ -44,7 +44,8 @@ class DesignMatrices:
             self.response = ResponseVector(self.model.response, data, eval_env)
 
         if self.model.common_terms:
-            self.common = CommonEffectsMatrix(Model(*self.model.common_terms), data, eval_env)
+            self.common = CommonEffectsMatrix(Model(*self.model.common_terms))
+            self.common._evaluate(data, eval_env)
 
         if self.model.group_terms:
             self.group = GroupEffectsMatrix(self.model.group_terms, data, eval_env)
@@ -116,7 +117,7 @@ class CommonEffectsMatrix:
     Parameters
     ----------
 
-    terms : Model
+    model : Model
         An Model object containing terms for the common effects of the model.
     data: pandas.DataFrame
         The data frame where variables are taken from
@@ -124,33 +125,52 @@ class CommonEffectsMatrix:
         The evaluation environment object where we take values and functions from.
     """
 
-    def __init__(self, terms, data, eval_env):
-        self.data = data
-        self.eval_env = eval_env
+    def __init__(self, model):
+        self.model = model
+        self.data = None
+        self.eval_env = None
         self.design_matrix = None
         self.terms_info = None
-        self.terms = terms
-        self.evaluate()
+        self.evaluated = False
 
-    def evaluate(self):
+    def _evaluate(self, data, eval_env):
         """Obtain design matrix for common effects.
 
-        Evaluates ``self.terms`` inside the data mask provided by ``data`` and updates
+        Evaluates ``self.model`` inside the data mask provided by ``data`` and updates
         ``self.design_matrix``. It also populates the dictionary ``self.terms_info`` with
         information related to each term, such as the type, the columns they occupy in the design
         matrix and the names of the columns.
         """
-        d = self.terms.eval(self.data, self.eval_env)
+        self.data = data
+        self.eval_env = eval_env
+        d = self.model.eval(self.data, self.eval_env)
         self.design_matrix = np.column_stack([d[key] for key in d.keys()])
         self.terms_info = {}
         # Get types and column slices
         start = 0
-        for term in self.terms.terms:
+        for term in self.model.terms:
             self.terms_info[term.name] = term.metadata
             delta = d[term.name].shape[1]
             self.terms_info[term.name]["cols"] = slice(start, start + delta)
             self.terms_info[term.name]["full_names"] = self.get_term_full_names(term.name)
             start += delta
+
+        self.evaluated = True
+
+    def _evaluate_new_data(self, data):
+        # Create and return new CommonEffectsMatrix from the information in the terms,
+        # with the new data
+        if not self.evaluated:
+            raise ValueError("Can't evaluate new data on unevaluated matrix.")
+        new_instance = self.__class__(self.model)
+        new_instance.data = data
+        new_instance.eval_env = self.eval_env
+        new_instance.terms_info = self.terms_info
+        new_instance.design_matrix = np.column_stack(
+            [term.eval_new_data(data) for term in self.model.terms]
+        )
+        new_instance.evaluated = True
+        return new_instance
 
     def as_dataframe(self):
         """Returns `self.design_matrix` as a pandas.DataFrame"""
