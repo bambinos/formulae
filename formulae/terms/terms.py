@@ -386,6 +386,19 @@ class Term:
             self.data = component.data["value"]
             self.metadata = {k: v for k, v in component.data.items() if k != "value"}
 
+    def eval_new_data(self, data, eval_env):
+        """Evaluates the term with new data."""
+        if self._type == "interaction":
+            data = reduce(get_interaction_matrix, [c.data["value"] for c in self.components])
+            self.metadata["type"] = "interaction"
+            self.metadata["terms"] = {
+                c.name: {k: v for k, v in c.data.items() if k != "value"} for c in self.components
+            }
+        else:
+            component = self.components[0]
+            self.data = component.data["value"]
+            self.metadata = {k: v for k, v in component.data.items() if k != "value"}
+
     @property
     def var_names(self):
         """Returns the name of the variables in the term as a set."""

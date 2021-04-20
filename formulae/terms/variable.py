@@ -121,11 +121,10 @@ class Variable:
         }
 
     def eval_new_data(self, data_mask):
-        """Evaluates the function call with new data.
+        """Evaluates the variable with new data.
 
-        This method evaluates the function call within a new data mask. If the transformation
-        applied is a stateful transformation, it uses the proper object that remembers all
-        parameters or settings that may have been set in a first pass.
+        This method evaluates the variable within a new data mask. If this object is categorical,
+        original encoding is remembered when carrying out the new evaluation
         """
         if self.data is None:
             raise ValueError("self.data is None. This error shouldn't have happened!")

@@ -30,7 +30,7 @@ def test_new_data_numeric_stateful_transform():
     call_term.set_data()
     assert (call_term.data["value"].T == [0, 0, 0]).all()
     data = pd.DataFrame({"x": [1, 2, 3]})
-    assert (call_term.eval_new_data(data, eval_env).T == [-9.0, -8.0, -7.0]).all()
+    assert (call_term.eval_new_data(data).T == [-9.0, -8.0, -7.0]).all()
 
 
 def test_new_data_categoric():
@@ -81,11 +81,11 @@ def test_new_data_categoric_stateful_transform():
     assert (np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]) == call_term.data["value"]).all()
 
     data = pd.DataFrame({"x": [2, 3]})
-    assert (call_term.eval_new_data(data, eval_env) == np.array([[0, 1, 0], [0, 0, 1]])).all()
+    assert (call_term.eval_new_data(data) == np.array([[0, 1, 0], [0, 0, 1]])).all()
 
     with pytest.raises(ValueError):
         data = pd.DataFrame({"x": [2, 3, 4]})
-        call_term.eval_new_data(data, eval_env)
+        call_term.eval_new_data(data)
 
     # The same with reduced encoding
     data = pd.DataFrame({"x": [1, 2, 3]})
@@ -95,10 +95,10 @@ def test_new_data_categoric_stateful_transform():
     assert (np.array([[0, 0], [1, 0], [0, 1]]) == call_term.data["value"]).all()
 
     data = pd.DataFrame({"x": [1, 3]})
-    assert (call_term.eval_new_data(data, eval_env) == np.array([[0, 0], [0, 1]])).all()
+    assert (call_term.eval_new_data(data) == np.array([[0, 0], [0, 1]])).all()
 
     # It remembers it saw "A", "B", and "C", but not "D".
     # So when you pass a new level, it raises a ValueError.
     with pytest.raises(ValueError):
         data = pd.DataFrame({"x": [2, 3, 4]})
-        call_term.eval_new_data(data, eval_env)
+        call_term.eval_new_data(data)
