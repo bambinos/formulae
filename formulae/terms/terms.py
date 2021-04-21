@@ -421,6 +421,7 @@ class GroupSpecificTerm:
     def __init__(self, expr, factor):
         self.expr = expr
         self.factor = factor
+        self.factor_type = None
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -448,6 +449,9 @@ class GroupSpecificTerm:
                 categories = sorted(factor.unique().tolist())
                 type_ = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
                 factor = factor.astype(type_)
+            else:
+                type_ = factor.dtype
+            self.factor_type = type_
         else:
             raise ValueError(
                 "Factor on right hand side of group specific term must be a single term."
@@ -477,14 +481,9 @@ class GroupSpecificTerm:
 
     def eval_new_data(self, data):
         """Evaluates the term with new data."""
-        # TO DO: check this function!!!
-        # TO DO: The following works, but we should ideally recover the factor type and apply it to
-        # the factor data here.
-        factor = data[self.factor.name]
-        if not hasattr(factor.dtype, "ordered") or not factor.dtype.ordered:
-            categories = sorted(factor.unique().tolist())
-            type_ = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
-            factor = factor.astype(type_)
+
+        # factor uses the same data type that is used in first evaluation.
+        factor = data[self.factor.name].astype(self.factor_type)
         Xi = self.expr.eval_new_data(data)
         Ji = pd.get_dummies(factor).to_numpy()
         Zi = linalg.khatri_rao(Ji.T, Xi.T).T

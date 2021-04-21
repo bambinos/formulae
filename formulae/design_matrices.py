@@ -155,7 +155,7 @@ class CommonEffectsMatrix:
             self.terms_info[term.name] = term.metadata
             delta = d[term.name].shape[1]
             self.terms_info[term.name]["cols"] = slice(start, start + delta)
-            self.terms_info[term.name]["full_names"] = self.get_term_full_names(term.name)
+            self.terms_info[term.name]["full_names"] = self._term_full_names(term.name)
             start += delta
 
         self.evaluated = True
@@ -177,12 +177,12 @@ class CommonEffectsMatrix:
 
     def as_dataframe(self):
         """Returns `self.design_matrix` as a pandas.DataFrame"""
-        colnames = [self.get_term_full_names(name) for name in self.terms_info]
+        colnames = [self._term_full_names(name) for name in self.terms_info]
         data = pd.DataFrame(self.design_matrix)
         data.columns = list(flatten_list(colnames))
         return data
 
-    def get_term_full_names(self, name):  # pylint: disable=inconsistent-return-statements
+    def _term_full_names(self, name):  # pylint: disable=inconsistent-return-statements
         # Always returns a list
         term = self.terms_info[name]
         _type = term["type"]
@@ -242,8 +242,8 @@ class GroupEffectsMatrix:
         self.terms = terms
         self.data = None
         self.eval_env = None
-        self.design_matrix = None
-        self.terms_info = None
+        self.design_matrix = np.zeros((0, 0))
+        self.terms_info = {}
         self.evaluated = False
 
     def _evaluate(self, data, eval_env):
@@ -271,8 +271,7 @@ class GroupEffectsMatrix:
                     Xi = np.atleast_2d(d["Xi"][:, idx]).T
                     Ji = d["Ji"]
                     Zi = linalg.khatri_rao(Ji.T, Xi.T).T
-                    delta_row = Zi.shape[0]
-                    delta_col = Zi.shape[1]
+                    delta_row, delta_col = Zi.shape
                     Z.append(Zi)
                     term_name = term.to_string(level)
                     self.terms_info[term_name] = {
@@ -293,8 +292,7 @@ class GroupEffectsMatrix:
                     start_col += delta_col
             else:
                 Zi = d["Zi"]
-                delta_row = Zi.shape[0]
-                delta_col = Zi.shape[1]
+                delta_row, delta_col = Zi.shape
                 Z.append(Zi)
                 term_name = term.to_string()
                 self.terms_info[term_name] = {k: v for k, v in d.items() if k != "Zi"}
@@ -302,20 +300,67 @@ class GroupEffectsMatrix:
                     slice(start_row, start_row + delta_row),
                     slice(start_col, start_col + delta_col),
                 )
-                self.terms_info[term_name]["full_names"] = self.get_term_full_names(term_name)
+                self.terms_info[term_name]["full_names"] = self._term_full_names(term_name)
                 start_row += delta_row
                 start_col += delta_col
 
         # Stored in Compressed Sparse Column format
         if Z:
             self.design_matrix = sp.sparse.block_diag(Z).tocsc()
-        else:
-            self.design_matrix = np.zeros((0, 0))
+
+        self.evaluated = True
 
     def _evaluate_new_data(self, data):
-        pass
+        if not self.evaluated:
+            raise ValueError("Can't evaluate new data on unevaluated matrix.")
 
-    def get_term_full_names(self, name):  # pylint: disable=inconsistent-return-statements
+        new_instance = self.__class__(self.terms)
+
+        start_row = start_col = 0
+        Z = []
+
+        for term in self.terms:
+            d = term.eval_new_data(data)
+            if d["type"] == "categoric":
+                levels = d["levels"] if d["encoding"] == "full" else d["levels"][1:]
+                Ji = d["Ji"]
+                for idx, level in enumerate(levels):
+                    Xi = np.atleast_2d(d["Xi"][:, idx]).T
+                    Zi = linalg.khatri_rao(Ji.T, Xi.T).T
+                    delta_row, delta_col = Zi.shape
+                    Z.append(Zi)
+                    term_name = term.to_string(level)
+                    # All the info, except from the indexes, is copied.
+                    new_instance.terms_info[term_name] = self.terms_info[term_name]
+                    new_instance.terms_info[term_name]["idxs"] = (
+                        slice(start_row, start_row + delta_row),
+                        slice(start_col, start_col + delta_col),
+                    )
+                    start_row += delta_row
+                    start_col += delta_col
+            else:
+                Zi = d["Zi"]
+                delta_row, delta_col = Zi.shape
+                Z.append(Zi)
+                term_name = term.to_string()
+                new_instance.terms_info[term_name] = self.terms_info[term_name]
+                new_instance.terms_info[term_name]["idxs"] = (
+                    slice(start_row, start_row + delta_row),
+                    slice(start_col, start_col + delta_col),
+                )
+                start_row += delta_row
+                start_col += delta_col
+
+        new_instance.data = data
+        new_instance.eval_env = self.eval_env
+
+        # Stored in Compressed Sparse Column format
+        if Z:
+            new_instance.design_matrix = sp.sparse.block_diag(Z).tocsc()
+
+        return new_instance
+
+    def _term_full_names(self, name):  # pylint: disable=inconsistent-return-statements
         # Always returns a list
         term = self.terms_info[name]
         _type = term["type"]
