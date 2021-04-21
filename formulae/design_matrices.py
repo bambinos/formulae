@@ -3,6 +3,7 @@ import itertools
 import logging
 
 from itertools import product
+from copy import deepcopy
 
 import numpy as np
 import pandas as pd
@@ -41,13 +42,16 @@ class DesignMatrices:
         self.model = model
 
         if self.model.response:
-            self.response = ResponseVector(self.model.response, data, eval_env)
+            self.response = ResponseVector(self.model.response)
+            self.response._evaluate(data, eval_env)
 
         if self.model.common_terms:
-            self.common = CommonEffectsMatrix(Model(*self.model.common_terms), data, eval_env)
+            self.common = CommonEffectsMatrix(Model(*self.model.common_terms))
+            self.common._evaluate(data, eval_env)
 
         if self.model.group_terms:
-            self.group = GroupEffectsMatrix(self.model.group_terms, data, eval_env)
+            self.group = GroupEffectsMatrix(self.model.group_terms)
+            self.group._evaluate(data, eval_env)
 
 
 class ResponseVector:
@@ -64,20 +68,21 @@ class ResponseVector:
         The evaluation environment object where we take values and functions from.
     """
 
-    def __init__(self, term, data, eval_env):
-        self.data = data
-        self.eval_env = eval_env
+    def __init__(self, term):
+        self.term = term
+        self.data = None
+        self.eval_env = None
         self.design_vector = None
         self.name = None  # a string
         self.type = None  # either numeric or categorical
         self.refclass = None  # Not None for categorical variables
-        self.term = term
-        self.evaluate()
 
-    def evaluate(self):
+    def _evaluate(self, data, eval_env):
         """Evaluates `self.term` inside the data mask provided by `data` and
         updates `self.design_vector` and `self.name`
         """
+        self.data = data
+        self.eval_env = eval_env
         self.term.set_type(self.data, self.eval_env)
         self.term.set_data()
         self.name = self.term.term.name
@@ -116,7 +121,7 @@ class CommonEffectsMatrix:
     Parameters
     ----------
 
-    terms : Model
+    model : Model
         An Model object containing terms for the common effects of the model.
     data: pandas.DataFrame
         The data frame where variables are taken from
@@ -124,42 +129,61 @@ class CommonEffectsMatrix:
         The evaluation environment object where we take values and functions from.
     """
 
-    def __init__(self, terms, data, eval_env):
-        self.data = data
-        self.eval_env = eval_env
+    def __init__(self, model):
+        self.model = model
+        self.data = None
+        self.eval_env = None
         self.design_matrix = None
         self.terms_info = None
-        self.terms = terms
-        self.evaluate()
+        self.evaluated = False
 
-    def evaluate(self):
+    def _evaluate(self, data, eval_env):
         """Obtain design matrix for common effects.
 
-        Evaluates ``self.terms`` inside the data mask provided by ``data`` and updates
+        Evaluates ``self.model`` inside the data mask provided by ``data`` and updates
         ``self.design_matrix``. It also populates the dictionary ``self.terms_info`` with
         information related to each term, such as the type, the columns they occupy in the design
         matrix and the names of the columns.
         """
-        d = self.terms.eval(self.data, self.eval_env)
+        self.data = data
+        self.eval_env = eval_env
+        d = self.model.eval(self.data, self.eval_env)
         self.design_matrix = np.column_stack([d[key] for key in d.keys()])
         self.terms_info = {}
         # Get types and column slices
         start = 0
-        for term in self.terms.terms:
+        for term in self.model.terms:
             self.terms_info[term.name] = term.metadata
             delta = d[term.name].shape[1]
             self.terms_info[term.name]["cols"] = slice(start, start + delta)
-            self.terms_info[term.name]["full_names"] = self.get_term_full_names(term.name)
+            self.terms_info[term.name]["full_names"] = self._term_full_names(term.name)
             start += delta
+
+        self.evaluated = True
+
+    def _evaluate_new_data(self, data):
+        # Create and return new CommonEffectsMatrix from the information in the terms,
+        # with the new data
+        if not self.evaluated:
+            raise ValueError("Can't evaluate new data on unevaluated matrix.")
+        new_instance = self.__class__(self.model)
+        new_instance.data = data
+        new_instance.eval_env = self.eval_env
+        new_instance.terms_info = deepcopy(self.terms_info)
+        new_instance.design_matrix = np.column_stack(
+            [term.eval_new_data(data) for term in self.model.terms]
+        )
+        new_instance.evaluated = True
+        return new_instance
 
     def as_dataframe(self):
         """Returns `self.design_matrix` as a pandas.DataFrame"""
-        colnames = [self.get_term_full_names(name) for name in self.terms_info]
+        colnames = [self._term_full_names(name) for name in self.terms_info]
         data = pd.DataFrame(self.design_matrix)
         data.columns = list(flatten_list(colnames))
         return data
 
-    def get_term_full_names(self, name):  # pylint: disable=inconsistent-return-statements
+    def _term_full_names(self, name):  # pylint: disable=inconsistent-return-statements
         # Always returns a list
         term = self.terms_info[name]
         _type = term["type"]
@@ -215,18 +239,20 @@ class GroupEffectsMatrix:
         The evaluation environment object where we take values and functions from.
     """
 
-    def __init__(self, terms, data, eval_env):
-        self.data = data
-        self.eval_env = eval_env
-        self.design_matrix = None
-        self.terms_info = None
+    def __init__(self, terms):
         self.terms = terms
-        self.evaluate()
+        self.data = None
+        self.eval_env = None
+        self.design_matrix = np.zeros((0, 0))
+        self.terms_info = {}
+        self.evaluated = False
 
-    def evaluate(self):
+    def _evaluate(self, data, eval_env):
         """Evaluates `self.terms` inside the data mask provided by `data` and
         updates `self.design_matrix`.
         """
+        self.data = data
+        self.eval_env = eval_env
         start_row = 0
         start_col = 0
         Z = []
@@ -246,8 +272,7 @@ class GroupEffectsMatrix:
                     Xi = np.atleast_2d(d["Xi"][:, idx]).T
                     Ji = d["Ji"]
                     Zi = linalg.khatri_rao(Ji.T, Xi.T).T
-                    delta_row = Zi.shape[0]
-                    delta_col = Zi.shape[1]
+                    delta_row, delta_col = Zi.shape
                     Z.append(Zi)
                     term_name = term.to_string(level)
                     self.terms_info[term_name] = {
@@ -268,8 +293,7 @@ class GroupEffectsMatrix:
                     start_col += delta_col
             else:
                 Zi = d["Zi"]
-                delta_row = Zi.shape[0]
-                delta_col = Zi.shape[1]
+                delta_row, delta_col = Zi.shape
                 Z.append(Zi)
                 term_name = term.to_string()
                 self.terms_info[term_name] = {k: v for k, v in d.items() if k != "Zi"}
@@ -277,17 +301,67 @@ class GroupEffectsMatrix:
                     slice(start_row, start_row + delta_row),
                     slice(start_col, start_col + delta_col),
                 )
-                self.terms_info[term_name]["full_names"] = self.get_term_full_names(term_name)
+                self.terms_info[term_name]["full_names"] = self._term_full_names(term_name)
                 start_row += delta_row
                 start_col += delta_col
 
         # Stored in Compressed Sparse Column format
         if Z:
             self.design_matrix = sp.sparse.block_diag(Z).tocsc()
-        else:
-            self.design_matrix = np.zeros((0, 0))
 
-    def get_term_full_names(self, name):  # pylint: disable=inconsistent-return-statements
+        self.evaluated = True
+
+    def _evaluate_new_data(self, data):
+        if not self.evaluated:
+            raise ValueError("Can't evaluate new data on unevaluated matrix.")
+
+        new_instance = self.__class__(self.terms)
+
+        start_row = start_col = 0
+        Z = []
+
+        for term in self.terms:
+            d = term.eval_new_data(data)
+            if d["type"] == "categoric":
+                levels = d["levels"] if d["encoding"] == "full" else d["levels"][1:]
+                Ji = d["Ji"]
+                for idx, level in enumerate(levels):
+                    Xi = np.atleast_2d(d["Xi"][:, idx]).T
+                    Zi = linalg.khatri_rao(Ji.T, Xi.T).T
+                    delta_row, delta_col = Zi.shape
+                    Z.append(Zi)
+                    term_name = term.to_string(level)
+                    # All the info, except from the indexes, is copied.
+                    new_instance.terms_info[term_name] = deepcopy(self.terms_info[term_name])
+                    new_instance.terms_info[term_name]["idxs"] = (
+                        slice(start_row, start_row + delta_row),
+                        slice(start_col, start_col + delta_col),
+                    )
+                    start_row += delta_row
+                    start_col += delta_col
+            else:
+                Zi = d["Zi"]
+                delta_row, delta_col = Zi.shape
+                Z.append(Zi)
+                term_name = term.to_string()
+                new_instance.terms_info[term_name] = deepcopy(self.terms_info[term_name])
+                new_instance.terms_info[term_name]["idxs"] = (
+                    slice(start_row, start_row + delta_row),
+                    slice(start_col, start_col + delta_col),
+                )
+                start_row += delta_row
+                start_col += delta_col
+
+        new_instance.data = data
+        new_instance.eval_env = self.eval_env
+
+        # Stored in Compressed Sparse Column format
+        if Z:
+            new_instance.design_matrix = sp.sparse.block_diag(Z).tocsc()
+
+        return new_instance
+
+    def _term_full_names(self, name):  # pylint: disable=inconsistent-return-statements
         # Always returns a list
         term = self.terms_info[name]
         _type = term["type"]

@@ -30,6 +30,7 @@ class Call:
 
     def __init__(self, expr, is_response=False):
         self.data = None
+        self.eval_env = None
         self._intermediate_data = None
         self._type = None
         self.is_response = is_response
@@ -87,8 +88,10 @@ class Call:
         names = get_data_mask_names(data_mask)
         if self.stateful_transform is not None:
             # Adds the stateful transform to the environment this is evaluated
-            eval_env = eval_env.with_outer_namespace({self.callee: self.stateful_transform})
-        x = eval_in_data_mask(self._eval_str(names), data_mask, eval_env)
+            self.eval_env = eval_env.with_outer_namespace({self.callee: self.stateful_transform})
+        else:
+            self.eval_env = eval_env
+        x = eval_in_data_mask(self._eval_str(names), data_mask, self.eval_env)
         if is_numeric_dtype(x):
             self._type = "numeric"
         elif is_string_dtype(x) or is_categorical_dtype(x) or isinstance(x, dict):
@@ -181,7 +184,7 @@ class Call:
             "encoding": encoding,
         }
 
-    def eval_new_data(self, data_mask, eval_env):
+    def eval_new_data(self, data_mask):
         """Evaluates the function call with new data.
 
         This method evaluates the function call within a new data mask. If the transformation
@@ -189,9 +192,7 @@ class Call:
         parameters or settings that may have been set in a first pass.
         """
         names = get_data_mask_names(data_mask)
-        if self.stateful_transform is not None:
-            eval_env = eval_env.with_outer_namespace({self.callee: self.stateful_transform})
-        x = eval_in_data_mask(self._eval_str(names), data_mask, eval_env)
+        x = eval_in_data_mask(self._eval_str(names), data_mask, self.eval_env)
         if self._type == "numeric":
             return self._eval_numeric(x)["value"]
         else:

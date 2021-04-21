@@ -87,6 +87,10 @@ class Intercept:
     def set_data(self, encoding):  # pylint: disable = unused-argument
         self.data = np.ones((self.len, 1))
 
+    def eval_new_data(self, data):
+        # it assumes data is a pandas DataFrame now
+        return np.ones((data.shape[0], 1))
+
 
 class NegatedIntercept:
     def __init__(self):
@@ -386,6 +390,14 @@ class Term:
             self.data = component.data["value"]
             self.metadata = {k: v for k, v in component.data.items() if k != "value"}
 
+    def eval_new_data(self, data):
+        """Evaluates the term with new data."""
+        if self._type == "interaction":
+            data = reduce(get_interaction_matrix, [c.eval_new_data(data) for c in self.components])
+        else:
+            data = self.components[0].eval_new_data(data)
+        return data
+
     @property
     def var_names(self):
         """Returns the name of the variables in the term as a set."""
@@ -409,6 +421,7 @@ class GroupSpecificTerm:
     def __init__(self, expr, factor):
         self.expr = expr
         self.factor = factor
+        self.factor_type = None
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -434,8 +447,11 @@ class GroupSpecificTerm:
             factor = data[self.factor.name]
             if not hasattr(factor.dtype, "ordered") or not factor.dtype.ordered:
                 categories = sorted(factor.unique().tolist())
-                cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
-                factor = factor.astype(cat_type)
+                type_ = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
+                factor = factor.astype(type_)
+            else:
+                type_ = factor.dtype
+            self.factor_type = type_
         else:
             raise ValueError(
                 "Factor on right hand side of group specific term must be a single term."
@@ -446,6 +462,29 @@ class GroupSpecificTerm:
         self.expr.set_type(data, eval_env)
         self.expr.set_data(encoding)
         Xi = self.expr.data
+        Ji = pd.get_dummies(factor).to_numpy()
+        Zi = linalg.khatri_rao(Ji.T, Xi.T).T
+        out = {
+            "type": self.expr.metadata["type"],
+            "Xi": Xi,
+            "Ji": Ji,
+            "Zi": sparse.coo_matrix(Zi),
+            "groups": factor.cat.categories.tolist(),
+        }
+        if self.expr._type == "categoric":  # pylint: disable = protected-access
+            out["levels"] = self.expr.metadata["levels"]
+            out["reference"] = self.expr.metadata["reference"]
+            out["encoding"] = self.expr.metadata["encoding"]
+        elif self.expr._type == "interaction":  # pylint: disable = protected-access
+            out["terms"] = self.expr.metadata["terms"]
+        return out
+
+    def eval_new_data(self, data):
+        """Evaluates the term with new data."""
+
+        # factor uses the same data type that is used in first evaluation.
+        factor = data[self.factor.name].astype(self.factor_type)
+        Xi = self.expr.eval_new_data(data)
         Ji = pd.get_dummies(factor).to_numpy()
         Zi = linalg.khatri_rao(Ji.T, Xi.T).T
         out = {
