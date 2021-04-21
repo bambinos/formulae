@@ -3,6 +3,7 @@ import itertools
 import logging
 
 from itertools import product
+from copy import deepcopy
 
 import numpy as np
 import pandas as pd
@@ -168,7 +169,7 @@ class CommonEffectsMatrix:
         new_instance = self.__class__(self.model)
         new_instance.data = data
         new_instance.eval_env = self.eval_env
-        new_instance.terms_info = self.terms_info
+        new_instance.terms_info = deepcopy(self.terms_info)
         new_instance.design_matrix = np.column_stack(
             [term.eval_new_data(data) for term in self.model.terms]
         )
@@ -331,7 +332,7 @@ class GroupEffectsMatrix:
                     Z.append(Zi)
                     term_name = term.to_string(level)
                     # All the info, except from the indexes, is copied.
-                    new_instance.terms_info[term_name] = self.terms_info[term_name]
+                    new_instance.terms_info[term_name] = deepcopy(self.terms_info[term_name])
                     new_instance.terms_info[term_name]["idxs"] = (
                         slice(start_row, start_row + delta_row),
                         slice(start_col, start_col + delta_col),
@@ -343,7 +344,7 @@ class GroupEffectsMatrix:
                 delta_row, delta_col = Zi.shape
                 Z.append(Zi)
                 term_name = term.to_string()
-                new_instance.terms_info[term_name] = self.terms_info[term_name]
+                new_instance.terms_info[term_name] = deepcopy(self.terms_info[term_name])
                 new_instance.terms_info[term_name]["idxs"] = (
                     slice(start_row, start_row + delta_row),
                     slice(start_col, start_col + delta_col),
