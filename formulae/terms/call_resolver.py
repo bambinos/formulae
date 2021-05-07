@@ -29,6 +29,14 @@ class LazyOperator:
     def __repr__(self):
         return self.__str__()
 
+    def __hash__(self):
+        return hash((self.symbol, *self.args))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.symbol == other.symbol and set(self.args) == set(other.args)
+
     def _get_symbol(self):
         oname = self.op.__name__
         if oname in ["add", "pos"]:
@@ -62,6 +70,14 @@ class LazyVariable:
     def __repr__(self):
         return self.__str__()
 
+    def __hash__(self):
+        return hash((self.name))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.name == other.name
+
     def accept(self, visitor):
         return visitor.visitLazyVariable(self)
 
@@ -86,6 +102,14 @@ class LazyValue:
     def __repr__(self):
         return self.__str__()
 
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.value == other.value
+
+    def __hash__(self):
+        return hash((self.value))
+
     def accept(self, visitor):
         return visitor.visitLazyValue(self)
 
@@ -108,6 +132,12 @@ class LazyCall:
 
     def __repr__(self):
         return self.__str__()
+
+    def __hash__(self):
+        return hash((self.callee, *self.args, *self.kwargs))
+
+    def __eq__(self, other):
+        return self.callee == other.callee and set(self.args) == set(other.args) and set(self.kwargs) == set(other.kwargs)
 
     def accept(self, visitor):
         return visitor.visitLazyCall(self)

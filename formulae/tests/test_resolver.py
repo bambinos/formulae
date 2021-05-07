@@ -1,11 +1,8 @@
 import pytest
 
 from formulae.model_description import model_description
-from formulae.token import Token
-
-import formulae.expr as expr
 from formulae.terms import Variable, Call, Intercept, Term, GroupSpecificTerm, Model, Response
-
+from formulae.terms.call_resolver import LazyCall, LazyVariable
 
 # TODO:
 # test repeated terms
@@ -44,14 +41,7 @@ def test_term_add():
     comp = Model(
         Intercept(),
         Term(Variable("x")),
-        Term(
-            Call(
-                expr.Call(
-                    expr.Variable(Token("IDENTIFIER", "f")),
-                    [expr.Variable(Token("IDENTIFIER", "x"))],
-                )
-            )
-        ),
+        Term(Call(LazyCall("f", [LazyVariable("x")], []))),
     )
     assert desc == comp
 
@@ -107,15 +97,7 @@ def test_term_interaction():
     desc = model_description("x:f(x)")
     comp = Model(
         Intercept(),
-        Term(
-            Variable("x"),
-            Call(
-                expr.Call(
-                    expr.Variable(Token("IDENTIFIER", "f")),
-                    [expr.Variable(Token("IDENTIFIER", "x"))],
-                )
-            ),
-        ),
+        Term(Variable("x"), Call(LazyCall("f", [LazyVariable("x")], []))),
     )
     assert desc == comp
 
@@ -171,23 +153,8 @@ def test_term_power_interaction():
     comp = Model(
         Intercept(),
         Term(Variable("x")),
-        Term(
-            Call(
-                expr.Call(
-                    expr.Variable(Token("IDENTIFIER", "f")),
-                    [expr.Variable(Token("IDENTIFIER", "x"))],
-                )
-            )
-        ),
-        Term(
-            Variable("x"),
-            Call(
-                expr.Call(
-                    expr.Variable(Token("IDENTIFIER", "f")),
-                    [expr.Variable(Token("IDENTIFIER", "x"))],
-                )
-            ),
-        ),
+        Term(Call(LazyCall("f", [LazyVariable("x")], []))),
+        Term(Variable("x"), Call(LazyCall("f", [LazyVariable("x")], []))),
     )
     assert desc == comp
 
@@ -254,15 +221,7 @@ def test_term_slash():
     comp = Model(
         Intercept(),
         Term(Variable("x")),
-        Term(
-            Variable("x"),
-            Call(
-                expr.Call(
-                    expr.Variable(Token("IDENTIFIER", "f")),
-                    [expr.Variable(Token("IDENTIFIER", "x"))],
-                )
-            ),
-        ),
+        Term(Variable("x"), Call(LazyCall("f", [LazyVariable("x")], []))),
     )
     assert desc == comp
 
