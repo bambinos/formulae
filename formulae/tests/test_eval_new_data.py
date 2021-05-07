@@ -9,6 +9,8 @@ from formulae.scanner import Scanner
 from formulae.terms import Variable, Call, Term, Model
 from formulae.design_matrices import design_matrices
 
+from formulae.terms.call_resolver import LazyCall, LazyVariable
+
 
 @pytest.fixture(scope="module")
 def data():
@@ -44,7 +46,7 @@ def test_call_new_data_numeric_stateful_transform():
     # of the first dataset passed, which is 10.
     eval_env = EvalEnvironment.capture(0)
     data = pd.DataFrame({"x": [10, 10, 10]})
-    call_term = Call(Parser(Scanner("center(x)").scan(False)).parse())
+    call_term = Call(LazyCall("center", [LazyVariable("x")], {}))
     call_term.set_type(data, eval_env)
     call_term.set_data()
     assert (call_term.data["value"].T == [0, 0, 0]).all()
@@ -94,7 +96,7 @@ def test_call_new_data_categoric_stateful_transform():
     data = pd.DataFrame({"x": [1, 2, 3]})
 
     # Full rank encoding
-    call_term = Call(Parser(Scanner("C(x)").scan(False)).parse())
+    call_term = Call(LazyCall("C", [LazyVariable("x")], {}))
     call_term.set_type(data, eval_env)
     call_term.set_data(encoding=True)
     assert (np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]) == call_term.data["value"]).all()
@@ -108,7 +110,7 @@ def test_call_new_data_categoric_stateful_transform():
 
     # The same with reduced encoding
     data = pd.DataFrame({"x": [1, 2, 3]})
-    call_term = Call(Parser(Scanner("C(x)").scan(False)).parse())
+    call_term = Call(LazyCall("C", [LazyVariable("x")], {}))
     call_term.set_type(data, eval_env)
     call_term.set_data()
     assert (np.array([[0, 0], [1, 0], [0, 1]]) == call_term.data["value"]).all()
@@ -134,15 +136,15 @@ def test_model_numeric_common(data, data2):
     common2 = dm.common._evaluate_new_data(data2)
 
     # First, assert stateful transforms remember the original parameter values
-    t1_mean1 = common1.model.terms[1].components[0].stateful_transform.mean
-    t1_mean2 = common2.model.terms[1].components[0].stateful_transform.mean
+    t1_mean1 = common1.model.terms[1].components[0].call.stateful_transform.mean
+    t1_mean2 = common2.model.terms[1].components[0].call.stateful_transform.mean
     assert np.allclose(t1_mean1, 0, atol=1)
     assert np.allclose(t1_mean1, t1_mean2)
 
-    t2_mean1 = common1.model.terms[2].components[0].stateful_transform.mean
-    t2_mean2 = common2.model.terms[2].components[0].stateful_transform.mean
-    t2_std1 = common1.model.terms[2].components[0].stateful_transform.std
-    t2_std2 = common2.model.terms[2].components[0].stateful_transform.std
+    t2_mean1 = common1.model.terms[2].components[0].call.stateful_transform.mean
+    t2_mean2 = common2.model.terms[2].components[0].call.stateful_transform.mean
+    t2_std1 = common1.model.terms[2].components[0].call.stateful_transform.std
+    t2_std2 = common2.model.terms[2].components[0].call.stateful_transform.std
     assert np.allclose(t2_mean1, 0, atol=1)
     assert np.allclose(t2_std1, 1, atol=1)
     assert np.allclose(t2_mean1, t2_mean2)

@@ -97,7 +97,7 @@ class LazyValue:
         self.value = value
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     def __repr__(self):
         return self.__str__()
@@ -128,7 +128,9 @@ class LazyCall:
             self.stateful_transform = STATEFUL_TRANSFORMS[self.callee]()
 
     def __str__(self):
-        return f"{self.callee}({', '.join([str(arg) for arg in self.args])})"
+        args = [str(arg) for arg in self.args]
+        kwargs = [f"{name} = {str(arg)}" for name, arg in self.kwargs.items()]
+        return f"{self.callee}({', '.join(args + kwargs)})"
 
     def __repr__(self):
         return self.__str__()
@@ -137,7 +139,11 @@ class LazyCall:
         return hash((self.callee, *self.args, *self.kwargs))
 
     def __eq__(self, other):
-        return self.callee == other.callee and set(self.args) == set(other.args) and set(self.kwargs) == set(other.kwargs)
+        return (
+            self.callee == other.callee
+            and set(self.args) == set(other.args)
+            and set(self.kwargs) == set(other.kwargs)
+        )
 
     def accept(self, visitor):
         return visitor.visitLazyCall(self)
@@ -146,7 +152,7 @@ class LazyCall:
         if self.stateful_transform:
             callee = self.stateful_transform
         else:
-            callee = eval_env.namespace[self.callee]
+            callee = eval_env.eval(self.callee)
 
         args = [arg.eval(data_mask, eval_env) for arg in self.args]
         kwargs = {name: arg.eval(data_mask, eval_env) for name, arg in self.kwargs.items()}

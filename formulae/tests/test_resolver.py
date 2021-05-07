@@ -41,7 +41,7 @@ def test_term_add():
     comp = Model(
         Intercept(),
         Term(Variable("x")),
-        Term(Call(LazyCall("f", [LazyVariable("x")], []))),
+        Term(Call(LazyCall("f", [LazyVariable("x")], {}))),
     )
     assert desc == comp
 
@@ -97,7 +97,7 @@ def test_term_interaction():
     desc = model_description("x:f(x)")
     comp = Model(
         Intercept(),
-        Term(Variable("x"), Call(LazyCall("f", [LazyVariable("x")], []))),
+        Term(Variable("x"), Call(LazyCall("f", [LazyVariable("x")], {}))),
     )
     assert desc == comp
 
@@ -153,8 +153,8 @@ def test_term_power_interaction():
     comp = Model(
         Intercept(),
         Term(Variable("x")),
-        Term(Call(LazyCall("f", [LazyVariable("x")], []))),
-        Term(Variable("x"), Call(LazyCall("f", [LazyVariable("x")], []))),
+        Term(Call(LazyCall("f", [LazyVariable("x")], {}))),
+        Term(Variable("x"), Call(LazyCall("f", [LazyVariable("x")], {}))),
     )
     assert desc == comp
 
@@ -221,7 +221,7 @@ def test_term_slash():
     comp = Model(
         Intercept(),
         Term(Variable("x")),
-        Term(Variable("x"), Call(LazyCall("f", [LazyVariable("x")], []))),
+        Term(Variable("x"), Call(LazyCall("f", [LazyVariable("x")], {}))),
     )
     assert desc == comp
 
