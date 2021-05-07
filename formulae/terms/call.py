@@ -3,14 +3,8 @@ import pandas as pd
 
 from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
 
-from formulae.eval import eval_in_data_mask
-from formulae.transforms import STATEFUL_TRANSFORMS
-from formulae.terms.call_utils import (
-    CallEvalPrinter,
-    CallNamePrinter,
-    CallVarsExtractor,
-    get_data_mask_names,
-)
+from formulae.transforms import TRANSFORMS
+from formulae.terms.call_utils import CallVarsExtractor
 
 
 class Call:
@@ -28,27 +22,23 @@ class Call:
         The call expression returned by the parser.
     """
 
-    def __init__(self, expr, is_response=False):
+    def __init__(self, call, is_response=False):
         self.data = None
         self.eval_env = None
         self._intermediate_data = None
         self._type = None
         self.is_response = is_response
-        self.callee = expr.callee.name.lexeme
-        self.args = expr.args
-        self.name = self._name_str()
-        if self.callee in STATEFUL_TRANSFORMS.keys():
-            self.stateful_transform = STATEFUL_TRANSFORMS[self.callee]()
-        else:
-            self.stateful_transform = None
+        self.call = call
+        self.name = str(self.call)
 
     def __hash__(self):
-        return hash((self.callee, self.name, self.stateful_transform))
+        return hash(self.call)
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return self.callee == other.callee and self.args == other.args
+        #  use call instead of name
+        return self.name == other.name
 
     def __repr__(self):
         return self.__str__()
@@ -63,14 +53,6 @@ class Call:
         """
         return visitor.visitCallTerm(self)
 
-    def _eval_str(self, names):
-        """Generates the string used to evaluate the call."""
-        return CallEvalPrinter(self, names).print()
-
-    def _name_str(self):
-        """Generates a string that reproduces the call and is used as name."""
-        return CallNamePrinter(self).print()
-
     @property
     def var_names(self):
         """Returns the names of the variables involved in the call, not including the callee."""
@@ -84,14 +66,11 @@ class Call:
         of the evaluation in ``._intermediate_data`` to prevent us from computing the same thing
         more than once.
         """
-        # Q: How to set non data dependent parameters?
-        names = get_data_mask_names(data_mask)
-        if self.stateful_transform is not None:
-            # Adds the stateful transform to the environment this is evaluated
-            self.eval_env = eval_env.with_outer_namespace({self.callee: self.stateful_transform})
-        else:
-            self.eval_env = eval_env
-        x = eval_in_data_mask(self._eval_str(names), data_mask, self.eval_env)
+
+        self.eval_env = eval_env.with_outer_namespace(TRANSFORMS)
+
+        x = self.call.eval(data_mask, self.eval_env)
+
         if is_numeric_dtype(x):
             self._type = "numeric"
         elif is_string_dtype(x) or is_categorical_dtype(x) or isinstance(x, dict):
@@ -191,8 +170,7 @@ class Call:
         applied is a stateful transformation, it uses the proper object that remembers all
         parameters or settings that may have been set in a first pass.
         """
-        names = get_data_mask_names(data_mask)
-        x = eval_in_data_mask(self._eval_str(names), data_mask, self.eval_env)
+        x = self.call.eval(data_mask, self.eval_env)
         if self._type == "numeric":
             return self._eval_numeric(x)["value"]
         else:
