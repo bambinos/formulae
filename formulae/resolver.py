@@ -1,4 +1,5 @@
-from .terms import Variable, Call, Term, Intercept, NegatedIntercept, Response
+from formulae.terms import Variable, Call, Term, Intercept, NegatedIntercept, Response
+from formulae.terms.call_resolver import CallResolver
 
 
 class ResolverError(Exception):
@@ -55,7 +56,9 @@ class Resolver:
             raise ResolverError("Couldn't resolve UnaryExpr with otype '" + otype + "'")
 
     def visitCallExpr(self, expr):
-        return Term(Call(expr))
+        # Delegates all the work to self._vsitCallExpr, that works recursively through its args.
+        # It just wraps the result in a Term object.
+        return Term(Call(CallResolver(expr).resolve()))
 
     def visitVariableExpr(self, expr):
         if expr.level:
@@ -75,7 +78,3 @@ class Resolver:
     def visitQuotedNameExpr(self, expr):
         # Quoted names don't accept levels yet.
         return Term(Variable(expr.expression.lexeme[1:-1]))
-
-
-# When evaluating ModelTerms object we'll have to "evaluate" CallTerms in a different manner
-# because the arguments is expressed as an AST and not as a ModelTerms object.

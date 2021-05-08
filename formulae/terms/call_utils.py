@@ -1,4 +1,3 @@
-import pandas as pd
 from formulae.utils import flatten_list
 
 
@@ -68,12 +67,10 @@ class CallVarsExtractor:
         self.expr = expr
 
     def get(self):
-        x = self.expr.accept(self)
-        # make sure it return a list
-        return list(flatten_list(x))
+        return list(flatten_list(self.expr.accept(self)))
 
     def visitCallTerm(self, term):
-        return [arg.accept(self) for arg in term.args]
+        return term.call.accept(self)
 
     def visitAssignExpr(self, expr):
         return str(expr.value.accept(self))
@@ -88,7 +85,7 @@ class CallVarsExtractor:
         return expr.right.accept(self)
 
     def visitCallExpr(self, expr):
-        return [arg.accept(self) for arg in expr.args]
+        return list(flatten_list([arg.accept(self) for arg in expr.args]))
 
     def visitVariableExpr(self, expr):
         return expr.name.lexeme
@@ -100,11 +97,16 @@ class CallVarsExtractor:
         # delete backquotes in 'variable'
         return expr.expression.lexeme[1:-1]
 
+    def visitLazyOperator(self, expr):
+        return list(arg.accept(self) for arg in expr.args)
 
-def get_data_mask_names(data_mask):
-    if isinstance(data_mask, pd.DataFrame):
-        return data_mask.columns.tolist()
-    elif isinstance(data_mask, dict):
-        return list(dict.keys())
-    else:
-        raise ValueError("'data_mask' must be a pandas DataFrame or a dictionary.")
+    def visitLazyVariable(self, expr):
+        return expr.name
+
+    def visitLazyValue(self, expr):  # pylint: disable = unused-argument
+        return ""
+
+    def visitLazyCall(self, expr):
+        args = list(flatten_list([arg.accept(self) for arg in expr.args]))
+        kwargs = list(flatten_list([arg.accept(self) for arg in expr.kwargs.values()]))
+        return args + kwargs
