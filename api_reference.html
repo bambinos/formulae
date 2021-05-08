@@ -1,0 +1,473 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Reference &#8212; Formulae 0.0.9 documentation</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Formulae" href="index.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+<a class="navbar-brand" href="index.html">
+<p class="title">Formulae</p>
+</a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 current active nav-item">
+ <a class="current reference internal nav-link" href="#">
+  API Reference
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/bambinos/formulae" rel="noopener" target="_blank" title="GitHub">
+            <span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://pypi.org/project/formulae/" rel="noopener" target="_blank" title="PyPi">
+            <span><i class="fas fa-box"></i></span>
+            <label class="sr-only">PyPi</label>
+          </a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-formulae">
+   <code class="xref py py-mod docutils literal notranslate">
+    <span class="pre">
+     formulae
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-formulae.terms">
+   <code class="xref py py-mod docutils literal notranslate">
+    <span class="pre">
+     formulae.terms
+    </span>
+   </code>
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<p>This reference provides detailed documentation for all modules, classes, and
+methods in the current release of formulae.</p>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="module-formulae">
+<span id="formulae"></span><h2><a class="reference internal" href="#module-formulae" title="formulae"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formulae</span></code></a><a class="headerlink" href="#module-formulae" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="formulae.design_matrices">
+<code class="sig-prename descclassname"><span class="pre">formulae.</span></code><code class="sig-name descname"><span class="pre">design_matrices</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">formula</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">na_action</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'drop'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/design_matrices.html#design_matrices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.design_matrices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain design matrices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>formula</strong> (<em>string</em>) – A model description written in the formula language</p></li>
+<li><p><strong>data</strong> (<em>pandas.DataFrame</em>) – The data frame where variables are taken from</p></li>
+<li><p><strong>na_action</strong> (<em>string</em>) – Describes what to do with missing values in <cite>data</cite>. ‘drop’ means to drop
+all rows with a missing value, ‘error’ means to raise an error. Defaults
+to ‘drop’.</p></li>
+<li><p><strong>eval_env</strong> (<em>integer</em>) – The number of environments we walk up in the stack starting from the function’s caller
+to capture the environment where formula is evaluated. Defaults to 0 which means
+the evaluation environment is the environment where <cite>design_matrices</cite> is called.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>design</strong> – An instance of DesignMatrices that contains the design matrice(s) described by
+<cite>formula</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>DesignMatrices</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="formulae.model_description">
+<code class="sig-prename descclassname"><span class="pre">formulae.</span></code><code class="sig-name descname"><span class="pre">model_description</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">formula</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/model_description.html#model_description"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.model_description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpret model formula and obtain a model description.</p>
+<p>This function receives a string with a formula describing a statistical
+model and returns an object of class ModelTerms that describes the
+model interpreted from the formula.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>formula</strong> (<em>string</em>) – A string with a model description in formula language.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>An object of class ModelTerms with an internal description of the model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-formulae.terms">
+<span id="formulae-terms"></span><h2><a class="reference internal" href="#module-formulae.terms" title="formulae.terms"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formulae.terms</span></code></a><a class="headerlink" href="#module-formulae.terms" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="formulae.terms.Call">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">formulae.terms.</span></code><code class="sig-name descname"><span class="pre">Call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">call</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomic component of a Term that is a call.</p>
+<p>This object supports stateful transformations defined in formulae.transforms.
+A transformation of this type defines its parameters the first time it is called,
+and then can be used to recompute the transformation with memorized parameter values.
+This behavior is useful when implementing a predict method and using transformations such
+as <code class="docutils literal notranslate"><span class="pre">center(x)</span></code> or <code class="docutils literal notranslate"><span class="pre">scale(x)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>expr</strong> (<em>formulae.expr.Call</em>) – The call expression returned by the parser.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="formulae.terms.Call.accept">
+<code class="sig-name descname"><span class="pre">accept</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">visitor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.accept"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.accept" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accept method called by a visitor.</p>
+<p>Visitors are those available in call_utils.py, and are used to work with call terms.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Call.eval_new_data">
+<code class="sig-name descname"><span class="pre">eval_new_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.eval_new_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the function call with new data.</p>
+<p>This method evaluates the function call within a new data mask. If the transformation
+applied is a stateful transformation, it uses the proper object that remembers all
+parameters or settings that may have been set in a first pass.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Call.set_data">
+<code class="sig-name descname"><span class="pre">set_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.set_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Completes evaluation of the call according to its type.</p>
+<p>Evaluates the call according to its type and stores the result in <code class="docutils literal notranslate"><span class="pre">.data</span></code>. It does not
+support multi-level categoric responses yet. If <code class="docutils literal notranslate"><span class="pre">self.is_response</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code> and the
+variable is of a categoric type, this method returns a 1d array of 0-1 instead of a matrix.</p>
+<p>In practice, it just completes the evaluation that started with <code class="docutils literal notranslate"><span class="pre">self.set_type()</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Call.set_type">
+<code class="sig-name descname"><span class="pre">set_type</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.set_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.set_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates function and determines the type of the result of the call.</p>
+<p>Evaluates the function call and sets the <code class="docutils literal notranslate"><span class="pre">._type</span></code> property to <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code> depending on the type of the result. It also stores the intermediate result
+of the evaluation in <code class="docutils literal notranslate"><span class="pre">._intermediate_data</span></code> to prevent us from computing the same thing
+more than once.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Call.var_names">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">var_names</span></code><a class="headerlink" href="#formulae.terms.Call.var_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the names of the variables involved in the call, not including the callee.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="formulae.terms.Model">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">formulae.terms.</span></code><code class="sig-name descname"><span class="pre">Model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">terms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation of the terms in a model</p>
+<dl class="py method">
+<dt id="formulae.terms.Model.add_response">
+<code class="sig-name descname"><span class="pre">add_response</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.add_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.add_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add response term to model description.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Model.add_term">
+<code class="sig-name descname"><span class="pre">add_term</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.add_term"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.add_term" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add term to model description.</p>
+<p>The term added can be of class <code class="docutils literal notranslate"><span class="pre">Intercept</span></code>, <code class="docutils literal notranslate"><span class="pre">Term</span></code>, or <code class="docutils literal notranslate"><span class="pre">GroupSpecificTerm</span></code>. It appends
+the new term object to the list of common terms or group specific terms as appropriate.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Model.common_components">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">common_components</span></code><a class="headerlink" href="#formulae.terms.Model.common_components" title="Permalink to this definition">¶</a></dt>
+<dd><p>Components in common terms in the model.</p>
+<p>Returns a list with all components, <code class="docutils literal notranslate"><span class="pre">Variable</span></code> and <code class="docutils literal notranslate"><span class="pre">Call</span></code> instances, within common
+terms in the model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Model.set_types">
+<code class="sig-name descname"><span class="pre">set_types</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.set_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.set_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the type of the common terms in the model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Model.terms">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">terms</span></code><a class="headerlink" href="#formulae.terms.Model.terms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Terms in the model.</p>
+<p>Returns a list of both common and group specific terms in the model description.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Model.var_names">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">var_names</span></code><a class="headerlink" href="#formulae.terms.Model.var_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of the variables in the model as a set.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="formulae.terms.Response">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">formulae.terms.</span></code><code class="sig-name descname"><span class="pre">Response</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation of a response term</p>
+<dl class="py method">
+<dt id="formulae.terms.Response.set_type">
+<code class="sig-name descname"><span class="pre">set_type</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Response.set_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Response.set_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set type of the response term.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Response.var_names">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">var_names</span></code><a class="headerlink" href="#formulae.terms.Response.var_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of the variables in the response as a set.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="formulae.terms.Term">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">formulae.terms.</span></code><code class="sig-name descname"><span class="pre">Term</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">components</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation of a single term.</p>
+<p>A model term can be an intercept, a term made of a single component, a function call,
+an interaction involving components and/or function calls.</p>
+<dl class="py method">
+<dt id="formulae.terms.Term.eval_new_data">
+<code class="sig-name descname"><span class="pre">eval_new_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.eval_new_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the term with new data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Term.get_component">
+<code class="sig-name descname"><span class="pre">get_component</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.get_component"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.get_component" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a component by name</p>
+<p>This method receives a component name and returns the component, either a Variable or Call.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Term.set_data">
+<code class="sig-name descname"><span class="pre">set_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.set_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtains and stores the final data object related to this term</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Term.set_type">
+<code class="sig-name descname"><span class="pre">set_type</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.set_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.set_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set type of the components in the term.</p>
+<p>Calls <code class="docutils literal notranslate"><span class="pre">.set_type()</span></code> method on each component in the term. For those components of class
+<code class="docutils literal notranslate"><span class="pre">Variable</span></code> it only passes the data mask. For <code class="docutils literal notranslate"><span class="pre">Call</span></code> objects it also passes the
+evaluation environment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Term.var_names">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">var_names</span></code><a class="headerlink" href="#formulae.terms.Term.var_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of the variables in the term as a set.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="formulae.terms.Variable">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">formulae.terms.</span></code><code class="sig-name descname"><span class="pre">Variable</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomic component of a Term</p>
+<dl class="py method">
+<dt id="formulae.terms.Variable.eval_new_data">
+<code class="sig-name descname"><span class="pre">eval_new_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.eval_new_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the variable with new data.</p>
+<p>This method evaluates the variable within a new data mask. If this object is categorical,
+original encoding is remembered when carrying out the new evaluation</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Variable.set_data">
+<code class="sig-name descname"><span class="pre">set_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.set_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtains and stores the final data object related to this variable.</p>
+<p>The result is stored in <code class="docutils literal notranslate"><span class="pre">self.data</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Variable.set_type">
+<code class="sig-name descname"><span class="pre">set_type</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.set_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.set_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detemines the type of the variable.</p>
+<p>Looks for the name of the variable in <code class="docutils literal notranslate"><span class="pre">data</span></code> and sets the <code class="docutils literal notranslate"><span class="pre">.type_</span></code> property to
+<code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code> depending on the type of the variable.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="formulae.terms.Variable.var_names">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">var_names</span></code><a class="headerlink" href="#formulae.terms.Variable.var_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of the variable as a set.</p>
+<p>This ends up being used in design_matrices.py to determine which variables of the data
+passed are present in the model and subset and raise proper errors.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="index.html" title="previous page">Formulae</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <script src="_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2021, The developers of Bambi.<br/>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>
