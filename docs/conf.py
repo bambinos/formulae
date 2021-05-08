@@ -124,7 +124,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'bambidoc'
+htmlhelp_basename = 'formulaedoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -173,7 +173,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'formulae', 'Formulae Documentation',
-     author, 'bambi', 'One line description of project.',
+     author, 'bambi', 'Statistical model formulas in Python',
      'Miscellaneous'),
 ]
 
