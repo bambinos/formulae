@@ -13,3 +13,4 @@
 ### Documentation
 
 * Added a changelog file to track changes (#20)
+* Formulae now has a github pages website (#21)
