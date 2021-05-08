@@ -263,3 +263,21 @@ def test_model_categoric_group(data, data2):
     )
 
     assert (group2["g1[Y]|g2"] == arr).all()
+
+
+def test_nested_transform(data, data2):
+    # Nested transformation still remembers original parameters
+    common = design_matrices("I(center(x) ** 2)", data).common
+
+    x = common._evaluate_new_data(data2)["I(center(x) ** 2)"]
+    y = (data2["x"] - data["x"].mean()) ** 2
+
+    assert np.allclose(x.flatten(), np.array(y).flatten())
+
+    # A more complicated example involving a stateful transform, with an external function call
+    # with a binary operator
+    common = design_matrices("scale(np.exp(x) + 1)", data).common
+
+    x = common._evaluate_new_data(data2)["scale(np.exp(x) + 1)"]
+    y = (np.exp(data2["x"]) + 1 - np.mean(np.exp(data["x"]) + 1)) / np.std(np.exp(data["x"]) + 1)
+    assert np.allclose(x.flatten(), np.array(y).flatten())
