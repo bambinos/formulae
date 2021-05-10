@@ -1,8 +1,14 @@
+<img src="docs/logo/formulae_large.png" width=250></img>
+
+[![PyPI version](https://badge.fury.io/py/formulae.svg)](https://badge.fury.io/py/formulae)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+
+
 # formulae
 
-formulae is a Python library that implements Wilkinson's formulas for statistical models à la lme4. The main difference with other implementations like [Patsy](https://github.com/pydata/patsy) or [formulaic](https://github.com/matthewwardrop/formulaic) is that formulae can work with formulas describing a model with both common and group specific effects (a.k.a. fixed and random effects, respectively).
+formulae is a Python library that implements Wilkinson's formulas for mixed-effects models. The main difference with other implementations like [Patsy](https://github.com/pydata/patsy) or [formulaic](https://github.com/matthewwardrop/formulaic) is that formulae can work with formulas describing a model with both common and group specific effects (a.k.a. fixed and random effects, respectively).
 
-This package has been written to make it easier to specify models with group effects in [Bambi](https://github.com/bambinos/bambi), a package that makes it easy to work with Bayesian GLMMs in Python, but it could be used independently as a backend for another library.
+This package has been written to make it easier to specify models with group effects in [Bambi](https://github.com/bambinos/bambi), a package that makes it easy to work with Bayesian GLMMs in Python, but it could be used independently as a backend for another library. The approach in this library is to extend classical statistical formulas in a similar way than in R package [lme4](https://CRAN.R-project.org/package=lme4).
 
 **Note:** While this package is working, there is no online documentation yet and you may find bugs within the code. You are encouraged to play with this library and give feedback about it, but it is not recommended to incorporate formulae in a larger project at this early stage of development.
 
