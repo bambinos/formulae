@@ -1,4 +1,5 @@
-Formulae
+.. image:: logo/formulae_large.png
+  :width: 250
 ===================================================
 |PyPI version|
 |Black|
@@ -12,9 +13,9 @@ Formulae
 
 
 
-Formulae is a Python library that implements Wilkinson's formulas for statistical models à la lme4.
+formulae is a Python library that implements Wilkinson's formulas for mixed-effects models.
 
-This package has been written to make it easier to specify models with group effects in `Bambi <https://github.com/bambinos/bambi>`_, a package that makes it easy to work with Bayesian GLMMs in Python, but it could be used independently as a backend for another library.
+This package has been written to make it easier to specify models with group effects in `Bambi <https://github.com/bambinos/bambi>`_, a package that makes it easy to work with Bayesian GLMMs in Python, but it could be used independently as a backend for another library. The approach in this library is to extend classical statistical formulas in a similar way than in R package `lme4 <https://CRAN.R-project.org/package=lme4>`_.
 
 
 Dependencies
