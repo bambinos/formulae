@@ -52,3 +52,10 @@ jobs:
           python -m pytest  -vv --cov=bambi --cov-report=term --cov-report=xml formulae/tests
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          env_vars: OS,PYTHON
+          name: codecov-umbrella
+          fail_ci_if_error: false
