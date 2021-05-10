@@ -12,20 +12,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Install dev environment & formulae
-      shell: bash -l {0}
-      run: |
-        conda install pip
-        pip install -r requirements.txt
-        pip install -r requirements-dev.txt
-        pip install .
-        pip freeze
+    - uses: actions/checkout@v1
 
     # Example of using a custom build-command.
     - uses: ammaraskar/sphinx-action@master
       with:
+        pre-build-command: python -m pip install -r requirements.txt -r requirements-dev.txt
         build-command: "make html"
         docs-folder: "docs/"
     # Great extra actions to compose with:
