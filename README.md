@@ -1,6 +1,7 @@
 <img src="docs/logo/formulae_large.png" width=250></img>
 
 [![PyPI version](https://badge.fury.io/py/formulae.svg)](https://badge.fury.io/py/formulae)
+[![codecov](https://codecov.io/gh/bambinos/formulae/branch/master/graph/badge.svg)](https://codecov.io/gh/bambinos/formulae)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
 
