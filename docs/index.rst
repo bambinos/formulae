@@ -1,15 +1,19 @@
 .. image:: logo/formulae_large.png
   :width: 250
 ===================================================
+
 |PyPI version|
+|Coverage|
 |Black|
 
-
 .. |PyPI version| image:: https://badge.fury.io/py/formulae.svg
-    :target: https://badge.fury.io/py/formulae
+   :target: https://badge.fury.io/py/formulae
+
+.. |Coverage| image:: https://codecov.io/gh/bambinos/formulae/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/bambinos/formulae
 
 .. |Black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/ambv/black
+   :target: https://github.com/ambv/black
 
 
 
