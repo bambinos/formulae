@@ -5,7 +5,21 @@ from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_d
 
 
 class Variable:
-    """Atomic component of a Term"""
+    """Representation of a variable in a model Term.
+
+    This class and ``Call`` are the atomic components of a model term.
+
+    Parameters
+    ----------
+    name: string
+        The identifier of the variable.
+    level: string
+        The level to use as reference. Allows to use the notation ``variable["level"]`` to indicate
+        which event should be model as success in binary response models. Can only be used with
+        response terms. Defaults to ``None``.
+    is_response: bool
+        Indicates whether this variable represents a response. Defaults to ``False``.
+    """
 
     def __init__(self, name, level=None, is_response=False):
         self.data = None
@@ -33,16 +47,24 @@ class Variable:
     def var_names(self):
         """Returns the name of the variable as a set.
 
-        This ends up being used in design_matrices.py to determine which variables of the data
-        passed are present in the model and subset and raise proper errors.
+        This is used to determine which variables of the data set being used are actually used in
+        the model. This allows us to subset the original data set and only raise errors regarding
+        missing values when the missingness happens in variables used in the model.
         """
         return {self.name}
 
     def set_type(self, data_mask):
         """Detemines the type of the variable.
 
-        Looks for the name of the variable in ``data`` and sets the ``.type_`` property to
+        Looks for the name of the variable in ``data_mask`` and sets the ``.type_`` property to
         ``"numeric"`` or ``"categoric"`` depending on the type of the variable.
+        It also stores the result of the intermediate evaluation in ``self._intermediate_data`` to
+        save computing time later.
+
+        Parameters
+        ----------
+        data_mask: pd.DataFrame
+            The data frame where variables are taken from
         """
         x = data_mask[self.name]
         if is_numeric_dtype(x):
@@ -59,6 +81,12 @@ class Variable:
         """Obtains and stores the final data object related to this variable.
 
         The result is stored in ``self.data``.
+
+        Parameters
+        ----------
+        encoding: bool
+            Indicates if it uses full or reduced encoding when the type of the variable is
+            categoric. Omitted when the variable is numeric.
         """
         if self._type is None:
             raise ValueError("Variable type is not set.")
@@ -72,6 +100,23 @@ class Variable:
             raise ValueError("Unexpected error while trying to evaluate a Variable.")
 
     def _eval_numeric(self, x):
+        """Finishes evaluation of a numeric variable.
+
+        Converts the intermediate values in ``x`` into a numpy array of shape ``(n, 1)``,
+        where ``n`` is the number of observations. This method is used both in ``self.set_data``
+        and in ``self.eval_new_data``.
+
+        Parameters
+        ----------
+        x: np.ndarray or pd.Series
+            The intermediate values of the variable.
+
+        Returns
+        ----------
+        result: dict
+            A dictionary with keys ``"value"`` and ``"type"``. The first contains the result of the
+            evaluation, and the latter is equal to ``"numeric"``.
+        """
         if isinstance(x, np.ndarray):
             value = np.atleast_2d(x)
             if x.shape[0] == 1 and len(x) > 1:
@@ -83,10 +128,30 @@ class Variable:
         return {"value": value, "type": "numeric"}
 
     def _eval_categoric(self, x, encoding):
-        """
+        """Finishes evaluation of a categoric variable.
+
+        Converts the intermediate values in ``x`` into a numpy array of shape ``(n, p)``, where
+        ``n`` is the number of observations and ``p`` the number of dummy variables used in the
+        numeric representation of the categorical variable.
+
         It does not support multi-level categoric responses yet. If ``self.is_response`` is ``True``
         and the variable is of a categoric type, the value element of the dictionary returned is a
         1d array of 0-1 instead of a matrix.
+
+        Parameters
+        ----------
+        x: np.ndarray or pd.Series
+            The intermediate values of the variable.
+        encoding: bool
+            Indicates if it uses full or reduced encoding.
+
+        Returns
+        ----------
+        result: dict
+            A dictionary with keys ``"value"``, ``"type"``, ``"levels"``, ``"reference"``, and
+            ``"encoding"``. They represent the result of the evaluation, the type, which is
+            ``"categoric"``, the levels observed in the variable, the level used as reference when
+            using reduced encoding, and whether the encoding is ``"full"`` or ``"reduced"``.
         """
         # If not ordered, we make it ordered.
         if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
@@ -102,6 +167,7 @@ class Variable:
                 reference = self.level
             value = np.atleast_2d(np.where(x == reference, 1, 0)).T
         else:
+            # Not always we receive a bool, so we need to check.
             if isinstance(encoding, list):
                 encoding = encoding[0]
             if isinstance(encoding, dict):
@@ -124,7 +190,20 @@ class Variable:
         """Evaluates the variable with new data.
 
         This method evaluates the variable within a new data mask. If this object is categorical,
-        original encoding is remembered when carrying out the new evaluation
+        original encoding is remembered (and checked) when carrying out the new evaluation.
+
+        Parameters
+        ----------
+        data_mask: pd.DataFrame
+            The data frame where variables are taken from
+
+        Returns
+        ----------
+        result: np.array
+            The rules for the shape of this array are the rules for ``self._eval_numeric()`` and
+            ``self._eval_categoric()``. The first applies for numeric variables, the second for
+            categoric ones.
+
         """
         if self.data is None:
             raise ValueError("self.data is None. This error shouldn't have happened!")
@@ -135,6 +214,21 @@ class Variable:
             return self._eval_new_data_categoric(x)
 
     def _eval_new_data_categoric(self, x):
+        """Evaluates the variable with new data when variable is categoric.
+
+        This method also checks the levels observed in the new data frame are included within the
+        set of the levels of the original data set. If not, an error is raised.
+
+        x: np.ndarray or pd.Series
+            The intermediate values of the variable.
+
+        Returns
+        ----------
+        result: np.array
+            Numeric numpy array ``(n, p)``, where ``n`` is the number of observations and ``p`` the
+            number of dummy variables used in the numeric representation of the categorical
+            variable.
+        """
         if self.is_response:
             return np.atleast_2d(np.where(x == self.data["reference"], 1, 0)).T
         else:

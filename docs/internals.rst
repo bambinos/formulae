@@ -6,11 +6,15 @@ developers who want to include formulae in their library.
 
 
 .. toctree::
-  :maxdepth: 2
+  :maxdepth: 4
 
 
 :mod:`matrices`
 ================================
+
+These objects are not intended to be used by end users. But developers working with formulae will
+need some familiarity with them, especially if you want to take advantage of features like obtaining
+a design matrix from an existing design but evaluated with new data.
 
 .. autoclass:: formulae.matrices.ResponseVector
   :members:
@@ -28,5 +32,18 @@ developers who want to include formulae in their library.
   :special-members: __getitem__
 
 
+:mod:`terms`
+================================
 
+These are internal components of the model that are not expected to be used by end users.
+Developers won't (normally) need to access these objects either.
+But reading this documentation may help you understand how formulae works, with both its advantages
+and disadvantages.
 
+.. autoclass:: formulae.terms.Variable
+  :members:
+  :private-members:
+
+.. autoclass:: formulae.terms.Call
+  :members:
+  :private-members:

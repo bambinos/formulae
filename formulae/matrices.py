@@ -212,7 +212,8 @@ class CommonEffectsMatrix:
         self.evaluated = True
 
     def _evaluate_new_data(self, data):
-        """Evaluates common terms with new data and return a new instance of ``CommonEffectsMatrix``.
+        """Evaluates common terms with new data and return a new instance of
+        ``CommonEffectsMatrix``.
 
         This method is intended to be used to obtain design matrices for new data and obtain
         out of sample predictions. Stateful transformations are properly handled if present in any

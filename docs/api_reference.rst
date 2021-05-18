@@ -6,7 +6,7 @@ methods in the current release of formulae.
 
 
 .. toctree::
-  :maxdepth: 2
+  :maxdepth: 4
 
 
 :mod:`formulae`
