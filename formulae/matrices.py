@@ -20,17 +20,33 @@ _log = logging.getLogger("formulae")
 
 
 class DesignMatrices:
-    """A wrapper of ResponseVector, CommonEffectsMatrix and GroupEffectsMatrix
+    """A wrapper of the response, the common and group specific effects.
 
     Parameters
     ----------
 
     model : Model
-        The model description.
+        The model description, the result of calling ``model_description``.
     data: pandas.DataFrame
-        The data frame where variables are taken from
+        The data frame where variables are taken from.
     eval_env: EvalEnvironment
-        The evaluation environment object where we take values and functions from.
+        The environment where values and functions are taken from.
+
+    Attributes
+    ----------
+    response: ResponseVector
+        The response in the model. Access its values with ``self.response.design_vector``. It is
+        ``None`` if there is no response term in the model.
+    common: CommonEffectsMatrix
+        The common effects (a.k.a. fixed effects) in the model. The design matrix can be accessed
+        with ``self.common.design_matrix``. The submatrix for a term is accessed via
+        ``self.common[term_name]``. It is ``None`` if there are no common terms in the
+        model.
+    group: GroupEffectsMatrix
+        The group specific effects (a.k.a. random effects) in the model. The design matrix can be
+        accessed with ``self.group.design_matrix``. The submatrix for a term is accessed via
+        ``self.group[term_name]``. It is ``None`` if there are no group specific terms in the
+        model.
     """
 
     def __init__(self, model, data, eval_env):
@@ -55,17 +71,28 @@ class DesignMatrices:
 
 
 class ResponseVector:
-    """Representation of the respose vector of a model
+    """Representation of the respose vector of a model.
 
     Parameters
     ----------
 
     term : Response
-        The description and data of the response term.
+        The term that represents the response in the model.
     data: pandas.DataFrame
-        The data frame where variables are taken from
+        The data frame where variables are taken from.
     eval_env: EvalEnvironment
-        The evaluation environment object where we take values and functions from.
+        The environment where values and functions are taken from.
+
+    Attributes
+    ----------
+    design_vector: np.array
+        A 1-dimensional numpy array containing the values of the response.
+    name: string
+        The name of the response term.
+    type: string
+        Either ``"numeric"`` or ``"categoric"``.
+    refclass: string
+        The name of the class taken as reference if ``type = "categoric"``.
     """
 
     def __init__(self, term):
@@ -78,8 +105,8 @@ class ResponseVector:
         self.refclass = None  # Not None for categorical variables
 
     def _evaluate(self, data, eval_env):
-        """Evaluates `self.term` inside the data mask provided by `data` and
-        updates `self.design_vector` and `self.name`
+        """Evaluates ``self.term`` inside the data mask provided by ``data`` and
+        updates ``self.design_vector`` and ``self.name``.
         """
         self.data = data
         self.eval_env = eval_env
@@ -92,7 +119,7 @@ class ResponseVector:
             self.refclass = self.term.term.metadata["reference"]
 
     def as_dataframe(self):
-        """Returns `self.design_vector` as a pandas.DataFrame"""
+        """Returns ``self.design_vector`` as a pandas.DataFrame."""
         data = pd.DataFrame(self.design_vector)
         if self.type == "categoric":
             colname = f"{self.name}[{self.refclass}]"
@@ -122,11 +149,25 @@ class CommonEffectsMatrix:
     ----------
 
     model : Model
-        An Model object containing terms for the common effects of the model.
+        A ``Model`` object containing only terms for the common effects of the model.
     data: pandas.DataFrame
-        The data frame where variables are taken from
+        The data frame where variables are taken from.
     eval_env: EvalEnvironment
-        The evaluation environment object where we take values and functions from.
+        The environment where values and functions are taken from.
+
+    Attributes
+    ----------
+    design_matrix: np.array
+        A 2-dimensional numpy array containing the values of the design matrix.
+    evaluated: bool
+        Indicates if the terms have been evaluated at least once. The terms must have been evaluated
+        before calling ``self._evaluate_new_data()`` because we must know the type of each term
+        to correctly handle the new data passed and the terms here.
+    terms_info: dict
+        A dictionary that holds information related to each of the common specific terms, such as
+        ``"idxs"``, ``"type"``, and ``"full_names"``. If ``"type"`` is ``"categoric"``, it also
+        contains ``"groups"``, ``"encoding"``, ``"levels"``, and ``"reference"``.
+        The keys are given by the term names.
     """
 
     def __init__(self, model):
@@ -141,9 +182,18 @@ class CommonEffectsMatrix:
         """Obtain design matrix for common effects.
 
         Evaluates ``self.model`` inside the data mask provided by ``data`` and updates
-        ``self.design_matrix``. It also populates the dictionary ``self.terms_info`` with
-        information related to each term, such as the type, the columns they occupy in the design
-        matrix and the names of the columns.
+        ``self.design_matrix``. This method also sets the values of ``self.data`` and
+        ``self.eval_env``.
+
+        It also populates the dictionary ``self.terms_info`` with information related to each term,
+        such as the type, the columns they occupy in the design matrix and the names of the columns.
+
+        Parameters
+        ----------
+        data: pandas.DataFrame
+            The data frame where variables are taken from
+        eval_env: EvalEnvironment
+            The environment where values and functions are taken from.
         """
         self.data = data
         self.eval_env = eval_env
@@ -162,6 +212,24 @@ class CommonEffectsMatrix:
         self.evaluated = True
 
     def _evaluate_new_data(self, data):
+        """Evaluates common terms with new data and return a new instance of ``CommonEffectsMatrix``.
+
+        This method is intended to be used to obtain design matrices for new data and obtain
+        out of sample predictions. Stateful transformations are properly handled if present in any
+        of the terms, which means parameters involved in the transformation are not overwritten with
+        the new data.
+
+        Parameters
+        ----------
+        data: pandas.DataFrame
+            The data frame where variables are taken from
+
+        Returns
+        ----------
+        new_instance: CommonEffectsMatrix
+            A new instance of ``CommonEffectsMatrix`` whose design matrix is obtained with the
+            values in the new data set.
+        """
         # Create and return new CommonEffectsMatrix from the information in the terms,
         # with the new data
         if not self.evaluated:
@@ -177,7 +245,7 @@ class CommonEffectsMatrix:
         return new_instance
 
     def as_dataframe(self):
-        """Returns `self.design_matrix` as a pandas.DataFrame"""
+        """Returns `self.design_matrix` as a pandas.DataFrame."""
         colnames = [self._term_full_names(name) for name in self.terms_info]
         data = pd.DataFrame(self.design_matrix)
         data.columns = list(flatten_list(colnames))
@@ -205,6 +273,19 @@ class CommonEffectsMatrix:
                 return [f"{name}[{term['reference']}]"]
 
     def __getitem__(self, term):
+        """Get the sub-matrix that corresponds to a given term.
+
+        Parameters
+        ----------
+        term: string
+            The name of the term.
+
+        Returns
+        ----------
+        matrix: np.array
+            A 2-dimensional numpy array that represents the sub-matrix corresponding to the
+            term passed.
+        """
         if term not in self.terms_info.keys():
             raise ValueError(f"'{term}' is not a valid term name")
         return self.design_matrix[:, self.terms_info[term]["cols"]]
@@ -224,19 +305,32 @@ class CommonEffectsMatrix:
 class GroupEffectsMatrix:
     """Representation of the design matrix for the group specific effects of a model.
 
-    In this case, `self.design_matrix` is a sparse matrix in CSC format.
     The sub-matrix that corresponds to a specific group effect can be accessed by
-    `self['1|g']`.
+    ``self[term_name]``, for example ``self["1|g"]``.
 
     Parameters
     ----------
-
     terms : list
-        A list of GroupSpecificTerm objects.
+        A list of ``GroupSpecificTerm`` objects.
     data: pandas.DataFrame
         The data frame where variables are taken from
     eval_env: EvalEnvironment
-        The evaluation environment object where we take values and functions from.
+        The environment where values and functions are taken from.
+
+    Attributes
+    ----------
+    design_matrix: scipy.sparse.csc.csc_matrix
+        A sparse matrix in CSC format containing the values of the design matrix.
+         Call ``self.toarray()`` to obtain a 2-dimensional array.
+    evaluated: bool
+        Indicates if the terms have been evaluated at least once. The terms must have been evaluated
+        before calling ``self._evaluate_new_data()`` because we must know the type of each term
+        to correctly handle the new data passed and the terms here.
+    terms_info: dict
+        A dictionary that holds information related to each of the group specific terms, such as
+        the matrices ``"Xi"`` and ``"Ji"``, ``"idxs"``, ``"type"``, and ``"full_names"``. If
+        ``"type"`` is ``"categoric"``, it also contains ``"groups"``, ``"encoding"``, ``"levels"``,
+        and ``"reference"``. The keys are given by the term names.
     """
 
     def __init__(self, terms):
@@ -248,8 +342,22 @@ class GroupEffectsMatrix:
         self.evaluated = False
 
     def _evaluate(self, data, eval_env):
-        """Evaluates `self.terms` inside the data mask provided by `data` and
-        updates `self.design_matrix`.
+        """Evaluate group specific terms.
+
+        This evaluates ``self.terms`` inside the data mask provided by ``data`` and the environment
+        ``eval_env``. It updates ``self.design_matrix`` with the result from the evaluation of each
+        term.
+
+        This method also sets the values of ``self.data`` and ``self.eval_env``. It also populates
+        the dictionary ``self.terms_info`` with information related to each term,such as the type,
+        the columns and rows they occupy in the design matrix and the names of the columns.
+
+        Parameters
+        ----------
+        data: pandas.DataFrame
+            The data frame where variables are taken from
+        eval_env: EvalEnvironment
+            The environment where values and functions are taken from.
         """
         self.data = data
         self.eval_env = eval_env
@@ -312,6 +420,26 @@ class GroupEffectsMatrix:
         self.evaluated = True
 
     def _evaluate_new_data(self, data):
+        """Evaluates group specific terms with new data and return a new instance of
+        ``GroupEffectsMatrix``.
+
+        This method is intended to be used to obtain design matrices for new data and obtain
+        out of sample predictions. Stateful transformations are properly handled if present in any
+        of the group specific terms, which means parameters involved in the transformation are not
+        overwritten with the new data.
+
+
+        Parameters
+        ----------
+        data: pandas.DataFrame
+            The data frame where variables are taken from
+
+        Returns
+        ----------
+        new_instance: GroupEffectsMatrix
+            A new instance of ``GroupEffectsMatrix`` whose design matrix is obtained with the values
+            in the new data set.
+        """
         if not self.evaluated:
             raise ValueError("Can't evaluate new data on unevaluated matrix.")
 
@@ -382,6 +510,19 @@ class GroupEffectsMatrix:
             return [f"{name}[{p[0]}|{p[1]}]" for p in products]
 
     def __getitem__(self, term):
+        """Get the sub-matrix that corresponds to a given term.
+
+        Parameters
+        ----------
+        term: string
+            The name of a group specific term.
+
+        Returns
+        ----------
+        matrix: np.array
+            A 2-dimensional numpy array that represents the sub-matrix corresponding to the
+            term passed.
+        """
         if term not in self.terms_info.keys():
             raise ValueError(f"'{term}' is not a valid term name")
         return self.design_matrix[self.terms_info[term]["idxs"]].toarray()
@@ -399,28 +540,29 @@ class GroupEffectsMatrix:
 
 
 def design_matrices(formula, data, na_action="drop", eval_env=0):
-    """Obtain design matrices.
+    """Parse model formula and obtain a ``DesignMatrices`` object containing objects representing
+    the response and the design matrices for both the common and group specific effects.
 
     Parameters
     ----------
     formula : string
-        A model description written in the formula language
+        A model formula.
     data: pandas.DataFrame
-        The data frame where variables are taken from
+        The data frame where variables in the formula are taken from.
     na_action: string
-        Describes what to do with missing values in `data`. 'drop' means to drop
-        all rows with a missing value, 'error' means to raise an error. Defaults
-        to 'drop'.
+        Describes what to do with missing values in ``data``. ``"drop"`` means to drop
+        all rows with a missing value, ``"error"`` means to raise an error. Defaults
+        to ``"drop"``.
     eval_env: integer
         The number of environments we walk up in the stack starting from the function's caller
         to capture the environment where formula is evaluated. Defaults to 0 which means
-        the evaluation environment is the environment where `design_matrices` is called.
+        the evaluation environment is the environment where ``design_matrices`` is called.
 
     Returns
     ----------
     design: DesignMatrices
         An instance of DesignMatrices that contains the design matrice(s) described by
-        `formula`.
+        ``formula``.
     """
 
     if not isinstance(formula, str):

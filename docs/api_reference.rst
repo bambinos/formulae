@@ -6,18 +6,18 @@ methods in the current release of formulae.
 
 
 .. toctree::
-  :maxdepth: 4
+  :maxdepth: 2
 
 
 :mod:`formulae`
 ===========================
 
 .. automodule:: formulae
-   :members:
+  :members: design_matrices, model_description
 
-
-:mod:`formulae.terms`
+:mod:`formulae.matrices`
 ===========================
 
-.. automodule:: formulae.terms
-    :members:
+.. automodule:: formulae.matrices
+  :members: DesignMatrices
+

@@ -7,7 +7,7 @@ from formulae.eval import EvalEnvironment
 from formulae.parser import Parser
 from formulae.scanner import Scanner
 from formulae.terms import Variable, Call, Term, Model
-from formulae.design_matrices import design_matrices
+from formulae.matrices import design_matrices
 
 from formulae.terms.call_resolver import LazyCall, LazyVariable
 

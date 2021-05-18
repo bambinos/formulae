@@ -1,5 +1,6 @@
 .. image:: logo/formulae_large.png
   :width: 250
+
 ===================================================
 
 |PyPI version|
@@ -24,7 +25,7 @@ This package has been written to make it easier to specify models with group eff
 
 Dependencies
 ============
-formulae requires a working Python interpreter (3.7+) and the libraries NumPy, SciPy and Pandas with versions specified in the (see `requirements.txt <https://github.com/bambinos/formulae/blob/master/requirements.txt>`_ for version information).
+formulae requires a working Python interpreter (3.7+) and the libraries NumPy, SciPy and pandas with versions specified in the (see `requirements.txt <https://github.com/bambinos/formulae/blob/master/requirements.txt>`_ for version information).
 
 Installation
 ============
@@ -51,6 +52,7 @@ Contents
    :maxdepth: 2
 
    api_reference
+   internals
 
 Indices
 =======
