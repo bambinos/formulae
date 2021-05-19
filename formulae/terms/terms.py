@@ -1,3 +1,4 @@
+# pylint: disable = too-many-lines
 import logging
 
 from functools import reduce
@@ -17,6 +18,8 @@ _log = logging.getLogger("formulae")
 
 
 class Intercept:
+    """Internal representation of a model intercept."""
+
     def __init__(self):
         self.name = "Intercept"
         self._type = "Intercept"
@@ -31,6 +34,16 @@ class Intercept:
         return hash(self._type)
 
     def __add__(self, other):
+        """Addition operator.
+
+        Generally this operator is used to explicitly add an intercept to a model. However, there
+        may be cases where the result is not a ``Model``, or does not contain an intercept.
+
+        * ``"1 + 0"`` and ``"1 + (-1)"`` return an empty model.
+        * ``"1 + 1"`` returns an intercept.
+        * ``"1 + x"`` and ``"1 + (x|g)"`` returns a model with both the term and the intercept.
+        * ``"1 + (x + y)"`` adds an intercept to the model given by ``x`` and ``y``.
+        """
         if isinstance(other, NegatedIntercept):
             return Model()
         elif isinstance(other, type(self)):
@@ -43,6 +56,15 @@ class Intercept:
             return NotImplemented
 
     def __sub__(self, other):
+        """Subtraction operator.
+
+        This operator removes an intercept from a model if the given model has an intercept.
+
+        * ``"1 - 1"`` returns an empty model.
+        * ``"1 - 0"`` and ``"1 - (-1)"`` return an intercept.
+        * ``"1 - (x + y)"`` returns the model given by ``x`` and ``y`` unchanged.
+        * ``"1 - (1 + x + y)"`` returns the model given by ``x`` and ``y``, removing the intercept.
+        """
         if isinstance(other, type(self)):
             return Model()
         elif isinstance(other, NegatedIntercept):
@@ -56,9 +78,13 @@ class Intercept:
             return NotImplemented
 
     def __or__(self, other):
-        """
-        (1|g) -> (1|g); (1|g:h) -> (1|g:h)
-        (1 | g + h) -> (1|g) + (1|h)
+        """Group-specific operator. Creates group-specific intercept.
+
+        This operation is usually surrounded by parenthesis. It is not actually required. They
+        are always used because ``|`` has lower precedence that the other common operators.
+
+        This operator is distributed over the right-hand side, which means ``(1|g + h)`` is
+        equivalent to ``(1|g) + (1|h)``.
         """
         if isinstance(other, Term):
             return GroupSpecificTerm(self, other)
@@ -77,33 +103,56 @@ class Intercept:
 
     @property
     def var_names(self):
+        """Returns empty set, no variables are used in the intercept."""
         return set()
 
     def set_type(self, data, eval_env):  # pylint: disable = unused-argument
+        """Sets length of the intercept."""
         # Nothing goes here as the type is given by the class.
         # Only works with DataFrames or Series so far
         self.len = data.shape[0]
 
     def set_data(self, encoding):  # pylint: disable = unused-argument
+        """Creates data for the intercept.
+
+        It sets ``self.data`` equal to a numpy array of ones of length ``(self.len, 1)``.
+        """
         self.data = np.ones((self.len, 1))
 
     def eval_new_data(self, data):
+        """Returns data for a new intercept.
+
+        The length of the new intercept is given by the number of rows in ``data``.
+        """
         # it assumes data is a pandas DataFrame now
         return np.ones((data.shape[0], 1))
 
 
 class NegatedIntercept:
+    """Internal representation of the opposite of a model intercept.
+
+    This object is created whenever we use ``"0"`` or ``"-1"`` in a model formula. It is not
+    expected to appear in a final model. It's here to help us make operations using the
+    ``Intercept`` and deciding when to keep it and when to drop it.
+    """
+
     def __init__(self):
         self.name = "NegatedIntercept"
         self._type = "Intercept"
 
     def __add__(self, other):
-        """
-        0 + 0 -> 0
-        0 + 1 -> <empty>
-        0 + a -> 0 + a
-        0 + (a|g) -> 0 + (a|g)
-        0 + (a + b) -> 0 + a + b
+        """Addition operator.
+
+        Generally this operator is used to explicitly remove an from a model.
+
+        * ``"0 + 1"`` returns an empty model.
+        * ``"0 + 0"`` returns a negated intercept
+        * ``"0 + x"`` returns a model that includes the negated intercept.
+        * ``"0 + (x + y)"`` adds an the negated intercept to the model given by ``x`` and ``y``.
+
+        No matter the final result contains the negated intercept, for example if we do something
+        like ``"y ~ 0 + x + y + 0"``, the ``Model`` that is obtained removes any negated intercepts
+        thay may have been left. They just don't make sense in a model.
         """
         if isinstance(other, type(self)):
             return self
@@ -143,10 +192,31 @@ class NegatedIntercept:
 
 
 class Term:
-    """Representation of a single term.
+    """Representation of a model term.
 
-    A model term can be an intercept, a term made of a single component, a function call,
-    an interaction involving components and/or function calls.
+    Terms are made of one or more components. Components are instances of :class:`.Variable` or
+    :class:`.Call`. Terms with only one component are known as main effects and terms with more than
+    one component are known as interaction effects. The order of the interaction is given by the
+    number of components in the term.
+
+    Parameters
+    ----------
+    components: :class:`.Variable` or :class:`.Call`
+        Atomic components of a term.
+
+    Attributes
+    ----------
+    data: dict
+        The values associated with the term as they go into the design matrix.
+    metadata: dict
+        Metadata associated with the term. If ``"numeric"`` or ``"categoric"`` it holds additional
+        information in the component ``.data`` attribute. If ``"interaction"``, the keys are
+        the name of the components and the values are dictionaries holding the metadata.
+    _type: string
+        Indicates the type of the term. Can be one of ``"numeric"``, ``"categoric"``, or
+        ``"interaction"``.
+    name: string
+        The name of the term as it was originally written in the model formula.
     """
 
     def __init__(self, *components):
@@ -170,17 +240,19 @@ class Term:
             return self.components == other.components
 
     def __add__(self, other):
-        """Sum between of ``Term`` and other classes of terms.
+        """Addition operator. Analogous to set union.
 
-        Analogous to set union.
-        x + x -> x
-        x + y -> x + y
-        x:y + u -> x:y + u
-        x:y + u:v -> x:y + u:v
-        x:y + (u + v) -> x:y + u + v
-        f(x) + y -> f(x) + y
-        f(x) + (y + z) -> f(x) + y + z
+        * ``"x + x"`` is equal to just ``"x"``
+        * ``"x + y"`` is equal to a model with both ``x`` and ``y``.
+        * ``"x + (y + z)"`` adds ``x`` to model already containing ``y`` and ``z``.
         """
+        # x + x -> x
+        # x + y -> x + y
+        # x:y + u -> x:y + u
+        # x:y + u:v -> x:y + u:v
+        # x:y + (u + v) -> x:y + u + v
+        # f(x) + y -> f(x) + y
+        # f(x) + (y + z) -> f(x) + y + z
         if self == other:
             return self
         elif isinstance(other, type(self)):
@@ -191,17 +263,17 @@ class Term:
             return NotImplemented
 
     def __sub__(self, other):
-        """Difference between a ``Term`` and other classes of terms.
+        """Subtraction operator. Analogous to set difference.
 
-        Analogous to set difference.
-        x - x -> ()
-        x - y -> x
-        x:y - u -> x:y
-        x:y - u:v -> x:y
-        x:y - (u + v) -> x:y
-        f(x) - y -> f(x)
-        f(x) - (y + z) -> f(x)
+        * ``"x - x"`` returns empty model.
+        * ``"x - y"`` returns the term ``"x"``.
+        * ``"x - (y + z)"`` returns the term ``"x"``.
         """
+        # x:y - u -> x:y
+        # x:y - u:v -> x:y
+        # x:y - (u + v) -> x:y
+        # f(x) - y -> f(x)
+        # f(x) - (y + z) -> f(x)
         if isinstance(other, type(self)):
             if self.components == other.components:
                 return Model()
@@ -216,15 +288,16 @@ class Term:
             return NotImplemented
 
     def __mul__(self, other):
-        """Full interaction.
+        """Full interaction operator.
 
-        x * x -> x + x + x:x -> x
-        x * y -> x + y + x:y
-        x:y * u -> x:y + u + x:y:u
-        x:y * u:v -> x:y + u:v + x:y:u:v
-        x:y * (u + v) -> x:y + u + v + x:y:u + x:y:v
-        f(x) * y -> f(x) + y + f(x):y
-        f(x) * (y + z) -> f(x) + y + z + f(x):y + f(x):z
+        This operator includes both the interaction as well as the main effects involved in the
+        interaction. It is a shortcut for ``x + y + x:y``.
+
+        * ``"x * x"`` equals to ``"x"``
+        * ``"x * y"`` equals to``"x + y + x:y"``
+        * ``"x:y * u"`` equals to ``"x:y + u + x:y:u"``
+        * ``"x:y * u:v"`` equals to ``"x:y + u:v + x:y:u:v"``
+        * ``"x:y * (u + v)"`` equals to ``"x:y + u + v + x:y:u + x:y:v"``
         """
         if self == other:
             return self
@@ -241,16 +314,16 @@ class Term:
             return NotImplemented
 
     def __matmul__(self, other):
-        """Simple interaction.
+        """Simple interaction operator.
 
-        x:x -> x
-        x:y -> x:y
-        x:(y:z) -> x:y:z
-        (x:y):u -> x:y:u
-        (x:y):(u + v) -> x:y:u + x:y:v
-        f(x):y -> f(x):y
-        f(x):y:z -> f(x):y:z
-        f(x):(y:z) -> f(x):y:z
+        This operator is actually invoked as ``:`` but internally passed as ``@`` because there
+        is no ``:`` operator in Python.
+
+        * ``"x : x"`` equals to ``"x"``
+        * ``"x : y"`` is the interaction between ``"x"`` and ``"y"``
+        * ``x:(y:z)"`` equals to just ``"x:y:z"``
+        * ``(x:y):u"`` equals to just ``"x:y:u"``
+        * ``"(x:y):(u + v)"`` equals to ``"x:y:u + x:y:v"``
         """
         if self == other:
             return self
@@ -265,8 +338,56 @@ class Term:
         else:
             return NotImplemented
 
+    def __truediv__(self, other):
+        """Division interaction operator.
+
+        * ``"x / x"`` equals to just ``"x"``
+        * ``"x / y"`` equals to ``"x + x:y"``
+        * ``"x / z:y"`` equals to ``"x + x:z:y"``
+        * ``"x / (z + y)"`` equals to ``"x + x:z + x:y"``
+        * ``"x:y / u:v"`` equals to ``"x:y + x:y:u:v"``
+        * ``"x:y / (u + v)"`` equals to ``"x:y + x:y:u + x:y:v"``
+        """
+        if self == other:
+            return self
+        elif isinstance(other, type(self)):
+            if len(other.components) == 1 and isinstance(other.components[0].name, (int, float)):
+                raise TypeError("Interaction with numeric does not make sense.")
+            return Model(self, Term(*self.components, *other.components))
+        elif isinstance(other, Model):
+            products = product([self], other.common_terms)
+            iterms = [Term(*p[0].components, *p[1].components) for p in products]
+            return self + Model(*iterms)
+        else:
+            return NotImplemented
+
+    def __or__(self, other):
+        """Group-specific operator. Creates group-specific intercept.
+
+        Intercepts are implicitly added.
+
+        * ``"x|g"`` equals to ``"(1|g) + (x|g)"``
+
+        Distributive over right hand side
+
+        * ``"(x|g + h)"`` equals to ``"(1|g) + (1|h) + (x|g) + (x|h)"``
+        """
+        if isinstance(other, Term):
+            # Only accepts terms, call terms and interactions.
+            # Adds implicit intercept.
+            terms = [GroupSpecificTerm(Intercept(), other), GroupSpecificTerm(self, other)]
+            return Model(*terms)
+        elif isinstance(other, Model):
+            intercepts = [
+                GroupSpecificTerm(Intercept(), p[1]) for p in product([self], other.common_terms)
+            ]
+            slopes = [GroupSpecificTerm(p[0], p[1]) for p in product([self], other.common_terms)]
+            return Model(*intercepts, *slopes)
+        else:
+            return NotImplemented
+
     def __pow__(self, other):
-        """Power of a ``Term``.
+        """Power operator.
 
         It leaves the term as it is. For a power in the math sense do ``I(x ** n)`` or ``{x ** n}``.
         """
@@ -284,50 +405,6 @@ class Term:
         else:
             return NotImplemented
 
-    def __truediv__(self, other):
-        """Division interaction.
-
-        x / x -> x
-        x / y -> x + x:y
-        x / z:y -> x + x:z:y
-        x / (z + y) -> x + x:z + x:y
-        x:y / u:v -> x:y + x:y:u:v
-        x:y / (u + v) -> x:y + x:y:u + x:y:v
-        """
-        if self == other:
-            return self
-        elif isinstance(other, type(self)):
-            if len(other.components) == 1 and isinstance(other.components[0].name, (int, float)):
-                raise TypeError("Interaction with numeric does not make sense.")
-            return Model(self, Term(*self.components, *other.components))
-        elif isinstance(other, Model):
-            products = product([self], other.common_terms)
-            iterms = [Term(*p[0].components, *p[1].components) for p in products]
-            return self + Model(*iterms)
-        else:
-            return NotImplemented
-
-    def __or__(self, other):
-        """Group specific term operation.
-
-        (x|g) -> (1|g) + (x|g)
-        (x|g + h) -> (x|g) + (x|h) -> (1|g) + (1|h) + (x|g) + (x|h)
-        (x|g:h) -> (1|g:h) + (x|g:h)
-        """
-        if isinstance(other, Term):
-            # Only accepts terms, call terms and interactions.
-            # Adds implicit intercept.
-            terms = [GroupSpecificTerm(Intercept(), other), GroupSpecificTerm(self, other)]
-            return Model(*terms)
-        elif isinstance(other, Model):
-            intercepts = [
-                GroupSpecificTerm(Intercept(), p[1]) for p in product([self], other.common_terms)
-            ]
-            slopes = [GroupSpecificTerm(p[0], p[1]) for p in product([self], other.common_terms)]
-            return Model(*intercepts, *slopes)
-        else:
-            return NotImplemented
-
     def __repr__(self):
         return self.__str__()
 
@@ -339,8 +416,15 @@ class Term:
         """Set type of the components in the term.
 
         Calls ``.set_type()`` method on each component in the term. For those components of class
-        ``Variable`` it only passes the data mask. For ``Call`` objects it also passes the
-        evaluation environment.
+        :class:`.Variable`` it only passes the data mask. For `:class:`.Call` objects it also passes
+        the evaluation environment.
+
+        Parameters
+        ----------
+        data_mask: pd.DataFrame
+            The data frame where variables are taken from
+        eval_env: EvalEnvironment
+            The environment where values and functions are taken from.
         """
         # Set the type of the components by calling their set_type method.
         for component in self.components:
@@ -366,7 +450,17 @@ class Term:
             self._type = self.components[0]._type  # pylint: disable = protected-access
 
     def set_data(self, encoding):
-        """Obtains and stores the final data object related to this term"""
+        """Obtains and stores the final data object related to this term.
+
+        Calls ``.set_data()`` method on each component in the term. Then, it uses the ``.data``
+        attribute on each of them to build ``self.data`` and ``self.metadata``.
+
+        Parameters
+        ----------
+        encoding: list or dict
+            Indicates if it uses full or reduced encoding when the type of the variable is
+            categoric.
+        """
         if isinstance(encoding, list) and len(encoding) == 1:
             encoding = encoding[0]
         else:
@@ -391,25 +485,57 @@ class Term:
             self.metadata = {k: v for k, v in component.data.items() if k != "value"}
 
     def eval_new_data(self, data):
-        """Evaluates the term with new data."""
+        """Evaluates the term with new data.
+
+        Calls ``.eval_new_data()`` method on each component in the term and combines the results
+        appropiately.
+
+        Parameters
+        ----------
+        data_mask: pd.DataFrame
+            The data frame where variables are taken from
+
+        Returns
+        ----------
+        result: np.array
+            The values resulting from evaluating this term using the new data.
+        """
         if self._type == "interaction":
-            data = reduce(get_interaction_matrix, [c.eval_new_data(data) for c in self.components])
+            result = reduce(
+                get_interaction_matrix, [c.eval_new_data(data) for c in self.components]
+            )
         else:
-            data = self.components[0].eval_new_data(data)
-        return data
+            result = self.components[0].eval_new_data(data)
+        return result
 
     @property
     def var_names(self):
-        """Returns the name of the variables in the term as a set."""
+        """Returns the name of the variables in the term as a set.
+
+        Loops through each component and updates the set with the ``.var_names`` of each component.
+
+        Returns
+        ----------
+        var_names: set
+            The names of the variables involved in the term.
+        """
         var_names = set()
         for component in self.components:
             var_names.update(component.var_names)
         return var_names
 
     def get_component(self, name):  # pylint: disable = inconsistent-return-statements
-        """Returns a component by name
+        """Returns a component by name.
 
-        This method receives a component name and returns the component, either a Variable or Call.
+        Parameters
+        ----------
+        name: string
+            The name of the component to return.
+
+        Returns
+        -------
+        component: `:class:`.Variable` or `:class:`.Call`
+            The component with name ``name``.
         """
 
         for component in self.components:

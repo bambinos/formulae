@@ -47,3 +47,13 @@ and disadvantages.
 .. autoclass:: formulae.terms.Call
   :members:
   :private-members:
+
+.. autoclass:: formulae.terms.Term
+  :members:
+  :private-members:
+  :special-members: __add__, __sub__, __mul__, __matmul__, __truediv__, __or__, __pow__
+
+.. autoclass:: formulae.terms.Intercept
+  :members:
+  :private-members:
+  :special-members: __add__, __sub__, __or__
