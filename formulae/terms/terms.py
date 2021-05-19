@@ -751,7 +751,16 @@ class GroupSpecificTerm:
 
 
 class Response:
-    """Representation of a response term"""
+    """Representation of a response term.
+
+    It is mostly a wrapper around :class:`.Term`.
+
+    Parameters
+    ----------
+    term: :class:`.Term`
+        The term we want to take as response in the model. Must contain only one component.
+
+    """
 
     def __init__(self, term):
         if isinstance(term, Term):
@@ -771,7 +780,11 @@ class Response:
             return self.term == other.term
 
     def __add__(self, other):
-        # ~ is interpreted as __add__
+        """Modelled as operator.
+
+        The operator is ``~``, but since it is not an operator in Python, we internally replace it
+        with ``+``. It means the LHS is taken as the response, and the RHS as the predictor.
+        """
         if isinstance(other, (Term, GroupSpecificTerm, Intercept)):
             return Model(other, response=self)
         elif isinstance(other, Model):
@@ -795,6 +808,7 @@ class Response:
         self.term.set_type(data, eval_env)
 
     def set_data(self, encoding=False):
+        """Set data of the response term."""
         self.term.set_data(encoding)
 
 
@@ -802,7 +816,15 @@ ACCEPTED_TERMS = (Term, GroupSpecificTerm, Intercept, NegatedIntercept)
 
 
 class Model:
-    """Representation of the terms in a model"""
+    """Representation of a model.
+
+    Parameters
+    ----------
+    terms: :class:`.Term`
+        This object can be instantiated with one or many terms.
+    response::class:`.Response`
+        The response term. Defaults to ``None`` which means there is no response.
+    """
 
     def __init__(self, *terms, response=None):
         if isinstance(response, Response) or response is None:
@@ -823,10 +845,14 @@ class Model:
         return equal_terms and equal_response
 
     def __add__(self, other):
-        """Set union.
-        (1 + x + y) + 0 -> (x + y)
-        (x + y) + z -> x + y + z
-        (x + y) + (u + v) -> x + y + u + v
+        """Addition operator. Analogous to set union.
+
+        Adds terms to the model and returns the model.
+
+        Returns
+        -------
+        self: :class:`.Model`
+            The same model object with the added term(s).
         """
         if isinstance(other, NegatedIntercept):
             return self - Intercept()
@@ -840,11 +866,16 @@ class Model:
             return NotImplemented
 
     def __sub__(self, other):
-        """Set difference.
+        """Subtraction operator. Analogous to set difference.
 
-        (x + y) - (x + u) -> y + u
-        (x + y) - x -> y
-        (x + y + (1 | g)) - (1 | g) -> x + y
+        * ``"(x + y) - (x + u)"`` equals to ``"y + u"``..
+        * ``"(x + y) - x"`` equals to ``"y"``.
+        * ``"(x + y + (1 | g)) - (1 | g)"`` equals to ``"x + y"``.
+
+        Returns
+        -------
+        self: :class:`.Model`
+            The same model object with the removed term(s).
         """
         if isinstance(other, type(self)):
             for term in other.terms:
@@ -864,11 +895,39 @@ class Model:
         else:
             return NotImplemented
 
-    def __mul__(self, other):
-        """Full interaction.
+    def __matmul__(self, other):
+        """Simple interaction operator.
 
-        (x + y) * (u + v) -> x + y + u + v + x:u + x:v + y:u + y:v
-        (x + y) * u -> x + y + u + x:u + y:u
+        * ``"(x + y) : (u + v)"`` equals to ``"x:u + x:v + y:u + y:v"``.
+        * ``"(x + y) : u"`` equals to ``"x:u + y:u"``.
+        * ``"(x + y) : f(u)"`` equals to ``"x:f(u) + y:f(u)"``.
+
+        Returns
+        -------
+        model: :class:`.Model`
+            A new instance of the model with all the interaction terms computed.
+        """
+        if isinstance(other, type(self)):
+            products = product(self.common_terms, other.common_terms)
+            iterms = [Term(*p[0].components, *p[1].components) for p in products]
+            return Model(*iterms)
+        elif isinstance(other, Term):
+            products = product(self.common_terms, [other])
+            iterms = [Term(*p[0].components, *p[1].components) for p in products]
+            return Model(*iterms)
+        else:
+            return NotImplemented
+
+    def __mul__(self, other):
+        """Full interaction operator.
+
+        * ``"(x + y) * (u + v)"`` equals to ``"x + y + u + v + x:u + x:v + y:u + y:v"``.
+        * ``"(x + y) * u"`` equals to ``"x + y + u + x:u + y:u"``.
+
+        Returns
+        -------
+        model: :class:`.Model`
+            A new instance of the model with all the interaction terms computed.
         """
         if self == other:
             return self
@@ -891,28 +950,17 @@ class Model:
         else:
             return NotImplemented
 
-    def __matmul__(self, other):
-        """Simple interaction.
-
-        (x + y) : (u + v) -> x:u + x:v + y:u + y:v
-        (x + y) : u -> x:u + y:u
-        (x + y) : f(u) -> x:f(u) + y:f(u)
-        """
-        if isinstance(other, type(self)):
-            products = product(self.common_terms, other.common_terms)
-            iterms = [Term(*p[0].components, *p[1].components) for p in products]
-            return Model(*iterms)
-        elif isinstance(other, Term):
-            products = product(self.common_terms, [other])
-            iterms = [Term(*p[0].components, *p[1].components) for p in products]
-            return Model(*iterms)
-        else:
-            return NotImplemented
-
     def __pow__(self, other):
-        """Power of a set of Terms
+        """Power of a set made of :class:`.Term`
 
-        (x + y + z) ** 2 -> x + y + z + x:y + x:z + y:z
+        Computes all interactions up to order ``n`` between the terms in the set.
+
+        * ``"(x + y + z) ** 2"`` equals to ``"x + y + z + x:y + x:z + y:z"``.
+
+        Returns
+        -------
+        model: :class:`.Model`
+            A new instance of the model with all the terms computed.
         """
         if isinstance(other, Term) and len(other.components) == 1:
             value = other.components[0].name
@@ -926,12 +974,15 @@ class Model:
             raise ValueError("Power must be a positive integer.")
 
     def __truediv__(self, other):
-        """Division interaction.
+        """Division interaction operator.
 
-        See https://patsy.readthedocs.io/en/latest/formulas.html
+        * ``"(x + y) / z"`` equals to ``"x + y + x:y:z"``.
+        * ``"(x + y) / (u + v)"`` equals to ``"x + y + x:y:u + x:y:v"``.
 
-        (x + y) / z -> x + y + x:y:z
-        (x + y) / (u + v) -> x + y + x:y:u + x:y:v
+        Returns
+        -------
+        model: :class:`.Model`
+            A new instance of the model with all the terms computed.
         """
         if isinstance(other, Term):
             return self.add_term(Term(*self.common_components + other.components))
@@ -942,11 +993,21 @@ class Model:
             return NotImplemented
 
     def __or__(self, other):
+        """Group specific term operator.
+
+        Only _models_ ``"0 + x"`` arrive here.
+
+        * ``"(0 + x | g)"`` equals to ``"(x|g)"``.
+        * ``"(0 + x | g + y)"`` equals to ``"(x|g) + (x|y)"``.
+
+        There are several edge cases to handle here. See in-line comments.
+
+        Returns
+        -------
+        model: :class:`.Model`
+            A new instance of the model with all the terms computed.
         """
-        Only terms like (0 + x | g) arrive here
-        (0 + x | g) -> (x|g)
-        (0 + x | g + y) -> (x|g) + (x|y)
-        """
+
         # If only one term in the expr, resolve according to the type of the term.
         if len(self.common_terms) == 1:
             return self.common_terms[0] | other
@@ -991,7 +1052,17 @@ class Model:
         return f"{self.__class__.__name__}(\n  {string}\n)"
 
     def add_response(self, term):
-        """Add response term to model description."""
+        """Add response term to model description.
+
+        This method is called when something like ``"y ~ x + z"`` appears in a model formula.
+
+        This method is called via special methods such as :meth:`Response.__add__`.
+
+        Returns
+        -------
+        self: :class:`.Model`
+            The same model object but now with a reponse term.
+        """
         if isinstance(term, Response):
             self.response = term
             return self
@@ -1001,8 +1072,16 @@ class Model:
     def add_term(self, term):
         """Add term to model description.
 
-        The term added can be of class ``Intercept``, ``Term``, or ``GroupSpecificTerm``. It appends
-        the new term object to the list of common terms or group specific terms as appropriate.
+        The term added can be of class :class:`.Intercept` :class:`.Term`, or
+        :class:`.GroupSpecificTerm`. It appends the new term object to the list of common terms or
+        group specific terms as appropriate.
+
+        This method is called via special methods such as :meth:`__add__`.
+
+        Returns
+        -------
+        self: :class:`.Model`
+            The same model object but now containing the new term.
         """
         if isinstance(term, GroupSpecificTerm):
             if term not in self.group_terms:
@@ -1019,7 +1098,10 @@ class Model:
     def terms(self):
         """Terms in the model.
 
-        Returns a list of both common and group specific terms in the model description.
+        Returns
+        -------
+        terms: list
+            A list containing both common and group specific terms.
         """
         return self.common_terms + self.group_terms
 
@@ -1027,8 +1109,10 @@ class Model:
     def common_components(self):
         """Components in common terms in the model.
 
-        Returns a list with all components, ``Variable`` and ``Call`` instances, within common
-        terms in the model.
+        Returns
+        -------
+        components: list
+            A list containing all components from common terms in the model.
         """
         # Note: Check whether this method is really necessary.
         return [
@@ -1037,7 +1121,14 @@ class Model:
 
     @property
     def var_names(self):
-        """Returns the name of the variables in the model as a set."""
+        """Get the name of the variables in the model.
+
+        Returns
+        -------
+        var_names: set
+            The names of all variables in the model.
+        """
+
         var_names = set()
         for term in self.terms:
             var_names.update(term.var_names)
@@ -1046,7 +1137,17 @@ class Model:
         return var_names
 
     def set_types(self, data, eval_env):
-        """Set the type of the common terms in the model."""
+        """Set the type of the common terms in the model.
+
+        Calls ``.set_type()`` method on term in the model.
+
+        Parameters
+        ----------
+        data: pd.DataFrame
+            The data frame where variables are taken from
+        eval_env: EvalEnvironment
+            The environment where values and functions are taken from.
+        """
         for term in self.common_terms:
             term.set_type(data, eval_env)
 
@@ -1098,9 +1199,9 @@ class Model:
     def _encoding_bools(self):
         """Determine encodings for terms containing at least one categorical variable.
 
-        This method returns dictionaries with True/False values.
-        True means the categorical variable uses 'levels' dummies.
-        False means the categorial variable uses 'levels - 1' dummies.
+        This method returns dictionaries with ``True``/``False`` values.
+        ``True`` means the categorical variable uses 'levels' dummies.
+        ``False`` means the categorial variable uses 'levels - 1' dummies.
         """
         groups = self._encoding_groups()
         l = [pick_contrasts(group) for group in groups]
@@ -1110,6 +1211,24 @@ class Model:
         return result
 
     def eval(self, data, eval_env):
+        """Evaluates terms in the model.
+
+        Only common effects are evaluated here. Group specific terms are evaluated individually
+        in :class:`GroupEffectsMatrix <formulae.matrices.GroupEffectsMatrix>`.
+
+        Parameters
+        ----------
+        data: pd.DataFrame
+            The data frame where variables are taken from
+        eval_env: EvalEnvironment
+            The environment where values and functions are taken from.
+
+        Returns
+        -------
+        result: dict
+            A dictionary where keys are the name of the terms and the values are their ``.data``
+            attribute.
+        """
         self.set_types(data, eval_env)
         encodings = self._encoding_bools()
         result = dict()

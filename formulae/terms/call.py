@@ -21,7 +21,7 @@ class Call:
 
     Parameters
     ----------
-    call: formulae.expr.Call
+    call: formulae.terms.call_resolver.LazyCall
         The call expression returned by the parser.
     is_response: bool
         Indicates whether this call represents a response. Defaults to ``False``.

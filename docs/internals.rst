@@ -50,14 +50,23 @@ and disadvantages.
 
 .. autoclass:: formulae.terms.Term
   :members:
-  :private-members:
   :special-members: __add__, __sub__, __mul__, __matmul__, __truediv__, __or__, __pow__
 
 .. autoclass:: formulae.terms.GroupSpecificTerm
   :members:
-  :private-members:
 
 .. autoclass:: formulae.terms.Intercept
   :members:
-  :private-members:
   :special-members: __add__, __sub__, __or__
+
+.. autoclass:: formulae.terms.NegatedIntercept
+  :members:
+  :special-members: __add__
+
+.. autoclass:: formulae.terms.Response
+  :members:
+  :special-members: __add__
+
+.. autoclass:: formulae.terms.Model
+  :members:
+  :special-members: __add__, __sub__, __mul__, __matmul__, __truediv__, __or__, __pow__
