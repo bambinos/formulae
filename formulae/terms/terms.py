@@ -421,7 +421,7 @@ class Term:
 
         Parameters
         ----------
-        data_mask: pd.DataFrame
+        data: pd.DataFrame
             The data frame where variables are taken from
         eval_env: EvalEnvironment
             The environment where values and functions are taken from.
@@ -492,7 +492,7 @@ class Term:
 
         Parameters
         ----------
-        data_mask: pd.DataFrame
+        data: pd.DataFrame
             The data frame where variables are taken from
 
         Returns
@@ -544,6 +544,32 @@ class Term:
 
 
 class GroupSpecificTerm:
+    """Representation of a group specific term.
+
+    Group specific terms are of the form ``(expr | factor)``. The expression ``expr`` is evaluated
+    as a model formula with only common effects and produces a model matrix following the rules
+    for common terms. ``factor`` is inspired on factors in R, but here it is evaluated as an ordered
+    pandas.CategoricalDtype object.
+
+    The operator ``|`` works as in R package lme4. As its authors say: "One way to think about the
+    vertical bar operator is as a special kind of interaction between the model matrix and the
+    grouping factor. This interaction ensures that the columns of the model matrix have different
+    effects for each level of the grouping factor"
+
+    Parameters
+    ----------
+    expr: :class:`.Intercept` or :class:`.Term`
+        The term for which we want to have a group specific term.
+    factor: :class:`.Term`
+        The factor that determines the groups in the group specific term.
+
+    Attributes
+    ----------
+    factor_type: pandas.core.dtypes.dtypes.CategoricalDtype
+        The type assigned to the grouping factor ``factor``. This is useful for when we need to
+        create a design matrix for new a new data set.
+    """
+
     def __init__(self, expr, factor):
         self.expr = expr
         self.factor = factor
@@ -568,6 +594,46 @@ class GroupSpecificTerm:
         return self.__class__.__name__ + "(\n  " + ",\n  ".join(strlist) + "\n)"
 
     def eval(self, data, eval_env, encoding):
+        """Evaluates term.
+
+        First, it evaluates the variable in ``self.factor``, creates an oredered categorical data
+        type using its levels, and stores it in ``self.factor_type``. Then, it obtains the
+        design matrix for ``self.expr`` to finally produce the matrix for the group specific
+        effect.
+
+        The output contains the following information
+
+        * ``"type"``: The type of the ``expr`` term.
+        * ``"Xi"``: The design matrix for the ``expr`` term.
+        * ``"Ji"``: The design matrix for the ``factor`` term.
+        * ``"Zi"``: The design matrix for the group specific term.
+        * ``"groups"``: The groups present in ``factor``.
+
+        If ``"type"`` is ``"categoric"``, the output dictionary also contains
+
+        * ``"levels"``: Levels of the term in ``expr``.
+        * ``"reference"``: The level taken as baseline.
+        * ``"encoding"``: The encoding of the term, either ``"full"`` or ``"reduced"``
+
+        If ``"type"`` is ``"interaction"``, the output dictionary also contains
+
+        * ``"terms"``: Metadata for each of the components in the interaction in ``expr``.
+
+        Parameters
+        ----------
+        data: pandas.DataFrame
+            The data frame where variables are taken from.
+        eval_env: EvalEnvironment
+            The environment where values and functions are taken from.
+        encoding: bool
+            Whether to use full or reduced rank encoding when ``expr`` is categoric.
+
+        Returns
+        -------
+        out: dict
+            See above.
+        """
+        # Evaluate factor and save type to self.factor_type.
         # Note: factor can't be a call or interaction yet.
         if len(self.factor.components) == 1 and isinstance(self.factor.components[0], Variable):
             factor = data[self.factor.name]
@@ -583,8 +649,7 @@ class GroupSpecificTerm:
                 "Factor on right hand side of group specific term must be a single term."
             )
 
-        # Notation as in lme4 paper
-        # Note we don't use `drop_first=True` for factor.
+        # Note we don't use drop_first=True for the factor.
         self.expr.set_type(data, eval_env)
         self.expr.set_data(encoding)
         Xi = self.expr.data
@@ -606,7 +671,23 @@ class GroupSpecificTerm:
         return out
 
     def eval_new_data(self, data):
-        """Evaluates the term with new data."""
+        """Evaluates the term with new data.
+
+        Converts the variable in ``factor`` to the type remembered from the first evaluation and
+        produces the design matrix for this grouping, calls ``.eval_new_data()`` on ``self.expr``
+        to obtain the design matrix for the ``expr`` side, then computes the design matrix
+        corresponding to the group specific effect.
+
+        Parameters
+        ----------
+        data: pd.DataFrame
+            The data frame where variables are taken from.
+
+        Returns
+        ----------
+        out: dict
+            Same rules as in :meth:`eval <GroupSpecificTerm.eval>`.
+        """
 
         # factor uses the same data type that is used in first evaluation.
         factor = data[self.factor.name].astype(self.factor_type)
@@ -630,27 +711,43 @@ class GroupSpecificTerm:
 
     @property
     def var_names(self):
+        """Returns the name of the variables in the term as a set.
+
+        Obtains both the variables in the ``expr`` as well as the variables in ``factor``.
+
+        Returns
+        ----------
+        var_names: set
+            The names of the variables involved in the term.
+        """
         expr_names = self.expr.var_names.copy()
         factor_names = self.factor.var_names.copy()
         return expr_names.union(factor_names)
 
     def to_string(self, level=None):
-        string = ""
+        """Obtain string representation of the name of the term.
+
+        Returns
+        ----------
+        name: str
+            The name of the term, such as ``1|g`` or ``var|g``.
+        """
+        name = ""
         if isinstance(self.expr, Intercept):
-            string += "1|"
+            name += "1|"
         elif isinstance(self.expr, Term):
             if level is not None:
-                string += f"{self.expr.name}[{level}]|"
+                name += f"{self.expr.name}[{level}]|"
             else:
-                string += f"{self.expr.name}|"
+                name += f"{self.expr.name}|"
         else:
             raise ValueError("Invalid LHS expression for group specific term")
 
         if isinstance(self.factor, Term):
-            string += self.factor.name
+            name += self.factor.name
         else:
             raise ValueError("Invalid RHS expression for group specific term")
-        return string
+        return name
 
 
 class Response:
@@ -1067,8 +1164,3 @@ def _create_and_eval_extra_term(term, encoding, data, eval_env):
     extra_term.set_type(data, eval_env)
     extra_term.set_data(encoding_)
     return extra_term
-
-
-# IDEA: What if Variable, Call, Terms, etc... get frozen once set_type or similar is called?
-#       Then, all properties and alike are ensured to remain constant and not change...
-#       idk, may need to think about it more.

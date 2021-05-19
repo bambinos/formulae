@@ -53,6 +53,10 @@ and disadvantages.
   :private-members:
   :special-members: __add__, __sub__, __mul__, __matmul__, __truediv__, __or__, __pow__
 
+.. autoclass:: formulae.terms.GroupSpecificTerm
+  :members:
+  :private-members:
+
 .. autoclass:: formulae.terms.Intercept
   :members:
   :private-members:
