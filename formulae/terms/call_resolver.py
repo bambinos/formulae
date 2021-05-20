@@ -11,8 +11,16 @@ class CallResolverError(Exception):
 class LazyOperator:
     """Unary and Binary lazy operators.
 
-    Functions calls like `a + b` are converted into a LazyOperator that is resolved when you
-    explicitly call it like `lazy_operator()`.
+    Functions calls like ``a + b`` are converted into a LazyOperator that is resolved when you
+    explicitly evaluates it.
+
+    Parameters
+    ----------
+    op: builtin_function_or_method
+        An operator in the ``operator`` built-in module. It can be one of ``add``, ``pos``, ``sub``,
+        ``neg``, ``pow``, ``mul``, and ``truediv``.
+    args:
+        One or two lazy instances.
     """
 
     def __init__(self, op, *args):
@@ -55,11 +63,37 @@ class LazyOperator:
         return visitor.visitLazyOperator(self)
 
     def eval(self, data_mask, eval_env):
+        """Evaluates the operation.
+
+        Evaluates the arguments involved in the operation, calls the Python operator, and returns
+        the result.
+
+        Parameters
+        ----------
+        data_mask: pd.DataFrame
+            The data frame where variables are taken from
+        eval_env: EvalEnvironment
+            The environment where values and functions are taken from.
+
+        Returns
+        -------
+        result:
+            The value obtained from the operator call.
+        """
         return self.op(*[arg.eval(data_mask, eval_env) for arg in self.args])
 
 
 class LazyVariable:
-    """Stores a name that is looked later into objects"""
+    """Lazy variable name.
+
+    The variable represented in this object does not hold any value until it is explicitly evaluated
+    within a data mask and an evaluation environment.
+
+    Parameters
+    ----------
+    name: str
+        The name of the variable it represents.
+    """
 
     def __init__(self, name):
         self.name = name
@@ -82,6 +116,24 @@ class LazyVariable:
         return visitor.visitLazyVariable(self)
 
     def eval(self, data_mask, eval_env):
+        """Evaluates variable.
+
+        First it looks for the variable in ``data_mask``. If not found there, it looks in
+        ``eval_env``. Then it just returns the value the variable represents in either the
+        data mask or the evaluation environment.
+
+        Parameters
+        ----------
+        data_mask: pd.DataFrame
+            The data frame where variables are taken from
+        eval_env: EvalEnvironment
+            The environment where values and functions are taken from.
+
+        Returns
+        -------
+        result:
+            The value represented by this name in either the data mask or the environment.
+        """
         try:
             result = data_mask[self.name]
         except KeyError:
@@ -93,6 +145,17 @@ class LazyVariable:
 
 
 class LazyValue:
+    """Lazy representation of a value in Python.
+
+    This object holds a value (a string or a number).
+    It returns its value only when it is evaluated via ``.eval()``.
+
+    Parameters
+    ----------
+    value: string or numeric
+        The value it holds.
+    """
+
     def __init__(self, value):
         self.value = value
 
@@ -114,10 +177,47 @@ class LazyValue:
         return visitor.visitLazyValue(self)
 
     def eval(self, data_mask, eval_env):  # pylint: disable = unused-argument
+        """Evaluates the value.
+
+        Simply returns the value. Arguments are ignored but required for consistency among all the
+        lazy objects.
+
+        Parameters
+        ----------
+        data_mask: pd.DataFrame
+            The data frame where variables are taken from
+        eval_env: EvalEnvironment
+            The environment where values and functions are taken from.
+
+        Returns
+        -------
+        value:
+            The value this obejct represents.
+        """
         return self.value
 
 
 class LazyCall:
+    """Lazy representation of a function call.
+
+    This class represents a function that can be a stateful transform (a function with memory)
+    whose arguments can also be stateful transforms.
+
+    To evaluate these functions we don't create a string representing Python code and let ``eval()``
+    run it. We take care of all the steps of the evaluation to make sure all the possibly nested
+    stateful transformations are handled correctly.
+
+    Parameters
+    ----------
+    callee: string
+        The name of the function
+    args: list
+        A list of lazy objects that are evaluated when calling the function this object represents.
+    kwargs: dict
+        A dictionary of named arguments that are evaluated when calling the function this object
+        represents.
+    """
+
     def __init__(self, callee, args, kwargs):
         self.callee = callee
         self.args = args
@@ -149,6 +249,23 @@ class LazyCall:
         return visitor.visitLazyCall(self)
 
     def eval(self, data_mask, eval_env):
+        """Evaluate the call.
+
+        This method first evaluates all its arguments, which are themselves lazy objects, and then
+        proceeds to evaluate the call it represents.
+
+        Parameters
+        ----------
+        data_mask: pd.DataFrame
+            The data frame where variables are taken from
+        eval_env: EvalEnvironment
+            The environment where values and functions are taken from.
+
+        Returns
+        -------
+        result:
+            The result of the call evaluation.
+        """
         if self.stateful_transform:
             callee = self.stateful_transform
         else:
@@ -161,6 +278,8 @@ class LazyCall:
 
 
 class CallResolver:
+    """Visitor that walks an AST representing a regular call and returns a lazy version of it."""
+
     def __init__(self, expr):
         self.expr = expr
 

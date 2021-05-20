@@ -13,11 +13,11 @@ methods in the current release of formulae.
 ===========================
 
 .. automodule:: formulae
-   :members:
+  :members: design_matrices, model_description
 
-
-:mod:`formulae.terms`
+:mod:`formulae.matrices`
 ===========================
 
-.. automodule:: formulae.terms
-    :members:
+.. automodule:: formulae.matrices
+  :members: DesignMatrices
+

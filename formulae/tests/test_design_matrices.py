@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from formulae.design_matrices import design_matrices
+from formulae.matrices import design_matrices
 
 # TODO: See interaction names.. they don't always work as expected
 @pytest.fixture(scope="module")

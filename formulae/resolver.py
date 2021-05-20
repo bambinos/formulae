@@ -56,7 +56,7 @@ class Resolver:
             raise ResolverError("Couldn't resolve UnaryExpr with otype '" + otype + "'")
 
     def visitCallExpr(self, expr):
-        # Delegates all the work to self._vsitCallExpr, that works recursively through its args.
+        # Delegates all the work to self._visitCallExpr, that works recursively through its args.
         # It just wraps the result in a Term object.
         return Term(Call(CallResolver(expr).resolve()))
 
