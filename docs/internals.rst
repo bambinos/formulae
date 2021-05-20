@@ -70,3 +70,22 @@ and disadvantages.
 .. autoclass:: formulae.terms.Model
   :members:
   :special-members: __add__, __sub__, __mul__, __matmul__, __truediv__, __or__, __pow__
+
+:mod:`call_resolver`
+================================
+
+.. autoclass:: formulae.terms.call_resolver.LazyValue
+  :members:
+  :private-members:
+
+.. autoclass:: formulae.terms.call_resolver.LazyVariable
+  :members:
+  :private-members:
+
+.. autoclass:: formulae.terms.call_resolver.LazyOperator
+  :members:
+  :private-members:
+
+.. autoclass:: formulae.terms.call_resolver.LazyCall
+  :members:
+  :private-members:
