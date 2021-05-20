@@ -73,6 +73,12 @@
  </a>
 </li>
 
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../internals.html">
+  Internals
+ </a>
+</li>
+
     
 </ul>
       </div>
@@ -136,7 +142,8 @@
               <div>
                 
   <h1>Source code for formulae.terms.terms</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span></span><span class="c1"># pylint: disable = too-many-lines</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
@@ -155,7 +162,9 @@
 <span class="n">_log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;formulae&quot;</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">Intercept</span><span class="p">:</span>
+<div class="viewcode-block" id="Intercept"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Intercept">[docs]</a><span class="k">class</span> <span class="nc">Intercept</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Internal representation of a model intercept.&quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Intercept&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;Intercept&quot;</span>
@@ -169,7 +178,17 @@
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_type</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="Intercept.__add__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Intercept.__add__">[docs]</a>    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Addition operator.</span>
+
+<span class="sd">        Generally this operator is used to explicitly add an intercept to a model. However, there</span>
+<span class="sd">        may be cases where the result is not a ``Model``, or does not contain an intercept.</span>
+
+<span class="sd">        * ``&quot;1 + 0&quot;`` and ``&quot;1 + (-1)&quot;`` return an empty model.</span>
+<span class="sd">        * ``&quot;1 + 1&quot;`` returns an intercept.</span>
+<span class="sd">        * ``&quot;1 + x&quot;`` and ``&quot;1 + (x|g)&quot;`` returns a model with both the term and the intercept.</span>
+<span class="sd">        * ``&quot;1 + (x + y)&quot;`` adds an intercept to the model given by ``x`` and ``y``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">NegatedIntercept</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">Model</span><span class="p">()</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
@@ -179,9 +198,18 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">+</span> <span class="n">other</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
-    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="Intercept.__sub__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Intercept.__sub__">[docs]</a>    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subtraction operator.</span>
+
+<span class="sd">        This operator removes an intercept from a model if the given model has an intercept.</span>
+
+<span class="sd">        * ``&quot;1 - 1&quot;`` returns an empty model.</span>
+<span class="sd">        * ``&quot;1 - 0&quot;`` and ``&quot;1 - (-1)&quot;`` return an intercept.</span>
+<span class="sd">        * ``&quot;1 - (x + y)&quot;`` returns the model given by ``x`` and ``y`` unchanged.</span>
+<span class="sd">        * ``&quot;1 - (1 + x + y)&quot;`` returns the model given by ``x`` and ``y``, removing the intercept.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
             <span class="k">return</span> <span class="n">Model</span><span class="p">()</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">NegatedIntercept</span><span class="p">):</span>
@@ -192,12 +220,16 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
-    <span class="k">def</span> <span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        (1|g) -&gt; (1|g); (1|g:h) -&gt; (1|g:h)</span>
-<span class="sd">        (1 | g + h) -&gt; (1|g) + (1|h)</span>
+<div class="viewcode-block" id="Intercept.__or__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Intercept.__or__">[docs]</a>    <span class="k">def</span> <span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Group-specific operator. Creates group-specific intercept.</span>
+
+<span class="sd">        This operation is usually surrounded by parenthesis. It is not actually required. They</span>
+<span class="sd">        are always used because ``|`` has lower precedence that the other common operators.</span>
+
+<span class="sd">        This operator is distributed over the right-hand side, which means ``(1|g + h)`` is</span>
+<span class="sd">        equivalent to ``(1|g) + (1|h)``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Term</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">GroupSpecificTerm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
@@ -206,7 +238,7 @@
             <span class="n">terms</span> <span class="o">=</span> <span class="p">[</span><span class="n">GroupSpecificTerm</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">terms</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
@@ -216,33 +248,56 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">var_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns empty set, no variables are used in the intercept.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">set_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>  <span class="c1"># pylint: disable = unused-argument</span>
+<div class="viewcode-block" id="Intercept.set_type"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Intercept.set_type">[docs]</a>    <span class="k">def</span> <span class="nf">set_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>  <span class="c1"># pylint: disable = unused-argument</span>
+        <span class="sd">&quot;&quot;&quot;Sets length of the intercept.&quot;&quot;&quot;</span>
         <span class="c1"># Nothing goes here as the type is given by the class.</span>
         <span class="c1"># Only works with DataFrames or Series so far</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">len</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">len</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
-    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">):</span>  <span class="c1"># pylint: disable = unused-argument</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">len</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<div class="viewcode-block" id="Intercept.set_data"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Intercept.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">):</span>  <span class="c1"># pylint: disable = unused-argument</span>
+        <span class="sd">&quot;&quot;&quot;Creates data for the intercept.</span>
 
-    <span class="k">def</span> <span class="nf">eval_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="sd">        It sets ``self.data`` equal to a numpy array of ones of length ``(self.len, 1)``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">len</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Intercept.eval_new_data"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Intercept.eval_new_data">[docs]</a>    <span class="k">def</span> <span class="nf">eval_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns data for a new intercept.</span>
+
+<span class="sd">        The length of the new intercept is given by the number of rows in ``data``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># it assumes data is a pandas DataFrame now</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span></div></div>
 
 
-<span class="k">class</span> <span class="nc">NegatedIntercept</span><span class="p">:</span>
+<div class="viewcode-block" id="NegatedIntercept"><a class="viewcode-back" href="../../../internals.html#formulae.terms.NegatedIntercept">[docs]</a><span class="k">class</span> <span class="nc">NegatedIntercept</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Internal representation of the opposite of a model intercept.</span>
+
+<span class="sd">    This object is created whenever we use ``&quot;0&quot;`` or ``&quot;-1&quot;`` in a model formula. It is not</span>
+<span class="sd">    expected to appear in a final model. It&#39;s here to help us make operations using the</span>
+<span class="sd">    ``Intercept`` and deciding when to keep it and when to drop it.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;NegatedIntercept&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;Intercept&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        0 + 0 -&gt; 0</span>
-<span class="sd">        0 + 1 -&gt; &lt;empty&gt;</span>
-<span class="sd">        0 + a -&gt; 0 + a</span>
-<span class="sd">        0 + (a|g) -&gt; 0 + (a|g)</span>
-<span class="sd">        0 + (a + b) -&gt; 0 + a + b</span>
+<div class="viewcode-block" id="NegatedIntercept.__add__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.NegatedIntercept.__add__">[docs]</a>    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Addition operator.</span>
+
+<span class="sd">        Generally this operator is used to explicitly remove an from a model.</span>
+
+<span class="sd">        * ``&quot;0 + 1&quot;`` returns an empty model.</span>
+<span class="sd">        * ``&quot;0 + 0&quot;`` returns a negated intercept</span>
+<span class="sd">        * ``&quot;0 + x&quot;`` returns a model that includes the negated intercept.</span>
+<span class="sd">        * ``&quot;0 + (x + y)&quot;`` adds an the negated intercept to the model given by ``x`` and ``y``.</span>
+
+<span class="sd">        No matter the final result contains the negated intercept, for example if we do something</span>
+<span class="sd">        like ``&quot;y ~ 0 + x + y + 0&quot;``, the ``Model`` that is obtained removes any negated intercepts</span>
+<span class="sd">        thay may have been left. They just don&#39;t make sense in a model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
             <span class="k">return</span> <span class="bp">self</span>
@@ -253,7 +308,7 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">+</span> <span class="n">other</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
@@ -278,14 +333,35 @@
 
     <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># This method should never be called. Leaving a pass to avoid harmless error.</span>
-        <span class="k">pass</span>
+        <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="Term"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Term">[docs]</a><span class="k">class</span> <span class="nc">Term</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Representation of a single term.</span>
+<div class="viewcode-block" id="Term"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Term">[docs]</a><span class="k">class</span> <span class="nc">Term</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Representation of a model term.</span>
 
-<span class="sd">    A model term can be an intercept, a term made of a single component, a function call,</span>
-<span class="sd">    an interaction involving components and/or function calls.</span>
+<span class="sd">    Terms are made of one or more components. Components are instances of :class:`.Variable` or</span>
+<span class="sd">    :class:`.Call`. Terms with only one component are known as main effects and terms with more than</span>
+<span class="sd">    one component are known as interaction effects. The order of the interaction is given by the</span>
+<span class="sd">    number of components in the term.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    components: :class:`.Variable` or :class:`.Call`</span>
+<span class="sd">        Atomic components of a term.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data: dict</span>
+<span class="sd">        The values associated with the term as they go into the design matrix.</span>
+<span class="sd">    metadata: dict</span>
+<span class="sd">        Metadata associated with the term. If ``&quot;numeric&quot;`` or ``&quot;categoric&quot;`` it holds additional</span>
+<span class="sd">        information in the component ``.data`` attribute. If ``&quot;interaction&quot;``, the keys are</span>
+<span class="sd">        the name of the components and the values are dictionaries holding the metadata.</span>
+<span class="sd">    _type: string</span>
+<span class="sd">        Indicates the type of the term. Can be one of ``&quot;numeric&quot;``, ``&quot;categoric&quot;``, or</span>
+<span class="sd">        ``&quot;interaction&quot;``.</span>
+<span class="sd">    name: string</span>
+<span class="sd">        The name of the term as it was originally written in the model formula.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">components</span><span class="p">):</span>
@@ -308,18 +384,20 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">components</span>
 
-    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Sum between of ``Term`` and other classes of terms.</span>
+<div class="viewcode-block" id="Term.__add__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Term.__add__">[docs]</a>    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Addition operator. Analogous to set union.</span>
 
-<span class="sd">        Analogous to set union.</span>
-<span class="sd">        x + x -&gt; x</span>
-<span class="sd">        x + y -&gt; x + y</span>
-<span class="sd">        x:y + u -&gt; x:y + u</span>
-<span class="sd">        x:y + u:v -&gt; x:y + u:v</span>
-<span class="sd">        x:y + (u + v) -&gt; x:y + u + v</span>
-<span class="sd">        f(x) + y -&gt; f(x) + y</span>
-<span class="sd">        f(x) + (y + z) -&gt; f(x) + y + z</span>
+<span class="sd">        * ``&quot;x + x&quot;`` is equal to just ``&quot;x&quot;``</span>
+<span class="sd">        * ``&quot;x + y&quot;`` is equal to a model with both ``x`` and ``y``.</span>
+<span class="sd">        * ``&quot;x + (y + z)&quot;`` adds ``x`` to model already containing ``y`` and ``z``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># x + x -&gt; x</span>
+        <span class="c1"># x + y -&gt; x + y</span>
+        <span class="c1"># x:y + u -&gt; x:y + u</span>
+        <span class="c1"># x:y + u:v -&gt; x:y + u:v</span>
+        <span class="c1"># x:y + (u + v) -&gt; x:y + u + v</span>
+        <span class="c1"># f(x) + y -&gt; f(x) + y</span>
+        <span class="c1"># f(x) + (y + z) -&gt; f(x) + y + z</span>
         <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
@@ -327,20 +405,20 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">+</span> <span class="n">other</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
-    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Difference between a ``Term`` and other classes of terms.</span>
+<div class="viewcode-block" id="Term.__sub__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Term.__sub__">[docs]</a>    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subtraction operator. Analogous to set difference.</span>
 
-<span class="sd">        Analogous to set difference.</span>
-<span class="sd">        x - x -&gt; ()</span>
-<span class="sd">        x - y -&gt; x</span>
-<span class="sd">        x:y - u -&gt; x:y</span>
-<span class="sd">        x:y - u:v -&gt; x:y</span>
-<span class="sd">        x:y - (u + v) -&gt; x:y</span>
-<span class="sd">        f(x) - y -&gt; f(x)</span>
-<span class="sd">        f(x) - (y + z) -&gt; f(x)</span>
+<span class="sd">        * ``&quot;x - x&quot;`` returns empty model.</span>
+<span class="sd">        * ``&quot;x - y&quot;`` returns the term ``&quot;x&quot;``.</span>
+<span class="sd">        * ``&quot;x - (y + z)&quot;`` returns the term ``&quot;x&quot;``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># x:y - u -&gt; x:y</span>
+        <span class="c1"># x:y - u:v -&gt; x:y</span>
+        <span class="c1"># x:y - (u + v) -&gt; x:y</span>
+        <span class="c1"># f(x) - y -&gt; f(x)</span>
+        <span class="c1"># f(x) - (y + z) -&gt; f(x)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">Model</span><span class="p">()</span>
@@ -352,18 +430,19 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
-    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Full interaction.</span>
+<div class="viewcode-block" id="Term.__mul__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Term.__mul__">[docs]</a>    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Full interaction operator.</span>
 
-<span class="sd">        x * x -&gt; x + x + x:x -&gt; x</span>
-<span class="sd">        x * y -&gt; x + y + x:y</span>
-<span class="sd">        x:y * u -&gt; x:y + u + x:y:u</span>
-<span class="sd">        x:y * u:v -&gt; x:y + u:v + x:y:u:v</span>
-<span class="sd">        x:y * (u + v) -&gt; x:y + u + v + x:y:u + x:y:v</span>
-<span class="sd">        f(x) * y -&gt; f(x) + y + f(x):y</span>
-<span class="sd">        f(x) * (y + z) -&gt; f(x) + y + z + f(x):y + f(x):z</span>
+<span class="sd">        This operator includes both the interaction as well as the main effects involved in the</span>
+<span class="sd">        interaction. It is a shortcut for ``x + y + x:y``.</span>
+
+<span class="sd">        * ``&quot;x * x&quot;`` equals to ``&quot;x&quot;``</span>
+<span class="sd">        * ``&quot;x * y&quot;`` equals to``&quot;x + y + x:y&quot;``</span>
+<span class="sd">        * ``&quot;x:y * u&quot;`` equals to ``&quot;x:y + u + x:y:u&quot;``</span>
+<span class="sd">        * ``&quot;x:y * u:v&quot;`` equals to ``&quot;x:y + u:v + x:y:u:v&quot;``</span>
+<span class="sd">        * ``&quot;x:y * (u + v)&quot;`` equals to ``&quot;x:y + u + v + x:y:u + x:y:v&quot;``</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
@@ -379,19 +458,19 @@
             <span class="p">]</span>
             <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">terms</span><span class="p">)</span> <span class="o">+</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">iterms</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
-    <span class="k">def</span> <span class="fm">__matmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Simple interaction.</span>
+<div class="viewcode-block" id="Term.__matmul__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Term.__matmul__">[docs]</a>    <span class="k">def</span> <span class="fm">__matmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Simple interaction operator.</span>
 
-<span class="sd">        x:x -&gt; x</span>
-<span class="sd">        x:y -&gt; x:y</span>
-<span class="sd">        x:(y:z) -&gt; x:y:z</span>
-<span class="sd">        (x:y):u -&gt; x:y:u</span>
-<span class="sd">        (x:y):(u + v) -&gt; x:y:u + x:y:v</span>
-<span class="sd">        f(x):y -&gt; f(x):y</span>
-<span class="sd">        f(x):y:z -&gt; f(x):y:z</span>
-<span class="sd">        f(x):(y:z) -&gt; f(x):y:z</span>
+<span class="sd">        This operator is actually invoked as ``:`` but internally passed as ``@`` because there</span>
+<span class="sd">        is no ``:`` operator in Python.</span>
+
+<span class="sd">        * ``&quot;x : x&quot;`` equals to ``&quot;x&quot;``</span>
+<span class="sd">        * ``&quot;x : y&quot;`` is the interaction between ``&quot;x&quot;`` and ``&quot;y&quot;``</span>
+<span class="sd">        * ``x:(y:z)&quot;`` equals to just ``&quot;x:y:z&quot;``</span>
+<span class="sd">        * ``(x:y):u&quot;`` equals to just ``&quot;x:y:u&quot;``</span>
+<span class="sd">        * ``&quot;(x:y):(u + v)&quot;`` equals to ``&quot;x:y:u + x:y:v&quot;``</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
@@ -404,10 +483,58 @@
             <span class="n">iterms</span> <span class="o">=</span> <span class="p">[</span><span class="n">Term</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">iterms</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
-    <span class="k">def</span> <span class="fm">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Power of a ``Term``.</span>
+<div class="viewcode-block" id="Term.__truediv__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Term.__truediv__">[docs]</a>    <span class="k">def</span> <span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Division interaction operator.</span>
+
+<span class="sd">        * ``&quot;x / x&quot;`` equals to just ``&quot;x&quot;``</span>
+<span class="sd">        * ``&quot;x / y&quot;`` equals to ``&quot;x + x:y&quot;``</span>
+<span class="sd">        * ``&quot;x / z:y&quot;`` equals to ``&quot;x + x:z:y&quot;``</span>
+<span class="sd">        * ``&quot;x / (z + y)&quot;`` equals to ``&quot;x + x:z + x:y&quot;``</span>
+<span class="sd">        * ``&quot;x:y / u:v&quot;`` equals to ``&quot;x:y + x:y:u:v&quot;``</span>
+<span class="sd">        * ``&quot;x:y / (u + v)&quot;`` equals to ``&quot;x:y + x:y:u + x:y:v&quot;``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Interaction with numeric does not make sense.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Term</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="o">*</span><span class="n">other</span><span class="o">.</span><span class="n">components</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
+            <span class="n">products</span> <span class="o">=</span> <span class="n">product</span><span class="p">([</span><span class="bp">self</span><span class="p">],</span> <span class="n">other</span><span class="o">.</span><span class="n">common_terms</span><span class="p">)</span>
+            <span class="n">iterms</span> <span class="o">=</span> <span class="p">[</span><span class="n">Term</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">]</span>
+            <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">iterms</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
+
+<div class="viewcode-block" id="Term.__or__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Term.__or__">[docs]</a>    <span class="k">def</span> <span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Group-specific operator. Creates group-specific intercept.</span>
+
+<span class="sd">        Intercepts are implicitly added.</span>
+
+<span class="sd">        * ``&quot;x|g&quot;`` equals to ``&quot;(1|g) + (x|g)&quot;``</span>
+
+<span class="sd">        Distributive over right hand side</span>
+
+<span class="sd">        * ``&quot;(x|g + h)&quot;`` equals to ``&quot;(1|g) + (1|h) + (x|g) + (x|h)&quot;``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Term</span><span class="p">):</span>
+            <span class="c1"># Only accepts terms, call terms and interactions.</span>
+            <span class="c1"># Adds implicit intercept.</span>
+            <span class="n">terms</span> <span class="o">=</span> <span class="p">[</span><span class="n">GroupSpecificTerm</span><span class="p">(</span><span class="n">Intercept</span><span class="p">(),</span> <span class="n">other</span><span class="p">),</span> <span class="n">GroupSpecificTerm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">terms</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
+            <span class="n">intercepts</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">GroupSpecificTerm</span><span class="p">(</span><span class="n">Intercept</span><span class="p">(),</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">product</span><span class="p">([</span><span class="bp">self</span><span class="p">],</span> <span class="n">other</span><span class="o">.</span><span class="n">common_terms</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="n">slopes</span> <span class="o">=</span> <span class="p">[</span><span class="n">GroupSpecificTerm</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">product</span><span class="p">([</span><span class="bp">self</span><span class="p">],</span> <span class="n">other</span><span class="o">.</span><span class="n">common_terms</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">intercepts</span><span class="p">,</span> <span class="o">*</span><span class="n">slopes</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
+
+<div class="viewcode-block" id="Term.__pow__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Term.__pow__">[docs]</a>    <span class="k">def</span> <span class="fm">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Power operator.</span>
 
 <span class="sd">        It leaves the term as it is. For a power in the math sense do ``I(x ** n)`` or ``{x ** n}``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -423,51 +550,7 @@
             <span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
-
-    <span class="k">def</span> <span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Division interaction.</span>
-
-<span class="sd">        x / x -&gt; x</span>
-<span class="sd">        x / y -&gt; x + x:y</span>
-<span class="sd">        x / z:y -&gt; x + x:z:y</span>
-<span class="sd">        x / (z + y) -&gt; x + x:z + x:y</span>
-<span class="sd">        x:y / u:v -&gt; x:y + x:y:u:v</span>
-<span class="sd">        x:y / (u + v) -&gt; x:y + x:y:u + x:y:v</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
-                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Interaction with numeric does not make sense.&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Term</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="o">*</span><span class="n">other</span><span class="o">.</span><span class="n">components</span><span class="p">))</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
-            <span class="n">products</span> <span class="o">=</span> <span class="n">product</span><span class="p">([</span><span class="bp">self</span><span class="p">],</span> <span class="n">other</span><span class="o">.</span><span class="n">common_terms</span><span class="p">)</span>
-            <span class="n">iterms</span> <span class="o">=</span> <span class="p">[</span><span class="n">Term</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">]</span>
-            <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">iterms</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
-
-    <span class="k">def</span> <span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Group specific term operation.</span>
-
-<span class="sd">        (x|g) -&gt; (1|g) + (x|g)</span>
-<span class="sd">        (x|g + h) -&gt; (x|g) + (x|h) -&gt; (1|g) + (1|h) + (x|g) + (x|h)</span>
-<span class="sd">        (x|g:h) -&gt; (1|g:h) + (x|g:h)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Term</span><span class="p">):</span>
-            <span class="c1"># Only accepts terms, call terms and interactions.</span>
-            <span class="c1"># Adds implicit intercept.</span>
-            <span class="n">terms</span> <span class="o">=</span> <span class="p">[</span><span class="n">GroupSpecificTerm</span><span class="p">(</span><span class="n">Intercept</span><span class="p">(),</span> <span class="n">other</span><span class="p">),</span> <span class="n">GroupSpecificTerm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)]</span>
-            <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">terms</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
-            <span class="n">intercepts</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">GroupSpecificTerm</span><span class="p">(</span><span class="n">Intercept</span><span class="p">(),</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">product</span><span class="p">([</span><span class="bp">self</span><span class="p">],</span> <span class="n">other</span><span class="o">.</span><span class="n">common_terms</span><span class="p">)</span>
-            <span class="p">]</span>
-            <span class="n">slopes</span> <span class="o">=</span> <span class="p">[</span><span class="n">GroupSpecificTerm</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">product</span><span class="p">([</span><span class="bp">self</span><span class="p">],</span> <span class="n">other</span><span class="o">.</span><span class="n">common_terms</span><span class="p">)]</span>
-            <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">intercepts</span><span class="p">,</span> <span class="o">*</span><span class="n">slopes</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
@@ -476,12 +559,19 @@
         <span class="n">string</span> <span class="o">=</span> <span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">component</span><span class="p">)</span> <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{self.__class__.__name__}</span><span class="s2">(</span><span class="si">{string}</span><span class="s2">)&quot;</span>
 
-<div class="viewcode-block" id="Term.set_type"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Term.set_type">[docs]</a>    <span class="k">def</span> <span class="nf">set_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
+<div class="viewcode-block" id="Term.set_type"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Term.set_type">[docs]</a>    <span class="k">def</span> <span class="nf">set_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set type of the components in the term.</span>
 
 <span class="sd">        Calls ``.set_type()`` method on each component in the term. For those components of class</span>
-<span class="sd">        ``Variable`` it only passes the data mask. For ``Call`` objects it also passes the</span>
-<span class="sd">        evaluation environment.</span>
+<span class="sd">        :class:`.Variable`` it only passes the data mask. For `:class:`.Call` objects it also passes</span>
+<span class="sd">        the evaluation environment.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pd.DataFrame</span>
+<span class="sd">            The data frame where variables are taken from</span>
+<span class="sd">        eval_env: EvalEnvironment</span>
+<span class="sd">            The environment where values and functions are taken from.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Set the type of the components by calling their set_type method.</span>
         <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
@@ -506,8 +596,18 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_type</span>  <span class="c1"># pylint: disable = protected-access</span></div>
 
-<div class="viewcode-block" id="Term.set_data"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Term.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Obtains and stores the final data object related to this term&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Term.set_data"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Term.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Obtains and stores the final data object related to this term.</span>
+
+<span class="sd">        Calls ``.set_data()`` method on each component in the term. Then, it uses the ``.data``</span>
+<span class="sd">        attribute on each of them to build ``self.data`` and ``self.metadata``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        encoding: list or dict</span>
+<span class="sd">            Indicates if it uses full or reduced encoding when the type of the variable is</span>
+<span class="sd">            categoric.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">encoding</span> <span class="o">=</span> <span class="n">encoding</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
@@ -531,26 +631,58 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">component</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">component</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">&quot;value&quot;</span><span class="p">}</span></div>
 
-<div class="viewcode-block" id="Term.eval_new_data"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Term.eval_new_data">[docs]</a>    <span class="k">def</span> <span class="nf">eval_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Evaluates the term with new data.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Term.eval_new_data"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Term.eval_new_data">[docs]</a>    <span class="k">def</span> <span class="nf">eval_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluates the term with new data.</span>
+
+<span class="sd">        Calls ``.eval_new_data()`` method on each component in the term and combines the results</span>
+<span class="sd">        appropiately.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pd.DataFrame</span>
+<span class="sd">            The data frame where variables are taken from</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result: np.array</span>
+<span class="sd">            The values resulting from evaluating this term using the new data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;interaction&quot;</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">get_interaction_matrix</span><span class="p">,</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">eval_new_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">])</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span>
+                <span class="n">get_interaction_matrix</span><span class="p">,</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">eval_new_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">]</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">eval_new_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">data</span></div>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">eval_new_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">var_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the name of the variables in the term as a set.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Returns the name of the variables in the term as a set.</span>
+
+<span class="sd">        Loops through each component and updates the set with the ``.var_names`` of each component.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        var_names: set</span>
+<span class="sd">            The names of the variables involved in the term.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">var_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
             <span class="n">var_names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">component</span><span class="o">.</span><span class="n">var_names</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">var_names</span>
 
-<div class="viewcode-block" id="Term.get_component"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Term.get_component">[docs]</a>    <span class="k">def</span> <span class="nf">get_component</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>  <span class="c1"># pylint: disable = inconsistent-return-statements</span>
-        <span class="sd">&quot;&quot;&quot;Returns a component by name</span>
+<div class="viewcode-block" id="Term.get_component"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Term.get_component">[docs]</a>    <span class="k">def</span> <span class="nf">get_component</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>  <span class="c1"># pylint: disable = inconsistent-return-statements</span>
+        <span class="sd">&quot;&quot;&quot;Returns a component by name.</span>
 
-<span class="sd">        This method receives a component name and returns the component, either a Variable or Call.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name: string</span>
+<span class="sd">            The name of the component to return.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        component: `:class:`.Variable` or `:class:`.Call`</span>
+<span class="sd">            The component with name ``name``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
@@ -558,7 +690,33 @@
                 <span class="k">return</span> <span class="n">component</span></div></div>
 
 
-<span class="k">class</span> <span class="nc">GroupSpecificTerm</span><span class="p">:</span>
+<div class="viewcode-block" id="GroupSpecificTerm"><a class="viewcode-back" href="../../../internals.html#formulae.terms.GroupSpecificTerm">[docs]</a><span class="k">class</span> <span class="nc">GroupSpecificTerm</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Representation of a group specific term.</span>
+
+<span class="sd">    Group specific terms are of the form ``(expr | factor)``. The expression ``expr`` is evaluated</span>
+<span class="sd">    as a model formula with only common effects and produces a model matrix following the rules</span>
+<span class="sd">    for common terms. ``factor`` is inspired on factors in R, but here it is evaluated as an ordered</span>
+<span class="sd">    pandas.CategoricalDtype object.</span>
+
+<span class="sd">    The operator ``|`` works as in R package lme4. As its authors say: &quot;One way to think about the</span>
+<span class="sd">    vertical bar operator is as a special kind of interaction between the model matrix and the</span>
+<span class="sd">    grouping factor. This interaction ensures that the columns of the model matrix have different</span>
+<span class="sd">    effects for each level of the grouping factor&quot;</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    expr: :class:`.Intercept` or :class:`.Term`</span>
+<span class="sd">        The term for which we want to have a group specific term.</span>
+<span class="sd">    factor: :class:`.Term`</span>
+<span class="sd">        The factor that determines the groups in the group specific term.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    factor_type: pandas.core.dtypes.dtypes.CategoricalDtype</span>
+<span class="sd">        The type assigned to the grouping factor ``factor``. This is useful for when we need to</span>
+<span class="sd">        create a design matrix for new a new data set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">factor</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">factor</span> <span class="o">=</span> <span class="n">factor</span>
@@ -582,7 +740,47 @@
         <span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;(</span><span class="se">\n</span><span class="s2">  &quot;</span> <span class="o">+</span> <span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">strlist</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">)&quot;</span>
 
-    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">,</span> <span class="n">encoding</span><span class="p">):</span>
+<div class="viewcode-block" id="GroupSpecificTerm.eval"><a class="viewcode-back" href="../../../internals.html#formulae.terms.GroupSpecificTerm.eval">[docs]</a>    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">,</span> <span class="n">encoding</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluates term.</span>
+
+<span class="sd">        First, it evaluates the variable in ``self.factor``, creates an oredered categorical data</span>
+<span class="sd">        type using its levels, and stores it in ``self.factor_type``. Then, it obtains the</span>
+<span class="sd">        design matrix for ``self.expr`` to finally produce the matrix for the group specific</span>
+<span class="sd">        effect.</span>
+
+<span class="sd">        The output contains the following information</span>
+
+<span class="sd">        * ``&quot;type&quot;``: The type of the ``expr`` term.</span>
+<span class="sd">        * ``&quot;Xi&quot;``: The design matrix for the ``expr`` term.</span>
+<span class="sd">        * ``&quot;Ji&quot;``: The design matrix for the ``factor`` term.</span>
+<span class="sd">        * ``&quot;Zi&quot;``: The design matrix for the group specific term.</span>
+<span class="sd">        * ``&quot;groups&quot;``: The groups present in ``factor``.</span>
+
+<span class="sd">        If ``&quot;type&quot;`` is ``&quot;categoric&quot;``, the output dictionary also contains</span>
+
+<span class="sd">        * ``&quot;levels&quot;``: Levels of the term in ``expr``.</span>
+<span class="sd">        * ``&quot;reference&quot;``: The level taken as baseline.</span>
+<span class="sd">        * ``&quot;encoding&quot;``: The encoding of the term, either ``&quot;full&quot;`` or ``&quot;reduced&quot;``</span>
+
+<span class="sd">        If ``&quot;type&quot;`` is ``&quot;interaction&quot;``, the output dictionary also contains</span>
+
+<span class="sd">        * ``&quot;terms&quot;``: Metadata for each of the components in the interaction in ``expr``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pandas.DataFrame</span>
+<span class="sd">            The data frame where variables are taken from.</span>
+<span class="sd">        eval_env: EvalEnvironment</span>
+<span class="sd">            The environment where values and functions are taken from.</span>
+<span class="sd">        encoding: bool</span>
+<span class="sd">            Whether to use full or reduced rank encoding when ``expr`` is categoric.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out: dict</span>
+<span class="sd">            See above.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Evaluate factor and save type to self.factor_type.</span>
         <span class="c1"># Note: factor can&#39;t be a call or interaction yet.</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Variable</span><span class="p">):</span>
             <span class="n">factor</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
@@ -598,8 +796,7 @@
                 <span class="s2">&quot;Factor on right hand side of group specific term must be a single term.&quot;</span>
             <span class="p">)</span>
 
-        <span class="c1"># Notation as in lme4 paper</span>
-        <span class="c1"># Note we don&#39;t use `drop_first=True` for factor.</span>
+        <span class="c1"># Note we don&#39;t use drop_first=True for the factor.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span>
         <span class="n">Xi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">data</span>
@@ -618,10 +815,26 @@
             <span class="n">out</span><span class="p">[</span><span class="s2">&quot;encoding&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;encoding&quot;</span><span class="p">]</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;interaction&quot;</span><span class="p">:</span>  <span class="c1"># pylint: disable = protected-access</span>
             <span class="n">out</span><span class="p">[</span><span class="s2">&quot;terms&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;terms&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">out</span>
+        <span class="k">return</span> <span class="n">out</span></div>
 
-    <span class="k">def</span> <span class="nf">eval_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Evaluates the term with new data.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="GroupSpecificTerm.eval_new_data"><a class="viewcode-back" href="../../../internals.html#formulae.terms.GroupSpecificTerm.eval_new_data">[docs]</a>    <span class="k">def</span> <span class="nf">eval_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluates the term with new data.</span>
+
+<span class="sd">        Converts the variable in ``factor`` to the type remembered from the first evaluation and</span>
+<span class="sd">        produces the design matrix for this grouping, calls ``.eval_new_data()`` on ``self.expr``</span>
+<span class="sd">        to obtain the design matrix for the ``expr`` side, then computes the design matrix</span>
+<span class="sd">        corresponding to the group specific effect.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pd.DataFrame</span>
+<span class="sd">            The data frame where variables are taken from.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        out: dict</span>
+<span class="sd">            Same rules as in :meth:`eval &lt;GroupSpecificTerm.eval&gt;`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># factor uses the same data type that is used in first evaluation.</span>
         <span class="n">factor</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">factor_type</span><span class="p">)</span>
@@ -641,35 +854,60 @@
             <span class="n">out</span><span class="p">[</span><span class="s2">&quot;encoding&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;encoding&quot;</span><span class="p">]</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;interaction&quot;</span><span class="p">:</span>  <span class="c1"># pylint: disable = protected-access</span>
             <span class="n">out</span><span class="p">[</span><span class="s2">&quot;terms&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;terms&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">out</span>
+        <span class="k">return</span> <span class="n">out</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">var_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the name of the variables in the term as a set.</span>
+
+<span class="sd">        Obtains both the variables in the ``expr`` as well as the variables in ``factor``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        var_names: set</span>
+<span class="sd">            The names of the variables involved in the term.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">expr_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">var_names</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">factor_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">var_names</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">expr_names</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">factor_names</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">to_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="n">string</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<div class="viewcode-block" id="GroupSpecificTerm.to_string"><a class="viewcode-back" href="../../../internals.html#formulae.terms.GroupSpecificTerm.to_string">[docs]</a>    <span class="k">def</span> <span class="nf">to_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Obtain string representation of the name of the term.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name: str</span>
+<span class="sd">            The name of the term, such as ``1|g`` or ``var|g``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="n">Intercept</span><span class="p">):</span>
-            <span class="n">string</span> <span class="o">+=</span> <span class="s2">&quot;1|&quot;</span>
+            <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;1|&quot;</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="n">Term</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{self.expr.name}</span><span class="s2">[</span><span class="si">{level}</span><span class="s2">]|&quot;</span>
+                <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{self.expr.name}</span><span class="s2">[</span><span class="si">{level}</span><span class="s2">]|&quot;</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{self.expr.name}</span><span class="s2">|&quot;</span>
+                <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{self.expr.name}</span><span class="s2">|&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid LHS expression for group specific term&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">,</span> <span class="n">Term</span><span class="p">):</span>
-            <span class="n">string</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">name</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">name</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid RHS expression for group specific term&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">string</span>
+        <span class="k">return</span> <span class="n">name</span></div></div>
 
 
-<div class="viewcode-block" id="Response"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Response">[docs]</a><span class="k">class</span> <span class="nc">Response</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Representation of a response term&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Response"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Response">[docs]</a><span class="k">class</span> <span class="nc">Response</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Representation of a response term.</span>
+
+<span class="sd">    It is mostly a wrapper around :class:`.Term`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    term: :class:`.Term`</span>
+<span class="sd">        The term we want to take as response in the model. Must contain only one component.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">term</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">Term</span><span class="p">):</span>
@@ -688,14 +926,18 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">term</span>
 
-    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="c1"># ~ is interpreted as __add__</span>
+<div class="viewcode-block" id="Response.__add__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Response.__add__">[docs]</a>    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Modelled as operator.</span>
+
+<span class="sd">        The operator is ``~``, but since it is not an operator in Python, we internally replace it</span>
+<span class="sd">        with ``+``. It means the LHS is taken as the response, and the RHS as the predictor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">Term</span><span class="p">,</span> <span class="n">GroupSpecificTerm</span><span class="p">,</span> <span class="n">Intercept</span><span class="p">)):</span>
             <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">response</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">add_response</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
@@ -708,19 +950,28 @@
         <span class="sd">&quot;&quot;&quot;Returns the name of the variables in the response as a set.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">var_names</span>
 
-<div class="viewcode-block" id="Response.set_type"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Response.set_type">[docs]</a>    <span class="k">def</span> <span class="nf">set_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
+<div class="viewcode-block" id="Response.set_type"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Response.set_type">[docs]</a>    <span class="k">def</span> <span class="nf">set_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set type of the response term.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Response.set_data"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Response.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set data of the response term.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span></div></div>
 
 
 <span class="n">ACCEPTED_TERMS</span> <span class="o">=</span> <span class="p">(</span><span class="n">Term</span><span class="p">,</span> <span class="n">GroupSpecificTerm</span><span class="p">,</span> <span class="n">Intercept</span><span class="p">,</span> <span class="n">NegatedIntercept</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Representation of the terms in a model&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Representation of a model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    terms: :class:`.Term`</span>
+<span class="sd">        This object can be instantiated with one or many terms.</span>
+<span class="sd">    response::class:`.Response`</span>
+<span class="sd">        The response term. Defaults to ``None`` which means there is no response.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">terms</span><span class="p">,</span> <span class="n">response</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">Response</span><span class="p">)</span> <span class="ow">or</span> <span class="n">response</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -740,11 +991,15 @@
         <span class="n">equal_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">response</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">response</span>
         <span class="k">return</span> <span class="n">equal_terms</span> <span class="ow">and</span> <span class="n">equal_response</span>
 
-    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set union.</span>
-<span class="sd">        (1 + x + y) + 0 -&gt; (x + y)</span>
-<span class="sd">        (x + y) + z -&gt; x + y + z</span>
-<span class="sd">        (x + y) + (u + v) -&gt; x + y + u + v</span>
+<div class="viewcode-block" id="Model.__add__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Model.__add__">[docs]</a>    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Addition operator. Analogous to set union.</span>
+
+<span class="sd">        Adds terms to the model and returns the model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self: :class:`.Model`</span>
+<span class="sd">            The same model object with the added term(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">NegatedIntercept</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span> <span class="o">-</span> <span class="n">Intercept</span><span class="p">()</span>
@@ -755,14 +1010,19 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">add_term</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
-    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set difference.</span>
+<div class="viewcode-block" id="Model.__sub__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Model.__sub__">[docs]</a>    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subtraction operator. Analogous to set difference.</span>
 
-<span class="sd">        (x + y) - (x + u) -&gt; y + u</span>
-<span class="sd">        (x + y) - x -&gt; y</span>
-<span class="sd">        (x + y + (1 | g)) - (1 | g) -&gt; x + y</span>
+<span class="sd">        * ``&quot;(x + y) - (x + u)&quot;`` equals to ``&quot;y + u&quot;``..</span>
+<span class="sd">        * ``&quot;(x + y) - x&quot;`` equals to ``&quot;y&quot;``.</span>
+<span class="sd">        * ``&quot;(x + y + (1 | g)) - (1 | g)&quot;`` equals to ``&quot;x + y&quot;``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self: :class:`.Model`</span>
+<span class="sd">            The same model object with the removed term(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
             <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">terms</span><span class="p">:</span>
@@ -780,13 +1040,41 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">group_terms</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
-    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Full interaction.</span>
+<div class="viewcode-block" id="Model.__matmul__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Model.__matmul__">[docs]</a>    <span class="k">def</span> <span class="fm">__matmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Simple interaction operator.</span>
 
-<span class="sd">        (x + y) * (u + v) -&gt; x + y + u + v + x:u + x:v + y:u + y:v</span>
-<span class="sd">        (x + y) * u -&gt; x + y + u + x:u + y:u</span>
+<span class="sd">        * ``&quot;(x + y) : (u + v)&quot;`` equals to ``&quot;x:u + x:v + y:u + y:v&quot;``.</span>
+<span class="sd">        * ``&quot;(x + y) : u&quot;`` equals to ``&quot;x:u + y:u&quot;``.</span>
+<span class="sd">        * ``&quot;(x + y) : f(u)&quot;`` equals to ``&quot;x:f(u) + y:f(u)&quot;``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        model: :class:`.Model`</span>
+<span class="sd">            A new instance of the model with all the interaction terms computed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="n">products</span> <span class="o">=</span> <span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">common_terms</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">common_terms</span><span class="p">)</span>
+            <span class="n">iterms</span> <span class="o">=</span> <span class="p">[</span><span class="n">Term</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">iterms</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Term</span><span class="p">):</span>
+            <span class="n">products</span> <span class="o">=</span> <span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">common_terms</span><span class="p">,</span> <span class="p">[</span><span class="n">other</span><span class="p">])</span>
+            <span class="n">iterms</span> <span class="o">=</span> <span class="p">[</span><span class="n">Term</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">iterms</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
+
+<div class="viewcode-block" id="Model.__mul__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Model.__mul__">[docs]</a>    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Full interaction operator.</span>
+
+<span class="sd">        * ``&quot;(x + y) * (u + v)&quot;`` equals to ``&quot;x + y + u + v + x:u + x:v + y:u + y:v&quot;``.</span>
+<span class="sd">        * ``&quot;(x + y) * u&quot;`` equals to ``&quot;x + y + u + x:u + y:u&quot;``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        model: :class:`.Model`</span>
+<span class="sd">            A new instance of the model with all the interaction terms computed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
@@ -807,30 +1095,19 @@
             <span class="n">iterms</span> <span class="o">=</span> <span class="p">[</span><span class="n">Term</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">terms</span><span class="p">)</span> <span class="o">+</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">iterms</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
-    <span class="k">def</span> <span class="fm">__matmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Simple interaction.</span>
+<div class="viewcode-block" id="Model.__pow__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Model.__pow__">[docs]</a>    <span class="k">def</span> <span class="fm">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Power of a set made of :class:`.Term`</span>
 
-<span class="sd">        (x + y) : (u + v) -&gt; x:u + x:v + y:u + y:v</span>
-<span class="sd">        (x + y) : u -&gt; x:u + y:u</span>
-<span class="sd">        (x + y) : f(u) -&gt; x:f(u) + y:f(u)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
-            <span class="n">products</span> <span class="o">=</span> <span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">common_terms</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">common_terms</span><span class="p">)</span>
-            <span class="n">iterms</span> <span class="o">=</span> <span class="p">[</span><span class="n">Term</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">iterms</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Term</span><span class="p">):</span>
-            <span class="n">products</span> <span class="o">=</span> <span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">common_terms</span><span class="p">,</span> <span class="p">[</span><span class="n">other</span><span class="p">])</span>
-            <span class="n">iterms</span> <span class="o">=</span> <span class="p">[</span><span class="n">Term</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">iterms</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+<span class="sd">        Computes all interactions up to order ``n`` between the terms in the set.</span>
 
-    <span class="k">def</span> <span class="fm">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Power of a set of Terms</span>
+<span class="sd">        * ``&quot;(x + y + z) ** 2&quot;`` equals to ``&quot;x + y + z + x:y + x:z + y:z&quot;``.</span>
 
-<span class="sd">        (x + y + z) ** 2 -&gt; x + y + z + x:y + x:z + y:z</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        model: :class:`.Model`</span>
+<span class="sd">            A new instance of the model with all the terms computed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Term</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
@@ -841,15 +1118,18 @@
             <span class="n">iterms</span> <span class="o">=</span> <span class="p">[</span><span class="n">Term</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">comp</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">term</span><span class="o">.</span><span class="n">components</span><span class="p">])</span> <span class="k">for</span> <span class="n">terms</span> <span class="ow">in</span> <span class="n">comb</span><span class="p">]</span>
             <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">iterms</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Power must be a positive integer.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Power must be a positive integer.&quot;</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Division interaction.</span>
+<div class="viewcode-block" id="Model.__truediv__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Model.__truediv__">[docs]</a>    <span class="k">def</span> <span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Division interaction operator.</span>
 
-<span class="sd">        See https://patsy.readthedocs.io/en/latest/formulas.html</span>
+<span class="sd">        * ``&quot;(x + y) / z&quot;`` equals to ``&quot;x + y + x:y:z&quot;``.</span>
+<span class="sd">        * ``&quot;(x + y) / (u + v)&quot;`` equals to ``&quot;x + y + x:y:u + x:y:v&quot;``.</span>
 
-<span class="sd">        (x + y) / z -&gt; x + y + x:y:z</span>
-<span class="sd">        (x + y) / (u + v) -&gt; x + y + x:y:u + x:y:v</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        model: :class:`.Model`</span>
+<span class="sd">            A new instance of the model with all the terms computed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Term</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_term</span><span class="p">(</span><span class="n">Term</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">common_components</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">components</span><span class="p">))</span>
@@ -857,14 +1137,24 @@
             <span class="n">iterms</span> <span class="o">=</span> <span class="p">[</span><span class="n">Term</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">common_components</span><span class="p">,</span> <span class="n">comp</span><span class="p">)</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">common_components</span><span class="p">]</span>
             <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">iterms</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
-    <span class="k">def</span> <span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Only terms like (0 + x | g) arrive here</span>
-<span class="sd">        (0 + x | g) -&gt; (x|g)</span>
-<span class="sd">        (0 + x | g + y) -&gt; (x|g) + (x|y)</span>
+<div class="viewcode-block" id="Model.__or__"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Model.__or__">[docs]</a>    <span class="k">def</span> <span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Group specific term operator.</span>
+
+<span class="sd">        Only _models_ ``&quot;0 + x&quot;`` arrive here.</span>
+
+<span class="sd">        * ``&quot;(0 + x | g)&quot;`` equals to ``&quot;(x|g)&quot;``.</span>
+<span class="sd">        * ``&quot;(0 + x | g + y)&quot;`` equals to ``&quot;(x|g) + (x|y)&quot;``.</span>
+
+<span class="sd">        There are several edge cases to handle here. See in-line comments.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        model: :class:`.Model`</span>
+<span class="sd">            A new instance of the model with all the terms computed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="c1"># If only one term in the expr, resolve according to the type of the term.</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">common_terms</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">common_terms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">|</span> <span class="n">other</span>
@@ -889,7 +1179,7 @@
             <span class="n">terms</span> <span class="o">=</span> <span class="p">[</span><span class="n">GroupSpecificTerm</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="n">terms</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
@@ -908,19 +1198,37 @@
 
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{self.__class__.__name__}</span><span class="s2">(</span><span class="se">\n</span><span class="s2">  </span><span class="si">{string}</span><span class="se">\n</span><span class="s2">)&quot;</span>
 
-<div class="viewcode-block" id="Model.add_response"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Model.add_response">[docs]</a>    <span class="k">def</span> <span class="nf">add_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">term</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Add response term to model description.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Model.add_response"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Model.add_response">[docs]</a>    <span class="k">def</span> <span class="nf">add_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">term</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add response term to model description.</span>
+
+<span class="sd">        This method is called when something like ``&quot;y ~ x + z&quot;`` appears in a model formula.</span>
+
+<span class="sd">        This method is called via special methods such as :meth:`Response.__add__`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self: :class:`.Model`</span>
+<span class="sd">            The same model object but now with a reponse term.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">Response</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">response</span> <span class="o">=</span> <span class="n">term</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;not Response&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Model.add_term"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Model.add_term">[docs]</a>    <span class="k">def</span> <span class="nf">add_term</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">term</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.add_term"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Model.add_term">[docs]</a>    <span class="k">def</span> <span class="nf">add_term</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">term</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add term to model description.</span>
 
-<span class="sd">        The term added can be of class ``Intercept``, ``Term``, or ``GroupSpecificTerm``. It appends</span>
-<span class="sd">        the new term object to the list of common terms or group specific terms as appropriate.</span>
+<span class="sd">        The term added can be of class :class:`.Intercept` :class:`.Term`, or</span>
+<span class="sd">        :class:`.GroupSpecificTerm`. It appends the new term object to the list of common terms or</span>
+<span class="sd">        group specific terms as appropriate.</span>
+
+<span class="sd">        This method is called via special methods such as :meth:`__add__`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self: :class:`.Model`</span>
+<span class="sd">            The same model object but now containing the new term.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">GroupSpecificTerm</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">term</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_terms</span><span class="p">:</span>
@@ -937,7 +1245,10 @@
     <span class="k">def</span> <span class="nf">terms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Terms in the model.</span>
 
-<span class="sd">        Returns a list of both common and group specific terms in the model description.</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        terms: list</span>
+<span class="sd">            A list containing both common and group specific terms.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">common_terms</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_terms</span>
 
@@ -945,8 +1256,10 @@
     <span class="k">def</span> <span class="nf">common_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Components in common terms in the model.</span>
 
-<span class="sd">        Returns a list with all components, ``Variable`` and ``Call`` instances, within common</span>
-<span class="sd">        terms in the model.</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        components: list</span>
+<span class="sd">            A list containing all components from common terms in the model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Note: Check whether this method is really necessary.</span>
         <span class="k">return</span> <span class="p">[</span>
@@ -955,7 +1268,14 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">var_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the name of the variables in the model as a set.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Get the name of the variables in the model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        var_names: set</span>
+<span class="sd">            The names of all variables in the model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">var_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms</span><span class="p">:</span>
             <span class="n">var_names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">var_names</span><span class="p">)</span>
@@ -963,8 +1283,18 @@
             <span class="n">var_names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">var_names</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">var_names</span>
 
-<div class="viewcode-block" id="Model.set_types"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Model.set_types">[docs]</a>    <span class="k">def</span> <span class="nf">set_types</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set the type of the common terms in the model.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Model.set_types"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Model.set_types">[docs]</a>    <span class="k">def</span> <span class="nf">set_types</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the type of the common terms in the model.</span>
+
+<span class="sd">        Calls ``.set_type()`` method on term in the model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pd.DataFrame</span>
+<span class="sd">            The data frame where variables are taken from</span>
+<span class="sd">        eval_env: EvalEnvironment</span>
+<span class="sd">            The environment where values and functions are taken from.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">common_terms</span><span class="p">:</span>
             <span class="n">term</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">)</span></div>
 
@@ -1016,9 +1346,9 @@
     <span class="k">def</span> <span class="nf">_encoding_bools</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Determine encodings for terms containing at least one categorical variable.</span>
 
-<span class="sd">        This method returns dictionaries with True/False values.</span>
-<span class="sd">        True means the categorical variable uses &#39;levels&#39; dummies.</span>
-<span class="sd">        False means the categorial variable uses &#39;levels - 1&#39; dummies.</span>
+<span class="sd">        This method returns dictionaries with ``True``/``False`` values.</span>
+<span class="sd">        ``True`` means the categorical variable uses &#39;levels&#39; dummies.</span>
+<span class="sd">        ``False`` means the categorial variable uses &#39;levels - 1&#39; dummies.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encoding_groups</span><span class="p">()</span>
         <span class="n">l</span> <span class="o">=</span> <span class="p">[</span><span class="n">pick_contrasts</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">]</span>
@@ -1027,7 +1357,25 @@
             <span class="n">result</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.eval"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Model.eval">[docs]</a>    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluates terms in the model.</span>
+
+<span class="sd">        Only common effects are evaluated here. Group specific terms are evaluated individually</span>
+<span class="sd">        in :class:`GroupEffectsMatrix &lt;formulae.matrices.GroupEffectsMatrix&gt;`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pd.DataFrame</span>
+<span class="sd">            The data frame where variables are taken from</span>
+<span class="sd">        eval_env: EvalEnvironment</span>
+<span class="sd">            The environment where values and functions are taken from.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result: dict</span>
+<span class="sd">            A dictionary where keys are the name of the terms and the values are their ``.data``</span>
+<span class="sd">            attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_types</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">)</span>
         <span class="n">encodings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encoding_bools</span><span class="p">()</span>
         <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
@@ -1063,7 +1411,7 @@
                 <span class="n">term</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">)</span>
                 <span class="n">term</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">term_encoding</span><span class="p">)</span>
                 <span class="n">result</span><span class="p">[</span><span class="n">term</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">data</span>
-        <span class="k">return</span> <span class="n">result</span></div>
+        <span class="k">return</span> <span class="n">result</span></div></div>
 
 
 <span class="k">def</span> <span class="nf">_create_and_eval_extra_term</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">encoding</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
@@ -1082,11 +1430,6 @@
     <span class="n">extra_term</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">)</span>
     <span class="n">extra_term</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">encoding_</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">extra_term</span>
-
-
-<span class="c1"># IDEA: What if Variable, Call, Terms, etc... get frozen once set_type or similar is called?</span>
-<span class="c1">#       Then, all properties and alike are ensured to remain constant and not change...</span>
-<span class="c1">#       idk, may need to think about it more.</span>
 </pre></div>
 
               </div>

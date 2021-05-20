@@ -73,6 +73,12 @@
  </a>
 </li>
 
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../internals.html">
+  Internals
+ </a>
+</li>
+
     
 </ul>
       </div>
@@ -142,8 +148,22 @@
 <span class="kn">from</span> <span class="nn">pandas.api.types</span> <span class="kn">import</span> <span class="n">is_categorical_dtype</span><span class="p">,</span> <span class="n">is_numeric_dtype</span><span class="p">,</span> <span class="n">is_string_dtype</span>
 
 
-<div class="viewcode-block" id="Variable"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Variable">[docs]</a><span class="k">class</span> <span class="nc">Variable</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Atomic component of a Term&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Variable"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Variable">[docs]</a><span class="k">class</span> <span class="nc">Variable</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Representation of a variable in a model Term.</span>
+
+<span class="sd">    This class and ``Call`` are the atomic components of a model term.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: string</span>
+<span class="sd">        The identifier of the variable.</span>
+<span class="sd">    level: string</span>
+<span class="sd">        The level to use as reference. Allows to use the notation ``variable[&quot;level&quot;]`` to indicate</span>
+<span class="sd">        which event should be model as success in binary response models. Can only be used with</span>
+<span class="sd">        response terms. Defaults to ``None``.</span>
+<span class="sd">    is_response: bool</span>
+<span class="sd">        Indicates whether this variable represents a response. Defaults to ``False``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">is_response</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
@@ -171,16 +191,24 @@
     <span class="k">def</span> <span class="nf">var_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the name of the variable as a set.</span>
 
-<span class="sd">        This ends up being used in design_matrices.py to determine which variables of the data</span>
-<span class="sd">        passed are present in the model and subset and raise proper errors.</span>
+<span class="sd">        This is used to determine which variables of the data set being used are actually used in</span>
+<span class="sd">        the model. This allows us to subset the original data set and only raise errors regarding</span>
+<span class="sd">        missing values when the missingness happens in variables used in the model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
 
-<div class="viewcode-block" id="Variable.set_type"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Variable.set_type">[docs]</a>    <span class="k">def</span> <span class="nf">set_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_mask</span><span class="p">):</span>
+<div class="viewcode-block" id="Variable.set_type"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Variable.set_type">[docs]</a>    <span class="k">def</span> <span class="nf">set_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_mask</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Detemines the type of the variable.</span>
 
-<span class="sd">        Looks for the name of the variable in ``data`` and sets the ``.type_`` property to</span>
+<span class="sd">        Looks for the name of the variable in ``data_mask`` and sets the ``.type_`` property to</span>
 <span class="sd">        ``&quot;numeric&quot;`` or ``&quot;categoric&quot;`` depending on the type of the variable.</span>
+<span class="sd">        It also stores the result of the intermediate evaluation in ``self._intermediate_data`` to</span>
+<span class="sd">        save computing time later.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_mask: pd.DataFrame</span>
+<span class="sd">            The data frame where variables are taken from</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">data_mask</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">is_numeric_dtype</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -193,10 +221,16 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Variable is of an unrecognized type ({type(x)}).&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_intermediate_data</span> <span class="o">=</span> <span class="n">x</span></div>
 
-<div class="viewcode-block" id="Variable.set_data"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Variable.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Variable.set_data"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Variable.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Obtains and stores the final data object related to this variable.</span>
 
 <span class="sd">        The result is stored in ``self.data``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        encoding: bool</span>
+<span class="sd">            Indicates if it uses full or reduced encoding when the type of the variable is</span>
+<span class="sd">            categoric. Omitted when the variable is numeric.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Variable type is not set.&quot;</span><span class="p">)</span>
@@ -209,7 +243,24 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unexpected error while trying to evaluate a Variable.&quot;</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_eval_numeric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="Variable._eval_numeric"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Variable._eval_numeric">[docs]</a>    <span class="k">def</span> <span class="nf">_eval_numeric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Finishes evaluation of a numeric variable.</span>
+
+<span class="sd">        Converts the intermediate values in ``x`` into a numpy array of shape ``(n, 1)``,</span>
+<span class="sd">        where ``n`` is the number of observations. This method is used both in ``self.set_data``</span>
+<span class="sd">        and in ``self.eval_new_data``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x: np.ndarray or pd.Series</span>
+<span class="sd">            The intermediate values of the variable.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result: dict</span>
+<span class="sd">            A dictionary with keys ``&quot;value&quot;`` and ``&quot;type&quot;``. The first contains the result of the</span>
+<span class="sd">            evaluation, and the latter is equal to ``&quot;numeric&quot;``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -218,13 +269,33 @@
             <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span><span class="o">.</span><span class="n">T</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Variable is of an unrecognized type ({type(x)}).&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;numeric&quot;</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;numeric&quot;</span><span class="p">}</span></div>
 
-    <span class="k">def</span> <span class="nf">_eval_categoric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">encoding</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Variable._eval_categoric"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Variable._eval_categoric">[docs]</a>    <span class="k">def</span> <span class="nf">_eval_categoric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">encoding</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Finishes evaluation of a categoric variable.</span>
+
+<span class="sd">        Converts the intermediate values in ``x`` into a numpy array of shape ``(n, p)``, where</span>
+<span class="sd">        ``n`` is the number of observations and ``p`` the number of dummy variables used in the</span>
+<span class="sd">        numeric representation of the categorical variable.</span>
+
 <span class="sd">        It does not support multi-level categoric responses yet. If ``self.is_response`` is ``True``</span>
 <span class="sd">        and the variable is of a categoric type, the value element of the dictionary returned is a</span>
 <span class="sd">        1d array of 0-1 instead of a matrix.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x: np.ndarray or pd.Series</span>
+<span class="sd">            The intermediate values of the variable.</span>
+<span class="sd">        encoding: bool</span>
+<span class="sd">            Indicates if it uses full or reduced encoding.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result: dict</span>
+<span class="sd">            A dictionary with keys ``&quot;value&quot;``, ``&quot;type&quot;``, ``&quot;levels&quot;``, ``&quot;reference&quot;``, and</span>
+<span class="sd">            ``&quot;encoding&quot;``. They represent the result of the evaluation, the type, which is</span>
+<span class="sd">            ``&quot;categoric&quot;``, the levels observed in the variable, the level used as reference when</span>
+<span class="sd">            using reduced encoding, and whether the encoding is ``&quot;full&quot;`` or ``&quot;reduced&quot;``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># If not ordered, we make it ordered.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="s2">&quot;ordered&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">ordered</span><span class="p">:</span>
@@ -240,6 +311,7 @@
                 <span class="n">reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="n">reference</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Not always we receive a bool, so we need to check.</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                 <span class="n">encoding</span> <span class="o">=</span> <span class="n">encoding</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
@@ -256,13 +328,26 @@
             <span class="s2">&quot;levels&quot;</span><span class="p">:</span> <span class="n">levels</span><span class="p">,</span>
             <span class="s2">&quot;reference&quot;</span><span class="p">:</span> <span class="n">reference</span><span class="p">,</span>
             <span class="s2">&quot;encoding&quot;</span><span class="p">:</span> <span class="n">encoding</span><span class="p">,</span>
-        <span class="p">}</span>
+        <span class="p">}</span></div>
 
-<div class="viewcode-block" id="Variable.eval_new_data"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Variable.eval_new_data">[docs]</a>    <span class="k">def</span> <span class="nf">eval_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_mask</span><span class="p">):</span>
+<div class="viewcode-block" id="Variable.eval_new_data"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Variable.eval_new_data">[docs]</a>    <span class="k">def</span> <span class="nf">eval_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_mask</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Evaluates the variable with new data.</span>
 
 <span class="sd">        This method evaluates the variable within a new data mask. If this object is categorical,</span>
-<span class="sd">        original encoding is remembered when carrying out the new evaluation</span>
+<span class="sd">        original encoding is remembered (and checked) when carrying out the new evaluation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_mask: pd.DataFrame</span>
+<span class="sd">            The data frame where variables are taken from</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result: np.array</span>
+<span class="sd">            The rules for the shape of this array are the rules for ``self._eval_numeric()`` and</span>
+<span class="sd">            ``self._eval_categoric()``. The first applies for numeric variables, the second for</span>
+<span class="sd">            categoric ones.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;self.data is None. This error shouldn&#39;t have happened!&quot;</span><span class="p">)</span>
@@ -272,7 +357,22 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_new_data_categoric</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_eval_new_data_categoric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="Variable._eval_new_data_categoric"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Variable._eval_new_data_categoric">[docs]</a>    <span class="k">def</span> <span class="nf">_eval_new_data_categoric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluates the variable with new data when variable is categoric.</span>
+
+<span class="sd">        This method also checks the levels observed in the new data frame are included within the</span>
+<span class="sd">        set of the levels of the original data set. If not, an error is raised.</span>
+
+<span class="sd">        x: np.ndarray or pd.Series</span>
+<span class="sd">            The intermediate values of the variable.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result: np.array</span>
+<span class="sd">            Numeric numpy array ``(n, p)``, where ``n`` is the number of observations and ``p`` the</span>
+<span class="sd">            number of dummy variables used in the numeric representation of the categorical</span>
+<span class="sd">            variable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_response</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;reference&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
         <span class="k">else</span><span class="p">:</span>
@@ -285,7 +385,7 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;At least one of the levels for &#39;</span><span class="si">{self.name}</span><span class="s2">&#39; in the new data was &quot;</span>
                     <span class="s2">&quot;not present in the original data set.&quot;</span>
-                <span class="p">)</span></div>
+                <span class="p">)</span></div></div>
 </pre></div>
 
               </div>

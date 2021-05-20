@@ -73,6 +73,12 @@
  </a>
 </li>
 
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../internals.html">
+  Internals
+ </a>
+</li>
+
     
 </ul>
       </div>
@@ -145,19 +151,24 @@
 <span class="kn">from</span> <span class="nn">formulae.terms.call_utils</span> <span class="kn">import</span> <span class="n">CallVarsExtractor</span>
 
 
-<div class="viewcode-block" id="Call"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Call">[docs]</a><span class="k">class</span> <span class="nc">Call</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Atomic component of a Term that is a call.</span>
+<div class="viewcode-block" id="Call"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Call">[docs]</a><span class="k">class</span> <span class="nc">Call</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Representation of a call in a model Term.</span>
 
-<span class="sd">    This object supports stateful transformations defined in formulae.transforms.</span>
+<span class="sd">    This class and ``Variable`` are the atomic components of a model term.</span>
+
+<span class="sd">    This object supports stateful transformations defined in ``formulae.transforms``.</span>
 <span class="sd">    A transformation of this type defines its parameters the first time it is called,</span>
 <span class="sd">    and then can be used to recompute the transformation with memorized parameter values.</span>
 <span class="sd">    This behavior is useful when implementing a predict method and using transformations such</span>
-<span class="sd">    as ``center(x)`` or ``scale(x)``.</span>
+<span class="sd">    as ``center(x)`` or ``scale(x)``. ``center(x)`` memorizes the value of the mean, and</span>
+<span class="sd">    ``scale(x)`` memorizes both the mean and the standard deviation.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    expr: formulae.expr.Call</span>
+<span class="sd">    call: formulae.terms.call_resolver.LazyCall</span>
 <span class="sd">        The call expression returned by the parser.</span>
+<span class="sd">    is_response: bool</span>
+<span class="sd">        Indicates whether this call represents a response. Defaults to ``False``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">call</span><span class="p">,</span> <span class="n">is_response</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -183,7 +194,7 @@
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{self.__class__.__name__}</span><span class="s2">(</span><span class="si">{self.name}</span><span class="s2">)&quot;</span>
 
-<div class="viewcode-block" id="Call.accept"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Call.accept">[docs]</a>    <span class="k">def</span> <span class="nf">accept</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visitor</span><span class="p">):</span>
+<div class="viewcode-block" id="Call.accept"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Call.accept">[docs]</a>    <span class="k">def</span> <span class="nf">accept</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visitor</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Accept method called by a visitor.</span>
 
 <span class="sd">        Visitors are those available in call_utils.py, and are used to work with call terms.</span>
@@ -192,16 +203,37 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">var_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the names of the variables involved in the call, not including the callee.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Returns the names of the variables involved in the call, not including the callee.</span>
+
+<span class="sd">        This is used to determine which variables of the data set being used are actually used in</span>
+<span class="sd">        the model. This allows us to subset the original data set and only raise errors regarding</span>
+<span class="sd">        missing values when the missingness happens in variables used in the model.</span>
+
+<span class="sd">        Uses a visitor of class ``CallVarsExtractor`` that walks through the components of the call</span>
+<span class="sd">        and returns a list with the name of the variables in the call.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result: list</span>
+<span class="sd">            A list of strings with the names of the names of the variables in the call, not</span>
+<span class="sd">            including the name of the callee.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">CallVarsExtractor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
 
-<div class="viewcode-block" id="Call.set_type"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Call.set_type">[docs]</a>    <span class="k">def</span> <span class="nf">set_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_mask</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
+<div class="viewcode-block" id="Call.set_type"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Call.set_type">[docs]</a>    <span class="k">def</span> <span class="nf">set_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_mask</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Evaluates function and determines the type of the result of the call.</span>
 
 <span class="sd">        Evaluates the function call and sets the ``._type`` property to ``&quot;numeric&quot;`` or</span>
 <span class="sd">        ``&quot;categoric&quot;`` depending on the type of the result. It also stores the intermediate result</span>
 <span class="sd">        of the evaluation in ``._intermediate_data`` to prevent us from computing the same thing</span>
 <span class="sd">        more than once.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_mask: pd.DataFrame</span>
+<span class="sd">            The data frame where variables are taken from</span>
+<span class="sd">        eval_env: EvalEnvironment</span>
+<span class="sd">            The environment where values and functions are taken from.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span> <span class="o">=</span> <span class="n">eval_env</span><span class="o">.</span><span class="n">with_outer_namespace</span><span class="p">(</span><span class="n">TRANSFORMS</span><span class="p">)</span>
@@ -216,14 +248,20 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Call result is of an unrecognized type ({type(x)}).&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_intermediate_data</span> <span class="o">=</span> <span class="n">x</span></div>
 
-<div class="viewcode-block" id="Call.set_data"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Call.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Completes evaluation of the call according to its type.</span>
+<div class="viewcode-block" id="Call.set_data"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Call.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Finishes the evaluation of the call according to its type.</span>
 
 <span class="sd">        Evaluates the call according to its type and stores the result in ``.data``. It does not</span>
 <span class="sd">        support multi-level categoric responses yet. If ``self.is_response`` is ``True`` and the</span>
 <span class="sd">        variable is of a categoric type, this method returns a 1d array of 0-1 instead of a matrix.</span>
 
 <span class="sd">        In practice, it just completes the evaluation that started with ``self.set_type()``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        encoding: bool</span>
+<span class="sd">            Indicates if it uses full or reduced encoding when the type of the call is</span>
+<span class="sd">            categoric. Omitted when the result of the call is numeric.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Workaround: var names present in &#39;data&#39; are taken from &#39;__DATA__[&#39;col&#39;]</span>
         <span class="c1"># the rest are left as they are and looked up in the upper namespace</span>
@@ -236,10 +274,23 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_categoric</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_intermediate_data</span><span class="p">,</span> <span class="n">encoding</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_eval_numeric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="Call._eval_numeric"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Call._eval_numeric">[docs]</a>    <span class="k">def</span> <span class="nf">_eval_numeric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Finishes evaluation of a numeric call.</span>
 
-<span class="sd">        This method ensures the returned type is a column vector (i.e. shape is (n, 1))</span>
+<span class="sd">        Converts the intermediate values of the call into a numpy array of shape ``(n, 1)``,</span>
+<span class="sd">        where ``n`` is the number of observations. This method is used both in ``self.set_data``</span>
+<span class="sd">        and in ``self.eval_new_data``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x: np.ndarray or pd.Series</span>
+<span class="sd">            The intermediate values resulting from the call.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result: dict</span>
+<span class="sd">            A dictionary with keys ``&quot;value&quot;`` and ``&quot;type&quot;``. The first contains the result of the</span>
+<span class="sd">            evaluation, and the latter is equal to ``&quot;numeric&quot;``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -249,16 +300,10 @@
             <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span><span class="o">.</span><span class="n">T</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Call result is of an unrecognized type ({type(x)}).&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;numeric&quot;</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;numeric&quot;</span><span class="p">}</span></div>
 
-    <span class="k">def</span> <span class="nf">_eval_categoric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">encoding</span><span class="p">):</span>
-        <span class="c1"># Note: Uncompleted docs.</span>
+<div class="viewcode-block" id="Call._eval_categoric"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Call._eval_categoric">[docs]</a>    <span class="k">def</span> <span class="nf">_eval_categoric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">encoding</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Finishes evaluation of categoric call.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">         encoding: list or bool</span>
-<span class="sd">            Determines whether to use reduced or full rank encoding.</span>
 
 <span class="sd">        First, it checks whether the intermediate evaluation returned is ordered. If not, it</span>
 <span class="sd">        creates a category where the levels are the observed in the variable. They are sorted</span>
@@ -268,6 +313,21 @@
 <span class="sd">        is a response, the value returned is a dummy with 1s for the reference level and 0s</span>
 <span class="sd">        elsewhere. If it is not a response variable, it determines the matrix of dummies according</span>
 <span class="sd">        to the levels and the encoding passed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x: np.ndarray or pd.Series</span>
+<span class="sd">            The intermediate values of the variable.</span>
+<span class="sd">        encoding: bool</span>
+<span class="sd">            Indicates if it uses full or reduced encoding.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result: dict</span>
+<span class="sd">            A dictionary with keys ``&quot;value&quot;``, ``&quot;type&quot;``, ``&quot;levels&quot;``, ``&quot;reference&quot;``, and</span>
+<span class="sd">            ``&quot;encoding&quot;``. They represent the result of the evaluation, the type, which is</span>
+<span class="sd">            ``&quot;categoric&quot;``, the levels observed in the variable, the level used as reference when</span>
+<span class="sd">            using reduced encoding, and whether the encoding is ``&quot;full&quot;`` or ``&quot;reduced&quot;``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="s2">&quot;ordered&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">ordered</span><span class="p">:</span>
@@ -298,14 +358,26 @@
             <span class="s2">&quot;levels&quot;</span><span class="p">:</span> <span class="n">levels</span><span class="p">,</span>
             <span class="s2">&quot;reference&quot;</span><span class="p">:</span> <span class="n">reference</span><span class="p">,</span>
             <span class="s2">&quot;encoding&quot;</span><span class="p">:</span> <span class="n">encoding</span><span class="p">,</span>
-        <span class="p">}</span>
+        <span class="p">}</span></div>
 
-<div class="viewcode-block" id="Call.eval_new_data"><a class="viewcode-back" href="../../../api_reference.html#formulae.terms.Call.eval_new_data">[docs]</a>    <span class="k">def</span> <span class="nf">eval_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_mask</span><span class="p">):</span>
+<div class="viewcode-block" id="Call.eval_new_data"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Call.eval_new_data">[docs]</a>    <span class="k">def</span> <span class="nf">eval_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_mask</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Evaluates the function call with new data.</span>
 
 <span class="sd">        This method evaluates the function call within a new data mask. If the transformation</span>
 <span class="sd">        applied is a stateful transformation, it uses the proper object that remembers all</span>
 <span class="sd">        parameters or settings that may have been set in a first pass.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_mask: pd.DataFrame</span>
+<span class="sd">            The data frame where variables are taken from</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result: np.array</span>
+<span class="sd">            The rules for the shape of this array are the rules for ``self._eval_numeric()`` and</span>
+<span class="sd">            ``self._eval_categoric()``. The first applies for numeric calls, the second for</span>
+<span class="sd">            categoric ones.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">data_mask</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;numeric&quot;</span><span class="p">:</span>
@@ -313,7 +385,22 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_new_data_categoric</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_eval_new_data_categoric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="Call._eval_new_data_categoric"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Call._eval_new_data_categoric">[docs]</a>    <span class="k">def</span> <span class="nf">_eval_new_data_categoric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluates the call with new data when the result of the call is categoric.</span>
+
+<span class="sd">        This method also checks the levels observed in the new data frame are included within the</span>
+<span class="sd">        set of the levels of the result of the original call If not, an error is raised.</span>
+
+<span class="sd">        x: np.ndarray or pd.Series</span>
+<span class="sd">            The intermediate values of the variable.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result: np.array</span>
+<span class="sd">            Numeric numpy array ``(n, p)``, where ``n`` is the number of observations and ``p`` the</span>
+<span class="sd">            number of dummy variables used in the numeric representation of the categorical</span>
+<span class="sd">            variable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_response</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;reference&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
         <span class="k">else</span><span class="p">:</span>
@@ -327,7 +414,7 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;At least one of the levels for &#39;</span><span class="si">{self.name}</span><span class="s2">&#39; in the new data was &quot;</span>
                     <span class="s2">&quot;not present in the original data set.&quot;</span>
-                <span class="p">)</span></div>
+                <span class="p">)</span></div></div>
 </pre></div>
 
               </div>

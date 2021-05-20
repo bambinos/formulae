@@ -1,0 +1,830 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>formulae.matrices &#8212; Formulae 0.0.10 documentation</title>
+    
+  <link href="../../_static/css/theme.css" rel="stylesheet" />
+  <link href="../../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="../../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../index.html">
+  <img src="../../_static/formulae_small.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../api_reference.html">
+  API Reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../internals.html">
+  Internals
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/bambinos/formulae" rel="noopener" target="_blank" title="GitHub">
+            <span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://pypi.org/project/formulae/" rel="noopener" target="_blank" title="PyPi">
+            <span><i class="fas fa-box"></i></span>
+            <label class="sr-only">PyPi</label>
+          </a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <h1>Source code for formulae.matrices</h1><div class="highlight"><pre>
+<span></span><span class="c1"># pylint: disable=relative-beyond-top-level</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span>
+
+<span class="kn">from</span> <span class="nn">.eval</span> <span class="kn">import</span> <span class="n">EvalEnvironment</span>
+<span class="kn">from</span> <span class="nn">.terms</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">Intercept</span>
+<span class="kn">from</span> <span class="nn">.model_description</span> <span class="kn">import</span> <span class="n">model_description</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">flatten_list</span>
+
+<span class="n">_log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;formulae&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DesignMatrices"><a class="viewcode-back" href="../../api_reference.html#formulae.DesignMatrices">[docs]</a><span class="k">class</span> <span class="nc">DesignMatrices</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;A wrapper of the response, the common and group specific effects.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    model : Model</span>
+<span class="sd">        The model description, the result of calling ``model_description``.</span>
+<span class="sd">    data: pandas.DataFrame</span>
+<span class="sd">        The data frame where variables are taken from.</span>
+<span class="sd">    eval_env: EvalEnvironment</span>
+<span class="sd">        The environment where values and functions are taken from.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    response: ResponseVector</span>
+<span class="sd">        The response in the model. Access its values with ``self.response.design_vector``. It is</span>
+<span class="sd">        ``None`` if there is no response term in the model.</span>
+<span class="sd">    common: CommonEffectsMatrix</span>
+<span class="sd">        The common effects (a.k.a. fixed effects) in the model. The design matrix can be accessed</span>
+<span class="sd">        with ``self.common.design_matrix``. The submatrix for a term is accessed via</span>
+<span class="sd">        ``self.common[term_name]``. It is ``None`` if there are no common terms in the</span>
+<span class="sd">        model.</span>
+<span class="sd">    group: GroupEffectsMatrix</span>
+<span class="sd">        The group specific effects (a.k.a. random effects) in the model. The design matrix can be</span>
+<span class="sd">        accessed with ``self.group.design_matrix``. The submatrix for a term is accessed via</span>
+<span class="sd">        ``self.group[term_name]``. It is ``None`` if there are no group specific terms in the</span>
+<span class="sd">        model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span> <span class="o">=</span> <span class="n">eval_env</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">response</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">common</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">response</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">response</span> <span class="o">=</span> <span class="n">ResponseVector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">response</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">common_terms</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">common</span> <span class="o">=</span> <span class="n">CommonEffectsMatrix</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">common_terms</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">group_terms</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="n">GroupEffectsMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">group_terms</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ResponseVector"><a class="viewcode-back" href="../../internals.html#formulae.ResponseVector">[docs]</a><span class="k">class</span> <span class="nc">ResponseVector</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Representation of the respose vector of a model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    term : Response</span>
+<span class="sd">        The term that represents the response in the model.</span>
+<span class="sd">    data: pandas.DataFrame</span>
+<span class="sd">        The data frame where variables are taken from.</span>
+<span class="sd">    eval_env: EvalEnvironment</span>
+<span class="sd">        The environment where values and functions are taken from.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    design_vector: np.array</span>
+<span class="sd">        A 1-dimensional numpy array containing the values of the response.</span>
+<span class="sd">    name: string</span>
+<span class="sd">        The name of the response term.</span>
+<span class="sd">    type: string</span>
+<span class="sd">        Either ``&quot;numeric&quot;`` or ``&quot;categoric&quot;``.</span>
+<span class="sd">    refclass: string</span>
+<span class="sd">        The name of the class taken as reference if ``type = &quot;categoric&quot;``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">term</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">term</span> <span class="o">=</span> <span class="n">term</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">design_vector</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># a string</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># either numeric or categorical</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refclass</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Not None for categorical variables</span>
+
+<div class="viewcode-block" id="ResponseVector._evaluate"><a class="viewcode-back" href="../../internals.html#formulae.ResponseVector._evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluates ``self.term`` inside the data mask provided by ``data`` and</span>
+<span class="sd">        updates ``self.design_vector`` and ``self.name``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span> <span class="o">=</span> <span class="n">eval_env</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">set_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">design_vector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">refclass</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;reference&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ResponseVector.as_dataframe"><a class="viewcode-back" href="../../internals.html#formulae.ResponseVector.as_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">as_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns ``self.design_vector`` as a pandas.DataFrame.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">design_vector</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>
+            <span class="n">colname</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{self.name}</span><span class="s2">[</span><span class="si">{self.refclass}</span><span class="s2">]&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">colname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">colname</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">data</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">string_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;name=&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">&quot;type=&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+            <span class="s2">&quot;length=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">design_vector</span><span class="p">)),</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>
+            <span class="n">string_list</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;refclass=&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">refclass</span><span class="p">]</span>
+        <span class="k">return</span> <span class="s2">&quot;ResponseVector(&quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">string_list</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span></div>
+
+
+<div class="viewcode-block" id="CommonEffectsMatrix"><a class="viewcode-back" href="../../internals.html#formulae.CommonEffectsMatrix">[docs]</a><span class="k">class</span> <span class="nc">CommonEffectsMatrix</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Representation of the design matrix for the common effects of a model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    model : Model</span>
+<span class="sd">        A ``Model`` object containing only terms for the common effects of the model.</span>
+<span class="sd">    data: pandas.DataFrame</span>
+<span class="sd">        The data frame where variables are taken from.</span>
+<span class="sd">    eval_env: EvalEnvironment</span>
+<span class="sd">        The environment where values and functions are taken from.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    design_matrix: np.array</span>
+<span class="sd">        A 2-dimensional numpy array containing the values of the design matrix.</span>
+<span class="sd">    evaluated: bool</span>
+<span class="sd">        Indicates if the terms have been evaluated at least once. The terms must have been evaluated</span>
+<span class="sd">        before calling ``self._evaluate_new_data()`` because we must know the type of each term</span>
+<span class="sd">        to correctly handle the new data passed and the terms here.</span>
+<span class="sd">    terms_info: dict</span>
+<span class="sd">        A dictionary that holds information related to each of the common specific terms, such as</span>
+<span class="sd">        ``&quot;idxs&quot;``, ``&quot;type&quot;``, and ``&quot;full_names&quot;``. If ``&quot;type&quot;`` is ``&quot;categoric&quot;``, it also</span>
+<span class="sd">        contains ``&quot;groups&quot;``, ``&quot;encoding&quot;``, ``&quot;levels&quot;``, and ``&quot;reference&quot;``.</span>
+<span class="sd">        The keys are given by the term names.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">design_matrix</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluated</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="CommonEffectsMatrix._evaluate"><a class="viewcode-back" href="../../internals.html#formulae.CommonEffectsMatrix._evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Obtain design matrix for common effects.</span>
+
+<span class="sd">        Evaluates ``self.model`` inside the data mask provided by ``data`` and updates</span>
+<span class="sd">        ``self.design_matrix``. This method also sets the values of ``self.data`` and</span>
+<span class="sd">        ``self.eval_env``.</span>
+
+<span class="sd">        It also populates the dictionary ``self.terms_info`` with information related to each term,</span>
+<span class="sd">        such as the type, the columns they occupy in the design matrix and the names of the columns.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pandas.DataFrame</span>
+<span class="sd">            The data frame where variables are taken from</span>
+<span class="sd">        eval_env: EvalEnvironment</span>
+<span class="sd">            The environment where values and functions are taken from.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span> <span class="o">=</span> <span class="n">eval_env</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">design_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># Get types and column slices</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">terms</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">metadata</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">term</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;cols&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="n">delta</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;full_names&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_term_full_names</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">start</span> <span class="o">+=</span> <span class="n">delta</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluated</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="CommonEffectsMatrix._evaluate_new_data"><a class="viewcode-back" href="../../internals.html#formulae.CommonEffectsMatrix._evaluate_new_data">[docs]</a>    <span class="k">def</span> <span class="nf">_evaluate_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluates common terms with new data and return a new instance of</span>
+<span class="sd">        ``CommonEffectsMatrix``.</span>
+
+<span class="sd">        This method is intended to be used to obtain design matrices for new data and obtain</span>
+<span class="sd">        out of sample predictions. Stateful transformations are properly handled if present in any</span>
+<span class="sd">        of the terms, which means parameters involved in the transformation are not overwritten with</span>
+<span class="sd">        the new data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pandas.DataFrame</span>
+<span class="sd">            The data frame where variables are taken from</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        new_instance: CommonEffectsMatrix</span>
+<span class="sd">            A new instance of ``CommonEffectsMatrix`` whose design matrix is obtained with the</span>
+<span class="sd">            values in the new data set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Create and return new CommonEffectsMatrix from the information in the terms,</span>
+        <span class="c1"># with the new data</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluated</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t evaluate new data on unevaluated matrix.&quot;</span><span class="p">)</span>
+        <span class="n">new_instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">new_instance</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="n">new_instance</span><span class="o">.</span><span class="n">eval_env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span>
+        <span class="n">new_instance</span><span class="o">.</span><span class="n">terms_info</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">)</span>
+        <span class="n">new_instance</span><span class="o">.</span><span class="n">design_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">term</span><span class="o">.</span><span class="n">eval_new_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">terms</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">new_instance</span><span class="o">.</span><span class="n">evaluated</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">new_instance</span></div>
+
+<div class="viewcode-block" id="CommonEffectsMatrix.as_dataframe"><a class="viewcode-back" href="../../internals.html#formulae.CommonEffectsMatrix.as_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">as_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns `self.design_matrix` as a pandas.DataFrame.&quot;&quot;&quot;</span>
+        <span class="n">colnames</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_term_full_names</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">]</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">design_matrix</span><span class="p">)</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">flatten_list</span><span class="p">(</span><span class="n">colnames</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">data</span></div>
+
+    <span class="k">def</span> <span class="nf">_term_full_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>  <span class="c1"># pylint: disable=inconsistent-return-statements</span>
+        <span class="c1"># Always returns a list</span>
+        <span class="n">term</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">_type</span> <span class="o">=</span> <span class="n">term</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;intercept&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;Intercept&quot;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;numeric&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;interaction&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">interaction_label</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>
+            <span class="c1"># &quot;levels&quot; is present when we have dummy encoding (not just a vector of 0-1)</span>
+            <span class="k">if</span> <span class="s2">&quot;levels&quot;</span> <span class="ow">in</span> <span class="n">term</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="c1"># Ask if encoding is &quot;full&quot; or &quot;reduced&quot;</span>
+                <span class="k">if</span> <span class="n">term</span><span class="p">[</span><span class="s2">&quot;encoding&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;full&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">[</span><span class="si">{level}</span><span class="s2">]&quot;</span> <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">term</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">]]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">[</span><span class="si">{level}</span><span class="s2">]&quot;</span> <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">term</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:]]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">[</span><span class="si">{term[&#39;reference&#39;]}</span><span class="s2">]&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="CommonEffectsMatrix.__getitem__"><a class="viewcode-back" href="../../internals.html#formulae.CommonEffectsMatrix.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">term</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the sub-matrix that corresponds to a given term.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        term: string</span>
+<span class="sd">            The name of the term.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        matrix: np.array</span>
+<span class="sd">            A 2-dimensional numpy array that represents the sub-matrix corresponding to the</span>
+<span class="sd">            term passed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">term</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{term}</span><span class="s2">&#39; is not a valid term name&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">design_matrix</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term</span><span class="p">][</span><span class="s2">&quot;cols&quot;</span><span class="p">]]</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">terms_str</span> <span class="o">=</span> <span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{k}</span><span class="s2">&#39;: {{{term_str(v)}}}&quot;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+        <span class="n">string_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;shape: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">design_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+            <span class="s2">&quot;terms: {</span><span class="se">\n</span><span class="s2">    &quot;</span> <span class="o">+</span> <span class="s2">&quot;  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">terms_str</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  }&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="s2">&quot;CommonEffectsMatrix(</span><span class="se">\n</span><span class="s2">  &quot;</span> <span class="o">+</span> <span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">string_list</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">)&quot;</span></div>
+
+
+<div class="viewcode-block" id="GroupEffectsMatrix"><a class="viewcode-back" href="../../internals.html#formulae.GroupEffectsMatrix">[docs]</a><span class="k">class</span> <span class="nc">GroupEffectsMatrix</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Representation of the design matrix for the group specific effects of a model.</span>
+
+<span class="sd">    The sub-matrix that corresponds to a specific group effect can be accessed by</span>
+<span class="sd">    ``self[term_name]``, for example ``self[&quot;1|g&quot;]``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    terms : list</span>
+<span class="sd">        A list of ``GroupSpecificTerm`` objects.</span>
+<span class="sd">    data: pandas.DataFrame</span>
+<span class="sd">        The data frame where variables are taken from</span>
+<span class="sd">    eval_env: EvalEnvironment</span>
+<span class="sd">        The environment where values and functions are taken from.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    design_matrix: scipy.sparse.csc.csc_matrix</span>
+<span class="sd">        A sparse matrix in CSC format containing the values of the design matrix.</span>
+<span class="sd">         Call ``self.toarray()`` to obtain a 2-dimensional array.</span>
+<span class="sd">    evaluated: bool</span>
+<span class="sd">        Indicates if the terms have been evaluated at least once. The terms must have been evaluated</span>
+<span class="sd">        before calling ``self._evaluate_new_data()`` because we must know the type of each term</span>
+<span class="sd">        to correctly handle the new data passed and the terms here.</span>
+<span class="sd">    terms_info: dict</span>
+<span class="sd">        A dictionary that holds information related to each of the group specific terms, such as</span>
+<span class="sd">        the matrices ``&quot;Xi&quot;`` and ``&quot;Ji&quot;``, ``&quot;idxs&quot;``, ``&quot;type&quot;``, and ``&quot;full_names&quot;``. If</span>
+<span class="sd">        ``&quot;type&quot;`` is ``&quot;categoric&quot;``, it also contains ``&quot;groups&quot;``, ``&quot;encoding&quot;``, ``&quot;levels&quot;``,</span>
+<span class="sd">        and ``&quot;reference&quot;``. The keys are given by the term names.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">terms</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">terms</span> <span class="o">=</span> <span class="n">terms</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">design_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluated</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="GroupEffectsMatrix._evaluate"><a class="viewcode-back" href="../../internals.html#formulae.GroupEffectsMatrix._evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluate group specific terms.</span>
+
+<span class="sd">        This evaluates ``self.terms`` inside the data mask provided by ``data`` and the environment</span>
+<span class="sd">        ``eval_env``. It updates ``self.design_matrix`` with the result from the evaluation of each</span>
+<span class="sd">        term.</span>
+
+<span class="sd">        This method also sets the values of ``self.data`` and ``self.eval_env``. It also populates</span>
+<span class="sd">        the dictionary ``self.terms_info`` with information related to each term,such as the type,</span>
+<span class="sd">        the columns and rows they occupy in the design matrix and the names of the columns.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pandas.DataFrame</span>
+<span class="sd">            The data frame where variables are taken from</span>
+<span class="sd">        eval_env: EvalEnvironment</span>
+<span class="sd">            The environment where values and functions are taken from.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span> <span class="o">=</span> <span class="n">eval_env</span>
+        <span class="n">start_row</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">start_col</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms</span><span class="p">:</span>
+            <span class="n">encoding</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="c1"># If both (1|g) and (x|g) are in the model, then the encoding for x is False.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="n">Intercept</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">term_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">term_</span><span class="o">.</span><span class="n">factor</span> <span class="o">==</span> <span class="n">term</span><span class="o">.</span><span class="n">factor</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">term_</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="n">Intercept</span><span class="p">):</span>
+                        <span class="n">encoding</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span><span class="p">,</span> <span class="n">encoding</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>
+                <span class="n">levels</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;encoding&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;full&quot;</span> <span class="k">else</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">level</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">levels</span><span class="p">):</span>
+                    <span class="n">Xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;Xi&quot;</span><span class="p">][:,</span> <span class="n">idx</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+                    <span class="n">Ji</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Ji&quot;</span><span class="p">]</span>
+                    <span class="n">Zi</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">khatri_rao</span><span class="p">(</span><span class="n">Ji</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">Xi</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+                    <span class="n">delta_row</span><span class="p">,</span> <span class="n">delta_col</span> <span class="o">=</span> <span class="n">Zi</span><span class="o">.</span><span class="n">shape</span>
+                    <span class="n">Z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Zi</span><span class="p">)</span>
+                    <span class="n">term_name</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;categoric&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;Xi&quot;</span><span class="p">:</span> <span class="n">Xi</span><span class="p">,</span>
+                        <span class="s2">&quot;Ji&quot;</span><span class="p">:</span> <span class="n">Ji</span><span class="p">,</span>
+                        <span class="s2">&quot;groups&quot;</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;groups&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;encoding&quot;</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;encoding&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;levels&quot;</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;reference&quot;</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;reference&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;full_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{term_name}</span><span class="s2">[</span><span class="si">{group}</span><span class="s2">]&quot;</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;groups&quot;</span><span class="p">]],</span>
+                    <span class="p">}</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term_name</span><span class="p">][</span><span class="s2">&quot;idxs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="nb">slice</span><span class="p">(</span><span class="n">start_row</span><span class="p">,</span> <span class="n">start_row</span> <span class="o">+</span> <span class="n">delta_row</span><span class="p">),</span>
+                        <span class="nb">slice</span><span class="p">(</span><span class="n">start_col</span><span class="p">,</span> <span class="n">start_col</span> <span class="o">+</span> <span class="n">delta_col</span><span class="p">),</span>
+                    <span class="p">)</span>
+                    <span class="n">start_row</span> <span class="o">+=</span> <span class="n">delta_row</span>
+                    <span class="n">start_col</span> <span class="o">+=</span> <span class="n">delta_col</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Zi</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Zi&quot;</span><span class="p">]</span>
+                <span class="n">delta_row</span><span class="p">,</span> <span class="n">delta_col</span> <span class="o">=</span> <span class="n">Zi</span><span class="o">.</span><span class="n">shape</span>
+                <span class="n">Z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Zi</span><span class="p">)</span>
+                <span class="n">term_name</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">to_string</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">&quot;Zi&quot;</span><span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term_name</span><span class="p">][</span><span class="s2">&quot;idxs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="nb">slice</span><span class="p">(</span><span class="n">start_row</span><span class="p">,</span> <span class="n">start_row</span> <span class="o">+</span> <span class="n">delta_row</span><span class="p">),</span>
+                    <span class="nb">slice</span><span class="p">(</span><span class="n">start_col</span><span class="p">,</span> <span class="n">start_col</span> <span class="o">+</span> <span class="n">delta_col</span><span class="p">),</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term_name</span><span class="p">][</span><span class="s2">&quot;full_names&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_term_full_names</span><span class="p">(</span><span class="n">term_name</span><span class="p">)</span>
+                <span class="n">start_row</span> <span class="o">+=</span> <span class="n">delta_row</span>
+                <span class="n">start_col</span> <span class="o">+=</span> <span class="n">delta_col</span>
+
+        <span class="c1"># Stored in Compressed Sparse Column format</span>
+        <span class="k">if</span> <span class="n">Z</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">design_matrix</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluated</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="GroupEffectsMatrix._evaluate_new_data"><a class="viewcode-back" href="../../internals.html#formulae.GroupEffectsMatrix._evaluate_new_data">[docs]</a>    <span class="k">def</span> <span class="nf">_evaluate_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluates group specific terms with new data and return a new instance of</span>
+<span class="sd">        ``GroupEffectsMatrix``.</span>
+
+<span class="sd">        This method is intended to be used to obtain design matrices for new data and obtain</span>
+<span class="sd">        out of sample predictions. Stateful transformations are properly handled if present in any</span>
+<span class="sd">        of the group specific terms, which means parameters involved in the transformation are not</span>
+<span class="sd">        overwritten with the new data.</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pandas.DataFrame</span>
+<span class="sd">            The data frame where variables are taken from</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        new_instance: GroupEffectsMatrix</span>
+<span class="sd">            A new instance of ``GroupEffectsMatrix`` whose design matrix is obtained with the values</span>
+<span class="sd">            in the new data set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluated</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t evaluate new data on unevaluated matrix.&quot;</span><span class="p">)</span>
+
+        <span class="n">new_instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">terms</span><span class="p">)</span>
+
+        <span class="n">start_row</span> <span class="o">=</span> <span class="n">start_col</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">eval_new_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>
+                <span class="n">levels</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;encoding&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;full&quot;</span> <span class="k">else</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="n">Ji</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Ji&quot;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">level</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">levels</span><span class="p">):</span>
+                    <span class="n">Xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;Xi&quot;</span><span class="p">][:,</span> <span class="n">idx</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+                    <span class="n">Zi</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">khatri_rao</span><span class="p">(</span><span class="n">Ji</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">Xi</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+                    <span class="n">delta_row</span><span class="p">,</span> <span class="n">delta_col</span> <span class="o">=</span> <span class="n">Zi</span><span class="o">.</span><span class="n">shape</span>
+                    <span class="n">Z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Zi</span><span class="p">)</span>
+                    <span class="n">term_name</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+                    <span class="c1"># All the info, except from the indexes, is copied.</span>
+                    <span class="n">new_instance</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term_name</span><span class="p">])</span>
+                    <span class="n">new_instance</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term_name</span><span class="p">][</span><span class="s2">&quot;idxs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="nb">slice</span><span class="p">(</span><span class="n">start_row</span><span class="p">,</span> <span class="n">start_row</span> <span class="o">+</span> <span class="n">delta_row</span><span class="p">),</span>
+                        <span class="nb">slice</span><span class="p">(</span><span class="n">start_col</span><span class="p">,</span> <span class="n">start_col</span> <span class="o">+</span> <span class="n">delta_col</span><span class="p">),</span>
+                    <span class="p">)</span>
+                    <span class="n">start_row</span> <span class="o">+=</span> <span class="n">delta_row</span>
+                    <span class="n">start_col</span> <span class="o">+=</span> <span class="n">delta_col</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Zi</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Zi&quot;</span><span class="p">]</span>
+                <span class="n">delta_row</span><span class="p">,</span> <span class="n">delta_col</span> <span class="o">=</span> <span class="n">Zi</span><span class="o">.</span><span class="n">shape</span>
+                <span class="n">Z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Zi</span><span class="p">)</span>
+                <span class="n">term_name</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">to_string</span><span class="p">()</span>
+                <span class="n">new_instance</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term_name</span><span class="p">])</span>
+                <span class="n">new_instance</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term_name</span><span class="p">][</span><span class="s2">&quot;idxs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="nb">slice</span><span class="p">(</span><span class="n">start_row</span><span class="p">,</span> <span class="n">start_row</span> <span class="o">+</span> <span class="n">delta_row</span><span class="p">),</span>
+                    <span class="nb">slice</span><span class="p">(</span><span class="n">start_col</span><span class="p">,</span> <span class="n">start_col</span> <span class="o">+</span> <span class="n">delta_col</span><span class="p">),</span>
+                <span class="p">)</span>
+                <span class="n">start_row</span> <span class="o">+=</span> <span class="n">delta_row</span>
+                <span class="n">start_col</span> <span class="o">+=</span> <span class="n">delta_col</span>
+
+        <span class="n">new_instance</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="n">new_instance</span><span class="o">.</span><span class="n">eval_env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span>
+
+        <span class="c1"># Stored in Compressed Sparse Column format</span>
+        <span class="k">if</span> <span class="n">Z</span><span class="p">:</span>
+            <span class="n">new_instance</span><span class="o">.</span><span class="n">design_matrix</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">new_instance</span></div>
+
+    <span class="k">def</span> <span class="nf">_term_full_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>  <span class="c1"># pylint: disable=inconsistent-return-statements</span>
+        <span class="c1"># Always returns a list</span>
+        <span class="n">term</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">_type</span> <span class="o">=</span> <span class="n">term</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;intercept&quot;</span><span class="p">,</span> <span class="s2">&quot;numeric&quot;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">[</span><span class="si">{group}</span><span class="s2">]&quot;</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">term</span><span class="p">[</span><span class="s2">&quot;groups&quot;</span><span class="p">]]</span>
+        <span class="k">elif</span> <span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;interaction&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">interaction_label</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>
+            <span class="c1"># not used anymore?</span>
+            <span class="k">if</span> <span class="s2">&quot;levels&quot;</span> <span class="ow">in</span> <span class="n">term</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="c1"># Ask if encoding is &quot;full&quot; or &quot;reduced&quot;</span>
+                <span class="k">if</span> <span class="n">term</span><span class="p">[</span><span class="s2">&quot;encoding&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;full&quot;</span><span class="p">:</span>
+                    <span class="n">products</span> <span class="o">=</span> <span class="n">product</span><span class="p">(</span><span class="n">term</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">],</span> <span class="n">term</span><span class="p">[</span><span class="s2">&quot;groups&quot;</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">products</span> <span class="o">=</span> <span class="n">product</span><span class="p">(</span><span class="n">term</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:],</span> <span class="n">term</span><span class="p">[</span><span class="s2">&quot;groups&quot;</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">products</span> <span class="o">=</span> <span class="n">product</span><span class="p">([</span><span class="n">term</span><span class="p">[</span><span class="s2">&quot;reference&quot;</span><span class="p">]],</span> <span class="n">term</span><span class="p">[</span><span class="s2">&quot;groups&quot;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">[</span><span class="si">{p[0]}</span><span class="s2">|</span><span class="si">{p[1]}</span><span class="s2">]&quot;</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">]</span>
+
+<div class="viewcode-block" id="GroupEffectsMatrix.__getitem__"><a class="viewcode-back" href="../../internals.html#formulae.GroupEffectsMatrix.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">term</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the sub-matrix that corresponds to a given term.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        term: string</span>
+<span class="sd">            The name of a group specific term.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        matrix: np.array</span>
+<span class="sd">            A 2-dimensional numpy array that represents the sub-matrix corresponding to the</span>
+<span class="sd">            term passed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">term</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{term}</span><span class="s2">&#39; is not a valid term name&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">design_matrix</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term</span><span class="p">][</span><span class="s2">&quot;idxs&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">terms_str</span> <span class="o">=</span> <span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{k}</span><span class="s2">&#39;: {{{term_str(v)}}}&quot;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+        <span class="n">string_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;shape: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">design_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+            <span class="s2">&quot;terms: {</span><span class="se">\n</span><span class="s2">    &quot;</span> <span class="o">+</span> <span class="s2">&quot;  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">terms_str</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  }&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="s2">&quot;GroupEffectsMatrix(</span><span class="se">\n</span><span class="s2">  &quot;</span> <span class="o">+</span> <span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">string_list</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">)&quot;</span></div>
+
+
+<div class="viewcode-block" id="design_matrices"><a class="viewcode-back" href="../../api_reference.html#formulae.design_matrices">[docs]</a><span class="k">def</span> <span class="nf">design_matrices</span><span class="p">(</span><span class="n">formula</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">na_action</span><span class="o">=</span><span class="s2">&quot;drop&quot;</span><span class="p">,</span> <span class="n">eval_env</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse model formula and obtain a ``DesignMatrices`` object containing objects representing</span>
+<span class="sd">    the response and the design matrices for both the common and group specific effects.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    formula : string</span>
+<span class="sd">        A model formula.</span>
+<span class="sd">    data: pandas.DataFrame</span>
+<span class="sd">        The data frame where variables in the formula are taken from.</span>
+<span class="sd">    na_action: string</span>
+<span class="sd">        Describes what to do with missing values in ``data``. ``&quot;drop&quot;`` means to drop</span>
+<span class="sd">        all rows with a missing value, ``&quot;error&quot;`` means to raise an error. Defaults</span>
+<span class="sd">        to ``&quot;drop&quot;``.</span>
+<span class="sd">    eval_env: integer</span>
+<span class="sd">        The number of environments we walk up in the stack starting from the function&#39;s caller</span>
+<span class="sd">        to capture the environment where formula is evaluated. Defaults to 0 which means</span>
+<span class="sd">        the evaluation environment is the environment where ``design_matrices`` is called.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ----------</span>
+<span class="sd">    design: DesignMatrices</span>
+<span class="sd">        An instance of DesignMatrices that contains the design matrice(s) described by</span>
+<span class="sd">        ``formula``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">formula</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;formula&#39; must be a string.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">formula</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;formula&#39; cannot be an empty string.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; must be a pandas.DataFrame.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; does not contain any observation.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;data&#39; does not contain any variable.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">na_action</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;drop&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;na_action&#39; must be either &#39;drop&#39; or &#39;error&#39;&quot;</span><span class="p">)</span>
+
+    <span class="n">eval_env</span> <span class="o">=</span> <span class="n">EvalEnvironment</span><span class="o">.</span><span class="n">capture</span><span class="p">(</span><span class="n">eval_env</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="n">model_description</span><span class="p">(</span><span class="n">formula</span><span class="p">)</span>
+
+    <span class="c1"># Incomplete rows are calculated using columns involved in model formula only</span>
+    <span class="n">cols_to_select</span> <span class="o">=</span> <span class="n">description</span><span class="o">.</span><span class="n">var_names</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">cols_to_select</span><span class="p">)]</span>
+
+    <span class="n">incomplete_rows</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">incomplete_rows_n</span> <span class="o">=</span> <span class="n">incomplete_rows</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">incomplete_rows_n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">na_action</span> <span class="o">==</span> <span class="s2">&quot;drop&quot;</span><span class="p">:</span>
+            <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Automatically removing </span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2"> rows from the dataset.&quot;</span><span class="p">,</span>
+                <span class="n">incomplete_rows_n</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="o">~</span><span class="n">incomplete_rows</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;data&#39; contains </span><span class="si">{incomplete_rows_n}</span><span class="s2"> incomplete rows.&quot;</span><span class="p">)</span>
+
+    <span class="n">design</span> <span class="o">=</span> <span class="n">DesignMatrices</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">design</span></div>
+
+
+<span class="c1"># Utils</span>
+<span class="k">def</span> <span class="nf">term_str</span><span class="p">(</span><span class="n">term</span><span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">term</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;interaction&quot;</span><span class="p">:</span>
+        <span class="n">terms</span> <span class="o">=</span> <span class="n">term</span><span class="p">[</span><span class="s2">&quot;terms&quot;</span><span class="p">]</span>
+        <span class="n">vars_</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">terms</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;numeric&quot;</span><span class="p">:</span>
+                <span class="n">vars_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{k}</span><span class="s2">: {{type=</span><span class="si">{v[&#39;type&#39;]}</span><span class="s2">}}&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>
+                <span class="n">str_l</span> <span class="o">=</span> <span class="p">[</span><span class="n">k2</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span> <span class="k">for</span> <span class="n">k2</span><span class="p">,</span> <span class="n">v2</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k2</span> <span class="o">!=</span> <span class="s2">&quot;value&quot;</span><span class="p">]</span>
+                <span class="n">vars_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{k}</span><span class="s2">: {{&quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">str_l</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;type=interaction, cols=</span><span class="si">{term[&#39;cols&#39;]}</span><span class="s2">, full_names=</span><span class="si">{term[&#39;full_names&#39;]}</span><span class="s2">&quot;</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">    vars={</span><span class="se">\n</span><span class="s2">  &quot;</span> <span class="o">+</span> <span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">vars_</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  }&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">k</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">term</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;Xi&quot;</span><span class="p">,</span> <span class="s2">&quot;Ji&quot;</span><span class="p">]])</span>
+    <span class="k">return</span> <span class="n">x</span>
+
+
+<span class="k">def</span> <span class="nf">interaction_label</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">terms</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;terms&quot;</span><span class="p">]</span>
+    <span class="n">colnames</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">terms</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;numeric&quot;</span><span class="p">:</span>
+            <span class="n">colnames</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">k</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;levels&quot;</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="c1"># ask whether encoding is full or reduced</span>
+                <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;encoding&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;full&quot;</span><span class="p">:</span>
+                    <span class="n">colnames</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{k}</span><span class="s2">[</span><span class="si">{level}</span><span class="s2">]&quot;</span> <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">]])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">colnames</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{k}</span><span class="s2">[</span><span class="si">{level}</span><span class="s2">]&quot;</span> <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:]])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">colnames</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{k}</span><span class="s2">[</span><span class="si">{v[&#39;reference&#39;]}</span><span class="s2">]&quot;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;:&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">str_tuple</span><span class="p">)</span> <span class="k">for</span> <span class="n">str_tuple</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">colnames</span><span class="p">))]</span>
+</pre></div>
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <script src="../../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2021, The developers of Bambi.<br/>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.<br/>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>
