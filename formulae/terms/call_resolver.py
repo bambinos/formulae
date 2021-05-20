@@ -155,6 +155,7 @@ class LazyValue:
     value: string or numeric
         The value it holds.
     """
+
     def __init__(self, value):
         self.value = value
 
@@ -216,6 +217,7 @@ class LazyCall:
         A dictionary of named arguments that are evaluated when calling the function this object
         represents.
     """
+
     def __init__(self, callee, args, kwargs):
         self.callee = callee
         self.args = args
@@ -276,8 +278,8 @@ class LazyCall:
 
 
 class CallResolver:
-    """Visitor that walks an AST representing a regular call and returns a lazy version of it.
-    """
+    """Visitor that walks an AST representing a regular call and returns a lazy version of it."""
+
     def __init__(self, expr):
         self.expr = expr
 
