@@ -281,3 +281,34 @@ def test_nested_transform(data, data2):
     x = common._evaluate_new_data(data2)["scale(np.exp(x) + 1)"]
     y = (np.exp(data2["x"]) + 1 - np.mean(np.exp(data["x"]) + 1)) / np.std(np.exp(data["x"]) + 1)
     assert np.allclose(x.flatten(), np.array(y).flatten())
+
+
+def test_components_arent_shared():
+
+    """
+    Components used in full interaction operator used to be shared between terms, which may save
+    space and time, but result in unexpected behavior if components have different encodings
+    in the different terms.
+    """
+    data = pd.DataFrame(
+        {
+            "y": np.random.normal(size=100),
+            "x": np.random.normal(size=100),
+            "g": np.random.choice(["A", "B", "C"], size=100),
+        }
+    )
+
+    common = design_matrices("y ~ 0 + x*g", data).common
+    assert not id(common.model.terms[0].components[0]) == id(common.model.terms[2].components[0])
+    assert not id(common.model.terms[1].components[0]) == id(common.model.terms[2].components[1])
+
+    new_data = data = pd.DataFrame(
+        {
+            "y": np.random.normal(size=100),
+            "x": np.random.normal(size=100),
+            "g": np.random.choice(["A", "B", "C"], size=100),
+        }
+    )
+
+    new_common = common._evaluate_new_data(new_data)
+    assert new_common.design_matrix.shape[1] == 6

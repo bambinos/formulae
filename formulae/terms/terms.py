@@ -1,5 +1,6 @@
 import logging
 
+from copy import deepcopy
 from functools import reduce
 from itertools import combinations, product
 
@@ -231,11 +232,13 @@ class Term:
         elif isinstance(other, type(self)):
             if len(other.components) == 1 and isinstance(other.components[0].name, (int, float)):
                 raise TypeError("Interaction with numeric does not make sense.")
-            return Model(self, other, Term(*self.components, *other.components))
+            return Model(self, other, Term(*deepcopy(self.components), *deepcopy(other.components)))
         elif isinstance(other, Model):
             products = product([self], other.common_terms)
             terms = [self] + other.common_terms
-            iterms = [Term(*p[0].components, *p[1].components) for p in products]
+            iterms = [
+                Term(*deepcopy(p[0].components), *deepcopy(p[1].components)) for p in products
+            ]
             return Model(*terms) + Model(*iterms)
         else:
             return NotImplemented
