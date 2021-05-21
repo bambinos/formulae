@@ -6,9 +6,13 @@
 
 ### Maintenance and fixes
 
+* Full interaction does not result in shared components anymore (#30)
+
 ### Deprecation
 
 ### Documentation
+
+* Added **Internals** section to documentation (#28)
 
 ## v0.0.10
 
