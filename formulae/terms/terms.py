@@ -1,4 +1,5 @@
 # pylint: disable = too-many-lines
+import itertools
 import logging
 
 from copy import deepcopy
@@ -6,7 +7,6 @@ from functools import reduce
 from itertools import combinations, product
 
 import numpy as np
-import pandas as pd
 from scipy import linalg, sparse
 
 from formulae.utils import get_interaction_matrix
@@ -576,7 +576,7 @@ class GroupSpecificTerm:
     def __init__(self, expr, factor):
         self.expr = expr
         self.factor = factor
-        self.factor_type = None
+        self.groups = None
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -636,34 +636,53 @@ class GroupSpecificTerm:
         out: dict
             See above.
         """
-        # Evaluate factor and save type to self.factor_type.
-        # Note: factor can't be a call or interaction yet.
-        if len(self.factor.components) == 1 and isinstance(self.factor.components[0], Variable):
-            factor = data[self.factor.name]
-            if not hasattr(factor.dtype, "ordered") or not factor.dtype.ordered:
-                categories = sorted(factor.unique().tolist())
-                type_ = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
-                factor = factor.astype(type_)
-            else:
-                type_ = factor.dtype
-            self.factor_type = type_
-        else:
-            raise ValueError(
-                "Factor on right hand side of group specific term must be a single term."
-            )
+        # Factor must be considered categorical, and with full encoding. We set type and obtain
+        # data for the factor term manually.
 
-        # Note we don't use drop_first=True for the factor.
+        # Set type on each component to check data is behaved as expected and then
+        # manually set type of the components to categoric.
+        for comp in self.factor.components:
+            if isinstance(comp, Variable):
+                comp.set_type(data)
+            elif isinstance(comp, Call):
+                comp.set_type(data, eval_env)
+            else:
+                raise ValueError(
+                    "Can't set type on Term because at least one of the components "
+                    f"is of the unexpected type {type(comp)}."
+                )
+            comp._type = "categoric"  # pylint: disable = protected-access
+
+        # Store the type of the components.
+        # We know they are categoric.
+        self.factor.component_types = {comp.name: "categoric" for comp in self.factor.components}
+
+        if len(self.factor.components) > 1:
+            self.factor._type = "interaction"  # pylint: disable = protected-access
+        else:
+            self.factor._type = "categoric"  # pylint: disable = protected-access
+
+        # Pass encoding=True when setting data.
+        self.factor.set_data(True)
+
+        # Obtain group names
+        groups = []
+        for comp in self.factor.components:
+            # We're certain they are all categoric with full encoding.
+            groups.append([str(lvl) for lvl in comp.data["levels"]])
+        self.groups = [":".join(s) for s in list(itertools.product(*groups))]
+
         self.expr.set_type(data, eval_env)
         self.expr.set_data(encoding)
         Xi = self.expr.data
-        Ji = pd.get_dummies(factor).to_numpy()
+        Ji = self.factor.data
         Zi = linalg.khatri_rao(Ji.T, Xi.T).T
         out = {
             "type": self.expr.metadata["type"],
             "Xi": Xi,
             "Ji": Ji,
             "Zi": sparse.coo_matrix(Zi),
-            "groups": factor.cat.categories.tolist(),
+            "groups": self.groups,
         }
         if self.expr._type == "categoric":  # pylint: disable = protected-access
             out["levels"] = self.expr.metadata["levels"]
@@ -692,17 +711,15 @@ class GroupSpecificTerm:
             Same rules as in :meth:`eval <GroupSpecificTerm.eval>`.
         """
 
-        # factor uses the same data type that is used in first evaluation.
-        factor = data[self.factor.name].astype(self.factor_type)
         Xi = self.expr.eval_new_data(data)
-        Ji = pd.get_dummies(factor).to_numpy()
+        Ji = self.factor.eval_new_data(data)
         Zi = linalg.khatri_rao(Ji.T, Xi.T).T
         out = {
             "type": self.expr.metadata["type"],
             "Xi": Xi,
             "Ji": Ji,
             "Zi": sparse.coo_matrix(Zi),
-            "groups": factor.cat.categories.tolist(),
+            "groups": self.groups,
         }
         if self.expr._type == "categoric":  # pylint: disable = protected-access
             out["levels"] = self.expr.metadata["levels"]
