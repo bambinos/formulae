@@ -291,6 +291,7 @@ def test_scan_intercept_disabled():
     ]
     assert compare_two_lists(sc, comp)
 
+
 def test_scan_unexpected_char():
 
     with pytest.raises(ScanError):
@@ -305,9 +306,11 @@ def test_scan_unexpected_char():
     with pytest.raises(ScanError):
         Scanner("x & y").scan(False)
 
+
 def test_scan_multiple_tildes():
     with pytest.raises(ScanError):
         Scanner("x ~ y ~ z").scan(False)
+
 
 def test_scan_unterminated_string():
     with pytest.raises(ScanError):
