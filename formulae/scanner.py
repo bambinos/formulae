@@ -101,7 +101,7 @@ class Scanner:
             else:
                 self.add_token("BANG")
         elif char == "=":
-            if self.match("=="):
+            if self.match("="):
                 self.add_token("EQUAL_EQUAL")
             else:
                 self.add_token("EQUAL")
@@ -130,7 +130,7 @@ class Scanner:
         elif char.isalpha():
             self.identifier()
         else:
-            raise ValueError("Unexpected character: " + str(char))
+            raise ScanError("Unexpected character: " + str(char))
 
     def scan(self, add_intercept=True):
         """Scan formula string.
@@ -154,7 +154,7 @@ class Scanner:
         tilde_idx = [i for i in range(len(self.tokens)) if is_tilde(self.tokens[i])]
 
         if len(tilde_idx) > 1:
-            raise ValueError("There is more than one '~' in model formula")
+            raise ScanError("There is more than one '~' in model formula")
 
         if add_intercept:
             if len(tilde_idx) == 0:
