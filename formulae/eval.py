@@ -37,10 +37,6 @@ class VarLookupDict:
     def keys(self):
         return [list(d.keys()) for d in self._dicts]
 
-    def find_modules(self):
-        l = [key for keys in self.keys() for key in keys if inspect.ismodule(self[key])]
-        return list(set(l))
-
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self._dicts)
 
