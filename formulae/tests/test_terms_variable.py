@@ -5,6 +5,7 @@ import pandas as pd
 
 from formulae.terms import Variable
 
+
 def test_variable_str():
 
     assert str(Variable("a")) == "Variable(a, level='None')"
