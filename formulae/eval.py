@@ -4,10 +4,6 @@
 import inspect
 import numbers
 
-import pandas as pd
-
-from .transforms import TRANSFORMS
-
 
 class VarLookupDict:
     def __init__(self, dicts):
@@ -113,4 +109,3 @@ class EvalEnvironment:
 
     def __hash__(self):
         return hash((EvalEnvironment, tuple(self._namespace_ids())))
-
