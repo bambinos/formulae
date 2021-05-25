@@ -4,10 +4,6 @@
 import inspect
 import numbers
 
-import pandas as pd
-
-from .transforms import TRANSFORMS
-
 
 class VarLookupDict:
     def __init__(self, dicts):
@@ -40,10 +36,6 @@ class VarLookupDict:
 
     def keys(self):
         return [list(d.keys()) for d in self._dicts]
-
-    def find_modules(self):
-        l = [key for keys in self.keys() for key in keys if inspect.ismodule(self[key])]
-        return list(set(l))
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self._dicts)
@@ -113,35 +105,3 @@ class EvalEnvironment:
 
     def __hash__(self):
         return hash((EvalEnvironment, tuple(self._namespace_ids())))
-
-
-def eval_in_data_mask(expr, data=None, eval_env=None):
-    """Evaluates expression in a given environment and data mask.
-
-    Variable names are first looked up in `data`.
-    If they are not found, they are looked up in `eval_env`.
-
-    Parameters
-    ----------
-    expr: string
-        A string with Python code, usually a function call.
-    data: pandas.DataFrame or None
-        A data frame where variables are looked up.
-    eval_env: EvalEnvironment
-        An execution environment where values and functions are taken from.
-
-    Returns
-    ----------
-    The result of the evaluation of `expr`.
-    """
-
-    # Still need to check name conflicts
-    if data is not None:
-        if isinstance(data, pd.DataFrame):
-            data_dict_inner = data.reset_index(drop=True).to_dict("series")
-            data_dict = {"__DATA__": data_dict_inner}
-        else:
-            raise ValueError("data must be a pandas.DataFrame")
-    else:
-        data_dict = {}
-    return eval_env.eval(expr, {**data_dict, **TRANSFORMS})

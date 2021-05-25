@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import pandas as pd
 
@@ -88,16 +90,19 @@ class Variable:
             Indicates if it uses full or reduced encoding when the type of the variable is
             categoric. Omitted when the variable is numeric.
         """
-        if self._type is None:
-            raise ValueError("Variable type is not set.")
-        if self._type not in ["numeric", "categoric"]:
-            raise ValueError(f"Variable is of an unrecognized type ({self._type}).")
-        if self._type == "numeric":
-            self.data = self._eval_numeric(self._intermediate_data)
-        elif self._type == "categoric":
-            self.data = self._eval_categoric(self._intermediate_data, encoding)
-        else:
-            raise ValueError("Unexpected error while trying to evaluate a Variable.")
+
+        try:
+            if self._type is None:
+                raise ValueError("Variable type is not set.")
+            if self._type not in ["numeric", "categoric"]:
+                raise ValueError(f"Variable is of an unrecognized type ({self._type}).")
+            if self._type == "numeric":
+                self.data = self._eval_numeric(self._intermediate_data)
+            elif self._type == "categoric":
+                self.data = self._eval_categoric(self._intermediate_data, encoding)
+        except:
+            print("Unexpected error while trying to evaluate a Variable.", sys.exc_info()[0])
+            raise
 
     def _eval_numeric(self, x):
         """Finishes evaluation of a numeric variable.
@@ -119,7 +124,7 @@ class Variable:
         """
         if isinstance(x, np.ndarray):
             value = np.atleast_2d(x)
-            if x.shape[0] == 1 and len(x) > 1:
+            if x.shape[0] == 1 and x.shape[1] > 1:
                 value = value.T
         elif isinstance(x, pd.Series):
             value = np.atleast_2d(x.to_numpy()).T

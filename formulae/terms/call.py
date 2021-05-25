@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import pandas as pd
 
@@ -93,11 +95,11 @@ class Call:
         """
 
         self.eval_env = eval_env.with_outer_namespace(TRANSFORMS)
-
         x = self.call.eval(data_mask, self.eval_env)
 
         if is_numeric_dtype(x):
             self._type = "numeric"
+        # Improve this condition, the dictionary may cause problems!
         elif is_string_dtype(x) or is_categorical_dtype(x) or isinstance(x, dict):
             self._type = "categoric"
         else:
@@ -119,16 +121,18 @@ class Call:
             Indicates if it uses full or reduced encoding when the type of the call is
             categoric. Omitted when the result of the call is numeric.
         """
-        # Workaround: var names present in 'data' are taken from '__DATA__['col']
-        # the rest are left as they are and looked up in the upper namespace
-        if self._type is None:
-            raise ValueError("Call result type is not set.")
-        if self._type not in ["numeric", "categoric"]:
-            raise ValueError(f"Call result is of an unrecognized type ({self._type}).")
-        if self._type == "numeric":
-            self.data = self._eval_numeric(self._intermediate_data)
-        else:
-            self.data = self._eval_categoric(self._intermediate_data, encoding)
+        try:
+            if self._type is None:
+                raise ValueError("Call result type is not set.")
+            if self._type not in ["numeric", "categoric"]:
+                raise ValueError(f"Call result is of an unrecognized type ({self._type}).")
+            if self._type == "numeric":
+                self.data = self._eval_numeric(self._intermediate_data)
+            else:
+                self.data = self._eval_categoric(self._intermediate_data, encoding)
+        except:
+            print("Unexpected error while trying to evaluate a Call:", sys.exc_info()[0])
+            raise
 
     def _eval_numeric(self, x):
         """Finishes evaluation of a numeric call.
@@ -150,7 +154,7 @@ class Call:
         """
         if isinstance(x, np.ndarray):
             value = np.atleast_2d(x)
-            if x.shape[0] == 1 and len(x) > 1:
+            if x.shape[0] == 1 and x.shape[1] > 1:
                 value = value.T
         elif isinstance(x, pd.Series):
             value = np.atleast_2d(x.to_numpy()).T

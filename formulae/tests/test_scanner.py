@@ -14,34 +14,46 @@ def test_scan_empty():
 
 
 def test_scan_literal():
-    sc = Scanner("'A'").scan()
+    sc = Scanner("'A'").scan(False)
     comp = [
-        Token("NUMBER", "1", 1),
-        Token("PLUS", "+"),
         Token("STRING", "'A'", "A"),
         Token("EOF", ""),
     ]
     assert compare_two_lists(sc, comp)
 
-    sc = Scanner("1").scan()
-    comp = [Token("NUMBER", "1", 1), Token("PLUS", "+"), Token("NUMBER", "1", 1), Token("EOF", "")]
+    sc = Scanner("1").scan(False)
+    comp = [Token("NUMBER", "1", 1), Token("EOF", "")]
     assert compare_two_lists(sc, comp)
 
-    sc = Scanner("1.132").scan()
+    sc = Scanner("125").scan(False)
+    comp = [Token("NUMBER", "125", 125), Token("EOF", "")]
+    assert compare_two_lists(sc, comp)
+
+    sc = Scanner("1.132").scan(False)
     comp = [
-        Token("NUMBER", "1", 1),
-        Token("PLUS", "+"),
         Token("NUMBER", "1.132", 1.132),
+        Token("EOF", ""),
+    ]
+    assert compare_two_lists(sc, comp)
+
+    sc = Scanner(".132").scan(False)
+    comp = [
+        Token("NUMBER", ".132", 0.132),
+        Token("EOF", ""),
+    ]
+    assert compare_two_lists(sc, comp)
+
+    sc = Scanner(".").scan(False)
+    comp = [
+        Token("PERIOD", "."),
         Token("EOF", ""),
     ]
     assert compare_two_lists(sc, comp)
 
 
 def test_scan_quoted_name():
-    sc = Scanner("`$$##!!`").scan()
+    sc = Scanner("`$$##!!`").scan(False)
     comp = [
-        Token("NUMBER", "1", 1),
-        Token("PLUS", "+"),
         Token("BQNAME", "`$$##!!`"),
         Token("EOF", ""),
     ]
@@ -49,16 +61,14 @@ def test_scan_quoted_name():
 
 
 def test_scan_variable():
-    sc = Scanner("x").scan()
-    comp = [Token("NUMBER", "1", 1), Token("PLUS", "+"), Token("IDENTIFIER", "x"), Token("EOF", "")]
+    sc = Scanner("x").scan(False)
+    comp = [Token("IDENTIFIER", "x"), Token("EOF", "")]
     assert compare_two_lists(sc, comp)
 
 
 def test_scan_call():
-    sc = Scanner("f(x)").scan()
+    sc = Scanner("f(x)").scan(False)
     comp = [
-        Token("NUMBER", "1", 1),
-        Token("PLUS", "+"),
         Token("IDENTIFIER", "f"),
         Token("LEFT_PAREN", "("),
         Token("IDENTIFIER", "x"),
@@ -67,10 +77,8 @@ def test_scan_call():
     ]
     assert compare_two_lists(sc, comp)
 
-    sc = Scanner("module.f(x)").scan()
+    sc = Scanner("module.f(x)").scan(False)
     comp = [
-        Token("NUMBER", "1", 1),
-        Token("PLUS", "+"),
         Token("IDENTIFIER", "module.f"),
         Token("LEFT_PAREN", "("),
         Token("IDENTIFIER", "x"),
@@ -79,10 +87,8 @@ def test_scan_call():
     ]
     assert compare_two_lists(sc, comp)
 
-    sc = Scanner("{x + y}").scan()
+    sc = Scanner("{x + y}").scan(False)
     comp = [
-        Token("NUMBER", "1", 1),
-        Token("PLUS", "+"),
         Token("LEFT_BRACE", "{"),
         Token("IDENTIFIER", "x"),
         Token("PLUS", "+"),
@@ -94,10 +100,8 @@ def test_scan_call():
 
 
 def test_scan_binary():
-    sc = Scanner("x + y").scan()
+    sc = Scanner("x + y").scan(False)
     comp = [
-        Token("NUMBER", "1", 1),
-        Token("PLUS", "+"),
         Token("IDENTIFIER", "x"),
         Token("PLUS", "+"),
         Token("IDENTIFIER", "y"),
@@ -105,10 +109,8 @@ def test_scan_binary():
     ]
     assert compare_two_lists(sc, comp)
 
-    sc = Scanner("x - y").scan()
+    sc = Scanner("x - y").scan(False)
     comp = [
-        Token("NUMBER", "1", 1),
-        Token("PLUS", "+"),
         Token("IDENTIFIER", "x"),
         Token("MINUS", "-"),
         Token("IDENTIFIER", "y"),
@@ -116,10 +118,8 @@ def test_scan_binary():
     ]
     assert compare_two_lists(sc, comp)
 
-    sc = Scanner("x * y").scan()
+    sc = Scanner("x * y").scan(False)
     comp = [
-        Token("NUMBER", "1", 1),
-        Token("PLUS", "+"),
         Token("IDENTIFIER", "x"),
         Token("STAR", "*"),
         Token("IDENTIFIER", "y"),
@@ -127,10 +127,8 @@ def test_scan_binary():
     ]
     assert compare_two_lists(sc, comp)
 
-    sc = Scanner("x / y").scan()
+    sc = Scanner("x / y").scan(False)
     comp = [
-        Token("NUMBER", "1", 1),
-        Token("PLUS", "+"),
         Token("IDENTIFIER", "x"),
         Token("SLASH", "/"),
         Token("IDENTIFIER", "y"),
@@ -138,10 +136,17 @@ def test_scan_binary():
     ]
     assert compare_two_lists(sc, comp)
 
-    sc = Scanner("x : y").scan()
+    sc = Scanner("x // y").scan(False)
     comp = [
-        Token("NUMBER", "1", 1),
-        Token("PLUS", "+"),
+        Token("IDENTIFIER", "x"),
+        Token("SLASH_SLASH", "//"),
+        Token("IDENTIFIER", "y"),
+        Token("EOF", ""),
+    ]
+    assert compare_two_lists(sc, comp)
+
+    sc = Scanner("x : y").scan(False)
+    comp = [
         Token("IDENTIFIER", "x"),
         Token("COLON", ":"),
         Token("IDENTIFIER", "y"),
@@ -149,10 +154,8 @@ def test_scan_binary():
     ]
     assert compare_two_lists(sc, comp)
 
-    sc = Scanner("x ** 2").scan()
+    sc = Scanner("x ** 2").scan(False)
     comp = [
-        Token("NUMBER", "1", 1),
-        Token("PLUS", "+"),
         Token("IDENTIFIER", "x"),
         Token("STAR_STAR", "**"),
         Token("NUMBER", "2", 2),
@@ -160,10 +163,8 @@ def test_scan_binary():
     ]
     assert compare_two_lists(sc, comp)
 
-    sc = Scanner("x | y").scan()
+    sc = Scanner("x | y").scan(False)
     comp = [
-        Token("NUMBER", "1", 1),
-        Token("PLUS", "+"),
         Token("IDENTIFIER", "x"),
         Token("PIPE", "|"),
         Token("IDENTIFIER", "y"),
@@ -171,12 +172,72 @@ def test_scan_binary():
     ]
     assert compare_two_lists(sc, comp)
 
-    sc = Scanner("x ~ y").scan()
+    sc = Scanner("x ~ y").scan(False)
     comp = [
         Token("IDENTIFIER", "x"),
         Token("TILDE", "~"),
-        Token("NUMBER", "1", 1),
-        Token("PLUS", "+"),
+        Token("IDENTIFIER", "y"),
+        Token("EOF", ""),
+    ]
+    assert compare_two_lists(sc, comp)
+
+    sc = Scanner("x == y").scan(False)
+    comp = [
+        Token("IDENTIFIER", "x"),
+        Token("EQUAL_EQUAL", "=="),
+        Token("IDENTIFIER", "y"),
+        Token("EOF", ""),
+    ]
+    assert compare_two_lists(sc, comp)
+
+    sc = Scanner("!y").scan(False)
+    comp = [
+        Token("BANG", "!"),
+        Token("IDENTIFIER", "y"),
+        Token("EOF", ""),
+    ]
+    assert compare_two_lists(sc, comp)
+
+    sc = Scanner("x < y").scan(False)
+    comp = [
+        Token("IDENTIFIER", "x"),
+        Token("LESS", "<"),
+        Token("IDENTIFIER", "y"),
+        Token("EOF", ""),
+    ]
+    assert compare_two_lists(sc, comp)
+
+    sc = Scanner("x <= y").scan(False)
+    comp = [
+        Token("IDENTIFIER", "x"),
+        Token("LESS_EQUAL", "<="),
+        Token("IDENTIFIER", "y"),
+        Token("EOF", ""),
+    ]
+    assert compare_two_lists(sc, comp)
+
+    sc = Scanner("x > y").scan(False)
+    comp = [
+        Token("IDENTIFIER", "x"),
+        Token("GREATER", ">"),
+        Token("IDENTIFIER", "y"),
+        Token("EOF", ""),
+    ]
+    assert compare_two_lists(sc, comp)
+
+    sc = Scanner("x >= y").scan(False)
+    comp = [
+        Token("IDENTIFIER", "x"),
+        Token("GREATER_EQUAL", ">="),
+        Token("IDENTIFIER", "y"),
+        Token("EOF", ""),
+    ]
+    assert compare_two_lists(sc, comp)
+
+    sc = Scanner("x % y").scan(False)
+    comp = [
+        Token("IDENTIFIER", "x"),
+        Token("MODULO", "%"),
         Token("IDENTIFIER", "y"),
         Token("EOF", ""),
     ]
@@ -229,3 +290,28 @@ def test_scan_intercept_disabled():
         Token("EOF", ""),
     ]
     assert compare_two_lists(sc, comp)
+
+
+def test_scan_unexpected_char():
+
+    with pytest.raises(ScanError):
+        Scanner("x # y").scan(False)
+
+    with pytest.raises(ScanError):
+        Scanner("x ; y").scan(False)
+
+    with pytest.raises(ScanError):
+        Scanner("x ^ y").scan(False)
+
+    with pytest.raises(ScanError):
+        Scanner("x & y").scan(False)
+
+
+def test_scan_multiple_tildes():
+    with pytest.raises(ScanError):
+        Scanner("x ~ y ~ z").scan(False)
+
+
+def test_scan_unterminated_string():
+    with pytest.raises(ScanError):
+        Scanner("x['abc]").scan(False)
