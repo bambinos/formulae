@@ -622,7 +622,7 @@ def term_str(term):
             elif v["type"] == "categoric":
                 str_l = [k2 + "=" + str(v2) for k2, v2 in v.items() if k2 != "value"]
                 vars_.append(f"    {k}: {{" + ", ".join(str_l) + "}")
-        x = f"type=interaction, cols={term['cols']}, full_names={term['full_names']}"
+        x = f"type=interaction, full_names={term['full_names']}"
         x += ",\n    vars={\n  " + ",\n  ".join(vars_) + "\n  }"
     else:
         x = ", ".join([k + "=" + str(v) for k, v in term.items() if k not in ["Xi", "Ji"]])
