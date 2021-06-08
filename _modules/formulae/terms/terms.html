@@ -143,6 +143,7 @@
                 
   <h1>Source code for formulae.terms.terms</h1><div class="highlight"><pre>
 <span></span><span class="c1"># pylint: disable = too-many-lines</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
@@ -150,7 +151,6 @@
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span><span class="p">,</span> <span class="n">product</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span><span class="p">,</span> <span class="n">sparse</span>
 
 <span class="kn">from</span> <span class="nn">formulae.utils</span> <span class="kn">import</span> <span class="n">get_interaction_matrix</span>
@@ -720,7 +720,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">factor</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">factor</span> <span class="o">=</span> <span class="n">factor</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">factor_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
@@ -780,34 +780,53 @@
 <span class="sd">        out: dict</span>
 <span class="sd">            See above.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Evaluate factor and save type to self.factor_type.</span>
-        <span class="c1"># Note: factor can&#39;t be a call or interaction yet.</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Variable</span><span class="p">):</span>
-            <span class="n">factor</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">factor</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="s2">&quot;ordered&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">factor</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">ordered</span><span class="p">:</span>
-                <span class="n">categories</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">factor</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
-                <span class="n">type_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">CategoricalDtype</span><span class="p">(</span><span class="n">categories</span><span class="o">=</span><span class="n">categories</span><span class="p">,</span> <span class="n">ordered</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                <span class="n">factor</span> <span class="o">=</span> <span class="n">factor</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">type_</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">type_</span> <span class="o">=</span> <span class="n">factor</span><span class="o">.</span><span class="n">dtype</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">factor_type</span> <span class="o">=</span> <span class="n">type_</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Factor on right hand side of group specific term must be a single term.&quot;</span>
-            <span class="p">)</span>
+        <span class="c1"># Factor must be considered categorical, and with full encoding. We set type and obtain</span>
+        <span class="c1"># data for the factor term manually.</span>
 
-        <span class="c1"># Note we don&#39;t use drop_first=True for the factor.</span>
+        <span class="c1"># Set type on each component to check data is behaved as expected and then</span>
+        <span class="c1"># manually set type of the components to categoric.</span>
+        <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="n">Variable</span><span class="p">):</span>
+                <span class="n">comp</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="n">Call</span><span class="p">):</span>
+                <span class="n">comp</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Can&#39;t set type on Term because at least one of the components &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;is of the unexpected type {type(comp)}.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">comp</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;categoric&quot;</span>  <span class="c1"># pylint: disable = protected-access</span>
+
+        <span class="c1"># Store the type of the components.</span>
+        <span class="c1"># We know they are categoric.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">component_types</span> <span class="o">=</span> <span class="p">{</span><span class="n">comp</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="s2">&quot;categoric&quot;</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">components</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;interaction&quot;</span>  <span class="c1"># pylint: disable = protected-access</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;categoric&quot;</span>  <span class="c1"># pylint: disable = protected-access</span>
+
+        <span class="c1"># Pass encoding=True when setting data.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Obtain group names</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+            <span class="c1"># We&#39;re certain they are all categoric with full encoding.</span>
+            <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl</span><span class="p">)</span> <span class="k">for</span> <span class="n">lvl</span> <span class="ow">in</span> <span class="n">comp</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">]])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;:&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">groups</span><span class="p">))]</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span>
         <span class="n">Xi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">data</span>
-        <span class="n">Ji</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">factor</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="n">Ji</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">data</span>
         <span class="n">Zi</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">khatri_rao</span><span class="p">(</span><span class="n">Ji</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">Xi</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
             <span class="s2">&quot;Xi&quot;</span><span class="p">:</span> <span class="n">Xi</span><span class="p">,</span>
             <span class="s2">&quot;Ji&quot;</span><span class="p">:</span> <span class="n">Ji</span><span class="p">,</span>
             <span class="s2">&quot;Zi&quot;</span><span class="p">:</span> <span class="n">sparse</span><span class="o">.</span><span class="n">coo_matrix</span><span class="p">(</span><span class="n">Zi</span><span class="p">),</span>
-            <span class="s2">&quot;groups&quot;</span><span class="p">:</span> <span class="n">factor</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="s2">&quot;groups&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>  <span class="c1"># pylint: disable = protected-access</span>
             <span class="n">out</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">]</span>
@@ -836,17 +855,15 @@
 <span class="sd">            Same rules as in :meth:`eval &lt;GroupSpecificTerm.eval&gt;`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="c1"># factor uses the same data type that is used in first evaluation.</span>
-        <span class="n">factor</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">factor_type</span><span class="p">)</span>
         <span class="n">Xi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">eval_new_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="n">Ji</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">factor</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="n">Ji</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">eval_new_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="n">Zi</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">khatri_rao</span><span class="p">(</span><span class="n">Ji</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">Xi</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
             <span class="s2">&quot;Xi&quot;</span><span class="p">:</span> <span class="n">Xi</span><span class="p">,</span>
             <span class="s2">&quot;Ji&quot;</span><span class="p">:</span> <span class="n">Ji</span><span class="p">,</span>
             <span class="s2">&quot;Zi&quot;</span><span class="p">:</span> <span class="n">sparse</span><span class="o">.</span><span class="n">coo_matrix</span><span class="p">(</span><span class="n">Zi</span><span class="p">),</span>
-            <span class="s2">&quot;groups&quot;</span><span class="p">:</span> <span class="n">factor</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="s2">&quot;groups&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>  <span class="c1"># pylint: disable = protected-access</span>
             <span class="n">out</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">]</span>
@@ -871,7 +888,7 @@
         <span class="n">factor_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">var_names</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">expr_names</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">factor_names</span><span class="p">)</span>
 
-<div class="viewcode-block" id="GroupSpecificTerm.to_string"><a class="viewcode-back" href="../../../internals.html#formulae.terms.GroupSpecificTerm.to_string">[docs]</a>    <span class="k">def</span> <span class="nf">to_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="GroupSpecificTerm.get_name"><a class="viewcode-back" href="../../../internals.html#formulae.terms.GroupSpecificTerm.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Obtain string representation of the name of the term.</span>
 
 <span class="sd">        Returns</span>
@@ -883,10 +900,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="n">Intercept</span><span class="p">):</span>
             <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;1|&quot;</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="n">Term</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{self.expr.name}</span><span class="s2">[</span><span class="si">{level}</span><span class="s2">]|&quot;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{self.expr.name}</span><span class="s2">|&quot;</span>
+            <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{self.expr.name}</span><span class="s2">|&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid LHS expression for group specific term&quot;</span><span class="p">)</span>
 
