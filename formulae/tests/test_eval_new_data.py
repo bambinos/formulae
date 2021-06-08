@@ -210,59 +210,32 @@ def test_model_categoric_group(data, data2):
     group1 = dm.group
     group2 = group1._evaluate_new_data(data2)
 
-    d1 = {k: v for k, v in group1.terms_info["g1[X]|g2"].items() if k not in ["idxs", "Xi", "Ji"]}
-    d2 = {k: v for k, v in group2.terms_info["g1[X]|g2"].items() if k not in ["idxs", "Xi", "Ji"]}
-    assert d1 == d2
-
-    d1 = {k: v for k, v in group1.terms_info["g1[Y]|g2"].items() if k not in ["idxs", "Xi", "Ji"]}
-    d2 = {k: v for k, v in group2.terms_info["g1[Y]|g2"].items() if k not in ["idxs", "Xi", "Ji"]}
+    d1 = {k: v for k, v in group1.terms_info["g1|g2"].items() if k not in ["idxs", "Xi", "Ji"]}
+    d2 = {k: v for k, v in group2.terms_info["g1|g2"].items() if k not in ["idxs", "Xi", "Ji"]}
     assert d1 == d2
 
     arr = np.array(
         [
-            [1, 0],
-            [0, 0],
-            [0, 0],
-            [0, 0],
-            [0, 0],
-            [0, 1],
-            [1, 0],
-            [0, 1],
-            [0, 0],
-            [0, 0],
-            [0, 0],
-            [0, 1],
-            [1, 0],
-            [0, 0],
-            [1, 0],
-            [0, 0],
+            [1, 0, 0, 0],
+            [0, 0, 0, 1],
+            [0, 1, 0, 0],
+            [0, 0, 0, 1],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [1, 0, 0, 0],
+            [0, 0, 1, 0],
+            [0, 1, 0, 0],
+            [0, 0, 0, 1],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [1, 0, 0, 0],
+            [0, 0, 0, 1],
+            [1, 0, 0, 0],
+            [0, 0, 0, 1],
         ]
     )
 
-    assert (group2["g1[X]|g2"] == arr).all()
-
-    arr = np.array(
-        [
-            [0, 0],
-            [0, 1],
-            [1, 0],
-            [0, 1],
-            [1, 0],
-            [0, 0],
-            [0, 0],
-            [0, 0],
-            [1, 0],
-            [0, 1],
-            [1, 0],
-            [0, 0],
-            [0, 0],
-            [0, 1],
-            [0, 0],
-            [0, 1],
-        ]
-    )
-
-    assert (group2["g1[Y]|g2"] == arr).all()
+    assert (group2["g1|g2"] == arr).all()
 
 
 def test_nested_transform(data, data2):
