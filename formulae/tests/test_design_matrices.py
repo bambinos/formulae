@@ -24,6 +24,26 @@ def data():
     return data
 
 
+@pytest.fixture(scope="module")
+def pixel():
+    """
+    X-ray pixel intensities over time dataset from R nlme package.
+    The output is a subset of this dataframe.
+    """
+    from os.path import dirname, join
+
+    data_dir = join(dirname(__file__), "data")
+    data = pd.read_csv(join(data_dir, "Pixel.csv"))
+
+    data["Dog"] = data["Dog"].astype("category")
+    data["day"] = data["day"].astype("category")
+    data = data[data["Dog"].isin([1, 2, 3])]
+    data = data[data["day"].isin([2, 4, 6])]
+    data = data.sort_values(["Dog", "Side", "day"])
+    data = data.reset_index(drop=True)
+    return data
+
+
 def compare_dicts(d1, d2):
     if len(d1) != len(d2):
         return False
@@ -464,3 +484,49 @@ def test_categoric_group_specific():
         "C(age_grp)[1]|BMI",
         "C(age_grp)[2]|BMI",
     ]
+
+
+def test_interactions_in_group_specific(pixel):
+    # We have group specific terms with the following characteristics
+    # 1. expr=categoric, factor=categoric
+    # 2. expr=intercept, factor=categoric
+    # 3. expr=intercept, factor=interaction between categorics
+    # The desing matrices used for the comparison are loaded from text files.
+    # The encoding is implicitly checked when comparing names.
+
+    from os.path import dirname, join
+
+    data_dir = join(dirname(__file__), "data/group_specific")
+    slope_by_dog_original = np.loadtxt(join(data_dir, "slope_by_dog.txt"))
+    intercept_by_side_original = np.loadtxt(join(data_dir, "intercept_by_side.txt"))
+    intercept_by_side_dog_original = np.loadtxt(join(data_dir, "intercept_by_side_dog.txt"))
+    dog_and_side_by_day_original = np.loadtxt(join(data_dir, "dog_and_side_by_day.txt"))
+
+    dm = design_matrices("pixel ~ day +  (0 + day | Dog) + (1 | Side/Dog)", pixel)
+    slope_by_dog = dm.group["day|Dog"]
+    intercept_by_side = dm.group["1|Side"]
+    intercept_by_side_dog = dm.group["1|Side:Dog"]
+
+    # Assert values in the design matrix
+    assert (slope_by_dog == slope_by_dog_original).all()
+    assert (intercept_by_side == intercept_by_side_original).all()
+    assert (intercept_by_side_dog == intercept_by_side_dog_original).all()
+
+    # Assert full names
+    names = [f"day[{d}]|{g}" for g in [1, 2, 3] for d in [2, 4, 6]]
+    assert dm.group.terms_info["day|Dog"]["full_names"] == names
+    names = [f"1|Side[{s}]" for s in ["L", "R"]]
+    assert dm.group.terms_info["1|Side"]["full_names"] == names
+    names = [f"1|Side:Dog[{s}:{d}]" for s in ["L", "R"] for d in [1, 2, 3]]
+    assert dm.group.terms_info["1|Side:Dog"]["full_names"] == names
+
+    # Another design matrix
+    dm = design_matrices("(0 + Dog:Side | day)", pixel)
+    dog_and_side_by_day = dm.group["Dog:Side|day"]
+
+    # Assert values in the design matrix
+    assert (dog_and_side_by_day == dog_and_side_by_day_original).all()
+
+    # Assert full names
+    names = [f"Dog[{d}]:Side[{s}]|{g}" for g in [2, 4, 6] for d in [1, 2, 3] for s in ["L", "R"]]
+    assert dm.group.terms_info["Dog:Side|day"]["full_names"] == names

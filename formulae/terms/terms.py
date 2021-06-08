@@ -744,7 +744,7 @@ class GroupSpecificTerm:
         factor_names = self.factor.var_names.copy()
         return expr_names.union(factor_names)
 
-    def to_string(self, level=None):
+    def get_name(self):
         """Obtain string representation of the name of the term.
 
         Returns
@@ -756,10 +756,7 @@ class GroupSpecificTerm:
         if isinstance(self.expr, Intercept):
             name += "1|"
         elif isinstance(self.expr, Term):
-            if level is not None:
-                name += f"{self.expr.name}[{level}]|"
-            else:
-                name += f"{self.expr.name}|"
+            name += f"{self.expr.name}|"
         else:
             raise ValueError("Invalid LHS expression for group specific term")
 

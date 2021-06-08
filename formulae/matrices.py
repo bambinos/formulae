@@ -2,14 +2,11 @@
 import itertools
 import logging
 
-from itertools import product
 from copy import deepcopy
 
 import numpy as np
 import pandas as pd
 import scipy as sp
-
-from scipy import linalg
 
 from .eval import EvalEnvironment
 from .terms import Model, Intercept
@@ -375,49 +372,24 @@ class GroupEffectsMatrix:
                         encoding = False
             d = term.eval(self.data, self.eval_env, encoding)
 
-            if d["type"] == "categoric":
-                levels = d["levels"] if d["encoding"] == "full" else d["levels"][1:]
-                for idx, level in enumerate(levels):
-                    Xi = np.atleast_2d(d["Xi"][:, idx]).T
-                    Ji = d["Ji"]
-                    Zi = linalg.khatri_rao(Ji.T, Xi.T).T
-                    delta_row, delta_col = Zi.shape
-                    Z.append(Zi)
-                    term_name = term.to_string(level)
-                    self.terms_info[term_name] = {
-                        "type": "categoric",
-                        "Xi": Xi,
-                        "Ji": Ji,
-                        "groups": d["groups"],
-                        "encoding": d["encoding"],
-                        "levels": d["levels"],
-                        "reference": d["reference"],
-                        "full_names": [f"{term_name}[{group}]" for group in d["groups"]],
-                    }
-                    self.terms_info[term_name]["idxs"] = (
-                        slice(start_row, start_row + delta_row),
-                        slice(start_col, start_col + delta_col),
-                    )
-                    start_row += delta_row
-                    start_col += delta_col
-            else:
-                Zi = d["Zi"]
-                delta_row, delta_col = Zi.shape
-                Z.append(Zi)
-                term_name = term.to_string()
-                self.terms_info[term_name] = {k: v for k, v in d.items() if k != "Zi"}
-                self.terms_info[term_name]["idxs"] = (
-                    slice(start_row, start_row + delta_row),
-                    slice(start_col, start_col + delta_col),
-                )
-                self.terms_info[term_name]["full_names"] = self._term_full_names(term_name)
-                start_row += delta_row
-                start_col += delta_col
+            # Grab subcomponent of Z that corresponds to this term
+            Zi = d["Zi"]
+            delta_row, delta_col = Zi.shape
+            Z.append(Zi)
+            name = term.get_name()
+            self.terms_info[name] = {k: v for k, v in d.items() if k != "Zi"}
+            self.terms_info[name]["idxs"] = (
+                slice(start_row, start_row + delta_row),
+                slice(start_col, start_col + delta_col),
+            )
+            # Generate term names
+            self.terms_info[name]["full_names"] = self._term_full_names(name, term.expr.name)
+            start_row += delta_row
+            start_col += delta_col
 
         # Stored in Compressed Sparse Column format
         if Z:
             self.design_matrix = sp.sparse.block_diag(Z).tocsc()
-
         self.evaluated = True
 
     def _evaluate_new_data(self, data):
@@ -451,35 +423,18 @@ class GroupEffectsMatrix:
 
         for term in self.terms:
             d = term.eval_new_data(data)
-            if d["type"] == "categoric":
-                levels = d["levels"] if d["encoding"] == "full" else d["levels"][1:]
-                Ji = d["Ji"]
-                for idx, level in enumerate(levels):
-                    Xi = np.atleast_2d(d["Xi"][:, idx]).T
-                    Zi = linalg.khatri_rao(Ji.T, Xi.T).T
-                    delta_row, delta_col = Zi.shape
-                    Z.append(Zi)
-                    term_name = term.to_string(level)
-                    # All the info, except from the indexes, is copied.
-                    new_instance.terms_info[term_name] = deepcopy(self.terms_info[term_name])
-                    new_instance.terms_info[term_name]["idxs"] = (
-                        slice(start_row, start_row + delta_row),
-                        slice(start_col, start_col + delta_col),
-                    )
-                    start_row += delta_row
-                    start_col += delta_col
-            else:
-                Zi = d["Zi"]
-                delta_row, delta_col = Zi.shape
-                Z.append(Zi)
-                term_name = term.to_string()
-                new_instance.terms_info[term_name] = deepcopy(self.terms_info[term_name])
-                new_instance.terms_info[term_name]["idxs"] = (
-                    slice(start_row, start_row + delta_row),
-                    slice(start_col, start_col + delta_col),
-                )
-                start_row += delta_row
-                start_col += delta_col
+            # Grab subcomponent of Z that corresponds to this term
+            Zi = d["Zi"]
+            delta_row, delta_col = Zi.shape
+            Z.append(Zi)
+            name = term.get_name()
+            new_instance.terms_info[name] = deepcopy(self.terms_info[name])
+            new_instance.terms_info[name]["idxs"] = (
+                slice(start_row, start_row + delta_row),
+                slice(start_col, start_col + delta_col),
+            )
+            start_row += delta_row
+            start_col += delta_col
 
         new_instance.data = data
         new_instance.eval_env = self.eval_env
@@ -487,28 +442,25 @@ class GroupEffectsMatrix:
         # Stored in Compressed Sparse Column format
         if Z:
             new_instance.design_matrix = sp.sparse.block_diag(Z).tocsc()
-
         return new_instance
 
-    def _term_full_names(self, name):  # pylint: disable=inconsistent-return-statements
-        # Always returns a list
+    def _term_full_names(self, name, expr):
+        # Always returns a list. This should be clearer in the future.
         term = self.terms_info[name]
-        _type = term["type"]
-        if _type in ["intercept", "numeric"]:
-            return [f"{name}[{group}]" for group in term["groups"]]
-        elif _type == "interaction":
-            return interaction_label(term)
-        elif _type == "categoric":
-            # not used anymore?
+        groups = term["groups"]
+        if term["type"] in ["intercept", "numeric"]:
+            names = [f"{name}[{group}]" for group in groups]
+        elif term["type"] == "interaction":
+            levels = interaction_label(term)
+            names = [f"{level}|{group}" for group in groups for level in levels]
+        elif term["type"] == "categoric":
             if "levels" in term.keys():
                 # Ask if encoding is "full" or "reduced"
-                if term["encoding"] == "full":
-                    products = product(term["levels"], term["groups"])
-                else:
-                    products = product(term["levels"][1:], term["groups"])
+                levels = term["levels"] if term["encoding"] == "full" else term["levels"][1:]
             else:
-                products = product([term["reference"]], term["groups"])
-            return [f"{name}[{p[0]}|{p[1]}]" for p in products]
+                levels = [term["reference"]]
+            names = [f"{expr}[{level}]|{group}" for group in groups for level in levels]
+        return names
 
     def __getitem__(self, term):
         """Get the sub-matrix that corresponds to a given term.
