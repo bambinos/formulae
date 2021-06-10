@@ -131,13 +131,13 @@ class ResponseVector:
 
     def __str__(self):
         string_list = [
-            "name=" + self.name,
-            "type=" + self.type,
-            "length=" + str(len(self.design_vector)),
+            "name: " + self.name,
+            "type: " + self.type,
+            "length: " + str(len(self.design_vector)),
         ]
         if self.type == "categoric":
-            string_list += ["refclass=" + self.refclass]
-        return "ResponseVector(" + ", ".join(string_list) + ")"
+            string_list += ["refclass: " + self.refclass]
+        return f"ResponseVector({wrapify(spacify(multilinify(string_list)))}\n)"
 
 
 class CommonEffectsMatrix:
