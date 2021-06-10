@@ -1,6 +1,7 @@
 # pylint: disable=relative-beyond-top-level
 import itertools
 import logging
+import textwrap
 
 from copy import deepcopy
 
@@ -202,8 +203,10 @@ class CommonEffectsMatrix:
         for term in self.model.terms:
             self.terms_info[term.name] = term.metadata
             delta = d[term.name].shape[1]
-            self.terms_info[term.name]["cols"] = slice(start, start + delta)
+            if term._type == "interaction": # pylint: disable = protected-access
+                self.terms_info[term.name]["levels"] = self._interaction_levels(term.name)
             self.terms_info[term.name]["full_names"] = self._term_full_names(term.name)
+            self.terms_info[term.name]["cols"] = slice(start, start + delta)
             start += delta
 
         self.evaluated = True
@@ -263,12 +266,22 @@ class CommonEffectsMatrix:
             # "levels" is present when we have dummy encoding (not just a vector of 0-1)
             if "levels" in term.keys():
                 # Ask if encoding is "full" or "reduced"
-                if term["encoding"] == "full":
-                    return [f"{name}[{level}]" for level in term["levels"]]
-                else:
-                    return [f"{name}[{level}]" for level in term["levels"][1:]]
+                levels = term["levels"] if term["encoding"] == "full" else term["levels"][1:]
+                return [f"{name}[{level}]" for level in levels]
             else:
                 return [f"{name}[{term['reference']}]"]
+
+    def _interaction_levels(self, name):
+        terms = self.terms_info[name]["terms"]
+        colnames = []
+        for v in terms.values():
+            if v["type"] == "categoric":
+                levels = v["levels"] if v["encoding"] == "full" else v["levels"][1:]
+                colnames.append([str(level) for level in levels])
+        if colnames:
+            return [", ".join(str_tuple) for str_tuple in list(itertools.product(*colnames))]
+        else:
+            return None
 
     def __getitem__(self, term):
         """Get the sub-matrix that corresponds to a given term.
@@ -292,12 +305,13 @@ class CommonEffectsMatrix:
         return self.__str__()
 
     def __str__(self):
-        terms_str = ",\n  ".join([f"'{k}': {{{term_str(v)}}}" for k, v in self.terms_info.items()])
-        string_list = [
-            "shape: " + str(self.design_matrix.shape),
-            "terms: {\n    " + "  ".join(terms_str.splitlines(True)) + "\n  }",
+        string = [f"'{k}': {{{spacify(term_str(v))}\n}}" for k, v in self.terms_info.items()]
+        string = multilinify(string)
+        string = [
+            f"shape: {self.design_matrix.shape}",
+            f"terms: {{{spacify(string)}\n}}",
         ]
-        return "CommonEffectsMatrix(\n  " + ",\n  ".join(string_list) + "\n)"
+        return f"CommonEffectsMatrix({wrapify(spacify(multilinify(string)))}\n)"
 
 
 class GroupEffectsMatrix:
@@ -378,12 +392,14 @@ class GroupEffectsMatrix:
             Z.append(Zi)
             name = term.get_name()
             self.terms_info[name] = {k: v for k, v in d.items() if k != "Zi"}
+            if self.terms_info[name]["type"] == "interaction": # pylint: disable = protected-access
+                self.terms_info[name]["levels"] = self._interaction_levels(name)
+            # Generate term names
+            self.terms_info[name]["full_names"] = self._term_full_names(name, term.expr.name)
             self.terms_info[name]["idxs"] = (
                 slice(start_row, start_row + delta_row),
                 slice(start_col, start_col + delta_col),
             )
-            # Generate term names
-            self.terms_info[name]["full_names"] = self._term_full_names(name, term.expr.name)
             start_row += delta_row
             start_col += delta_col
 
@@ -462,6 +478,18 @@ class GroupEffectsMatrix:
             names = [f"{expr}[{level}]|{group}" for group in groups for level in levels]
         return names
 
+    def _interaction_levels(self, name):
+        terms = self.terms_info[name]["terms"]
+        colnames = []
+        for v in terms.values():
+            if v["type"] == "categoric":
+                levels = v["levels"] if v["encoding"] == "full" else v["levels"][1:]
+                colnames.append([str(level) for level in levels])
+        if colnames:
+            return [", ".join(str_tuple) for str_tuple in list(itertools.product(*colnames))]
+        else:
+            return None
+
     def __getitem__(self, term):
         """Get the sub-matrix that corresponds to a given term.
 
@@ -484,12 +512,13 @@ class GroupEffectsMatrix:
         return self.__str__()
 
     def __str__(self):
-        terms_str = ",\n  ".join([f"'{k}': {{{term_str(v)}}}" for k, v in self.terms_info.items()])
-        string_list = [
-            "shape: " + str(self.design_matrix.shape),
-            "terms: {\n    " + "  ".join(terms_str.splitlines(True)) + "\n  }",
+        string = [f"'{k}': {{{spacify(term_str(v))}\n}}" for k, v in self.terms_info.items()]
+        string = multilinify(string)
+        string = [
+            f"shape: {self.design_matrix.shape}",
+            f"terms: {{{spacify(string)}\n}}",
         ]
-        return "GroupEffectsMatrix(\n  " + ",\n  ".join(string_list) + "\n)"
+        return f"GroupEffectsMatrix({wrapify(spacify(multilinify(string)))}\n)"
 
 
 def design_matrices(formula, data, na_action="drop", eval_env=0):
@@ -564,27 +593,18 @@ def design_matrices(formula, data, na_action="drop", eval_env=0):
 
 # Utils
 def term_str(term):
-    x = None
     if term["type"] == "interaction":
-        terms = term["terms"]
-        vars_ = []
-        for k, v in terms.items():
-            if v["type"] == "numeric":
-                vars_.append(f"    {k}: {{type={v['type']}}}")
-            elif v["type"] == "categoric":
-                str_l = [k2 + "=" + str(v2) for k2, v2 in v.items() if k2 != "value"]
-                vars_.append(f"    {k}: {{" + ", ".join(str_l) + "}")
-        x = f"type=interaction, full_names={term['full_names']}"
-        x += ",\n    vars={\n  " + ",\n  ".join(vars_) + "\n  }"
+        string_list = [f"{k}: {v}" for k, v in term.items() if k not in ["terms", "Xi", "Ji"]]
+        string_vars = [f"'{k}': {{{spacify(term_str(v))}\n}}" for k, v in term["terms"].items()]
+        string = multilinify(string_list + [f"vars: {{{spacify(multilinify(string_vars))}\n}}"])
     else:
-        x = ", ".join([k + "=" + str(v) for k, v in term.items() if k not in ["Xi", "Ji"]])
-    return x
+        string = multilinify([f"{k}: {v}" for k, v in term.items() if k not in ["Xi", "Ji"]])
+    return string
 
 
 def interaction_label(x):
     terms = x["terms"]
     colnames = []
-
     for k, v in terms.items():
         if v["type"] == "numeric":
             colnames.append([k])
@@ -599,3 +619,24 @@ def interaction_label(x):
                 colnames.append([f"{k}[{v['reference']}]"])
 
     return [":".join(str_tuple) for str_tuple in list(itertools.product(*colnames))]
+
+
+def spacify(string):
+    return "  " + "  ".join(string.splitlines(True))
+
+
+def multilinify(l, sep=","):
+    sep += "\n"
+    return "\n" + sep.join(l)
+
+
+def wrapify(string, width=100):
+    l = string.splitlines(True)
+    wrapper = textwrap.TextWrapper(width=width)
+    for idx, line in enumerate(l):
+        if len(line) > width:
+            leading_spaces = len(line) - len(line.lstrip(" "))
+            wrapper.subsequent_indent = " " * (leading_spaces + 2)
+            wrapped = wrapper.wrap(line)
+            l[idx] = "\n".join(wrapped) + "\n"
+    return "".join(l)
