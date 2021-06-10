@@ -1,5 +1,6 @@
 *.ipynb
 *.pyc
+.coverage
 *.egg-info/
 .ipynb_checkpoints/
 .vscode/
