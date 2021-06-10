@@ -203,7 +203,7 @@ class CommonEffectsMatrix:
         for term in self.model.terms:
             self.terms_info[term.name] = term.metadata
             delta = d[term.name].shape[1]
-            if term._type == "interaction": # pylint: disable = protected-access
+            if term._type == "interaction":  # pylint: disable = protected-access
                 self.terms_info[term.name]["levels"] = self._interaction_levels(term.name)
             self.terms_info[term.name]["full_names"] = self._term_full_names(term.name)
             self.terms_info[term.name]["cols"] = slice(start, start + delta)
@@ -392,7 +392,7 @@ class GroupEffectsMatrix:
             Z.append(Zi)
             name = term.get_name()
             self.terms_info[name] = {k: v for k, v in d.items() if k != "Zi"}
-            if self.terms_info[name]["type"] == "interaction": # pylint: disable = protected-access
+            if self.terms_info[name]["type"] == "interaction":  # pylint: disable = protected-access
                 self.terms_info[name]["levels"] = self._interaction_levels(name)
             # Generate term names
             self.terms_info[name]["full_names"] = self._term_full_names(name, term.expr.name)
