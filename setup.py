@@ -37,7 +37,7 @@ if "setuptools" in sys.modules:
 setup(
     name="formulae",
     version=__version__,
-    description="An implementation of Wilkinson's formula language for statistical models à la lme4",
+    description="Formulas for mixed-effects models in Python",
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
     url="https://github.com/bambinos/formulae",
