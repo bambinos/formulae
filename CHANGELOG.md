@@ -8,6 +8,8 @@
 
 ### Documentation
 
+* Add a Getting started section to webpage and remove that content from README.md
+
 ## v0.1.0
 
 ### New features
