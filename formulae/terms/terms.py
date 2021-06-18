@@ -7,7 +7,7 @@ from functools import reduce
 from itertools import combinations, product
 
 import numpy as np
-from scipy import linalg, sparse
+from scipy import linalg
 
 from formulae.utils import get_interaction_matrix
 from formulae.contrasts import pick_contrasts
@@ -681,7 +681,7 @@ class GroupSpecificTerm:
             "type": self.expr.metadata["type"],
             "Xi": Xi,
             "Ji": Ji,
-            "Zi": sparse.coo_matrix(Zi),
+            "Zi": Zi,
             "groups": self.groups,
         }
         if self.expr._type == "categoric":  # pylint: disable = protected-access
@@ -718,7 +718,7 @@ class GroupSpecificTerm:
             "type": self.expr.metadata["type"],
             "Xi": Xi,
             "Ji": Ji,
-            "Zi": sparse.coo_matrix(Zi),
+            "Zi": Zi,
             "groups": self.groups,
         }
         if self.expr._type == "categoric":  # pylint: disable = protected-access
