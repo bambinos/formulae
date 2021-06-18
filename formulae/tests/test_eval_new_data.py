@@ -285,3 +285,17 @@ def test_components_arent_shared():
 
     new_common = common._evaluate_new_data(new_data)
     assert new_common.design_matrix.shape[1] == 6
+
+
+def test_eval_new_data_when_evaluated_false(data, data2):
+    dm = design_matrices("y ~ x + (g1|g2)", data)
+    common = dm.common
+    group = dm.group
+
+    common.evaluated = False
+    group.evaluated = False
+
+    with pytest.raises(ValueError):
+        common._evaluate_new_data(data2)
+    with pytest.raises(ValueError):
+        group._evaluate_new_data(data2)

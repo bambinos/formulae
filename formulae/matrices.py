@@ -7,7 +7,6 @@ from copy import deepcopy
 
 import numpy as np
 import pandas as pd
-import scipy as sp
 
 from .eval import EvalEnvironment
 from .terms import Model, Intercept
@@ -163,7 +162,7 @@ class CommonEffectsMatrix:
         to correctly handle the new data passed and the terms here.
     terms_info: dict
         A dictionary that holds information related to each of the common specific terms, such as
-        ``"idxs"``, ``"type"``, and ``"full_names"``. If ``"type"`` is ``"categoric"``, it also
+        ``"cols"``, ``"type"``, and ``"full_names"``. If ``"type"`` is ``"categoric"``, it also
         contains ``"groups"``, ``"encoding"``, ``"levels"``, and ``"reference"``.
         The keys are given by the term names.
     """
@@ -231,8 +230,7 @@ class CommonEffectsMatrix:
             A new instance of ``CommonEffectsMatrix`` whose design matrix is obtained with the
             values in the new data set.
         """
-        # Create and return new CommonEffectsMatrix from the information in the terms,
-        # with the new data
+        # Create and return new CommonEffectsMatrix from the information in the terms, with new data
         if not self.evaluated:
             raise ValueError("Can't evaluate new data on unevaluated matrix.")
         new_instance = self.__class__(self.model)
@@ -331,16 +329,15 @@ class GroupEffectsMatrix:
 
     Attributes
     ----------
-    design_matrix: scipy.sparse.csc.csc_matrix
-        A sparse matrix in CSC format containing the values of the design matrix.
-         Call ``self.toarray()`` to obtain a 2-dimensional array.
+    design_matrix: np.array
+        A 2 dimensional numpy array with the values of the design matrix.
     evaluated: bool
         Indicates if the terms have been evaluated at least once. The terms must have been evaluated
         before calling ``self._evaluate_new_data()`` because we must know the type of each term
         to correctly handle the new data passed and the terms here.
     terms_info: dict
         A dictionary that holds information related to each of the group specific terms, such as
-        the matrices ``"Xi"`` and ``"Ji"``, ``"idxs"``, ``"type"``, and ``"full_names"``. If
+        the matrices ``"Xi"`` and ``"Ji"``, ``"cols"``, ``"type"``, and ``"full_names"``. If
         ``"type"`` is ``"categoric"``, it also contains ``"groups"``, ``"encoding"``, ``"levels"``,
         and ``"reference"``. The keys are given by the term names.
     """
@@ -373,8 +370,7 @@ class GroupEffectsMatrix:
         """
         self.data = data
         self.eval_env = eval_env
-        start_row = 0
-        start_col = 0
+        start = 0
         Z = []
         self.terms_info = {}
         for term in self.terms:
@@ -388,7 +384,7 @@ class GroupEffectsMatrix:
 
             # Grab subcomponent of Z that corresponds to this term
             Zi = d["Zi"]
-            delta_row, delta_col = Zi.shape
+            delta = Zi.shape[1]
             Z.append(Zi)
             name = term.get_name()
             self.terms_info[name] = {k: v for k, v in d.items() if k != "Zi"}
@@ -396,16 +392,11 @@ class GroupEffectsMatrix:
                 self.terms_info[name]["levels"] = self._interaction_levels(name)
             # Generate term names
             self.terms_info[name]["full_names"] = self._term_full_names(name, term.expr.name)
-            self.terms_info[name]["idxs"] = (
-                slice(start_row, start_row + delta_row),
-                slice(start_col, start_col + delta_col),
-            )
-            start_row += delta_row
-            start_col += delta_col
+            self.terms_info[name]["cols"] = slice(start, start + delta)
+            start += delta
 
-        # Stored in Compressed Sparse Column format
         if Z:
-            self.design_matrix = sp.sparse.block_diag(Z).tocsc()
+            self.design_matrix = np.column_stack(Z)
         self.evaluated = True
 
     def _evaluate_new_data(self, data):
@@ -433,31 +424,22 @@ class GroupEffectsMatrix:
             raise ValueError("Can't evaluate new data on unevaluated matrix.")
 
         new_instance = self.__class__(self.terms)
-
-        start_row = start_col = 0
+        start = 0
         Z = []
-
         for term in self.terms:
             d = term.eval_new_data(data)
             # Grab subcomponent of Z that corresponds to this term
             Zi = d["Zi"]
-            delta_row, delta_col = Zi.shape
+            delta = Zi.shape[1]
             Z.append(Zi)
             name = term.get_name()
             new_instance.terms_info[name] = deepcopy(self.terms_info[name])
-            new_instance.terms_info[name]["idxs"] = (
-                slice(start_row, start_row + delta_row),
-                slice(start_col, start_col + delta_col),
-            )
-            start_row += delta_row
-            start_col += delta_col
-
+            new_instance.terms_info[name]["cols"] = slice(start, start + delta)
+            start += delta
         new_instance.data = data
         new_instance.eval_env = self.eval_env
-
-        # Stored in Compressed Sparse Column format
         if Z:
-            new_instance.design_matrix = sp.sparse.block_diag(Z).tocsc()
+            new_instance.design_matrix = np.column_stack(Z)
         return new_instance
 
     def _term_full_names(self, name, expr):
@@ -506,7 +488,7 @@ class GroupEffectsMatrix:
         """
         if term not in self.terms_info.keys():
             raise ValueError(f"'{term}' is not a valid term name")
-        return self.design_matrix[self.terms_info[term]["idxs"]].toarray()
+        return self.design_matrix[:, self.terms_info[term]["cols"]]
 
     def __repr__(self):
         return self.__str__()
