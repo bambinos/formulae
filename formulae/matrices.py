@@ -230,8 +230,7 @@ class CommonEffectsMatrix:
             A new instance of ``CommonEffectsMatrix`` whose design matrix is obtained with the
             values in the new data set.
         """
-        # Create and return new CommonEffectsMatrix from the information in the terms,
-        # with the new data
+        # Create and return new CommonEffectsMatrix from the information in the terms, with new data
         if not self.evaluated:
             raise ValueError("Can't evaluate new data on unevaluated matrix.")
         new_instance = self.__class__(self.model)
