@@ -103,6 +103,7 @@ Contents
 .. toctree::
    :maxdepth: 4
 
+   notebooks/getting_started
    api_reference
    internals
 
