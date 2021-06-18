@@ -151,7 +151,7 @@
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span><span class="p">,</span> <span class="n">product</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span><span class="p">,</span> <span class="n">sparse</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span>
 
 <span class="kn">from</span> <span class="nn">formulae.utils</span> <span class="kn">import</span> <span class="n">get_interaction_matrix</span>
 <span class="kn">from</span> <span class="nn">formulae.contrasts</span> <span class="kn">import</span> <span class="n">pick_contrasts</span>
@@ -825,7 +825,7 @@
             <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
             <span class="s2">&quot;Xi&quot;</span><span class="p">:</span> <span class="n">Xi</span><span class="p">,</span>
             <span class="s2">&quot;Ji&quot;</span><span class="p">:</span> <span class="n">Ji</span><span class="p">,</span>
-            <span class="s2">&quot;Zi&quot;</span><span class="p">:</span> <span class="n">sparse</span><span class="o">.</span><span class="n">coo_matrix</span><span class="p">(</span><span class="n">Zi</span><span class="p">),</span>
+            <span class="s2">&quot;Zi&quot;</span><span class="p">:</span> <span class="n">Zi</span><span class="p">,</span>
             <span class="s2">&quot;groups&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>  <span class="c1"># pylint: disable = protected-access</span>
@@ -862,7 +862,7 @@
             <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
             <span class="s2">&quot;Xi&quot;</span><span class="p">:</span> <span class="n">Xi</span><span class="p">,</span>
             <span class="s2">&quot;Ji&quot;</span><span class="p">:</span> <span class="n">Ji</span><span class="p">,</span>
-            <span class="s2">&quot;Zi&quot;</span><span class="p">:</span> <span class="n">sparse</span><span class="o">.</span><span class="n">coo_matrix</span><span class="p">(</span><span class="n">Zi</span><span class="p">),</span>
+            <span class="s2">&quot;Zi&quot;</span><span class="p">:</span> <span class="n">Zi</span><span class="p">,</span>
             <span class="s2">&quot;groups&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>  <span class="c1"># pylint: disable = protected-access</span>

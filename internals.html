@@ -312,7 +312,7 @@ to correctly handle the new data passed and the terms here.</p>
 <dt id="formulae.matrices.CommonEffectsMatrix.terms_info">
 <code class="sig-name descname">terms_info</code><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.terms_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>A dictionary that holds information related to each of the common specific terms, such as
-<code class="docutils literal notranslate"><span class="pre">&quot;idxs&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;type&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;full_names&quot;</span></code>. If <code class="docutils literal notranslate"><span class="pre">&quot;type&quot;</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, it also
+<code class="docutils literal notranslate"><span class="pre">&quot;cols&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;type&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;full_names&quot;</span></code>. If <code class="docutils literal notranslate"><span class="pre">&quot;type&quot;</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, it also
 contains <code class="docutils literal notranslate"><span class="pre">&quot;groups&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;encoding&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;levels&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;reference&quot;</span></code>.
 The keys are given by the term names.</p>
 <dl class="field-list simple">
@@ -408,13 +408,10 @@ values in the new data set.</p>
 <dl class="attribute">
 <dt id="formulae.matrices.GroupEffectsMatrix.design_matrix">
 <code class="sig-name descname">design_matrix</code><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.design_matrix" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>A sparse matrix in CSC format containing the values of the design matrix.</dt><dd><p>Call <code class="docutils literal notranslate"><span class="pre">self.toarray()</span></code> to obtain a 2-dimensional array.</p>
-</dd>
-</dl>
+<dd><p>A 2 dimensional numpy array with the values of the design matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>scipy.sparse.csc.csc_matrix</p>
+<dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
 </dd></dl>
@@ -436,7 +433,7 @@ to correctly handle the new data passed and the terms here.</p>
 <dt id="formulae.matrices.GroupEffectsMatrix.terms_info">
 <code class="sig-name descname">terms_info</code><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.terms_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>A dictionary that holds information related to each of the group specific terms, such as
-the matrices <code class="docutils literal notranslate"><span class="pre">&quot;Xi&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Ji&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;idxs&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;type&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;full_names&quot;</span></code>. If
+the matrices <code class="docutils literal notranslate"><span class="pre">&quot;Xi&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Ji&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cols&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;type&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;full_names&quot;</span></code>. If
 <code class="docutils literal notranslate"><span class="pre">&quot;type&quot;</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, it also contains <code class="docutils literal notranslate"><span class="pre">&quot;groups&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;encoding&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;levels&quot;</span></code>,
 and <code class="docutils literal notranslate"><span class="pre">&quot;reference&quot;</span></code>. The keys are given by the term names.</p>
 <dl class="field-list simple">

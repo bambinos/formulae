@@ -151,7 +151,6 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
 
 <span class="kn">from</span> <span class="nn">.eval</span> <span class="kn">import</span> <span class="n">EvalEnvironment</span>
 <span class="kn">from</span> <span class="nn">.terms</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">Intercept</span>
@@ -307,7 +306,7 @@
 <span class="sd">        to correctly handle the new data passed and the terms here.</span>
 <span class="sd">    terms_info: dict</span>
 <span class="sd">        A dictionary that holds information related to each of the common specific terms, such as</span>
-<span class="sd">        ``&quot;idxs&quot;``, ``&quot;type&quot;``, and ``&quot;full_names&quot;``. If ``&quot;type&quot;`` is ``&quot;categoric&quot;``, it also</span>
+<span class="sd">        ``&quot;cols&quot;``, ``&quot;type&quot;``, and ``&quot;full_names&quot;``. If ``&quot;type&quot;`` is ``&quot;categoric&quot;``, it also</span>
 <span class="sd">        contains ``&quot;groups&quot;``, ``&quot;encoding&quot;``, ``&quot;levels&quot;``, and ``&quot;reference&quot;``.</span>
 <span class="sd">        The keys are given by the term names.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -375,8 +374,7 @@
 <span class="sd">            A new instance of ``CommonEffectsMatrix`` whose design matrix is obtained with the</span>
 <span class="sd">            values in the new data set.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Create and return new CommonEffectsMatrix from the information in the terms,</span>
-        <span class="c1"># with the new data</span>
+        <span class="c1"># Create and return new CommonEffectsMatrix from the information in the terms, with new data</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluated</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t evaluate new data on unevaluated matrix.&quot;</span><span class="p">)</span>
         <span class="n">new_instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
@@ -475,16 +473,15 @@
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-<span class="sd">    design_matrix: scipy.sparse.csc.csc_matrix</span>
-<span class="sd">        A sparse matrix in CSC format containing the values of the design matrix.</span>
-<span class="sd">         Call ``self.toarray()`` to obtain a 2-dimensional array.</span>
+<span class="sd">    design_matrix: np.array</span>
+<span class="sd">        A 2 dimensional numpy array with the values of the design matrix.</span>
 <span class="sd">    evaluated: bool</span>
 <span class="sd">        Indicates if the terms have been evaluated at least once. The terms must have been evaluated</span>
 <span class="sd">        before calling ``self._evaluate_new_data()`` because we must know the type of each term</span>
 <span class="sd">        to correctly handle the new data passed and the terms here.</span>
 <span class="sd">    terms_info: dict</span>
 <span class="sd">        A dictionary that holds information related to each of the group specific terms, such as</span>
-<span class="sd">        the matrices ``&quot;Xi&quot;`` and ``&quot;Ji&quot;``, ``&quot;idxs&quot;``, ``&quot;type&quot;``, and ``&quot;full_names&quot;``. If</span>
+<span class="sd">        the matrices ``&quot;Xi&quot;`` and ``&quot;Ji&quot;``, ``&quot;cols&quot;``, ``&quot;type&quot;``, and ``&quot;full_names&quot;``. If</span>
 <span class="sd">        ``&quot;type&quot;`` is ``&quot;categoric&quot;``, it also contains ``&quot;groups&quot;``, ``&quot;encoding&quot;``, ``&quot;levels&quot;``,</span>
 <span class="sd">        and ``&quot;reference&quot;``. The keys are given by the term names.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -517,8 +514,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span> <span class="o">=</span> <span class="n">eval_env</span>
-        <span class="n">start_row</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">start_col</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">Z</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms</span><span class="p">:</span>
@@ -532,7 +528,7 @@
 
             <span class="c1"># Grab subcomponent of Z that corresponds to this term</span>
             <span class="n">Zi</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Zi&quot;</span><span class="p">]</span>
-            <span class="n">delta_row</span><span class="p">,</span> <span class="n">delta_col</span> <span class="o">=</span> <span class="n">Zi</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">Zi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">Z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Zi</span><span class="p">)</span>
             <span class="n">name</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">&quot;Zi&quot;</span><span class="p">}</span>
@@ -540,16 +536,11 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;levels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interaction_levels</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
             <span class="c1"># Generate term names</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;full_names&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_term_full_names</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">term</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;idxs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="nb">slice</span><span class="p">(</span><span class="n">start_row</span><span class="p">,</span> <span class="n">start_row</span> <span class="o">+</span> <span class="n">delta_row</span><span class="p">),</span>
-                <span class="nb">slice</span><span class="p">(</span><span class="n">start_col</span><span class="p">,</span> <span class="n">start_col</span> <span class="o">+</span> <span class="n">delta_col</span><span class="p">),</span>
-            <span class="p">)</span>
-            <span class="n">start_row</span> <span class="o">+=</span> <span class="n">delta_row</span>
-            <span class="n">start_col</span> <span class="o">+=</span> <span class="n">delta_col</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;cols&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="n">delta</span><span class="p">)</span>
+            <span class="n">start</span> <span class="o">+=</span> <span class="n">delta</span>
 
-        <span class="c1"># Stored in Compressed Sparse Column format</span>
         <span class="k">if</span> <span class="n">Z</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">design_matrix</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">design_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">evaluated</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="GroupEffectsMatrix._evaluate_new_data"><a class="viewcode-back" href="../../internals.html#formulae.GroupEffectsMatrix._evaluate_new_data">[docs]</a>    <span class="k">def</span> <span class="nf">_evaluate_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
@@ -577,31 +568,22 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t evaluate new data on unevaluated matrix.&quot;</span><span class="p">)</span>
 
         <span class="n">new_instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">terms</span><span class="p">)</span>
-
-        <span class="n">start_row</span> <span class="o">=</span> <span class="n">start_col</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">Z</span> <span class="o">=</span> <span class="p">[]</span>
-
         <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms</span><span class="p">:</span>
             <span class="n">d</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">eval_new_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
             <span class="c1"># Grab subcomponent of Z that corresponds to this term</span>
             <span class="n">Zi</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Zi&quot;</span><span class="p">]</span>
-            <span class="n">delta_row</span><span class="p">,</span> <span class="n">delta_col</span> <span class="o">=</span> <span class="n">Zi</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">Zi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">Z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Zi</span><span class="p">)</span>
             <span class="n">name</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span>
             <span class="n">new_instance</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
-            <span class="n">new_instance</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;idxs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="nb">slice</span><span class="p">(</span><span class="n">start_row</span><span class="p">,</span> <span class="n">start_row</span> <span class="o">+</span> <span class="n">delta_row</span><span class="p">),</span>
-                <span class="nb">slice</span><span class="p">(</span><span class="n">start_col</span><span class="p">,</span> <span class="n">start_col</span> <span class="o">+</span> <span class="n">delta_col</span><span class="p">),</span>
-            <span class="p">)</span>
-            <span class="n">start_row</span> <span class="o">+=</span> <span class="n">delta_row</span>
-            <span class="n">start_col</span> <span class="o">+=</span> <span class="n">delta_col</span>
-
+            <span class="n">new_instance</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;cols&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="n">delta</span><span class="p">)</span>
+            <span class="n">start</span> <span class="o">+=</span> <span class="n">delta</span>
         <span class="n">new_instance</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
         <span class="n">new_instance</span><span class="o">.</span><span class="n">eval_env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span>
-
-        <span class="c1"># Stored in Compressed Sparse Column format</span>
         <span class="k">if</span> <span class="n">Z</span><span class="p">:</span>
-            <span class="n">new_instance</span><span class="o">.</span><span class="n">design_matrix</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span>
+            <span class="n">new_instance</span><span class="o">.</span><span class="n">design_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">new_instance</span></div>
 
     <span class="k">def</span> <span class="nf">_term_full_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
@@ -650,7 +632,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">term</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{term}</span><span class="s2">&#39; is not a valid term name&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">design_matrix</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term</span><span class="p">][</span><span class="s2">&quot;idxs&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">design_matrix</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms_info</span><span class="p">[</span><span class="n">term</span><span class="p">][</span><span class="s2">&quot;cols&quot;</span><span class="p">]]</span></div>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
