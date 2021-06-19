@@ -33,6 +33,8 @@ jobs:
     # Publish built docs to gh-pages branch.
     # ===============================
     - name: Commit documentation changes
+      # Only once from master or a tag
+      if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
       run: |
         git clone https://github.com/bambinos/formulae.git --branch gh-pages --single-branch gh-pages
         cp -r docs/_build/html/* gh-pages/
@@ -43,6 +45,7 @@ jobs:
         git add .
         git commit -m "Update documentation" -a || true
         # The above command will fail if no changes were present, so we ignore that.
+
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:
