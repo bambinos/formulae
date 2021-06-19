@@ -6,7 +6,6 @@ on:
       - master
   pull_request:
 
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,6 +23,7 @@ jobs:
         build-command: "make html"
         docs-folder: "docs/"
 
+    # Great extra actions to compose with:
     # Create an artifact of the html output.
     - uses: actions/upload-artifact@v1
       with:
