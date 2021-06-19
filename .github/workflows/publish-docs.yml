@@ -1,34 +1,35 @@
-name: Publish documentation
+name: Build and publish documentation
 
 on:
   push:
     branches:
       - master
+  pull_request:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
 
     steps:
     - uses: actions/checkout@v1
-    - uses: r-lib/actions/setup-pandoc@v1
-
-    # Example of using a custom build-command.
     - uses: ammaraskar/sphinx-action@master
       with:
-        pre-build-command: python -m pip install -r requirements.txt -r requirements-dev.txt
-        build-command: "make html"
         docs-folder: "docs/"
-    # Great extra actions to compose with:
+        pre-build-command: apt-get update -y && apt-get install -y pandoc && python -m pip install -r requirements.txt -r requirements-dev.txt
+        build-command: "make html"
+
     # Create an artifact of the html output.
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v2
       with:
         name: DocumentationHTML
         path: docs/_build/html/
+
     # Publish built docs to gh-pages branch.
-    # ===============================
     - name: Commit documentation changes
+    # Only once from master or a tag
+      if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
       run: |
         git clone https://github.com/bambinos/formulae.git --branch gh-pages --single-branch gh-pages
         cp -r docs/_build/html/* gh-pages/
@@ -38,12 +39,12 @@ jobs:
         git config --local user.name "GitHub Action"
         git add .
         git commit -m "Update documentation" -a || true
-        # The above command will fail if no changes were present, so we ignore
-        # that.
+        # The above command will fail if no changes were present, so we ignore that.
+
     - name: Push changes
+      if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
       uses: ad-m/github-push-action@master
       with:
         branch: gh-pages
         directory: gh-pages
         github_token: ${{ secrets.GITHUB_TOKEN }}
-    # ===============================
