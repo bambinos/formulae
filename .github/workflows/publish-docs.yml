@@ -13,13 +13,11 @@ jobs:
       fail-fast: false
 
     steps:
-    - uses: docker://pandoc/core:2.9
-    - uses: actions/checkout@v2
-
+    - uses: actions/checkout@v1
     - uses: ammaraskar/sphinx-action@master
       with:
         docs-folder: "docs/"
-        pre-build-command: python -m pip install -r requirements.txt -r requirements-dev.txt
+        pre-build-command: apt-get update -y && apt-get install -y pandoc && python -m pip install -r requirements.txt -r requirements-dev.txt
         build-command: "make html"
 
     # Create an artifact of the html output.
