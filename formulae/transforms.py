@@ -69,7 +69,7 @@ def C(x, ref=None, levels=None):
         to the levels specified in `levels` or the order the levels appear in the variable.
     levels: list or None
         A list describing the desired order for the categorical variable. Defaults to None
-        which means `ref` is used if not None.
+        which means ``ref`` is used if not None.
 
     Returns
     ----------
@@ -95,5 +95,31 @@ def C(x, ref=None, levels=None):
     return x
 
 
-TRANSFORMS = {"I": I, "C": C}
+class Prop:
+    def __init__(self, successes, trials):
+        self.successes = successes
+        self.trials = trials
+
+    def eval(self):
+        return np.vstack([self.successes, self.trials]).T
+
+
+def prop(successes, trials):
+    # successes and trials are pd.Series
+    successes = successes.values
+    trials = trials.values
+
+    if not (np.mod(successes, 1) == 0).all():
+        raise ValueError("'successes' must be a collection of integer numbers")
+
+    if not (np.mod(trials, 1) == 0).all():
+        raise ValueError("'trials' must be a collection of integer numbers")
+
+    if not (np.less_equal(successes, trials)).all():
+        raise ValueError("'successes' cannot be greater than 'trials'")
+
+    return Prop(successes, trials)
+
+
+TRANSFORMS = {"I": I, "C": C, "prop": prop}
 STATEFUL_TRANSFORMS = {"center": Center, "scale": Scale, "standardize": Scale}

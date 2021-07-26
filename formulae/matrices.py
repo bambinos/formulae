@@ -112,6 +112,7 @@ class ResponseVector:
         self.name = self.term.term.name
         self.design_vector = self.term.term.data
         self.type = self.term.term.metadata["type"]
+
         if self.type == "categoric":
             self.refclass = self.term.term.metadata["reference"]
 

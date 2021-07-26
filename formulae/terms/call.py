@@ -5,7 +5,7 @@ import pandas as pd
 
 from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
 
-from formulae.transforms import TRANSFORMS
+from formulae.transforms import TRANSFORMS, Prop
 from formulae.terms.call_utils import CallVarsExtractor
 
 
@@ -99,9 +99,10 @@ class Call:
 
         if is_numeric_dtype(x):
             self._type = "numeric"
-        # Improve this condition, the dictionary may cause problems!
-        elif is_string_dtype(x) or is_categorical_dtype(x) or isinstance(x, dict):
+        elif is_string_dtype(x) or is_categorical_dtype(x):
             self._type = "categoric"
+        elif isinstance(x, Prop):
+            self._type = "prop"
         else:
             raise ValueError(f"Call result is of an unrecognized type ({type(x)}).")
         self._intermediate_data = x
@@ -124,12 +125,14 @@ class Call:
         try:
             if self._type is None:
                 raise ValueError("Call result type is not set.")
-            if self._type not in ["numeric", "categoric"]:
+            if self._type not in ["numeric", "categoric", "prop"]:
                 raise ValueError(f"Call result is of an unrecognized type ({self._type}).")
             if self._type == "numeric":
                 self.data = self._eval_numeric(self._intermediate_data)
-            else:
+            elif self._type == "categoric":
                 self.data = self._eval_categoric(self._intermediate_data, encoding)
+            elif self._type == "prop":
+                self.data = self._eval_prop(self._intermediate_data)
         except:
             print("Unexpected error while trying to evaluate a Call:", sys.exc_info()[0])
             raise
@@ -220,6 +223,11 @@ class Call:
             "encoding": encoding,
         }
 
+    def _eval_prop(self, prop):
+        if not self.is_response:
+            raise ValueError("'prop()' can only be used in the context of a response term.")
+        return {"value": prop.eval(), "type": "prop"}
+
     def eval_new_data(self, data_mask):
         """Evaluates the function call with new data.
 
@@ -261,17 +269,14 @@ class Call:
             number of dummy variables used in the numeric representation of the categorical
             variable.
         """
-        if self.is_response:
-            return np.atleast_2d(np.where(x == self.data["reference"], 1, 0)).T
+        # Raise error if passing a level that was not observed.
+        new_data_levels = pd.Categorical(x).dtype.categories.tolist()
+        if set(new_data_levels).issubset(set(self.data["levels"])):
+            series = pd.Categorical(x, categories=self.data["levels"])
+            drop_first = self.data["encoding"] == "reduced"
+            return pd.get_dummies(series, drop_first=drop_first).to_numpy()
         else:
-            # Raise error if passing a level that was not observed.
-            new_data_levels = pd.Categorical(x).dtype.categories.tolist()
-            if set(new_data_levels).issubset(set(self.data["levels"])):
-                series = pd.Categorical(x, categories=self.data["levels"])
-                drop_first = self.data["encoding"] == "reduced"
-                return pd.get_dummies(series, drop_first=drop_first).to_numpy()
-            else:
-                raise ValueError(
-                    f"At least one of the levels for '{self.name}' in the new data was "
-                    "not present in the original data set."
-                )
+            raise ValueError(
+                f"At least one of the levels for '{self.name}' in the new data was "
+                "not present in the original data set."
+            )
