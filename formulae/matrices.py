@@ -88,7 +88,7 @@ class ResponseVector:
         The name of the response term.
     type: string
         Either ``"numeric"`` or ``"categoric"``.
-    refclass: string
+    baseline: string
         The name of the class taken as reference if ``type = "categoric"``.
     """
 
@@ -99,7 +99,10 @@ class ResponseVector:
         self.design_vector = None
         self.name = None  # a string
         self.type = None  # either numeric or categorical
-        self.refclass = None  # Not None for categorical variables
+        self.baseline = None  # Not None for non-binary categorical variables
+        self.success = None  # Not None for binary categorical variables
+        self.levels = None  # Not None for categorical variables
+        self.binary = None  # Not None for categorical variables (either True or False)
 
     def _evaluate(self, data, eval_env):
         """Evaluates ``self.term`` inside the data mask provided by ``data`` and
@@ -114,13 +117,18 @@ class ResponseVector:
         self.type = self.term.term.metadata["type"]
 
         if self.type == "categoric":
-            self.refclass = self.term.term.metadata["reference"]
+            self.binary = len(np.unique(self.design_vector)) == 2
+            self.levels = self.term.term.metadata["levels"]
+            if self.binary:
+                self.success = self.term.term.metadata["reference"]
+            else:
+                self.baseline = self.term.term.metadata["reference"]
 
     def as_dataframe(self):
         """Returns ``self.design_vector`` as a pandas.DataFrame."""
         data = pd.DataFrame(self.design_vector)
         if self.type == "categoric":
-            colname = f"{self.name}[{self.refclass}]"
+            colname = f"{self.name}[{self.baseline}]"
         else:
             colname = self.name
         data.columns = [colname]
@@ -131,12 +139,16 @@ class ResponseVector:
 
     def __str__(self):
         string_list = [
-            "name: " + self.name,
-            "type: " + self.type,
-            "length: " + str(len(self.design_vector)),
+            f"name: {self.name}",
+            f"type: {self.type}",
+            f"length: {len(self.design_vector)}",
         ]
         if self.type == "categoric":
-            string_list += ["refclass: " + self.refclass]
+            string_list += [f"levels: {self.levels}", f"binary: {self.binary}"]
+            if self.binary:
+                string_list += [f"success: {self.success}"]
+            else:
+                string_list += [f"baseline: {self.baseline}"]
         return f"ResponseVector({wrapify(spacify(multilinify(string_list)))}\n)"
 
 
