@@ -702,3 +702,6 @@ def test_offset():
 
     with pytest.raises(ValueError):
         design_matrices("y ~ offset(g)", data)
+
+    with pytest.raises(ValueError):
+        design_matrices("offset(y) ~ x", data)
