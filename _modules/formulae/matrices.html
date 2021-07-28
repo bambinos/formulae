@@ -240,7 +240,7 @@
 <span class="sd">        The name of the response term.</span>
 <span class="sd">    type: string</span>
 <span class="sd">        Either ``&quot;numeric&quot;`` or ``&quot;categoric&quot;``.</span>
-<span class="sd">    refclass: string</span>
+<span class="sd">    baseline: string</span>
 <span class="sd">        The name of the class taken as reference if ``type = &quot;categoric&quot;``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -251,7 +251,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">design_vector</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># a string</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># either numeric or categorical</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">refclass</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Not None for categorical variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Not None for non-binary categorical variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Not None for binary categorical variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">levels</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Not None for categorical variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">binary</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Not None for categorical variables (either True or False)</span>
 
 <div class="viewcode-block" id="ResponseVector._evaluate"><a class="viewcode-back" href="../../internals.html#formulae.ResponseVector._evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">eval_env</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Evaluates ``self.term`` inside the data mask provided by ``data`` and</span>
@@ -264,14 +267,20 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">design_vector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">refclass</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;reference&quot;</span><span class="p">]</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">binary</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">design_vector</span><span class="p">))</span> <span class="o">==</span> <span class="mi">2</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">levels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;reference&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;reference&quot;</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="ResponseVector.as_dataframe"><a class="viewcode-back" href="../../internals.html#formulae.ResponseVector.as_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">as_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns ``self.design_vector`` as a pandas.DataFrame.&quot;&quot;&quot;</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">design_vector</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>
-            <span class="n">colname</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{self.name}</span><span class="s2">[</span><span class="si">{self.refclass}</span><span class="s2">]&quot;</span>
+            <span class="n">colname</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{self.name}</span><span class="s2">[</span><span class="si">{self.baseline}</span><span class="s2">]&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">colname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
         <span class="n">data</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">colname</span><span class="p">]</span>
@@ -282,12 +291,16 @@
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">string_list</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s2">&quot;name: &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-            <span class="s2">&quot;type: &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
-            <span class="s2">&quot;length: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">design_vector</span><span class="p">)),</span>
+            <span class="sa">f</span><span class="s2">&quot;name: </span><span class="si">{self.name}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;type: </span><span class="si">{self.type}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;length: {len(self.design_vector)}&quot;</span><span class="p">,</span>
         <span class="p">]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>
-            <span class="n">string_list</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;refclass: &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">refclass</span><span class="p">]</span>
+            <span class="n">string_list</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;levels: </span><span class="si">{self.levels}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;binary: </span><span class="si">{self.binary}</span><span class="s2">&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary</span><span class="p">:</span>
+                <span class="n">string_list</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;success: </span><span class="si">{self.success}</span><span class="s2">&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">string_list</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;baseline: </span><span class="si">{self.baseline}</span><span class="s2">&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;ResponseVector({wrapify(spacify(multilinify(string_list)))}</span><span class="se">\n</span><span class="s2">)&quot;</span></div>
 
 
