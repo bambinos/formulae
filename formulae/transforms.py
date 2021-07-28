@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+from pandas.api.types import is_numeric_dtype
+
 # Stateful transformations.
 # These transformations have memory about the state of parameters that are
 # required to compute the transformation and are obtained as a subproduct of the
@@ -128,6 +130,15 @@ def binary(x, success=None):
 
 class Prop:
     def __init__(self, successes, trials):
+        if not (np.mod(successes, 1) == 0).all():
+            raise ValueError("'successes' must be a collection of integer numbers")
+
+        if not (np.mod(trials, 1) == 0).all():
+            raise ValueError("'trials' must be a collection of integer numbers")
+
+        if not (np.less_equal(successes, trials)).all():
+            raise ValueError("'successes' cannot be greater than 'trials'")
+
         self.successes = successes
         self.trials = trials
 
@@ -139,18 +150,22 @@ def prop(successes, trials):
     # successes and trials are pd.Series
     successes = successes.values
     trials = trials.values
-
-    if not (np.mod(successes, 1) == 0).all():
-        raise ValueError("'successes' must be a collection of integer numbers")
-
-    if not (np.mod(trials, 1) == 0).all():
-        raise ValueError("'trials' must be a collection of integer numbers")
-
-    if not (np.less_equal(successes, trials)).all():
-        raise ValueError("'successes' cannot be greater than 'trials'")
-
     return Prop(successes, trials)
 
 
-TRANSFORMS = {"I": I, "C": C, "binary": binary, "prop": prop}
+class Offset:
+    def __init__(self, x):
+        if not is_numeric_dtype(x):
+            raise ValueError("offset() can only be used with numeric variables.")
+        self.x = x.values
+
+    def eval(self):
+        return self.x.flatten()[:, np.newaxis]
+
+
+def offset(x):
+    return Offset(x)
+
+
+TRANSFORMS = {"I": I, "C": C, "binary": binary, "prop": prop, "offset": offset}
 STATEFUL_TRANSFORMS = {"center": Center, "scale": Scale, "standardize": Scale}
