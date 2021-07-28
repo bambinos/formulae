@@ -530,3 +530,74 @@ def test_interactions_in_group_specific(pixel):
     # Assert full names
     names = [f"Dog[{d}]:Side[{s}]|{g}" for g in [2, 4, 6] for d in [1, 2, 3] for s in ["L", "R"]]
     assert dm.group.terms_info["Dog:Side|day"]["full_names"] == names
+
+
+def test_prop_response():
+    data = pd.DataFrame(
+        {
+            "x": np.array([1.6907, 1.7242, 1.7552, 1.7842, 1.8113, 1.8369, 1.8610, 1.8839]),
+            "n": np.array([59, 60, 62, 56, 63, 59, 62, 60]),
+            "y": np.array([6, 13, 18, 28, 52, 53, 61, 60]),
+        }
+    )
+
+    response = design_matrices("prop(y, n) ~ x", data).response
+
+    assert response.type == "prop"
+    assert response.design_vector.shape == (8, 2)
+    assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
+
+
+def test_prop_response_fails():
+    # x larger than n
+    with pytest.raises(ValueError):
+        design_matrices("prop(x, n) ~ 1", pd.DataFrame({"x": [2, 3], "n": [1, 2]}))
+
+    # x and/or n not integer
+    with pytest.raises(ValueError):
+        design_matrices("prop(x, n) ~ 1", pd.DataFrame({"x": [2, 3.3], "n": [4, 4]}))
+
+    with pytest.raises(ValueError):
+        design_matrices("prop(x, n) ~ 1", pd.DataFrame({"x": [2, 3], "n": [4.3, 4]}))
+
+
+def test_categoric_responses():
+    data = pd.DataFrame(
+        {
+            "y1": np.random.choice(["A", "B", "C"], size=30),
+            "y2": np.random.choice(["A", "B"], size=30),
+            "x": np.random.normal(size=30),
+        }
+    )
+
+    # Multi-level response
+    response = design_matrices("y1 ~ x", data).response
+    assert list(np.unique(response.design_vector)) == [0, 1, 2]
+    assert response.levels == ["A", "B", "C"]
+    assert response.binary is False
+    assert response.baseline == "A"
+    assert response.success is None
+
+    # Multi-level response, explicitly converted to binary
+    response = design_matrices("y1['A'] ~ x", data).response
+    assert list(np.unique(response.design_vector)) == [0, 1]
+    assert response.levels == ["A", "B", "C"]
+    assert response.binary is True
+    assert response.baseline is None
+    assert response.success == "A"
+
+    # Default binary response
+    response = design_matrices("y2 ~ x", data).response
+    assert list(np.unique(response.design_vector)) == [0, 1]
+    assert response.levels == ["A", "B"]
+    assert response.binary is True
+    assert response.baseline is None
+    assert response.success == "A"
+
+    # Binary response with explicit level
+    response = design_matrices("y2['B'] ~ x", data).response
+    assert list(np.unique(response.design_vector)) == [0, 1]
+    assert response.levels == ["A", "B"]
+    assert response.binary is True
+    assert response.baseline is None
+    assert response.success == "B"
