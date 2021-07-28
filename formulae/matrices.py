@@ -269,7 +269,7 @@ class CommonEffectsMatrix:
         _type = term["type"]
         if _type == "intercept":
             return ["Intercept"]
-        elif _type == "numeric":
+        elif _type in ["numeric", "offset"]:
             return [name]
         elif _type == "interaction":
             return interaction_label(term)

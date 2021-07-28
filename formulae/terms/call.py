@@ -5,7 +5,7 @@ import pandas as pd
 
 from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
 
-from formulae.transforms import TRANSFORMS, Prop
+from formulae.transforms import TRANSFORMS, Prop, Offset
 from formulae.terms.call_utils import CallVarsExtractor
 
 
@@ -103,6 +103,8 @@ class Call:
             self._type = "categoric"
         elif isinstance(x, Prop):
             self._type = "prop"
+        elif isinstance(x, Offset):
+            self._type = "offset"
         else:
             raise ValueError(f"Call result is of an unrecognized type ({type(x)}).")
         self._intermediate_data = x
@@ -125,7 +127,7 @@ class Call:
         try:
             if self._type is None:
                 raise ValueError("Call result type is not set.")
-            if self._type not in ["numeric", "categoric", "prop"]:
+            if self._type not in ["numeric", "categoric", "prop", "offset"]:
                 raise ValueError(f"Call result is of an unrecognized type ({self._type}).")
             if self._type == "numeric":
                 self.data = self._eval_numeric(self._intermediate_data)
@@ -133,6 +135,8 @@ class Call:
                 self.data = self._eval_categoric(self._intermediate_data, encoding)
             elif self._type == "prop":
                 self.data = self._eval_prop(self._intermediate_data)
+            elif self._type == "offset":
+                self.data = self._eval_offset(self._intermediate_data)
         except:
             print("Unexpected error while trying to evaluate a Call:", sys.exc_info()[0])
             raise
@@ -228,6 +232,11 @@ class Call:
         if not self.is_response:
             raise ValueError("'prop()' can only be used in the context of a response term.")
         return {"value": prop.eval(), "type": "prop"}
+
+    def _eval_offset(self, offset):
+        if self.is_response:
+            raise ValueError("'offset() cannot be used in the context of a response term.")
+        return {"value": offset.eval(), "type": "offset"}
 
     def eval_new_data(self, data_mask):
         """Evaluates the function call with new data.

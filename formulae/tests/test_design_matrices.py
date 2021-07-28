@@ -682,3 +682,26 @@ def test_C_function():
 
     with pytest.raises(ValueError):
         design_matrices("y ~ C(g, 'c', levels=l)", data)
+
+
+def test_offset():
+    size = 100
+    data = pd.DataFrame(
+        {
+            "y": np.random.randint(0, 5, size=size),
+            "x": np.random.randint(5, 10, size=size),
+            "g": np.random.choice(["a", "b", "c"], size=size),
+        }
+    )
+
+    dm = design_matrices("y ~ offset(x)", data)
+    term = dm.common.terms_info["offset(x)"]
+    assert term["type"] == "offset"
+    assert term["full_names"] == ["offset(x)"]
+    assert (dm.common["offset(x)"].flatten() == data["x"]).all()
+
+    with pytest.raises(ValueError):
+        design_matrices("y ~ offset(g)", data)
+
+    with pytest.raises(ValueError):
+        design_matrices("offset(y) ~ x", data)
