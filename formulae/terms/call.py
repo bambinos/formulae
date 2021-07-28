@@ -156,11 +156,12 @@ class Call:
             evaluation, and the latter is equal to ``"numeric"``.
         """
         if isinstance(x, np.ndarray):
-            value = np.atleast_2d(x)
-            if x.shape[0] == 1 and x.shape[1] > 1:
-                value = value.T
+            value = x.flatten()
+            if value.ndim > 1:
+                raise ValueError(f"The result of {self.name} is not 1-dimensional.")
+            value = value[:, np.newaxis]
         elif isinstance(x, pd.Series):
-            value = np.atleast_2d(x.to_numpy()).T
+            value = x.to_numpy()[:, np.newaxis]
         else:
             raise ValueError(f"Call result is of an unrecognized type ({type(x)}).")
         return {"value": value, "type": "numeric"}

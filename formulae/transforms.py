@@ -51,25 +51,25 @@ def I(x):
     return x
 
 
-def C(x, ref=None, levels=None):
-    """Make a variable categorical
+def C(x, reference=None, levels=None):
+    """Make a variable categorical or manipulate the order of its levels.
 
     This is an internal function only accesible through the formula interface.
-    `ref` takes precedence over `levels`
 
     Parameters
     ----------
 
-    x: pd.Series or 1D np.array
+    x: pd.Series
         The object containing the variable to be converted to categorical.
-    ref: str, numeric or None
-        The reference level. This is used when the desired output is a 0-1 variable.
-        The reference level is 1 and the rest are 0. Defaults to None which means this
-        feature is disabled and the variable is categorized using a dummy encoding according
-        to the levels specified in `levels` or the order the levels appear in the variable.
+    reference: str, numeric or None
+        The reference level. This is used when the goal is only to only change the level taken
+        as reference but not the order of the others. Defaults to ``None`` which means this
+        feature is disabled and the variable is categorized according to the levels specified in
+        ``levels`` or the order of the levels after calling ``sorted()``.
     levels: list or None
-        A list describing the desired order for the categorical variable. Defaults to None
-        which means ``ref`` is used if not None.
+        A list describing the desired order for the categorical variable. Defaults to ``None``
+        which means either ``reference`` is used or the order of the levels after calling
+        ``sorted()``.
 
     Returns
     ----------
@@ -77,22 +77,53 @@ def C(x, ref=None, levels=None):
         An ordered categorical series.
     """
 
-    if ref is not None and levels is not None:
-        raise ValueError("At least one of 'ref' or 'levels' must be None.")
-    if ref is not None:
-        bool_ = x == ref
-        if sum(bool_) == 0:
-            raise ValueError(f"No value in 'x' is equal to 'ref' \"{ref}\"")
-        value = np.atleast_2d(np.where(bool_, 1, 0)).T
-        return value
+    if reference is not None and levels is not None:
+        raise ValueError("At least one of 'reference' or 'levels' must be None.")
+
+    if reference is not None:
+        # If the variable has categories, use their order.
+        if hasattr(x.dtype, "categories"):
+            categories = list(x.dtype.categories)
+        # If the variable does not have categories use `sorted()`.
+        else:
+            categories = sorted(x.unique().tolist())
+        # Send reference to the first place
+        categories.insert(0, categories.pop(categories.index(reference)))
     elif levels is not None:
-        cat_type = pd.api.types.CategoricalDtype(categories=levels, ordered=True)
-        x = x.astype(cat_type)
+        categories = levels
     elif not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
         categories = sorted(x.unique().tolist())
-        cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
-        x = x.astype(cat_type)
+
+    # Create type and use it in the variable
+    cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
+    x = x.astype(cat_type)
     return x
+
+
+def binary(x, success=None):
+    """Make a variable binary
+
+    Parameters
+    ----------
+    x: pd.Series
+        The object containing the variable to be converted to binary.
+    success: str, numeric or None
+        The success level. When the variable is equal to this level, the binary variable is 1.
+        All the rest are 0. Defaults to ``None`` which means formulae is going to sort all the
+        values in the variable and pick the first one as success.
+
+    Returns
+    -------
+    x: np.array
+        A 0-1 numpy array with shape ``(n, 1)`` where ``n`` is the number of observations.
+    """
+    if success is None:
+        categories = sorted(x.unique().tolist())
+        success = categories[0]
+    booleans = x == success
+    if not sum(booleans):
+        raise ValueError(f"No value in 'x' is equal to \"{success}\"")
+    return np.where(booleans, 1, 0)[:, np.newaxis]
 
 
 class Prop:
@@ -121,5 +152,5 @@ def prop(successes, trials):
     return Prop(successes, trials)
 
 
-TRANSFORMS = {"I": I, "C": C, "prop": prop}
+TRANSFORMS = {"I": I, "C": C, "binary": binary, "prop": prop}
 STATEFUL_TRANSFORMS = {"center": Center, "scale": Scale, "standardize": Scale}

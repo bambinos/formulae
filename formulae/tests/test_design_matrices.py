@@ -402,12 +402,6 @@ def test_built_in_transforms(data):
         "C(x3)[4]",
     ]
 
-    # Specify reference -> it is converted into 0-1 variable
-    dm = design_matrices("y ~ C(x3, 3)", data)
-    assert dm.common.terms_info["C(x3, 3)"]["type"] == "numeric"
-    assert dm.common.terms_info["C(x3, 3)"]["full_names"] == ["C(x3, 3)"]
-    assert all(dm.common["C(x3, 3)"][:, 0] == np.where(data["x3"] == 3, 1, 0))
-
     # Specify levels, different to observed
     lvls = [3, 2, 4, 1]
     dm = design_matrices("y ~ C(x3, levels=lvls)", data)
@@ -601,3 +595,90 @@ def test_categoric_responses():
     assert response.binary is True
     assert response.baseline is None
     assert response.success == "B"
+
+
+def test_binary_function():
+    size = 100
+    data = pd.DataFrame(
+        {
+            "y": np.random.randint(0, 5, size=size),
+            "x": np.random.randint(5, 10, size=size),
+            "g": np.random.choice(["a", "b", "c"], size=size),
+        }
+    )
+
+    # String value
+    term = design_matrices("y ~ binary(g, 'c')", data).common["binary(g, c)"].squeeze()
+    assert np.array_equal(np.where(term == 1), np.where(data["g"] == "c"))
+
+    # Numeric value
+    term = design_matrices("y ~ binary(x, 7)", data).common["binary(x, 7)"].squeeze()
+    assert np.array_equal(np.where(term == 1), np.where(data["x"] == 7))
+
+    # Variable name
+    # string
+    m = "b"
+    term = design_matrices("y ~ binary(g, m)", data).common["binary(g, m)"].squeeze()
+    assert np.array_equal(np.where(term == 1), np.where(data["g"] == m))
+
+    # numeric
+    z = 8
+    term = design_matrices("y ~ binary(x, z)", data).common["binary(x, z)"].squeeze()
+    assert np.array_equal(np.where(term == 1), np.where(data["x"] == z))
+
+    # Pass nothing
+    term = design_matrices("y ~ binary(x)", data).common["binary(x)"].squeeze()
+    assert np.array_equal(np.where(term == 1), np.where(data["x"] == 5))
+
+    # Values not found in the variable
+    with pytest.raises(ValueError):
+        design_matrices("y ~ binary(g, 'Not found')", data)
+
+    with pytest.raises(ValueError):
+        design_matrices("y ~ binary(x, 999)", data)
+
+
+def test_C_function():
+    size = 100
+    data = pd.DataFrame(
+        {
+            "y": np.random.randint(0, 5, size=size),
+            "x": np.random.randint(5, 10, size=size),
+            "g": np.random.choice(["a", "b", "c"], size=size),
+        }
+    )
+
+    term = design_matrices("y ~ C(x)", data).common.terms_info["C(x)"]
+    assert term["type"] == "categoric"
+    assert term["levels"] == [5, 6, 7, 8, 9]
+    assert term["reference"] == 5
+
+    term = design_matrices("y ~ C(x, 7)", data).common.terms_info["C(x, 7)"]
+    assert term["type"] == "categoric"
+    assert term["levels"] == [7, 5, 6, 8, 9]
+    assert term["reference"] == 7
+
+    l = [6, 8, 5, 7, 9]
+    term = design_matrices("y ~ C(x, levels=l)", data).common.terms_info["C(x, levels = l)"]
+    assert term["type"] == "categoric"
+    assert term["levels"] == l
+    assert term["reference"] == 6
+
+    term = design_matrices("y ~ C(g)", data).common.terms_info["C(g)"]
+    assert term["type"] == "categoric"
+    assert term["levels"] == ["a", "b", "c"]
+    assert term["reference"] == "a"
+
+    term = design_matrices("y ~ C(g, 'c')", data).common.terms_info["C(g, c)"]
+    assert term["type"] == "categoric"
+    assert term["levels"] == ["c", "a", "b"]
+    assert term["reference"] == "c"
+
+    l = ["b", "c", "a"]
+    term = design_matrices("y ~ C(g, levels=l)", data).common.terms_info["C(g, levels = l)"]
+    assert term["type"] == "categoric"
+    assert term["levels"] == l
+    assert term["reference"] == "b"
+
+    with pytest.raises(ValueError):
+        design_matrices("y ~ C(g, 'c', levels=l)", data)
