@@ -421,7 +421,7 @@
         <span class="n">_type</span> <span class="o">=</span> <span class="n">term</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;intercept&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;Intercept&quot;</span><span class="p">]</span>
-        <span class="k">elif</span> <span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;numeric&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;numeric&quot;</span><span class="p">,</span> <span class="s2">&quot;offset&quot;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">name</span><span class="p">]</span>
         <span class="k">elif</span> <span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;interaction&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">interaction_label</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
