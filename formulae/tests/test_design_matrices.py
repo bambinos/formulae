@@ -530,3 +530,45 @@ def test_interactions_in_group_specific(pixel):
     # Assert full names
     names = [f"Dog[{d}]:Side[{s}]|{g}" for g in [2, 4, 6] for d in [1, 2, 3] for s in ["L", "R"]]
     assert dm.group.terms_info["Dog:Side|day"]["full_names"] == names
+
+
+def test_categoric_responses():
+    data = pd.DataFrame(
+        {
+            "y1": np.random.choice(["A", "B", "C"], size=30),
+            "y2": np.random.choice(["A", "B"], size=30),
+            "x": np.random.normal(size=30),
+        }
+    )
+
+    # Multi-level response
+    response = design_matrices("y1 ~ x", data).response
+    assert list(np.unique(response.design_vector)) == [0, 1, 2]
+    assert response.levels == ["A", "B", "C"]
+    assert response.binary is False
+    assert response.baseline == "A"
+    assert response.success is None
+
+    # Multi-level response, explicitly converted to binary
+    response = design_matrices("y1['A'] ~ x", data).response
+    assert list(np.unique(response.design_vector)) == [0, 1]
+    assert response.levels == ["A", "B", "C"]
+    assert response.binary is True
+    assert response.baseline is None
+    assert response.success == "A"
+
+    # Default binary response
+    response = design_matrices("y2 ~ x", data).response
+    assert list(np.unique(response.design_vector)) == [0, 1]
+    assert response.levels == ["A", "B"]
+    assert response.binary is True
+    assert response.baseline is None
+    assert response.success == "A"
+
+    # Binary response with explicit level
+    response = design_matrices("y2['B'] ~ x", data).response
+    assert list(np.unique(response.design_vector)) == [0, 1]
+    assert response.levels == ["A", "B"]
+    assert response.binary is True
+    assert response.baseline is None
+    assert response.success == "B"
