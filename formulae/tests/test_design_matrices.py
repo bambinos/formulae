@@ -626,6 +626,10 @@ def test_binary_function():
     term = design_matrices("y ~ binary(x, z)", data).common["binary(x, z)"].squeeze()
     assert np.array_equal(np.where(term == 1), np.where(data["x"] == z))
 
+    # Pass nothing
+    term = design_matrices("y ~ binary(x)", data).common["binary(x)"].squeeze()
+    assert np.array_equal(np.where(term == 1), np.where(data["x"] == 5))
+
     # Values not found in the variable
     with pytest.raises(ValueError):
         design_matrices("y ~ binary(g, 'Not found')", data)
