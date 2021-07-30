@@ -1,6 +1,8 @@
 # Change Log
 
-## v0.1.x Unreleased
+## v0.1. Unreleased
+
+## v0.1.2
 
 ### New features
 
