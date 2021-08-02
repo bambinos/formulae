@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Internals &#8212; Formulae 0.1.2 documentation</title>
+    <title>Internals &#8212; Formulae 0.1.1 documentation</title>
     
   <link href="_static/css/theme.css" rel="stylesheet" />
   <link href="_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
@@ -254,8 +254,8 @@ a design matrix from an existing design but evaluated with new data.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="formulae.matrices.ResponseVector.baseline">
-<code class="sig-name descname">baseline</code><a class="headerlink" href="#formulae.matrices.ResponseVector.baseline" title="Permalink to this definition">¶</a></dt>
+<dt id="formulae.matrices.ResponseVector.refclass">
+<code class="sig-name descname">refclass</code><a class="headerlink" href="#formulae.matrices.ResponseVector.refclass" title="Permalink to this definition">¶</a></dt>
 <dd><p>The name of the class taken as reference if <code class="docutils literal notranslate"><span class="pre">type</span> <span class="pre">=</span> <span class="pre">&quot;categoric&quot;</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -544,6 +544,9 @@ response terms. Defaults to <code class="docutils literal notranslate"><span cla
 <p>Converts the intermediate values in <code class="docutils literal notranslate"><span class="pre">x</span></code> into a numpy array of shape <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>, where
 <code class="docutils literal notranslate"><span class="pre">n</span></code> is the number of observations and <code class="docutils literal notranslate"><span class="pre">p</span></code> the number of dummy variables used in the
 numeric representation of the categorical variable.</p>
+<p>It does not support multi-level categoric responses yet. If <code class="docutils literal notranslate"><span class="pre">self.is_response</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>
+and the variable is of a categoric type, the value element of the dictionary returned is a
+1d array of 0-1 instead of a matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
