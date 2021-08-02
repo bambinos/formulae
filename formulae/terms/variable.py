@@ -139,10 +139,6 @@ class Variable:
         ``n`` is the number of observations and ``p`` the number of dummy variables used in the
         numeric representation of the categorical variable.
 
-        It does not support multi-level categoric responses yet. If ``self.is_response`` is ``True``
-        and the variable is of a categoric type, the value element of the dictionary returned is a
-        1d array of 0-1 instead of a matrix.
-
         Parameters
         ----------
         x: np.ndarray or pd.Series
@@ -168,9 +164,16 @@ class Variable:
         levels = x.cat.categories.tolist()
 
         if self.is_response:
+            # Will be binary, no matter how many levels
             if self.level is not None:
                 reference = self.level
-            value = np.atleast_2d(np.where(x == reference, 1, 0)).T
+                value = np.where(x == reference, 1, 0)[:, np.newaxis]
+            # Is binary, model first event
+            elif len(x.unique()) == 2:
+                value = np.where(x == reference, 1, 0)[:, np.newaxis]
+            # Isn't binary, no level has been passed, return codes.
+            else:
+                value = pd.Categorical(x).codes[:, np.newaxis]
         else:
             # Not always we receive a bool, so we need to check.
             if isinstance(encoding, list):
@@ -234,16 +237,13 @@ class Variable:
             number of dummy variables used in the numeric representation of the categorical
             variable.
         """
-        if self.is_response:
-            return np.atleast_2d(np.where(x == self.data["reference"], 1, 0)).T
+        new_data_levels = pd.Categorical(x).dtype.categories.tolist()
+        if set(new_data_levels).issubset(set(self.data["levels"])):
+            series = pd.Categorical(x, categories=self.data["levels"])
+            drop_first = self.data["encoding"] == "reduced"
+            return pd.get_dummies(series, drop_first=drop_first).to_numpy()
         else:
-            new_data_levels = pd.Categorical(x).dtype.categories.tolist()
-            if set(new_data_levels).issubset(set(self.data["levels"])):
-                series = pd.Categorical(x, categories=self.data["levels"])
-                drop_first = self.data["encoding"] == "reduced"
-                return pd.get_dummies(series, drop_first=drop_first).to_numpy()
-            else:
-                raise ValueError(
-                    f"At least one of the levels for '{self.name}' in the new data was "
-                    "not present in the original data set."
-                )
+            raise ValueError(
+                f"At least one of the levels for '{self.name}' in the new data was "
+                "not present in the original data set."
+            )
