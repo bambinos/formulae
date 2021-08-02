@@ -541,6 +541,12 @@ def test_prop_response():
     assert response.design_vector.shape == (8, 2)
     assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
 
+    # Admit integer values for 'n'
+    response = design_matrices("prop(y, 62) ~ x", data).response
+    assert response.type == "prop"
+    assert response.design_vector.shape == (8, 2)
+    assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
+
 
 def test_prop_response_fails():
     # x larger than n
@@ -553,6 +559,14 @@ def test_prop_response_fails():
 
     with pytest.raises(ValueError):
         design_matrices("prop(x, n) ~ 1", pd.DataFrame({"x": [2, 3], "n": [4.3, 4]}))
+
+    # x not a variable name
+    with pytest.raises(ValueError):
+        design_matrices("prop(10, n) ~ 1", pd.DataFrame({"x": [2, 3], "n": [1, 2]}))
+
+    # trials must be integer, not float
+    with pytest.raises(ValueError):
+        design_matrices("prop(x, 3.4) ~ 1", pd.DataFrame({"x": [2, 3], "n": [1, 2]}))
 
 
 def test_categoric_responses():

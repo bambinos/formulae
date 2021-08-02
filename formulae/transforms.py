@@ -148,8 +148,17 @@ class Prop:
 
 def prop(successes, trials):
     # Successes and trials are pd.Series
+    if not isinstance(successes, pd.Series):
+        raise ValueError("'successes' must be a variable name.")
     successes = successes.values
-    trials = trials.values
+
+    if isinstance(trials, pd.Series):
+        trials = trials.values
+    elif isinstance(trials, int):
+        trials = np.ones(len(successes), dtype=int) * trials
+    else:
+        raise ValueError("'trials' must be a variable name or an integer.")
+
     return Prop(successes, trials)
 
 
