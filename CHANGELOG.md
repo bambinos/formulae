@@ -2,17 +2,19 @@
 
 ## v0.1.x Unreleased
 
-### New features
+- Revert changes back to v0.1.2
+
+## v0.1.3
+
+- Revert changes back to v0.1.1
+
+## v0.1.2
 
 - Added `prop()` function to handle response terms that a proportion computed from two variables (#40)
 - Categorical responses can contain more than one level (#40)
 - Added `binary()` function to convert numeric/categorical variables into 0-1 variables (#41)
 - Modified `C()` to make it simpler to obtain categorical variables and manipulate their levels (#41)
 - Added `offset()` (#42)
-
-## v0.1.3
-
-- Temporary release
 
 ## v0.1.1
 
