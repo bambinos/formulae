@@ -147,7 +147,7 @@ class Prop:
 
 
 def prop(successes, trials):
-    # successes and trials are pd.Series
+    # Successes and trials are pd.Series
     successes = successes.values
     trials = trials.values
     return Prop(successes, trials)
