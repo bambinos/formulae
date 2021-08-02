@@ -1,8 +1,6 @@
 import numpy as np
 import pandas as pd
 
-from pandas.api.types import is_numeric_dtype
-
 # Stateful transformations.
 # These transformations have memory about the state of parameters that are
 # required to compute the transformation and are obtained as a subproduct of the
@@ -53,25 +51,25 @@ def I(x):
     return x
 
 
-def C(x, reference=None, levels=None):
-    """Make a variable categorical or manipulate the order of its levels.
+def C(x, ref=None, levels=None):
+    """Make a variable categorical
 
     This is an internal function only accesible through the formula interface.
+    `ref` takes precedence over `levels`
 
     Parameters
     ----------
 
-    x: pd.Series
+    x: pd.Series or 1D np.array
         The object containing the variable to be converted to categorical.
-    reference: str, numeric or None
-        The reference level. This is used when the goal is only to only change the level taken
-        as reference but not the order of the others. Defaults to ``None`` which means this
-        feature is disabled and the variable is categorized according to the levels specified in
-        ``levels`` or the order of the levels after calling ``sorted()``.
+    ref: str, numeric or None
+        The reference level. This is used when the desired output is a 0-1 variable.
+        The reference level is 1 and the rest are 0. Defaults to None which means this
+        feature is disabled and the variable is categorized using a dummy encoding according
+        to the levels specified in `levels` or the order the levels appear in the variable.
     levels: list or None
-        A list describing the desired order for the categorical variable. Defaults to ``None``
-        which means either ``reference`` is used or the order of the levels after calling
-        ``sorted()``.
+        A list describing the desired order for the categorical variable. Defaults to None
+        which means `ref` is used if not None.
 
     Returns
     ----------
@@ -79,26 +77,21 @@ def C(x, reference=None, levels=None):
         An ordered categorical series.
     """
 
-    if reference is not None and levels is not None:
-        raise ValueError("At least one of 'reference' or 'levels' must be None.")
-
-    if reference is not None:
-        # If the variable has categories, use their order.
-        if hasattr(x.dtype, "categories"):
-            categories = list(x.dtype.categories)
-        # If the variable does not have categories use `sorted()`.
-        else:
-            categories = sorted(x.unique().tolist())
-        # Send reference to the first place
-        categories.insert(0, categories.pop(categories.index(reference)))
+    if ref is not None and levels is not None:
+        raise ValueError("At least one of 'ref' or 'levels' must be None.")
+    if ref is not None:
+        bool_ = x == ref
+        if sum(bool_) == 0:
+            raise ValueError(f"No value in 'x' is equal to 'ref' \"{ref}\"")
+        value = np.atleast_2d(np.where(bool_, 1, 0)).T
+        return value
     elif levels is not None:
-        categories = levels
+        cat_type = pd.api.types.CategoricalDtype(categories=levels, ordered=True)
+        x = x.astype(cat_type)
     elif not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
         categories = sorted(x.unique().tolist())
-
-    # Create type and use it in the variable
-    cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
-    x = x.astype(cat_type)
+        cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
+        x = x.astype(cat_type)
     return x
 
 
