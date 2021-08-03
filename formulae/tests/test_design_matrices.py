@@ -1,4 +1,3 @@
-from numpy.core.numeric import allclose
 import pytest
 
 import numpy as np
@@ -537,13 +536,13 @@ def test_prop_response():
 
     response = design_matrices("prop(y, n) ~ x", data).response
 
-    assert response.type == "prop"
+    assert response.type == "proportion"
     assert response.design_vector.shape == (8, 2)
     assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
 
     # Admit integer values for 'n'
     response = design_matrices("prop(y, 62) ~ x", data).response
-    assert response.type == "prop"
+    assert response.type == "proportion"
     assert response.design_vector.shape == (8, 2)
     assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
 
@@ -719,3 +718,44 @@ def test_offset():
 
     with pytest.raises(ValueError):
         design_matrices("offset(y) ~ x", data)
+
+
+def test_predict_prop():
+    data = pd.DataFrame(
+        {
+            "x": np.array([1.6907, 1.7242, 1.7552, 1.7842, 1.8113, 1.8369, 1.8610, 1.8839]),
+            "n": np.array([59, 60, 62, 56, 63, 59, 62, 60]),
+            "y": np.array([6, 13, 18, 28, 52, 53, 61, 60]),
+        }
+    )
+
+    # If trials is a variable, new dataset must have that variable
+    dm = design_matrices("prop(y, n) ~ x", data)
+    result = dm.response._evaluate_new_data(pd.DataFrame({"n": [10, 10, 30, 30]}))
+    assert (result == np.array([10, 10, 30, 30])[:, np.newaxis]).all()
+
+    # If trials is a constant value, return that same value
+    dm = design_matrices("prop(y, 70) ~ x", data)
+    result = dm.response._evaluate_new_data(pd.DataFrame({"n": [10, 10, 30, 30]}))
+    print(result)
+    assert (result == np.array([70, 70, 70, 70])[:, np.newaxis]).all()
+
+
+def test_predict_offset():
+    data = pd.DataFrame(
+        {
+            "x": np.array([1.6907, 1.7242, 1.7552, 1.7842, 1.8113, 1.8369, 1.8610, 1.8839]),
+            "n": np.array([59, 60, 62, 56, 63, 59, 62, 60]),
+            "y": np.array([6, 13, 18, 28, 52, 53, 61, 60]),
+        }
+    )
+
+    # If offset is a variable, new dataset must have that variable
+    dm = design_matrices("y ~ x + offset(x)", data)
+    result = dm.common._evaluate_new_data(pd.DataFrame({"x": [1, 2, 3]}))["offset(x)"]
+    assert (result == np.array([1, 2, 3])[:, np.newaxis]).all()
+
+    # If offset is a constant value, return that same value
+    dm = design_matrices("y ~ x + offset(10)", data)
+    result = dm.common._evaluate_new_data(pd.DataFrame({"x": [1, 2, 3]}))["offset(10)"]
+    assert (result == np.array([10, 10, 10])[:, np.newaxis]).all()

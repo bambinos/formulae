@@ -124,6 +124,11 @@ class ResponseVector:
             else:
                 self.baseline = self.term.term.metadata["reference"]
 
+    def _evaluate_new_data(self, data):
+        if self.type == "proportion":
+            return self.term.term.eval_new_data(data)
+        raise ValueError("Can't evaluate response term with type different to 'proportion'")
+
     def as_dataframe(self):
         """Returns ``self.design_vector`` as a pandas.DataFrame."""
         data = pd.DataFrame(self.design_vector)
