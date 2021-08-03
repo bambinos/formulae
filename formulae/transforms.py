@@ -226,6 +226,7 @@ TRANSFORMS = {
     "I": I,
     "C": C,
     "binary": binary,
+    "p": proportion,
     "prop": proportion,
     "proportion": proportion,
     "offset": offset,
