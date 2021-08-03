@@ -157,7 +157,7 @@
 
 <span class="kn">from</span> <span class="nn">pandas.api.types</span> <span class="kn">import</span> <span class="n">is_categorical_dtype</span><span class="p">,</span> <span class="n">is_numeric_dtype</span><span class="p">,</span> <span class="n">is_string_dtype</span>
 
-<span class="kn">from</span> <span class="nn">formulae.transforms</span> <span class="kn">import</span> <span class="n">TRANSFORMS</span><span class="p">,</span> <span class="n">Prop</span><span class="p">,</span> <span class="n">Offset</span>
+<span class="kn">from</span> <span class="nn">formulae.transforms</span> <span class="kn">import</span> <span class="n">TRANSFORMS</span><span class="p">,</span> <span class="n">Proportion</span><span class="p">,</span> <span class="n">Offset</span>
 <span class="kn">from</span> <span class="nn">formulae.terms.call_utils</span> <span class="kn">import</span> <span class="n">CallVarsExtractor</span>
 
 
@@ -253,10 +253,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;numeric&quot;</span>
         <span class="k">elif</span> <span class="n">is_string_dtype</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">or</span> <span class="n">is_categorical_dtype</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;categoric&quot;</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Prop</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;prop&quot;</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Proportion</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;proportion&quot;</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Offset</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;offset&quot;</span>
+            <span class="n">x</span><span class="o">.</span><span class="n">set_size</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data_mask</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Call result is of an unrecognized type ({type(x)}).&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_intermediate_data</span> <span class="o">=</span> <span class="n">x</span></div>
@@ -279,14 +280,14 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Call result type is not set.&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;numeric&quot;</span><span class="p">,</span> <span class="s2">&quot;categoric&quot;</span><span class="p">,</span> <span class="s2">&quot;prop&quot;</span><span class="p">,</span> <span class="s2">&quot;offset&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;numeric&quot;</span><span class="p">,</span> <span class="s2">&quot;categoric&quot;</span><span class="p">,</span> <span class="s2">&quot;proportion&quot;</span><span class="p">,</span> <span class="s2">&quot;offset&quot;</span><span class="p">]:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Call result is of an unrecognized type (</span><span class="si">{self._type}</span><span class="s2">).&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;numeric&quot;</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_numeric</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_intermediate_data</span><span class="p">)</span>
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;categoric&quot;</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_categoric</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_intermediate_data</span><span class="p">,</span> <span class="n">encoding</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;prop&quot;</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_prop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_intermediate_data</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;proportion&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_proportion</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_intermediate_data</span><span class="p">)</span>
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;offset&quot;</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_offset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_intermediate_data</span><span class="p">)</span>
         <span class="k">except</span><span class="p">:</span>
@@ -380,17 +381,17 @@
             <span class="s2">&quot;encoding&quot;</span><span class="p">:</span> <span class="n">encoding</span><span class="p">,</span>
         <span class="p">}</span></div>
 
-    <span class="k">def</span> <span class="nf">_eval_prop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_eval_proportion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proportion</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_response</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;prop()&#39; can only be used in the context of a response term.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">prop</span><span class="o">.</span><span class="n">eval</span><span class="p">(),</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;prop&quot;</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">proportion</span><span class="o">.</span><span class="n">eval</span><span class="p">(),</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;proportion&quot;</span><span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">_eval_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_response</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;offset() cannot be used in the context of a response term.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">offset</span><span class="o">.</span><span class="n">eval</span><span class="p">(),</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;offset&quot;</span><span class="p">}</span>
 
-<div class="viewcode-block" id="Call.eval_new_data"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Call.eval_new_data">[docs]</a>    <span class="k">def</span> <span class="nf">eval_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_mask</span><span class="p">):</span>
+<div class="viewcode-block" id="Call.eval_new_data"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Call.eval_new_data">[docs]</a>    <span class="k">def</span> <span class="nf">eval_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_mask</span><span class="p">):</span>  <span class="c1"># pylint: disable = inconsistent-return-statements</span>
         <span class="sd">&quot;&quot;&quot;Evaluates the function call with new data.</span>
 
 <span class="sd">        This method evaluates the function call within a new data mask. If the transformation</span>
@@ -409,11 +410,34 @@
 <span class="sd">            ``self._eval_categoric()``. The first applies for numeric calls, the second for</span>
 <span class="sd">            categoric ones.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">data_mask</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;numeric&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_numeric</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_new_data_categoric</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;numeric&quot;</span><span class="p">,</span> <span class="s2">&quot;categoric&quot;</span><span class="p">]:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">data_mask</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_env</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;numeric&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_numeric</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_new_data_categoric</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;proportion&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_intermediate_data</span><span class="o">.</span><span class="n">trials_type</span> <span class="o">==</span> <span class="s2">&quot;constant&quot;</span><span class="p">:</span>
+                <span class="c1"># Return value passed in the second component</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">data_mask</span><span class="o">.</span><span class="n">index</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Extract name of the second component</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">data_mask</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+                    <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">values</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;offset&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_intermediate_data</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;constant&quot;</span><span class="p">:</span>
+                <span class="c1"># Return value passed as the argument</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">data_mask</span><span class="o">.</span><span class="n">index</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Extract name of the argument</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">data_mask</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+                    <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">values</span></div>
 
 <div class="viewcode-block" id="Call._eval_new_data_categoric"><a class="viewcode-back" href="../../../internals.html#formulae.terms.Call._eval_new_data_categoric">[docs]</a>    <span class="k">def</span> <span class="nf">_eval_new_data_categoric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Evaluates the call with new data when the result of the call is categoric.</span>

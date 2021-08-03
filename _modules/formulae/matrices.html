@@ -276,6 +276,11 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;reference&quot;</span><span class="p">]</span></div>
 
+    <span class="k">def</span> <span class="nf">_evaluate_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;proportion&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">term</span><span class="o">.</span><span class="n">eval_new_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t evaluate response term with type different to &#39;proportion&#39;&quot;</span><span class="p">)</span>
+
 <div class="viewcode-block" id="ResponseVector.as_dataframe"><a class="viewcode-back" href="../../internals.html#formulae.ResponseVector.as_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">as_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns ``self.design_vector`` as a pandas.DataFrame.&quot;&quot;&quot;</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">design_vector</span><span class="p">)</span>
