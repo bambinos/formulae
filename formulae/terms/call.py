@@ -5,7 +5,7 @@ import pandas as pd
 
 from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
 
-from formulae.transforms import TRANSFORMS, Prop, Offset
+from formulae.transforms import TRANSFORMS, Proportion, Offset
 from formulae.terms.call_utils import CallVarsExtractor
 
 
@@ -101,10 +101,11 @@ class Call:
             self._type = "numeric"
         elif is_string_dtype(x) or is_categorical_dtype(x):
             self._type = "categoric"
-        elif isinstance(x, Prop):
-            self._type = "prop"
+        elif isinstance(x, Proportion):
+            self._type = "proportion"
         elif isinstance(x, Offset):
             self._type = "offset"
+            x.set_size(len(data_mask.index))
         else:
             raise ValueError(f"Call result is of an unrecognized type ({type(x)}).")
         self._intermediate_data = x
@@ -127,14 +128,14 @@ class Call:
         try:
             if self._type is None:
                 raise ValueError("Call result type is not set.")
-            if self._type not in ["numeric", "categoric", "prop", "offset"]:
+            if self._type not in ["numeric", "categoric", "proportion", "offset"]:
                 raise ValueError(f"Call result is of an unrecognized type ({self._type}).")
             if self._type == "numeric":
                 self.data = self._eval_numeric(self._intermediate_data)
             elif self._type == "categoric":
                 self.data = self._eval_categoric(self._intermediate_data, encoding)
-            elif self._type == "prop":
-                self.data = self._eval_prop(self._intermediate_data)
+            elif self._type == "proportion":
+                self.data = self._eval_proportion(self._intermediate_data)
             elif self._type == "offset":
                 self.data = self._eval_offset(self._intermediate_data)
         except:
@@ -228,17 +229,17 @@ class Call:
             "encoding": encoding,
         }
 
-    def _eval_prop(self, prop):
+    def _eval_proportion(self, proportion):
         if not self.is_response:
             raise ValueError("'prop()' can only be used in the context of a response term.")
-        return {"value": prop.eval(), "type": "prop"}
+        return {"value": proportion.eval(), "type": "proportion"}
 
     def _eval_offset(self, offset):
         if self.is_response:
             raise ValueError("'offset() cannot be used in the context of a response term.")
         return {"value": offset.eval(), "type": "offset"}
 
-    def eval_new_data(self, data_mask):
+    def eval_new_data(self, data_mask):  # pylint: disable = inconsistent-return-statements
         """Evaluates the function call with new data.
 
         This method evaluates the function call within a new data mask. If the transformation
@@ -257,11 +258,34 @@ class Call:
             ``self._eval_categoric()``. The first applies for numeric calls, the second for
             categoric ones.
         """
-        x = self.call.eval(data_mask, self.eval_env)
-        if self._type == "numeric":
-            return self._eval_numeric(x)["value"]
-        else:
-            return self._eval_new_data_categoric(x)
+        if self._type in ["numeric", "categoric"]:
+            x = self.call.eval(data_mask, self.eval_env)
+            if self._type == "numeric":
+                return self._eval_numeric(x)["value"]
+            else:
+                return self._eval_new_data_categoric(x)
+        elif self._type == "proportion":
+            if self._intermediate_data.trials_type == "constant":
+                # Return value passed in the second component
+                return np.ones((len(data_mask.index), 1)) * self.call.args[1].value
+            else:
+                # Extract name of the second component
+                name = self.call.args[1].name
+                values = data_mask[name]
+                if isinstance(values, pd.Series):
+                    values = values.values[:, np.newaxis]
+                return values
+        elif self._type == "offset":
+            if self._intermediate_data.type == "constant":
+                # Return value passed as the argument
+                return np.ones((len(data_mask.index), 1)) * self.call.args[0].value
+            else:
+                # Extract name of the argument
+                name = self.call.args[0].name
+                values = data_mask[name]
+                if isinstance(values, pd.Series):
+                    values = values.values[:, np.newaxis]
+                return values
 
     def _eval_new_data_categoric(self, x):
         """Evaluates the call with new data when the result of the call is categoric.

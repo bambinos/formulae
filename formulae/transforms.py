@@ -128,8 +128,22 @@ def binary(x, success=None):
     return np.where(booleans, 1, 0)[:, np.newaxis]
 
 
-class Prop:
-    def __init__(self, successes, trials):
+class Proportion:
+    """Representation of a proportion term.
+
+    Parameters
+    ----------
+    successes: ndarray
+        1D array containing data with ``int`` type.
+    trials: ndarray
+        1D array containing data with ``int`` type. Its values must be equal or larger than the
+        values in ``successes``
+    trials_type: str
+        Indicates whether ``trials`` is a constant value or not. It can be either ``"constant"``
+        or ``"variable"``.
+    """
+
+    def __init__(self, successes, trials, trials_type):
         if not (np.mod(successes, 1) == 0).all():
             raise ValueError("'successes' must be a collection of integer numbers")
 
@@ -141,40 +155,79 @@ class Prop:
 
         self.successes = successes
         self.trials = trials
+        self.trials_type = trials_type
 
     def eval(self):
         return np.vstack([self.successes, self.trials]).T
 
 
-def prop(successes, trials):
-    # Successes and trials are pd.Series
+def proportion(successes, trials):
+    """Create a term that represents the proportion ``successes/trials``.
+
+    This function is actually a wrapper of class ``Proportion`` that checks its arguments.
+
+    Parameters
+    ----------
+    successes: pd.Series
+        The number of successes for each observation unit.
+    trials: pd.Series or int
+        The number of trials for each observation unit. If ``int``, this function internally
+        generates an array of the same length than ``successes``.
+    """
+    # If this function does not receive a pd.Series, it means the user didn't pass a name in the
+    # formula interface
+
     if not isinstance(successes, pd.Series):
         raise ValueError("'successes' must be a variable name.")
     successes = successes.values
 
     if isinstance(trials, pd.Series):
         trials = trials.values
+        trials_type = "variable"
     elif isinstance(trials, int):
         trials = np.ones(len(successes), dtype=int) * trials
+        trials_type = "constant"
     else:
         raise ValueError("'trials' must be a variable name or an integer.")
 
-    return Prop(successes, trials)
+    return Proportion(successes, trials, trials_type)
 
 
 class Offset:
     def __init__(self, x):
-        if not is_numeric_dtype(x):
+        self.size = None
+        if not (is_numeric_dtype(x) or isinstance(x, (int, float))):
             raise ValueError("offset() can only be used with numeric variables.")
-        self.x = x.values
+
+        if isinstance(x, pd.Series):
+            self.x = x.values
+            self.type = "variable"
+        elif isinstance(x, (int, float)):
+            self.x = x
+            self.type = "constant"
+        else:
+            raise ValueError("'x' must be a variable name or a number.")
 
     def eval(self):
-        return self.x.flatten()[:, np.newaxis]
+        if self.type == "variable":
+            return self.x.flatten()[:, np.newaxis]
+        else:
+            return np.ones((self.size, 1)) * self.x
+
+    def set_size(self, size):
+        self.size = size
 
 
 def offset(x):
     return Offset(x)
 
 
-TRANSFORMS = {"I": I, "C": C, "binary": binary, "prop": prop, "offset": offset}
+TRANSFORMS = {
+    "I": I,
+    "C": C,
+    "binary": binary,
+    "prop": proportion,
+    "proportion": proportion,
+    "offset": offset,
+}
 STATEFUL_TRANSFORMS = {"center": Center, "scale": Scale, "standardize": Scale}
