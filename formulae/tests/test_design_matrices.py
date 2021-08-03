@@ -535,13 +535,24 @@ def test_prop_response():
     )
 
     response = design_matrices("prop(y, n) ~ x", data).response
-
     assert response.type == "proportion"
     assert response.design_vector.shape == (8, 2)
     assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
 
     # Admit integer values for 'n'
     response = design_matrices("prop(y, 62) ~ x", data).response
+    assert response.type == "proportion"
+    assert response.design_vector.shape == (8, 2)
+    assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
+
+    # Use aliases
+    response = design_matrices("proportion(y, n) ~ x", data).response
+    assert response.type == "proportion"
+    assert response.design_vector.shape == (8, 2)
+    assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
+
+    # Use aliases
+    response = design_matrices("p(y, n) ~ x", data).response
     assert response.type == "proportion"
     assert response.design_vector.shape == (8, 2)
     assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
