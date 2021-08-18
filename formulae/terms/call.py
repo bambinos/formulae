@@ -161,10 +161,10 @@ class Call:
             evaluation, and the latter is equal to ``"numeric"``.
         """
         if isinstance(x, np.ndarray):
-            value = x.flatten()
-            if value.ndim > 1:
-                raise ValueError(f"The result of {self.name} is not 1-dimensional.")
-            value = value[:, np.newaxis]
+            if x.ndim == 1:
+                value = x[:, np.newaxis]
+            else:
+                value = x
         elif isinstance(x, pd.Series):
             value = x.to_numpy()[:, np.newaxis]
         else:

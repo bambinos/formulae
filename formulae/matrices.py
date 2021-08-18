@@ -213,7 +213,7 @@ class CommonEffectsMatrix:
         self.data = data
         self.eval_env = eval_env
         d = self.model.eval(self.data, self.eval_env)
-        self.design_matrix = np.column_stack([d[key] for key in d.keys()])
+        self.design_matrix = np.hstack([d[key] for key in d.keys()])
         self.terms_info = {}
         # Get types and column slices
         start = 0
