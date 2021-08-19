@@ -283,7 +283,7 @@ class BSpline:
 
         order = degree + 1
 
-        if df:
+        if df is not None:
             n_inner_knots = df - order
             if not intercept:
                 n_inner_knots += 1
@@ -296,7 +296,7 @@ class BSpline:
                 )
 
             # User specified 'df' AND 'knots'
-            if knots:
+            if knots is not None:
                 if len(knots) != n_inner_knots:
                     raise ValueError(
                         f"df={df} with degree={degree} implies {n_inner_knots} knots; "
@@ -307,7 +307,7 @@ class BSpline:
                 knot_quantiles = np.linspace(0, 1, n_inner_knots + 2)[1:-1]
                 inner_knots = np.percentile(x, 100 * np.asarray(knot_quantiles))
 
-        if knots:
+        if knots is not None:
             inner_knots = knots
 
         if lower_bound is None:
@@ -321,7 +321,7 @@ class BSpline:
 
         inner_knots = np.asarray(inner_knots)
         if inner_knots.ndim > 1:
-            raise ValueError("Knots must be 1 dimensional")
+            raise ValueError("'knots' must be 1 dimensional")
 
         if np.any(inner_knots < lower_bound):
             raise ValueError(
