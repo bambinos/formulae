@@ -1,5 +1,6 @@
 # inconsistently raises this problem
 # pylint: disable=relative-beyond-top-level
+from numpy.lib.arraysetops import isin
 from .expr import Assign, Grouping, Binary, Unary, Call, Variable, QuotedName, Literal
 from .token import Token
 from .utils import listify
@@ -83,7 +84,6 @@ class Parser:
             if isinstance(expr, Variable):
                 return Assign(expr, right)
             else:
-                print(expr)
                 raise ParseError("Invalid assignment target.")
         return expr
 
@@ -163,18 +163,27 @@ class Parser:
         return expr
 
     def primary(self):  # pylint: disable=too-many-return-statements
-        if self.match("NUMBER"):
-            return Literal(self.previous().literal)
-        elif self.match("IDENTIFIER"):
+        if self.match("IDENTIFIER"):
             identifier = self.previous()
             if self.match("LEFT_BRACKET"):
-                level = self.expression()
-                if not isinstance(level, Literal):
-                    raise ParseError("Subset notation only allows a string or a number.")
+                level = self.primary()
+                if not isinstance(level, (Literal, Variable)):
+                    raise ParseError("Subset notation only allows a string or an identifer.")
+
+                if isinstance(level, Literal) and not isinstance(level.value, str):
+                    raise ParseError("Subset notation only allows a string or an identifer.")
+
+                if isinstance(level, Variable):
+                    if level.level is not None:
+                        raise ParseError("Are you using nested brackets? Why?")
+                    level = Literal(level.name.lexeme)
+
                 self.consume("RIGHT_BRACKET", "Expect ']' after level name.")
                 return Variable(identifier, level)
             else:
                 return Variable(self.previous())
+        elif self.match("NUMBER"):
+            return Literal(self.previous().literal)
         elif self.match("STRING"):
             return Literal(self.previous().literal)
         elif self.match("BQNAME"):
