@@ -1,6 +1,5 @@
 # inconsistently raises this problem
 # pylint: disable=relative-beyond-top-level
-from numpy.lib.arraysetops import isin
 from .expr import Assign, Grouping, Binary, Unary, Call, Variable, QuotedName, Literal
 from .token import Token
 from .utils import listify
