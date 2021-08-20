@@ -1,9 +1,11 @@
 import pytest
+import re
 
 import numpy as np
 import pandas as pd
 
 from formulae.matrices import design_matrices
+from formulae.parser import ParseError
 
 # TODO: See interaction names.. they don't always work as expected
 @pytest.fixture(scope="module")
@@ -584,6 +586,7 @@ def test_categoric_responses():
         {
             "y1": np.random.choice(["A", "B", "C"], size=30),
             "y2": np.random.choice(["A", "B"], size=30),
+            "y3": np.random.choice(["Hi there", "Bye bye", "What??"], size=30),
             "x": np.random.normal(size=30),
         }
     )
@@ -619,6 +622,32 @@ def test_categoric_responses():
     assert response.binary is True
     assert response.baseline is None
     assert response.success == "B"
+
+    # Binary response with explicit level passed as identifier
+    response = design_matrices("y2[B] ~ x", data).response
+    assert list(np.unique(response.design_vector)) == [0, 1]
+    assert response.levels == ["A", "B"]
+    assert response.binary is True
+    assert response.baseline is None
+    assert response.success == "B"
+
+    # Binary response with explicit level with spaces
+    response = design_matrices("y3['Bye bye'] ~ x", data).response
+    assert list(np.unique(response.design_vector)) == [0, 1]
+    assert response.levels == ["Bye bye", "Hi there", "What??"]
+    assert response.binary is True
+    assert response.baseline is None
+    assert response.success == "Bye bye"
+
+    # Users trying to use nested brackets (WHY?)
+    with pytest.raises(ParseError, match=re.escape("Are you using nested brackets? Why?")):
+        design_matrices("y3[A[B]] ~ x", data)
+
+    # Users try to pass a number to use a number
+    with pytest.raises(
+        ParseError, match=re.escape("Subset notation only allows a string or an identifer")
+    ):
+        design_matrices("y3[1] ~ x", data)
 
 
 def test_binary_function():
