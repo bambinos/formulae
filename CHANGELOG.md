@@ -2,6 +2,11 @@
 
 ## v0.1.x Unreleased
 
+- Added `bs()`, a stateful transformation for basis splines (#52)
+- Subset notation in response terms can now be an identifier. It is interpreted as a string. (#52)
+
+## v0.1.4
+
 - Revert changes back to v0.1.2
 
 ## v0.1.3
