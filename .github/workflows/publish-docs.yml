@@ -44,10 +44,12 @@ jobs:
         # Use the args we normally pass to sphinx-build, but run sphinx-multiversion
         run: sphinx-build docs docs/_build
 
-      - name: Push changes
+      - name: Publish Docs to gh-pages
+        # Only once from master or a tag
         if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
-        uses: ad-m/github-push-action@master
+        # We pin to the SHA, not the tag, for security reasons.
+        uses: peaceiris/actions-gh-pages@bbdfb200618d235585ad98e965f4aafc39b4c501 # v3.7.3
         with:
-          branch: gh-pages
-          directory: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/_build/html
+          keep_files: true
