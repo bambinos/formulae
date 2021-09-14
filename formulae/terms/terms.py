@@ -1178,7 +1178,7 @@ class Model:
             else:
                 components[term.name] = term._type  # pylint: disable = protected-access
         # First, group with only categoric terms
-        categoric_group = dict()
+        categoric_group = {}
         for k, v in components.items():
             if v == "categoric":
                 categoric_group[k] = [k]
@@ -1203,7 +1203,7 @@ class Model:
                     numeric_part = ":".join(numeric)
                     if numeric_set not in numeric_group_sets:
                         numeric_group_sets.append(numeric_set)
-                        numeric_groups.append(dict())
+                        numeric_groups.append({})
                     idx = numeric_group_sets.index(numeric_set)
                     # Prevent full encoding when numeric part is present outside
                     # this numeric-categoric interaction
@@ -1222,7 +1222,7 @@ class Model:
         """
         groups = self._encoding_groups()
         l = [pick_contrasts(group) for group in groups]
-        result = dict()
+        result = {}
         for d in l:
             result.update(d)
         return result
@@ -1248,7 +1248,7 @@ class Model:
         """
         self.set_types(data, eval_env)
         encodings = self._encoding_bools()
-        result = dict()
+        result = {}
 
         # First, we have to add terms if the encoding implies so.
 

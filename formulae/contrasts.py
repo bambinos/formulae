@@ -172,7 +172,7 @@ def pick_contrasts(group):
     """
 
     used_subterms = set()
-    codings = dict()
+    codings = {}
 
     for name, components in group.items():
         codings[name] = ExpandedTerm(name, components).pick_contrast(used_subterms)
