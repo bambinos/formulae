@@ -8,7 +8,7 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 
-from .eval import EvalEnvironment
+from .environment import Environment
 from .terms import Model, Intercept
 from .model_description import model_description
 from .utils import flatten_list
@@ -26,7 +26,7 @@ class DesignMatrices:
         The model description, the result of calling ``model_description``.
     data: pandas.DataFrame
         The data frame where variables are taken from.
-    eval_env: EvalEnvironment
+    env: Environment
         The environment where values and functions are taken from.
 
     Attributes
@@ -46,9 +46,9 @@ class DesignMatrices:
         model.
     """
 
-    def __init__(self, model, data, eval_env):
+    def __init__(self, model, data, env):
         self.data = data
-        self.eval_env = eval_env
+        self.env = env
         self.response = None
         self.common = None
         self.group = None
@@ -56,15 +56,15 @@ class DesignMatrices:
 
         if self.model.response:
             self.response = ResponseVector(self.model.response)
-            self.response._evaluate(data, eval_env)
+            self.response._evaluate(data, env)
 
         if self.model.common_terms:
             self.common = CommonEffectsMatrix(Model(*self.model.common_terms))
-            self.common._evaluate(data, eval_env)
+            self.common._evaluate(data, env)
 
         if self.model.group_terms:
             self.group = GroupEffectsMatrix(self.model.group_terms)
-            self.group._evaluate(data, eval_env)
+            self.group._evaluate(data, env)
 
 
 class ResponseVector:
@@ -77,7 +77,7 @@ class ResponseVector:
         The term that represents the response in the model.
     data: pandas.DataFrame
         The data frame where variables are taken from.
-    eval_env: EvalEnvironment
+    env: Environment
         The environment where values and functions are taken from.
 
     Attributes
@@ -95,7 +95,7 @@ class ResponseVector:
     def __init__(self, term):
         self.term = term
         self.data = None
-        self.eval_env = None
+        self.env = None
         self.design_vector = None
         self.name = None  # a string
         self.type = None  # either numeric or categorical
@@ -104,13 +104,13 @@ class ResponseVector:
         self.levels = None  # Not None for categorical variables
         self.binary = None  # Not None for categorical variables (either True or False)
 
-    def _evaluate(self, data, eval_env):
+    def _evaluate(self, data, env):
         """Evaluates ``self.term`` inside the data mask provided by ``data`` and
         updates ``self.design_vector`` and ``self.name``.
         """
         self.data = data
-        self.eval_env = eval_env
-        self.term.set_type(self.data, self.eval_env)
+        self.env = env
+        self.term.set_type(self.data, self.env)
         self.term.set_data()
         self.name = self.term.term.name
         self.design_vector = self.term.term.data
@@ -167,7 +167,7 @@ class CommonEffectsMatrix:
         A ``Model`` object containing only terms for the common effects of the model.
     data: pandas.DataFrame
         The data frame where variables are taken from.
-    eval_env: EvalEnvironment
+    env: Environment
         The environment where values and functions are taken from.
 
     Attributes
@@ -188,17 +188,17 @@ class CommonEffectsMatrix:
     def __init__(self, model):
         self.model = model
         self.data = None
-        self.eval_env = None
+        self.env = None
         self.design_matrix = None
         self.terms_info = None
         self.evaluated = False
 
-    def _evaluate(self, data, eval_env):
+    def _evaluate(self, data, env):
         """Obtain design matrix for common effects.
 
         Evaluates ``self.model`` inside the data mask provided by ``data`` and updates
         ``self.design_matrix``. This method also sets the values of ``self.data`` and
-        ``self.eval_env``.
+        ``self.env``.
 
         It also populates the dictionary ``self.terms_info`` with information related to each term,
         such as the type, the columns they occupy in the design matrix and the names of the columns.
@@ -207,12 +207,12 @@ class CommonEffectsMatrix:
         ----------
         data: pandas.DataFrame
             The data frame where variables are taken from
-        eval_env: EvalEnvironment
+        env: Environment
             The environment where values and functions are taken from.
         """
         self.data = data
-        self.eval_env = eval_env
-        d = self.model.eval(self.data, self.eval_env)
+        self.env = env
+        d = self.model.eval(self.data, self.env)
         self.design_matrix = np.hstack([d[key] for key in d.keys()])
         self.terms_info = {}
         # Get types and column slices
@@ -253,7 +253,7 @@ class CommonEffectsMatrix:
             raise ValueError("Can't evaluate new data on unevaluated matrix.")
         new_instance = self.__class__(self.model)
         new_instance.data = data
-        new_instance.eval_env = self.eval_env
+        new_instance.env = self.env
         new_instance.terms_info = deepcopy(self.terms_info)
         new_instance.design_matrix = np.column_stack(
             [term.eval_new_data(data) for term in self.model.terms]
@@ -342,7 +342,7 @@ class GroupEffectsMatrix:
         A list of ``GroupSpecificTerm`` objects.
     data: pandas.DataFrame
         The data frame where variables are taken from
-    eval_env: EvalEnvironment
+    env: Environment
         The environment where values and functions are taken from.
 
     Attributes
@@ -363,19 +363,19 @@ class GroupEffectsMatrix:
     def __init__(self, terms):
         self.terms = terms
         self.data = None
-        self.eval_env = None
+        self.env = None
         self.design_matrix = np.zeros((0, 0))
         self.terms_info = {}
         self.evaluated = False
 
-    def _evaluate(self, data, eval_env):
+    def _evaluate(self, data, env):
         """Evaluate group specific terms.
 
         This evaluates ``self.terms`` inside the data mask provided by ``data`` and the environment
-        ``eval_env``. It updates ``self.design_matrix`` with the result from the evaluation of each
+        ``env``. It updates ``self.design_matrix`` with the result from the evaluation of each
         term.
 
-        This method also sets the values of ``self.data`` and ``self.eval_env``. It also populates
+        This method also sets the values of ``self.data`` and ``self.env``. It also populates
         the dictionary ``self.terms_info`` with information related to each term,such as the type,
         the columns and rows they occupy in the design matrix and the names of the columns.
 
@@ -383,11 +383,11 @@ class GroupEffectsMatrix:
         ----------
         data: pandas.DataFrame
             The data frame where variables are taken from
-        eval_env: EvalEnvironment
+        env: Environment
             The environment where values and functions are taken from.
         """
         self.data = data
-        self.eval_env = eval_env
+        self.env = env
         start = 0
         Z = []
         self.terms_info = {}
@@ -398,7 +398,7 @@ class GroupEffectsMatrix:
                 for term_ in self.terms:
                     if term_.factor == term.factor and isinstance(term_.expr, Intercept):
                         encoding = False
-            d = term.eval(self.data, self.eval_env, encoding)
+            d = term.eval(self.data, self.env, encoding)
 
             # Grab subcomponent of Z that corresponds to this term
             Zi = d["Zi"]
@@ -455,7 +455,7 @@ class GroupEffectsMatrix:
             new_instance.terms_info[name]["cols"] = slice(start, start + delta)
             start += delta
         new_instance.data = data
-        new_instance.eval_env = self.eval_env
+        new_instance.env = self.env
         if Z:
             new_instance.design_matrix = np.column_stack(Z)
         return new_instance
@@ -521,7 +521,7 @@ class GroupEffectsMatrix:
         return f"GroupEffectsMatrix({wrapify(spacify(multilinify(string)))}\n)"
 
 
-def design_matrices(formula, data, na_action="drop", eval_env=0):
+def design_matrices(formula, data, na_action="drop", env=0):
     """Parse model formula and obtain a ``DesignMatrices`` object containing objects representing
     the response and the design matrices for both the common and group specific effects.
 
@@ -535,7 +535,7 @@ def design_matrices(formula, data, na_action="drop", eval_env=0):
         Describes what to do with missing values in ``data``. ``"drop"`` means to drop
         all rows with a missing value, ``"error"`` means to raise an error. Defaults
         to ``"drop"``.
-    eval_env: integer
+    env: integer
         The number of environments we walk up in the stack starting from the function's caller
         to capture the environment where formula is evaluated. Defaults to 0 which means
         the evaluation environment is the environment where ``design_matrices`` is called.
@@ -565,7 +565,7 @@ def design_matrices(formula, data, na_action="drop", eval_env=0):
     if na_action not in ["drop", "error"]:
         raise ValueError("'na_action' must be either 'drop' or 'error'")
 
-    eval_env = EvalEnvironment.capture(eval_env, reference=1)
+    env = Environment.capture(env, reference=1)
 
     description = model_description(formula)
 
@@ -587,7 +587,7 @@ def design_matrices(formula, data, na_action="drop", eval_env=0):
         else:
             raise ValueError(f"'data' contains {incomplete_rows_n} incomplete rows.")
 
-    design = DesignMatrices(description, data, eval_env)
+    design = DesignMatrices(description, data, env)
     return design
 
 

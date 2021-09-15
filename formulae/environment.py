@@ -1,4 +1,4 @@
-# VarLookUpDict and EvalEnvironment are taken from Patsy library.
+# VarLookUpDict and Environment are taken from Patsy library.
 # For more info see: https://github.com/pydata/patsy/blob/master/patsy/eval.py
 # pylint: disable=relative-beyond-top-level
 import inspect
@@ -41,7 +41,7 @@ class VarLookupDict:
         return "%s(%r)" % (self.__class__.__name__, self._dicts)
 
 
-class EvalEnvironment:
+class Environment:
     """Represents a Python execution environment.
     Encapsulates a namespace for variable lookup
     """
@@ -58,23 +58,15 @@ class EvalEnvironment:
     def with_outer_namespace(self, outer_namespace):
         return self.__class__(self._namespaces + [outer_namespace])
 
-    def eval(self, expr, inner_namespace={}):  # pylint: disable = dangerous-default-value
-        return eval(  # pylint: disable = eval-used
-            expr,
-            {},
-            VarLookupDict([inner_namespace] + self._namespaces),
-        )
-
     @classmethod
-    def capture(cls, eval_env=0, reference=0):
-        if isinstance(eval_env, cls):
-            return eval_env
-        elif isinstance(eval_env, numbers.Integral):
-            depth = eval_env + reference
+    def capture(cls, env=0, reference=0):
+        if isinstance(env, cls):
+            return env
+        elif isinstance(env, numbers.Integral):
+            depth = env + reference
         else:
             raise TypeError(
-                "Parameter 'eval_env' must be either an integer "
-                "or an instance of EvalEnvironment."
+                "Parameter 'env' must be either an integer " "or an instance of Environment."
             )
         frame = inspect.currentframe()
         try:
@@ -96,4 +88,4 @@ class EvalEnvironment:
         return not self == other
 
     def __hash__(self):
-        return hash((EvalEnvironment, tuple(self._namespace_ids())))
+        return hash((Environment, tuple(self._namespace_ids())))

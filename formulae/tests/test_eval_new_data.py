@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from formulae.eval import EvalEnvironment
+from formulae.environment import Environment
 from formulae.parser import Parser
 from formulae.scanner import Scanner
 from formulae.terms import Variable, Call, Term, Model
@@ -44,10 +44,10 @@ def test_term_new_data_numeric():
 def test_call_new_data_numeric_stateful_transform():
     # The center() transformation remembers the value of the mean
     # of the first dataset passed, which is 10.
-    eval_env = EvalEnvironment.capture(0)
+    env = Environment.capture(0)
     data = pd.DataFrame({"x": [10, 10, 10]})
     call_term = Call(LazyCall("center", [LazyVariable("x")], {}))
-    call_term.set_type(data, eval_env)
+    call_term.set_type(data, env)
     call_term.set_data()
     assert (call_term.data["value"].T == [0, 0, 0]).all()
     data = pd.DataFrame({"x": [1, 2, 3]})
@@ -92,12 +92,12 @@ def test_term_new_data_categoric():
 
 
 def test_call_new_data_categoric_stateful_transform():
-    eval_env = EvalEnvironment.capture(0)
+    env = Environment.capture(0)
     data = pd.DataFrame({"x": [1, 2, 3]})
 
     # Full rank encoding
     call_term = Call(LazyCall("C", [LazyVariable("x")], {}))
-    call_term.set_type(data, eval_env)
+    call_term.set_type(data, env)
     call_term.set_data(encoding=True)
     assert (np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]) == call_term.data["value"]).all()
 
@@ -111,7 +111,7 @@ def test_call_new_data_categoric_stateful_transform():
     # The same with reduced encoding
     data = pd.DataFrame({"x": [1, 2, 3]})
     call_term = Call(LazyCall("C", [LazyVariable("x")], {}))
-    call_term.set_type(data, eval_env)
+    call_term.set_type(data, env)
     call_term.set_data()
     assert (np.array([[0, 0], [1, 0], [0, 1]]) == call_term.data["value"]).all()
 

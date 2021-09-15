@@ -58,7 +58,7 @@ class LazyOperator:
     def accept(self, visitor):
         return visitor.visitLazyOperator(self)
 
-    def eval(self, data_mask, eval_env):
+    def eval(self, data_mask, env):
         """Evaluates the operation.
 
         Evaluates the arguments involved in the operation, calls the Python operator, and returns
@@ -68,7 +68,7 @@ class LazyOperator:
         ----------
         data_mask: pd.DataFrame
             The data frame where variables are taken from
-        eval_env: EvalEnvironment
+        env: Environment
             The environment where values and functions are taken from.
 
         Returns
@@ -76,7 +76,7 @@ class LazyOperator:
         result:
             The value obtained from the operator call.
         """
-        return self.op(*[arg.eval(data_mask, eval_env) for arg in self.args])
+        return self.op(*[arg.eval(data_mask, env) for arg in self.args])
 
 
 class LazyVariable:
@@ -111,18 +111,18 @@ class LazyVariable:
     def accept(self, visitor):
         return visitor.visitLazyVariable(self)
 
-    def eval(self, data_mask, eval_env):
+    def eval(self, data_mask, env):
         """Evaluates variable.
 
         First it looks for the variable in ``data_mask``. If not found there, it looks in
-        ``eval_env``. Then it just returns the value the variable represents in either the
+        ``env``. Then it just returns the value the variable represents in either the
         data mask or the evaluation environment.
 
         Parameters
         ----------
         data_mask: pd.DataFrame
             The data frame where variables are taken from
-        eval_env: EvalEnvironment
+        env: Environment
             The environment where values and functions are taken from.
 
         Returns
@@ -137,7 +137,7 @@ class LazyVariable:
                 result = data_mask[self.name]
             except KeyError:
                 try:
-                    result = eval_env.namespace[self.name]
+                    result = env.namespace[self.name]
                 except KeyError as e:
                     raise e
         return result
@@ -238,7 +238,7 @@ class LazyCall:
     def accept(self, visitor):
         return visitor.visitLazyCall(self)
 
-    def eval(self, data_mask, eval_env):
+    def eval(self, data_mask, env):
         """Evaluate the call.
 
         This method first evaluates all its arguments, which are themselves lazy objects, and then
@@ -248,7 +248,7 @@ class LazyCall:
         ----------
         data_mask: pd.DataFrame
             The data frame where variables are taken from
-        eval_env: EvalEnvironment
+        env: Environment
             The environment where values and functions are taken from.
 
         Returns
@@ -259,11 +259,11 @@ class LazyCall:
         if self.stateful_transform:
             callee = self.stateful_transform
         else:
-            # callee = eval_env.eval(self.callee)
-            callee = get_function_from_module(self.callee, eval_env)
+            # callee = env.eval(self.callee)
+            callee = get_function_from_module(self.callee, env)
 
-        args = [arg.eval(data_mask, eval_env) for arg in self.args]
-        kwargs = {name: arg.eval(data_mask, eval_env) for name, arg in self.kwargs.items()}
+        args = [arg.eval(data_mask, env) for arg in self.args]
+        kwargs = {name: arg.eval(data_mask, env) for name, arg in self.kwargs.items()}
 
         return callee(*args, **kwargs)
 
@@ -324,16 +324,16 @@ class CallResolver:
         return LazyVariable(expr.expression.lexeme[1:-1])
 
 
-def get_function_from_module(name, eval_env):
+def get_function_from_module(name, env):
     names = name.split(".")
     if len(names) == 1:
-        fun = eval_env.namespace[names[0]]
+        fun = env.namespace[names[0]]
     else:
         module_name = names[0]
         function_name = names[-1]
         inner_modules_names = names[1:-1]
 
-        module = eval_env.namespace[module_name]
+        module = env.namespace[module_name]
 
         if inner_modules_names:
             inner_module = getattr(module, inner_modules_names[0])

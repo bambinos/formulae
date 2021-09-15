@@ -107,7 +107,7 @@ class Intercept:
         """Returns empty set, no variables are used in the intercept."""
         return set()
 
-    def set_type(self, data, eval_env):  # pylint: disable = unused-argument
+    def set_type(self, data, env):  # pylint: disable = unused-argument
         """Sets length of the intercept."""
         # Nothing goes here as the type is given by the class.
         # Only works with DataFrames or Series so far
@@ -415,7 +415,7 @@ class Term:
         string = "[" + ", ".join([str(component) for component in self.components]) + "]"
         return f"{self.__class__.__name__}({string})"
 
-    def set_type(self, data, eval_env):
+    def set_type(self, data, env):
         """Set type of the components in the term.
 
         Calls ``.set_type()`` method on each component in the term. For those components of class
@@ -426,7 +426,7 @@ class Term:
         ----------
         data: pd.DataFrame
             The data frame where variables are taken from
-        eval_env: EvalEnvironment
+        env: Environment
             The environment where values and functions are taken from.
         """
         # Set the type of the components by calling their set_type method.
@@ -434,7 +434,7 @@ class Term:
             if isinstance(component, Variable):
                 component.set_type(data)
             elif isinstance(component, Call):
-                component.set_type(data, eval_env)
+                component.set_type(data, env)
             else:
                 raise ValueError(
                     "Can't set type on Term because at least one of the components "
@@ -596,7 +596,7 @@ class GroupSpecificTerm:
         ]
         return self.__class__.__name__ + "(\n  " + ",\n  ".join(strlist) + "\n)"
 
-    def eval(self, data, eval_env, encoding):
+    def eval(self, data, env, encoding):
         """Evaluates term.
 
         First, it evaluates the variable in ``self.factor``, creates an oredered categorical data
@@ -626,7 +626,7 @@ class GroupSpecificTerm:
         ----------
         data: pandas.DataFrame
             The data frame where variables are taken from.
-        eval_env: EvalEnvironment
+        env: Environment
             The environment where values and functions are taken from.
         encoding: bool
             Whether to use full or reduced rank encoding when ``expr`` is categoric.
@@ -645,7 +645,7 @@ class GroupSpecificTerm:
             if isinstance(comp, Variable):
                 comp.set_type(data)
             elif isinstance(comp, Call):
-                comp.set_type(data, eval_env)
+                comp.set_type(data, env)
             else:
                 raise ValueError(
                     "Can't set type on Term because at least one of the components "
@@ -672,7 +672,7 @@ class GroupSpecificTerm:
             groups.append([str(lvl) for lvl in comp.data["levels"]])
         self.groups = [":".join(s) for s in list(itertools.product(*groups))]
 
-        self.expr.set_type(data, eval_env)
+        self.expr.set_type(data, env)
         self.expr.set_data(encoding)
         Xi = self.expr.data
         Ji = self.factor.data
@@ -820,9 +820,9 @@ class Response:
         """Returns the name of the variables in the response as a set."""
         return self.term.var_names
 
-    def set_type(self, data, eval_env):
+    def set_type(self, data, env):
         """Set type of the response term."""
-        self.term.set_type(data, eval_env)
+        self.term.set_type(data, env)
 
     def set_data(self, encoding=False):
         """Set data of the response term."""
@@ -1153,7 +1153,7 @@ class Model:
             var_names.update(self.response.var_names)
         return var_names
 
-    def set_types(self, data, eval_env):
+    def set_types(self, data, env):
         """Set the type of the common terms in the model.
 
         Calls ``.set_type()`` method on term in the model.
@@ -1162,11 +1162,11 @@ class Model:
         ----------
         data: pd.DataFrame
             The data frame where variables are taken from
-        eval_env: EvalEnvironment
+        env: Environment
             The environment where values and functions are taken from.
         """
         for term in self.common_terms:
-            term.set_type(data, eval_env)
+            term.set_type(data, env)
 
     def _encoding_groups(self):
         components = {}
@@ -1227,7 +1227,7 @@ class Model:
             result.update(d)
         return result
 
-    def eval(self, data, eval_env):
+    def eval(self, data, env):
         """Evaluates terms in the model.
 
         Only common effects are evaluated here. Group specific terms are evaluated individually
@@ -1237,7 +1237,7 @@ class Model:
         ----------
         data: pd.DataFrame
             The data frame where variables are taken from
-        eval_env: EvalEnvironment
+        env: Environment
             The environment where values and functions are taken from.
 
         Returns
@@ -1246,7 +1246,7 @@ class Model:
             A dictionary where keys are the name of the terms and the values are their ``.data``
             attribute.
         """
-        self.set_types(data, eval_env)
+        self.set_types(data, env)
         encodings = self._encoding_bools()
         result = {}
 
@@ -1270,7 +1270,7 @@ class Model:
                         term.set_data(encoding)
                         result[term.name] = term.data
                     else:
-                        extra_term = _create_and_eval_extra_term(term, encoding, data, eval_env)
+                        extra_term = _create_and_eval_extra_term(term, encoding, data, env)
                         result[extra_term.name] = extra_term.data
                         # Finally, add term to self.common_terms object, right before the term
                         # that causes its addition.
@@ -1282,7 +1282,7 @@ class Model:
         return result
 
 
-def _create_and_eval_extra_term(term, encoding, data, eval_env):
+def _create_and_eval_extra_term(term, encoding, data, env):
     if len(encoding) == 1:
         component_name = list(encoding.keys())[0]
         encoding_ = list(encoding.values())[0]
@@ -1295,6 +1295,6 @@ def _create_and_eval_extra_term(term, encoding, data, eval_env):
             term.get_component(name) for name in component_names if name in encoding.keys()
         ]
         extra_term = Term(*components)
-    extra_term.set_type(data, eval_env)
+    extra_term.set_type(data, env)
     extra_term.set_data(encoding_)
     return extra_term
