@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from formulae.eval import EvalEnvironment
+from formulae.environment import Environment
 from formulae.parser import Parser
 from formulae.scanner import Scanner
 from formulae.terms import Call
@@ -26,15 +26,15 @@ def test_call_str():
 
 def test_call_unrecognized_type():
     f = lambda x: x
-    eval_env = EvalEnvironment.capture()
+    env = Environment.capture()
     with pytest.raises(ValueError):
-        call("f(x)").set_type({"x": 1}, eval_env)
+        call("f(x)").set_type({"x": 1}, env)
 
     with pytest.raises(ValueError):
-        call("x").set_type({"x": [1, 2]}, eval_env)
+        call("x").set_type({"x": [1, 2]}, env)
 
     with pytest.raises(ValueError):
-        call("x").set_type({"x": set([5, 6])}, eval_env)
+        call("x").set_type({"x": set([5, 6])}, env)
 
 
 def test_call_set_data_errors():

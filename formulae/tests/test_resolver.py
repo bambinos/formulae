@@ -1,8 +1,9 @@
 import pytest
 
+from formulae.environment import Environment
 from formulae.model_description import model_description
 from formulae.terms import Variable, Call, Intercept, Term, GroupSpecificTerm, Model, Response
-from formulae.terms.call_resolver import LazyCall, LazyVariable
+from formulae.terms.call_resolver import LazyCall, LazyVariable, get_function_from_module
 
 # TODO:
 # test repeated terms
@@ -283,3 +284,18 @@ def test_subset_index():
     )
     comp.add_response(Response(Term(Variable("threecats", level="b"))))
     assert desc == comp
+
+
+def test_get_function_from_module():
+    import numpy as np
+
+    def function(x):
+        return x
+
+    env = Environment.capture()
+
+    NAMES = ["np.random.normal", "np.exp", "function"]
+    FUNS = [np.random.normal, np.exp, function]
+    for name, fun in zip(NAMES, FUNS):
+        f = get_function_from_module(name, env)
+        assert f == fun

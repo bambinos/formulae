@@ -31,7 +31,7 @@ class Call:
 
     def __init__(self, call, is_response=False):
         self.data = None
-        self.eval_env = None
+        self.env = None
         self._intermediate_data = None
         self._type = None
         self.is_response = is_response
@@ -78,7 +78,7 @@ class Call:
         """
         return set(CallVarsExtractor(self).get())
 
-    def set_type(self, data_mask, eval_env):
+    def set_type(self, data_mask, env):
         """Evaluates function and determines the type of the result of the call.
 
         Evaluates the function call and sets the ``._type`` property to ``"numeric"`` or
@@ -90,12 +90,12 @@ class Call:
         ----------
         data_mask: pd.DataFrame
             The data frame where variables are taken from
-        eval_env: EvalEnvironment
+        env: Environment
             The environment where values and functions are taken from.
         """
 
-        self.eval_env = eval_env.with_outer_namespace(TRANSFORMS)
-        x = self.call.eval(data_mask, self.eval_env)
+        self.env = env.with_outer_namespace(TRANSFORMS)
+        x = self.call.eval(data_mask, self.env)
 
         if is_numeric_dtype(x):
             self._type = "numeric"
@@ -259,7 +259,7 @@ class Call:
             categoric ones.
         """
         if self._type in ["numeric", "categoric"]:
-            x = self.call.eval(data_mask, self.eval_env)
+            x = self.call.eval(data_mask, self.env)
             if self._type == "numeric":
                 return self._eval_numeric(x)["value"]
             else:
