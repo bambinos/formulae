@@ -1,9 +1,14 @@
 # Change Log
 
-## v0.1.x Unreleased
+## v0.2.x Unreleased
+
+## v0.2.0
 
 - Added `bs()`, a stateful transformation for basis splines (#52)
-- Subset notation in response terms can now be an identifier. It is interpreted as a string. (#52)
+- Subset notation in response terms can now be an identifier. It is interpreted as a string (#52)
+- `True`, `False` and `None` are correctly evaluated in function calls arguments now (#53)
+- The `.set_type()` on each term used to be called twice. Now we call it once (#53)
+- Added the function `get_function_from_module()`. Now we don't use Python's `eval()` anymore (#53)
 
 ## v0.1.4
 
