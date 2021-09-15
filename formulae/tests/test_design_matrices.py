@@ -777,7 +777,6 @@ def test_predict_prop():
     # If trials is a constant value, return that same value
     dm = design_matrices("prop(y, 70) ~ x", data)
     result = dm.response._evaluate_new_data(pd.DataFrame({"n": [10, 10, 30, 30]}))
-    print(result)
     assert (result == np.array([70, 70, 70, 70])[:, np.newaxis]).all()
 
 

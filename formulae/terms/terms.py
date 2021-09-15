@@ -1267,7 +1267,6 @@ class Model:
                 for (idx, encoding) in enumerate(term_encoding):
                     # Last term never adds any new term, it corresponds to the outer `term`.
                     if idx == len(term_encoding) - 1:
-                        term.set_type(data, eval_env)
                         term.set_data(encoding)
                         result[term.name] = term.data
                     else:
@@ -1278,7 +1277,6 @@ class Model:
                         self.common_terms.insert(self.common_terms.index(term), extra_term)
             else:
                 # This term does not add any lower order term, so we just evaluate it as it is.
-                term.set_type(data, eval_env)
                 term.set_data(term_encoding)
                 result[term.name] = term.data
         return result

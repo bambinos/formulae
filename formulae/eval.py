@@ -86,19 +86,11 @@ class EvalEnvironment:
         finally:
             del frame
 
-    def subset(self, names):
-        """Creates a new, flat EvalEnvironment that contains only the variables specified."""
-        vld = VarLookupDict(self._namespaces)
-        new_ns = dict((name, vld[name]) for name in names)
-        return EvalEnvironment([new_ns])
-
     def _namespace_ids(self):
         return [id(n) for n in self._namespaces]
 
     def __eq__(self, other):
-        return (
-            isinstance(other, EvalEnvironment) and self._namespace_ids() == other._namespace_ids()
-        )
+        return isinstance(other, type(self)) and self._namespace_ids() == other._namespace_ids()
 
     def __ne__(self, other):
         return not self == other

@@ -84,26 +84,6 @@ def test_evalenv_capture():
         EvalEnvironment.capture(100)
 
 
-def test_evalenv_subset():
-    a = 1
-    b = "hello friend"
-    c = [1, 2, 3]
-    d = {"a": 1, "b": 2}
-
-    eval_env = EvalEnvironment.capture()
-
-    assert "a" in eval_env.namespace
-    assert "b" in eval_env.namespace
-    assert "c" in eval_env.namespace
-    assert "d" in eval_env.namespace
-
-    eval_env = eval_env.subset(["a", "c"])
-    assert eval_env.namespace["a"] == a
-    assert eval_env.namespace["c"] == c
-    assert "b" not in eval_env.namespace
-    assert "d" not in eval_env.namespace
-
-
 def test_evalenv_equality():
     a = 1
     b = "hello friend"

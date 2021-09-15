@@ -23,10 +23,20 @@ class LazyOperator:
         One or two lazy instances.
     """
 
+    SYMBOLS = {
+        "add": "+",
+        "pos": "+",
+        "sub": "-",
+        "neg": "-",
+        "pow": "**",
+        "mul": "*",
+        "truediv": "/",
+    }
+
     def __init__(self, op, *args):
         self.op = op
         self.args = args
-        self.symbol = self._get_symbol()
+        self.symbol = self.SYMBOLS[op.__name__]
 
     def __str__(self):
         if len(self.args) == 1:
@@ -44,20 +54,6 @@ class LazyOperator:
         if not isinstance(other, type(self)):
             return False
         return self.symbol == other.symbol and set(self.args) == set(other.args)
-
-    def _get_symbol(self):
-        oname = self.op.__name__
-        if oname in ["add", "pos"]:
-            symbol = "+"
-        elif oname in ["sub", "neg"]:
-            symbol = "-"
-        elif oname == "pow":
-            symbol = "**"
-        elif oname == "mul":
-            symbol = "*"
-        elif oname == "truediv":
-            symbol = "/"
-        return symbol
 
     def accept(self, visitor):
         return visitor.visitLazyOperator(self)
@@ -95,6 +91,8 @@ class LazyVariable:
         The name of the variable it represents.
     """
 
+    BUILTINS = {"True": True, "False": False, "None": None}
+
     def __init__(self, name):
         self.name = name
 
@@ -108,9 +106,7 @@ class LazyVariable:
         return hash((self.name))
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)):
-            return False
-        return self.name == other.name
+        return isinstance(other, type(self)) and self.name == other.name
 
     def accept(self, visitor):
         return visitor.visitLazyVariable(self)
@@ -134,13 +130,16 @@ class LazyVariable:
         result:
             The value represented by this name in either the data mask or the environment.
         """
-        try:
-            result = data_mask[self.name]
-        except KeyError:
+        if self.name in self.BUILTINS:
+            result = self.BUILTINS[self.name]
+        else:
             try:
-                result = eval_env.namespace[self.name]
-            except KeyError as e:
-                raise e
+                result = data_mask[self.name]
+            except KeyError:
+                try:
+                    result = eval_env.namespace[self.name]
+                except KeyError as e:
+                    raise e
         return result
 
 
@@ -166,9 +165,7 @@ class LazyValue:
         return self.__str__()
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)):
-            return False
-        return self.value == other.value
+        return isinstance(other, type(self)) and self.value == other.value
 
     def __hash__(self):
         return hash((self.value))
@@ -176,18 +173,11 @@ class LazyValue:
     def accept(self, visitor):
         return visitor.visitLazyValue(self)
 
-    def eval(self, data_mask, eval_env):  # pylint: disable = unused-argument
+    def eval(self, *args, **kwargs):  # pylint: disable = unused-argument
         """Evaluates the value.
 
-        Simply returns the value. Arguments are ignored but required for consistency among all the
-        lazy objects.
-
-        Parameters
-        ----------
-        data_mask: pd.DataFrame
-            The data frame where variables are taken from
-        eval_env: EvalEnvironment
-            The environment where values and functions are taken from.
+        Simply returns the value. Other arguments are ignored but required for consistency
+        among all the lazy objects.
 
         Returns
         -------
@@ -269,7 +259,8 @@ class LazyCall:
         if self.stateful_transform:
             callee = self.stateful_transform
         else:
-            callee = eval_env.eval(self.callee)
+            # callee = eval_env.eval(self.callee)
+            callee = get_function_from_module(self.callee, eval_env)
 
         args = [arg.eval(data_mask, eval_env) for arg in self.args]
         kwargs = {name: arg.eval(data_mask, eval_env) for name, arg in self.kwargs.items()}
@@ -279,6 +270,16 @@ class LazyCall:
 
 class CallResolver:
     """Visitor that walks an AST representing a regular call and returns a lazy version of it."""
+
+    BINARY_OPERATORS = {
+        "PLUS": operator.add,
+        "MINUS": operator.sub,
+        "STAR_STAR": operator.pow,
+        "STAR": operator.mul,
+        "SLASH": operator.truediv,
+    }
+
+    UNARY_OPERATORS = {"PLUS": operator.pos, "MINUS": operator.neg}
 
     def __init__(self, expr):
         self.expr = expr
@@ -291,29 +292,16 @@ class CallResolver:
 
     def visitBinaryExpr(self, expr):
         otype = expr.operator.type
-        if otype == "PLUS":
-            op = operator.add
-        elif otype == "MINUS":
-            op = operator.sub
-        elif otype == "STAR_STAR":
-            op = operator.pow
-        elif otype == "STAR":
-            op = operator.mul
-        elif otype == "SLASH":
-            op = operator.truediv
-        else:
-            raise CallResolverError(f"Can't resolve call wih binary expression of type '{otype}'")
+        op = self.BINARY_OPERATORS.get(otype)
+        if op is None:
+            raise CallResolverError(f"Can't resolve call with binary expression of type '{otype}'")
         return LazyOperator(op, expr.left.accept(self), expr.right.accept(self))
 
     def visitUnaryExpr(self, expr):
         otype = expr.operator.type
-        if otype == "PLUS":
-            op = operator.pos
-        elif otype == "MINUS":
-            op = operator.neg
-        else:
-            raise CallResolverError(f"Can't resolve unary expression of type '{otype}'")
-
+        op = self.UNARY_OPERATORS.get(otype)
+        if op is None:
+            raise CallResolverError(f"Can't resolve call with unary expression of type '{otype}'")
         return LazyOperator(op, expr.right.accept(self))
 
     def visitCallExpr(self, expr):
@@ -334,3 +322,25 @@ class CallResolver:
 
     def visitQuotedNameExpr(self, expr):
         return LazyVariable(expr.expression.lexeme[1:-1])
+
+
+def get_function_from_module(name, eval_env):
+    names = name.split(".")
+    if len(names) == 1:
+        fun = eval_env.namespace[names[0]]
+    else:
+        module_name = names[0]
+        function_name = names[-1]
+        inner_modules_names = names[1:-1]
+
+        module = eval_env.namespace[module_name]
+
+        if inner_modules_names:
+            inner_module = getattr(module, inner_modules_names[0])
+            for inner_module_name in inner_modules_names[1:]:
+                # print(name)
+                inner_module = getattr(inner_module, inner_module_name)
+            fun = getattr(inner_module, function_name)
+        else:
+            fun = getattr(module, function_name)
+    return fun
