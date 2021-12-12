@@ -38,7 +38,7 @@ class VarLookupDict:
         return [list(d.keys()) for d in self._dicts]
 
     def __repr__(self):
-        return "%s(%r)" % (self.__class__.__name__, self._dicts)
+        return f"{self.__class__.__name__}({self._dicts})"
 
 
 class Environment:

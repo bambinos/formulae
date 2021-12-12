@@ -1207,7 +1207,7 @@ class Model:
                     idx = numeric_group_sets.index(numeric_set)
                     # Prevent full encoding when numeric part is present outside
                     # this numeric-categoric interaction
-                    if numeric_part in components.keys():
+                    if numeric_part in components:
                         numeric_groups[idx][numeric_part] = []
                     numeric_groups[idx][k] = categoric
 
@@ -1257,7 +1257,7 @@ class Model:
         for term in common_terms:
             term_encoding = False
 
-            if term.name in encodings.keys():
+            if term.name in encodings:
                 term_encoding = encodings[term.name]
             if hasattr(term_encoding, "__len__") and len(term_encoding) > 1:
                 # we're in an interaction that added terms.

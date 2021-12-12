@@ -195,7 +195,7 @@ class Scanner:
             self.advance()
         # Check if the identifier is a reserved word
         identifier = self.code[self.start : self.current]
-        if identifier in self.keywords.keys():
+        if identifier in self.keywords:
             _type = self.keywords[identifier]
         else:
             _type = "IDENTIFIER"

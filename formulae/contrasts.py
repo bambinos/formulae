@@ -45,7 +45,7 @@ class ExpandedFactor:
             suffix = "+"
         else:
             suffix = "-"
-        return "%r%s" % (self.factor, suffix)
+        return f"{self.factor}{suffix}"
 
 
 # And a collection of Terms make up an EvalFactor
@@ -108,7 +108,7 @@ class Subterm:
         return not self == other
 
     def __repr__(self):
-        return "%s(%r)" % (self.__class__.__name__, list(self.efactors))
+        return f"{self.__class__.__name__}({list(self.efactors)})"
 
 
 class ExpandedTerm:
