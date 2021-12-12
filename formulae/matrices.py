@@ -504,7 +504,7 @@ class GroupEffectsMatrix:
             A 2-dimensional numpy array that represents the sub-matrix corresponding to the
             term passed.
         """
-        if term not in self.terms_info.keys():
+        if term not in self.terms_info:
             raise ValueError(f"'{term}' is not a valid term name")
         return self.design_matrix[:, self.terms_info[term]["cols"]]
 
