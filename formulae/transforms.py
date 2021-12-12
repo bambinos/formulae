@@ -97,6 +97,7 @@ def C(x, reference=None, levels=None):
         categories = levels
     elif not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
         categories = sorted(x.unique().tolist())
+
     # Create type and use it in the variable
     cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
     x = x.astype(cat_type)
