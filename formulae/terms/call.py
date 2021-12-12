@@ -33,7 +33,7 @@ class Call:
         self.data = None
         self.env = None
         self._intermediate_data = None
-        self._type = None
+        self.kind = None
         self.is_response = is_response
         self.call = call
         self.name = str(self.call)
@@ -81,7 +81,7 @@ class Call:
     def set_type(self, data_mask, env):
         """Evaluates function and determines the type of the result of the call.
 
-        Evaluates the function call and sets the ``._type`` property to ``"numeric"`` or
+        Evaluates the function call and sets the ``.kind`` property to ``"numeric"`` or
         ``"categoric"`` depending on the type of the result. It also stores the intermediate result
         of the evaluation in ``._intermediate_data`` to prevent us from computing the same thing
         more than once.
@@ -98,13 +98,13 @@ class Call:
         x = self.call.eval(data_mask, self.env)
 
         if is_numeric_dtype(x):
-            self._type = "numeric"
+            self.kind = "numeric"
         elif is_string_dtype(x) or is_categorical_dtype(x):
-            self._type = "categoric"
+            self.kind = "categoric"
         elif isinstance(x, Proportion):
-            self._type = "proportion"
+            self.kind = "proportion"
         elif isinstance(x, Offset):
-            self._type = "offset"
+            self.kind = "offset"
             x.set_size(len(data_mask.index))
         else:
             raise ValueError(f"Call result is of an unrecognized type ({type(x)}).")
@@ -126,17 +126,17 @@ class Call:
             categoric. Omitted when the result of the call is numeric.
         """
         try:
-            if self._type is None:
+            if self.kind is None:
                 raise ValueError("Call result type is not set.")
-            if self._type not in ["numeric", "categoric", "proportion", "offset"]:
-                raise ValueError(f"Call result is of an unrecognized type ({self._type}).")
-            if self._type == "numeric":
+            if self.kind not in ["numeric", "categoric", "proportion", "offset"]:
+                raise ValueError(f"Call result is of an unrecognized type ({self.kind}).")
+            if self.kind == "numeric":
                 self.data = self._eval_numeric(self._intermediate_data)
-            elif self._type == "categoric":
+            elif self.kind == "categoric":
                 self.data = self._eval_categoric(self._intermediate_data, encoding)
-            elif self._type == "proportion":
+            elif self.kind == "proportion":
                 self.data = self._eval_proportion(self._intermediate_data)
-            elif self._type == "offset":
+            elif self.kind == "offset":
                 self.data = self._eval_offset(self._intermediate_data)
         except:
             print("Unexpected error while trying to evaluate a Call:", sys.exc_info()[0])
@@ -157,7 +157,7 @@ class Call:
         Returns
         ----------
         result: dict
-            A dictionary with keys ``"value"`` and ``"type"``. The first contains the result of the
+            A dictionary with keys ``"value"`` and ``"kind"``. The first contains the result of the
             evaluation, and the latter is equal to ``"numeric"``.
         """
         if isinstance(x, np.ndarray):
@@ -169,7 +169,7 @@ class Call:
             value = x.to_numpy()[:, np.newaxis]
         else:
             raise ValueError(f"Call result is of an unrecognized type ({type(x)}).")
-        return {"value": value, "type": "numeric"}
+        return {"value": value, "kind": "numeric"}
 
     def _eval_categoric(self, x, encoding):
         """Finishes evaluation of categoric call.
@@ -193,7 +193,7 @@ class Call:
         Returns
         ----------
         result: dict
-            A dictionary with keys ``"value"``, ``"type"``, ``"levels"``, ``"reference"``, and
+            A dictionary with keys ``"value"``, ``"kind"``, ``"levels"``, ``"reference"``, and
             ``"encoding"``. They represent the result of the evaluation, the type, which is
             ``"categoric"``, the levels observed in the variable, the level used as reference when
             using reduced encoding, and whether the encoding is ``"full"`` or ``"reduced"``.
@@ -223,7 +223,7 @@ class Call:
                 encoding = "reduced"
         return {
             "value": value,
-            "type": "categoric",
+            "kind": "categoric",
             "levels": levels,
             "reference": reference,
             "encoding": encoding,
@@ -232,12 +232,12 @@ class Call:
     def _eval_proportion(self, proportion):
         if not self.is_response:
             raise ValueError("'prop()' can only be used in the context of a response term.")
-        return {"value": proportion.eval(), "type": "proportion"}
+        return {"value": proportion.eval(), "kind": "proportion"}
 
     def _eval_offset(self, offset):
         if self.is_response:
             raise ValueError("'offset() cannot be used in the context of a response term.")
-        return {"value": offset.eval(), "type": "offset"}
+        return {"value": offset.eval(), "kind": "offset"}
 
     def eval_new_data(self, data_mask):  # pylint: disable = inconsistent-return-statements
         """Evaluates the function call with new data.
@@ -258,13 +258,13 @@ class Call:
             ``self._eval_categoric()``. The first applies for numeric calls, the second for
             categoric ones.
         """
-        if self._type in ["numeric", "categoric"]:
+        if self.kind in ["numeric", "categoric"]:
             x = self.call.eval(data_mask, self.env)
-            if self._type == "numeric":
+            if self.kind == "numeric":
                 return self._eval_numeric(x)["value"]
             else:
                 return self._eval_new_data_categoric(x)
-        elif self._type == "proportion":
+        elif self.kind == "proportion":
             if self._intermediate_data.trials_type == "constant":
                 # Return value passed in the second component
                 return np.ones((len(data_mask.index), 1)) * self.call.args[1].value
@@ -275,8 +275,8 @@ class Call:
                 if isinstance(values, pd.Series):
                     values = values.values[:, np.newaxis]
                 return values
-        elif self._type == "offset":
-            if self._intermediate_data.type == "constant":
+        elif self.kind == "offset":
+            if self._intermediate_data.kind == "constant":
                 # Return value passed as the argument
                 return np.ones((len(data_mask.index), 1)) * self.call.args[0].value
             else:

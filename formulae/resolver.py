@@ -19,7 +19,7 @@ class Resolver:
         return expr.expression.accept(self)
 
     def visitBinaryExpr(self, expr):  # pylint: disable=too-many-return-statements
-        otype = expr.operator.type
+        otype = expr.operator.kind
         if otype == "TILDE":
             return Response(expr.left.accept(self)) + expr.right.accept(self)
         if otype == "PLUS":
@@ -41,7 +41,7 @@ class Resolver:
             raise ResolverError("Couldn't resolve BinaryExpr with otype '" + otype + "'")
 
     def visitUnaryExpr(self, expr):
-        otype = expr.operator.type
+        otype = expr.operator.kind
         if otype == "PLUS":
             return expr.right.accept(self)
         elif otype == "MINUS":

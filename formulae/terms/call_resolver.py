@@ -291,14 +291,14 @@ class CallResolver:
         return expr.expression.accept(self)
 
     def visitBinaryExpr(self, expr):
-        otype = expr.operator.type
+        otype = expr.operator.kind
         op = self.BINARY_OPERATORS.get(otype)
         if op is None:
             raise CallResolverError(f"Can't resolve call with binary expression of type '{otype}'")
         return LazyOperator(op, expr.left.accept(self), expr.right.accept(self))
 
     def visitUnaryExpr(self, expr):
-        otype = expr.operator.type
+        otype = expr.operator.kind
         op = self.UNARY_OPERATORS.get(otype)
         if op is None:
             raise CallResolverError(f"Can't resolve call with unary expression of type '{otype}'")
