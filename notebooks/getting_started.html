@@ -1,13 +1,15 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
-    <title>Getting started &#8212; Formulae 0.1.4 documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Getting started &#8212; Formulae 0.2.0 documentation</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet" />
-  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+  <link href="../_static/css/theme.css" rel="stylesheet">
+  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -21,25 +23,27 @@
       
 
     
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/blank.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
-    <script src="../_static/language_data.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="API Reference" href="../api_reference.html" />
     <link rel="prev" title="Dependencies" href="../index.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
     
   </head>
   <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
@@ -480,19 +484,19 @@ div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
-<div class="section" id="Getting-started">
+<section id="Getting-started">
 <h1>Getting started<a class="headerlink" href="#Getting-started" title="Permalink to this headline">¶</a></h1>
-<p>formulae requires a working Python interpreter (3.7+) and the libraries numpy, scipy and pandas with versions specified in the <a class="reference external" href="https://github.com/bambinos/formulae/blob/master/requirements.txt">requirements.txt</a> file.</p>
+<p>formulae requires a working Python interpreter (3.7+) and the libraries NumPy, SciPy and pandas with versions specified in the <a class="reference external" href="https://github.com/bambinos/formulae/blob/master/requirements.txt">requirements.txt</a> file.</p>
 <p>Assuming a standard Python environment is installed on your machine (including pip), the latest release of formulae can be installed in one line using pip:</p>
 <p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">formulae</span></code></p>
 <p>Alternatively, if you want the development version of the package you can install from GitHub:</p>
 <p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">git+https://github.com/bambinos/formulae.git</span></code></p>
-<div class="section" id="User-guide">
+<section id="User-guide">
 <h2>User guide<a class="headerlink" href="#User-guide" title="Permalink to this headline">¶</a></h2>
 <p>The main function is <code class="docutils literal notranslate"><span class="pre">design_matrices()</span></code>. It takes a model formula and a pandas DataFrame and returns an object of class <code class="docutils literal notranslate"><span class="pre">DesignMatrices</span></code> that contains information about the response, the common effects, and the group specific effects that can be accessed with the attributes <code class="docutils literal notranslate"><span class="pre">.response</span></code>, <code class="docutils literal notranslate"><span class="pre">.common</span></code>, and <code class="docutils literal notranslate"><span class="pre">.group</span></code> respectively.</p>
-<p>Model formulas are much like the very famous model formulas in the programming language R. The extension to group-specific effects is similar to the extension provided by the <a class="reference external" href="https://CRAN.R-project.org/package=lme4">lme4</a> package, also in R.</p>
-</div>
-<div class="section" id="Setup">
+<p>Model formulas are much like the very famous model formulas in the R programming language. The extension to group-specific effects is similar to the extension provided by the <a class="reference external" href="https://CRAN.R-project.org/package=lme4">lme4</a> package, also in R.</p>
+</section>
+<section id="Setup">
 <h2>Setup<a class="headerlink" href="#Setup" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
@@ -512,15 +516,15 @@ from formulae import design_matrices
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>np.random.seed(1111)
-SIZE=10
+<span></span>rng = np.random.default_rng(7355608)
+SIZE = 10
 data = pd.DataFrame(
     {
-        &quot;y1&quot;: np.random.normal(size=SIZE),
-        &quot;y2&quot;: np.random.choice([&quot;A&quot;, &quot;B&quot;, &quot;C&quot;], size=SIZE),
-        &quot;x&quot;: np.random.normal(size=SIZE),
-        &quot;z&quot;: np.random.choice([1, 2, 3], size=SIZE),
-        &quot;g&quot;: np.random.choice([&quot;Group 1&quot;, &quot;Group 2&quot;, &quot;Group 3&quot;], size=SIZE),
+        &quot;y1&quot;: rng.normal(size=SIZE),
+        &quot;y2&quot;: rng.choice([&quot;A&quot;, &quot;B&quot;, &quot;C&quot;], size=SIZE),
+        &quot;x&quot;: rng.normal(size=SIZE),
+        &quot;z&quot;: rng.choice([1, 2, 3], size=SIZE),
+        &quot;g&quot;: rng.choice([&quot;Group 1&quot;, &quot;Group 2&quot;, &quot;Group 3&quot;], size=SIZE),
     }
 )
 data
@@ -560,81 +564,81 @@ data
   <tbody>
     <tr>
       <th>0</th>
-      <td>-1.300010</td>
-      <td>A</td>
-      <td>1.361511</td>
-      <td>2</td>
+      <td>0.200521</td>
+      <td>C</td>
+      <td>-0.351447</td>
+      <td>3</td>
       <td>Group 2</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>-1.072989</td>
+      <td>-0.421306</td>
       <td>B</td>
-      <td>1.379059</td>
-      <td>2</td>
-      <td>Group 1</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>0.790199</td>
-      <td>A</td>
-      <td>0.666949</td>
-      <td>1</td>
-      <td>Group 3</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>-0.878265</td>
-      <td>B</td>
-      <td>0.171964</td>
-      <td>1</td>
-      <td>Group 2</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>1.501822</td>
-      <td>B</td>
-      <td>0.557267</td>
-      <td>1</td>
-      <td>Group 2</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>-0.023929</td>
-      <td>C</td>
-      <td>0.654634</td>
-      <td>2</td>
-      <td>Group 2</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>0.275949</td>
-      <td>A</td>
-      <td>0.249460</td>
-      <td>2</td>
-      <td>Group 3</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>-0.966393</td>
-      <td>A</td>
-      <td>-0.626812</td>
+      <td>-0.431129</td>
       <td>3</td>
       <td>Group 1</td>
     </tr>
     <tr>
-      <th>8</th>
-      <td>-1.580315</td>
-      <td>A</td>
-      <td>0.619571</td>
+      <th>2</th>
+      <td>-0.490128</td>
+      <td>B</td>
+      <td>-0.412738</td>
       <td>2</td>
+      <td>Group 2</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>-0.929507</td>
+      <td>B</td>
+      <td>0.574337</td>
+      <td>3</td>
+      <td>Group 2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1.515838</td>
+      <td>A</td>
+      <td>1.561390</td>
+      <td>3</td>
+      <td>Group 1</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>-1.180238</td>
+      <td>A</td>
+      <td>-0.357137</td>
+      <td>1</td>
+      <td>Group 2</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>-1.839936</td>
+      <td>C</td>
+      <td>-0.453278</td>
+      <td>3</td>
       <td>Group 3</td>
     </tr>
     <tr>
-      <th>9</th>
-      <td>-0.203675</td>
+      <th>7</th>
+      <td>-0.330336</td>
       <td>B</td>
-      <td>0.338624</td>
+      <td>-0.039111</td>
+      <td>3</td>
+      <td>Group 2</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>-0.797019</td>
+      <td>A</td>
+      <td>1.882748</td>
+      <td>2</td>
+      <td>Group 2</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>-0.030036</td>
+      <td>A</td>
+      <td>0.549615</td>
       <td>3</td>
       <td>Group 3</td>
     </tr>
@@ -642,8 +646,8 @@ data
 </table>
 </div></div>
 </div>
-</div>
-<div class="section" id="Creating-and-accessing-design-matrices">
+</section>
+<section id="Creating-and-accessing-design-matrices">
 <h2>Creating and accessing design matrices<a class="headerlink" href="#Creating-and-accessing-design-matrices" title="Permalink to this headline">¶</a></h2>
 <p>Let’s create a <code class="docutils literal notranslate"><span class="pre">DesignMatrices</span></code> object with a numeric response and a numeric predictor. The first argument we pass is the model formula, and the second is the data frame where we take variables from.</p>
 <div class="nbinput nblast docutils container">
@@ -676,13 +680,13 @@ CommonEffectsMatrix(
   terms: {
     &#39;Intercept&#39;: {
       type: intercept,
-      full_names: [&#39;Intercept&#39;],
-      cols: slice(0, 1, None)
+      cols: slice(0, 1, None),
+      full_names: [&#39;Intercept&#39;]
     },
     &#39;x&#39;: {
       type: numeric,
-      full_names: [&#39;x&#39;],
-      cols: slice(1, 2, None)
+      cols: slice(1, 2, None),
+      full_names: [&#39;x&#39;]
     }
   }
 )
@@ -704,16 +708,16 @@ CommonEffectsMatrix(
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[ 1.        ,  1.36151086],
-       [ 1.        ,  1.37905918],
-       [ 1.        ,  0.66694943],
-       [ 1.        ,  0.17196362],
-       [ 1.        ,  0.55726654],
-       [ 1.        ,  0.65463436],
-       [ 1.        ,  0.24945962],
-       [ 1.        , -0.62681223],
-       [ 1.        ,  0.61957115],
-       [ 1.        ,  0.33862397]])
+array([[ 1.        , -0.351447  ],
+       [ 1.        , -0.43112895],
+       [ 1.        , -0.41273793],
+       [ 1.        ,  0.57433652],
+       [ 1.        ,  1.56139001],
+       [ 1.        , -0.35713698],
+       [ 1.        , -0.45327849],
+       [ 1.        , -0.03911089],
+       [ 1.        ,  1.88274763],
+       [ 1.        ,  0.54961543]])
 </pre></div></div>
 </div>
 <p>Or call the <code class="docutils literal notranslate"><span class="pre">.as_dataframe()</span></code> method to return a data frame.</p>
@@ -757,49 +761,117 @@ array([[ 1.        ,  1.36151086],
     <tr>
       <th>0</th>
       <td>1.0</td>
-      <td>1.361511</td>
+      <td>-0.351447</td>
     </tr>
     <tr>
       <th>1</th>
       <td>1.0</td>
-      <td>1.379059</td>
+      <td>-0.431129</td>
     </tr>
     <tr>
       <th>2</th>
       <td>1.0</td>
-      <td>0.666949</td>
+      <td>-0.412738</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1.0</td>
-      <td>0.171964</td>
+      <td>0.574337</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1.0</td>
-      <td>0.557267</td>
+      <td>1.561390</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
-</div>
-<div class="section" id="Categorical-predictors">
-<h2>Categorical predictors<a class="headerlink" href="#Categorical-predictors" title="Permalink to this headline">¶</a></h2>
-<p>Variables with categorical type in the pandas data frame are recognized and handled as such in formulae. If there’s a numerical variable that should be interpreted as categorical and you don’t want to manipulate your data manually, you can wrap the name of the variable with <code class="docutils literal notranslate"><span class="pre">C()</span></code>, like <code class="docutils literal notranslate"><span class="pre">C(variable)</span></code>, and formulae will convert it to categorical type.</p>
-<p>Categorical predictors are encoded using reference level encoding (i.e. the first level is taken as baseline). This way, the resulting design matrix is of full-rank.</p>
+<p>Note the response term can be omitted and we still obtain the design matrix for the common predictors</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>dm = design_matrices(&quot;y1 ~ g&quot;, data, )
+<span></span>dm = design_matrices(&quot;x&quot;, data)
 dm.common.as_dataframe().head()
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Intercept</th>
+      <th>x</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1.0</td>
+      <td>-0.351447</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1.0</td>
+      <td>-0.431129</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1.0</td>
+      <td>-0.412738</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1.0</td>
+      <td>0.574337</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1.0</td>
+      <td>1.561390</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+</section>
+<section id="Categorical-predictors">
+<h2>Categorical predictors<a class="headerlink" href="#Categorical-predictors" title="Permalink to this headline">¶</a></h2>
+<p>Variables with categorical type in the data frame are recognized and handled as such. If there’s a numerical variable that should be interpreted as categorical and you don’t want to manipulate your data manually, you can wrap the name of the variable with <code class="docutils literal notranslate"><span class="pre">C()</span></code>, like <code class="docutils literal notranslate"><span class="pre">C(variable)</span></code>, and formulae will convert it to the categorical type.</p>
+<p>Categorical predictors are encoded using reference level encoding (i.e. the first level is taken as baseline). This way, the resulting design matrix is of full-rank.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span>dm = design_matrices(&quot;g&quot;, data)
+dm.common.as_dataframe().head()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -842,8 +914,8 @@ dm.common.as_dataframe().head()
     <tr>
       <th>2</th>
       <td>1.0</td>
-      <td>0.0</td>
       <td>1.0</td>
+      <td>0.0</td>
     </tr>
     <tr>
       <th>3</th>
@@ -854,7 +926,7 @@ dm.common.as_dataframe().head()
     <tr>
       <th>4</th>
       <td>1.0</td>
-      <td>1.0</td>
+      <td>0.0</td>
       <td>0.0</td>
     </tr>
   </tbody>
@@ -863,17 +935,17 @@ dm.common.as_dataframe().head()
 </div>
 <p>But if we don’t have an intercept term, there’s no need to use reference encoding for the categorical variables to avoid linear dependencies between the columns and formulae uses cell-means encoding.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>dm = design_matrices(&quot;y1 ~ 0 + g&quot;, data)
+<span></span>dm = design_matrices(&quot;0 + g&quot;, data)
 dm.common.as_dataframe().head()
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -916,8 +988,8 @@ dm.common.as_dataframe().head()
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>0</td>
       <td>1</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>3</th>
@@ -927,8 +999,8 @@ dm.common.as_dataframe().head()
     </tr>
     <tr>
       <th>4</th>
-      <td>0</td>
       <td>1</td>
+      <td>0</td>
       <td>0</td>
     </tr>
   </tbody>
@@ -937,17 +1009,17 @@ dm.common.as_dataframe().head()
 </div>
 <p>Suppose that <code class="docutils literal notranslate"><span class="pre">z</span></code> actually represents a certain categorization represented by numbers. We can use <code class="docutils literal notranslate"><span class="pre">&quot;y1</span> <span class="pre">~</span> <span class="pre">C(z)&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">z</span></code> will be internally interpreted as categorical instead of numeric.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>dm = design_matrices(&quot;y1 ~ C(z)&quot;, data)
+<span></span>dm = design_matrices(&quot;C(z)&quot;, data)
 dm.common.as_dataframe().head()
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -978,32 +1050,32 @@ dm.common.as_dataframe().head()
     <tr>
       <th>0</th>
       <td>1.0</td>
-      <td>1.0</td>
       <td>0.0</td>
+      <td>1.0</td>
     </tr>
     <tr>
       <th>1</th>
       <td>1.0</td>
-      <td>1.0</td>
       <td>0.0</td>
+      <td>1.0</td>
     </tr>
     <tr>
       <th>2</th>
       <td>1.0</td>
-      <td>0.0</td>
+      <td>1.0</td>
       <td>0.0</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1.0</td>
       <td>0.0</td>
-      <td>0.0</td>
+      <td>1.0</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1.0</td>
       <td>0.0</td>
-      <td>0.0</td>
+      <td>1.0</td>
     </tr>
   </tbody>
 </table>
@@ -1011,19 +1083,19 @@ dm.common.as_dataframe().head()
 </div>
 <p>By default, the <code class="docutils literal notranslate"><span class="pre">C()</span></code> wrapper takes the first level as the reference level (after being sorted with <code class="docutils literal notranslate"><span class="pre">sorted()</span></code>), but we can override this by passing a list with a custom ordering.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span># 2 is taken as baseline, and then it comes 3 and 1.
-lvls = [2, 3, 1]
-dm = design_matrices(&quot;y1 ~ C(z, levels=lvls)&quot;, data)
+lvl = [2, 3, 1]
+dm = design_matrices(&quot;C(z, levels=lvl)&quot;, data)
 dm.common.as_dataframe().head()
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1046,58 +1118,58 @@ dm.common.as_dataframe().head()
     <tr style="text-align: right;">
       <th></th>
       <th>Intercept</th>
-      <th>C(z, levels = lvls)[3]</th>
-      <th>C(z, levels = lvls)[1]</th>
+      <th>C(z, levels = lvl)[3]</th>
+      <th>C(z, levels = lvl)[1]</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>1.0</td>
-      <td>0.0</td>
+      <td>1.0</td>
       <td>0.0</td>
     </tr>
     <tr>
       <th>1</th>
       <td>1.0</td>
-      <td>0.0</td>
+      <td>1.0</td>
       <td>0.0</td>
     </tr>
     <tr>
       <th>2</th>
       <td>1.0</td>
       <td>0.0</td>
-      <td>1.0</td>
+      <td>0.0</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1.0</td>
-      <td>0.0</td>
       <td>1.0</td>
+      <td>0.0</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1.0</td>
-      <td>0.0</td>
       <td>1.0</td>
+      <td>0.0</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
-<p>And finally, <code class="docutils literal notranslate"><span class="pre">C()</span></code> also allows us to convert a variable into a <code class="docutils literal notranslate"><span class="pre">0-1</span></code> variable by passing a reference level. In the next chunk of code we use <code class="docutils literal notranslate"><span class="pre">C(z,</span> <span class="pre">2)</span></code>, which means the new variable will be 1 whenever <code class="docutils literal notranslate"><span class="pre">z==2</span></code>, and 0 otherwise.</p>
+<p><code class="docutils literal notranslate"><span class="pre">C()</span></code> also allows us to change only the reference level. In the next chunk of code we use <code class="docutils literal notranslate"><span class="pre">C(z,</span> <span class="pre">2)</span></code> to indicate that we want <code class="docutils literal notranslate"><span class="pre">2</span></code> to be the reference level, and leave all the other levels as default.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>dm = design_matrices(&quot;y1 ~ C(z, 2)&quot;, data)
+<span></span>dm = design_matrices(&quot;C(z, 2)&quot;, data)
 dm.common.as_dataframe().head()
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1120,14 +1192,156 @@ dm.common.as_dataframe().head()
     <tr style="text-align: right;">
       <th></th>
       <th>Intercept</th>
-      <th>C(z, 2)</th>
+      <th>C(z, 2)[1]</th>
+      <th>C(z, 2)[3]</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>1.0</td>
+      <td>0.0</td>
       <td>1.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<p>Finally, if we want to convert one variable into a binary variable, we can use the internal <code class="docutils literal notranslate"><span class="pre">binary()</span></code> function:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span>dm = design_matrices(&quot;binary(z, 2)&quot;, data)
+dm.common.as_dataframe().head()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Intercept</th>
+      <th>binary(z, 2)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1.0</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<p>which also works for categorical variables</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span>dm = design_matrices(&quot;binary(g, &#39;Group 1&#39;)&quot;, data)
+dm.common.as_dataframe().head()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Intercept</th>
+      <th>binary(g, Group 1)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1.0</td>
+      <td>0.0</td>
     </tr>
     <tr>
       <th>1</th>
@@ -1147,28 +1361,28 @@ dm.common.as_dataframe().head()
     <tr>
       <th>4</th>
       <td>1.0</td>
-      <td>0.0</td>
+      <td>1.0</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
-</div>
-<div class="section" id="Adding-interactions">
+</section>
+<section id="Adding-interactions">
 <h2>Adding interactions<a class="headerlink" href="#Adding-interactions" title="Permalink to this headline">¶</a></h2>
 <p>The interaction operator is <code class="docutils literal notranslate"><span class="pre">:</span></code>.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>dm = design_matrices(&quot;y1 ~ x:z&quot;, data)
+<span></span>dm = design_matrices(&quot;x:z&quot;, data)
 dm.common.as_dataframe().head()
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1198,27 +1412,27 @@ dm.common.as_dataframe().head()
     <tr>
       <th>0</th>
       <td>1.0</td>
-      <td>2.723022</td>
+      <td>-1.054341</td>
     </tr>
     <tr>
       <th>1</th>
       <td>1.0</td>
-      <td>2.758118</td>
+      <td>-1.293387</td>
     </tr>
     <tr>
       <th>2</th>
       <td>1.0</td>
-      <td>0.666949</td>
+      <td>-0.825476</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1.0</td>
-      <td>0.171964</td>
+      <td>1.723010</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1.0</td>
-      <td>0.557267</td>
+      <td>4.684170</td>
     </tr>
   </tbody>
 </table>
@@ -1226,17 +1440,17 @@ dm.common.as_dataframe().head()
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">*</span></code> operator is known as the full interaction operator because <code class="docutils literal notranslate"><span class="pre">x*z</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">z</span> <span class="pre">+</span> <span class="pre">x:z</span></code></p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>dm = design_matrices(&quot;y1 ~ x*z&quot;, data)
+<span></span>dm = design_matrices(&quot;x*z&quot;, data)
 dm.common.as_dataframe().head()
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1268,37 +1482,37 @@ dm.common.as_dataframe().head()
     <tr>
       <th>0</th>
       <td>1.0</td>
-      <td>1.361511</td>
-      <td>2.0</td>
-      <td>2.723022</td>
+      <td>-0.351447</td>
+      <td>3.0</td>
+      <td>-1.054341</td>
     </tr>
     <tr>
       <th>1</th>
       <td>1.0</td>
-      <td>1.379059</td>
-      <td>2.0</td>
-      <td>2.758118</td>
+      <td>-0.431129</td>
+      <td>3.0</td>
+      <td>-1.293387</td>
     </tr>
     <tr>
       <th>2</th>
       <td>1.0</td>
-      <td>0.666949</td>
-      <td>1.0</td>
-      <td>0.666949</td>
+      <td>-0.412738</td>
+      <td>2.0</td>
+      <td>-0.825476</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1.0</td>
-      <td>0.171964</td>
-      <td>1.0</td>
-      <td>0.171964</td>
+      <td>0.574337</td>
+      <td>3.0</td>
+      <td>1.723010</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1.0</td>
-      <td>0.557267</td>
-      <td>1.0</td>
-      <td>0.557267</td>
+      <td>1.561390</td>
+      <td>3.0</td>
+      <td>4.684170</td>
     </tr>
   </tbody>
 </table>
@@ -1306,17 +1520,17 @@ dm.common.as_dataframe().head()
 </div>
 <p>And both interaction operators can be used with mixtures of numerical and categorical variables.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>dm = design_matrices(&quot;y1 ~ 0 + x*g&quot;, data)
+<span></span>dm = design_matrices(&quot;0 + x*g&quot;, data)
 dm.common.as_dataframe().head()
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1349,69 +1563,70 @@ dm.common.as_dataframe().head()
   <tbody>
     <tr>
       <th>0</th>
-      <td>1.361511</td>
+      <td>-0.351447</td>
       <td>0.0</td>
       <td>1.0</td>
       <td>0.0</td>
-      <td>1.361511</td>
-      <td>0.000000</td>
+      <td>-0.351447</td>
+      <td>-0.0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>1.379059</td>
+      <td>-0.431129</td>
       <td>1.0</td>
       <td>0.0</td>
       <td>0.0</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
+      <td>-0.000000</td>
+      <td>-0.0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>0.666949</td>
-      <td>0.0</td>
+      <td>-0.412738</td>
       <td>0.0</td>
       <td>1.0</td>
-      <td>0.000000</td>
-      <td>0.666949</td>
+      <td>0.0</td>
+      <td>-0.412738</td>
+      <td>-0.0</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>0.171964</td>
+      <td>0.574337</td>
       <td>0.0</td>
       <td>1.0</td>
       <td>0.0</td>
-      <td>0.171964</td>
-      <td>0.000000</td>
+      <td>0.574337</td>
+      <td>0.0</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>0.557267</td>
-      <td>0.0</td>
+      <td>1.561390</td>
       <td>1.0</td>
       <td>0.0</td>
-      <td>0.557267</td>
+      <td>0.0</td>
       <td>0.000000</td>
+      <td>0.0</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
-</div>
-<div class="section" id="Function-calls">
+</section>
+<section id="Function-calls">
 <h2>Function calls<a class="headerlink" href="#Function-calls" title="Permalink to this headline">¶</a></h2>
-<p>A term does not need to be just a variable in a pandas data frame. It can also be the result of a function call.</p>
+<p>A term does not need to be just a variable in a data frame. It can also be the result of a function call. Formulae allows you to built-in functions as well as functions available from the top-level environment where <code class="docutils literal notranslate"><span class="pre">design_matrices</span></code> is being called.</p>
+<p>Since we’ve loaded the NumPy library as <code class="docutils literal notranslate"><span class="pre">np</span></code>, we can access its namespace as we would do in regular Python code.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>dm = design_matrices(&quot;y1 ~ np.exp(x)&quot;, data)
+<span></span>dm = design_matrices(&quot;np.exp(x)&quot;, data)
 dm.common.as_dataframe().head()
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1441,48 +1656,48 @@ dm.common.as_dataframe().head()
     <tr>
       <th>0</th>
       <td>1.0</td>
-      <td>3.902084</td>
+      <td>0.703669</td>
     </tr>
     <tr>
       <th>1</th>
       <td>1.0</td>
-      <td>3.971164</td>
+      <td>0.649775</td>
     </tr>
     <tr>
       <th>2</th>
       <td>1.0</td>
-      <td>1.948285</td>
+      <td>0.661836</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1.0</td>
-      <td>1.187635</td>
+      <td>1.775952</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1.0</td>
-      <td>1.745894</td>
+      <td>4.765441</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
-<p>Or the result of calling a custom function.</p>
+<p>We can also use our own custom functions</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span>def add(x, how_much):
     return x + how_much
 
-dm = design_matrices(&quot;y1 ~ add(x, 10)&quot;, data)
+dm = design_matrices(&quot;add(x, 10)&quot;, data)
 dm.common.as_dataframe().head()
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1512,27 +1727,27 @@ dm.common.as_dataframe().head()
     <tr>
       <th>0</th>
       <td>1.0</td>
-      <td>11.361511</td>
+      <td>9.648553</td>
     </tr>
     <tr>
       <th>1</th>
       <td>1.0</td>
-      <td>11.379059</td>
+      <td>9.568871</td>
     </tr>
     <tr>
       <th>2</th>
       <td>1.0</td>
-      <td>10.666949</td>
+      <td>9.587262</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1.0</td>
-      <td>10.171964</td>
+      <td>10.574337</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1.0</td>
-      <td>10.557267</td>
+      <td>11.561390</td>
     </tr>
   </tbody>
 </table>
@@ -1540,17 +1755,17 @@ dm.common.as_dataframe().head()
 </div>
 <p>Or even nested function calls!</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>dm = design_matrices(&quot;y1 ~ add(np.exp(x), 5)&quot;, data)
+<span></span>dm = design_matrices(&quot;add(np.exp(x), 5)&quot;, data)
 dm.common.as_dataframe().head()
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1580,48 +1795,54 @@ dm.common.as_dataframe().head()
     <tr>
       <th>0</th>
       <td>1.0</td>
-      <td>8.902084</td>
+      <td>5.703669</td>
     </tr>
     <tr>
       <th>1</th>
       <td>1.0</td>
-      <td>8.971164</td>
+      <td>5.649775</td>
     </tr>
     <tr>
       <th>2</th>
       <td>1.0</td>
-      <td>6.948285</td>
+      <td>5.661836</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1.0</td>
-      <td>6.187635</td>
+      <td>6.775952</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1.0</td>
-      <td>6.745894</td>
+      <td>9.765441</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
-</div>
-<div class="section" id="Built-in-transformations">
+</section>
+<section id="Built-in-transformations">
 <h2>Built-in transformations<a class="headerlink" href="#Built-in-transformations" title="Permalink to this headline">¶</a></h2>
-<p>There are only two built-in transformations (for now!) that are commonly used when doing statistical modeling. These are <code class="docutils literal notranslate"><span class="pre">center()</span></code> and <code class="docutils literal notranslate"><span class="pre">scale()</span></code>. They center and standardize a variable, respectively.</p>
+<p>Formulae comes with some built-in transformations that come very handy when doing statistical modeling. These functions are</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">center()</span></code>: Centers the variable around its mean.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale()</span></code>: Centers the variable around its mean and divides it by its standard deviation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">standardize()</span></code>: An alias for <code class="docutils literal notranslate"><span class="pre">scale()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bs()</span></code>: Create a Basis Spline, a.k.a. B-Spline.</p></li>
+</ul>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>dm = design_matrices(&quot;y1 ~ scale(x)&quot;, data)
+<span></span>dm = design_matrices(&quot;scale(x)&quot;, data)
 dm.common.as_dataframe().head()
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1651,34 +1872,34 @@ dm.common.as_dataframe().head()
     <tr>
       <th>0</th>
       <td>1.0</td>
-      <td>1.495846</td>
+      <td>-0.732600</td>
     </tr>
     <tr>
       <th>1</th>
       <td>1.0</td>
-      <td>1.527691</td>
+      <td>-0.829284</td>
     </tr>
     <tr>
       <th>2</th>
       <td>1.0</td>
-      <td>0.235417</td>
+      <td>-0.806969</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1.0</td>
-      <td>-0.662840</td>
+      <td>0.390720</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1.0</td>
-      <td>0.036374</td>
+      <td>1.588384</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1694,25 +1915,172 @@ print(np.mean(dm.common.as_dataframe()[&quot;scale(x)&quot;]))
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 1.0
--3.8857805861880476e-17
+-2.2204460492503132e-17
 </pre></div></div>
 </div>
-<p>These transformations are known as <strong>stateful transformations</strong> because they remember the original values of parameters involved in the transformation (the mean and the standard deviation). This feature is critical when one wants to derive a design matrix based on new data, as required when evaluating the fit of a model on a new dataset.</p>
-<div class="section" id="Suppresing-the-default-intercept">
-<h3>Suppresing the default intercept<a class="headerlink" href="#Suppresing-the-default-intercept" title="Permalink to this headline">¶</a></h3>
-<p>By default, formulae includes an intercept in the resulting desing matrix. But this can be ommited. Just add a <code class="docutils literal notranslate"><span class="pre">0</span></code> to the model formula as in the following example.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>dm = design_matrices(&quot;y1 ~ 0 + x&quot;, data)
+<span></span>dm = design_matrices(&quot;bs(x, df=6)&quot;, data)
+dm.common.as_dataframe()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Intercept</th>
+      <th>bs(x, df = 6)[0]</th>
+      <th>bs(x, df = 6)[1]</th>
+      <th>bs(x, df = 6)[2]</th>
+      <th>bs(x, df = 6)[3]</th>
+      <th>bs(x, df = 6)[4]</th>
+      <th>bs(x, df = 6)[5]</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1.0</td>
+      <td>0.281092</td>
+      <td>0.655237</td>
+      <td>0.063433</td>
+      <td>0.000237</td>
+      <td>0.000000</td>
+      <td>0.000000e+00</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1.0</td>
+      <td>0.703742</td>
+      <td>0.086820</td>
+      <td>0.000757</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000e+00</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1.0</td>
+      <td>0.737838</td>
+      <td>0.240873</td>
+      <td>0.004644</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000e+00</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1.0</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.359380</td>
+      <td>0.502344</td>
+      <td>0.138276</td>
+      <td>1.039084e-07</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1.0</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.005325</td>
+      <td>0.092999</td>
+      <td>0.470374</td>
+      <td>4.313026e-01</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>1.0</td>
+      <td>0.312950</td>
+      <td>0.631876</td>
+      <td>0.055013</td>
+      <td>0.000161</td>
+      <td>0.000000</td>
+      <td>0.000000e+00</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>1.0</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000e+00</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>1.0</td>
+      <td>0.000000</td>
+      <td>0.296984</td>
+      <td>0.611161</td>
+      <td>0.090700</td>
+      <td>0.001155</td>
+      <td>0.000000e+00</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>1.0</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>1.000000e+00</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>1.0</td>
+      <td>0.000000</td>
+      <td>0.000008</td>
+      <td>0.380123</td>
+      <td>0.494494</td>
+      <td>0.125375</td>
+      <td>0.000000e+00</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<p>These transformations are known as <strong>stateful transformations</strong> because they remember the original values of parameters involved in the transformation (the mean and the standard deviation). This feature is critical when one wants to derive a design matrix based on new data, as required when evaluating the fit of a model on a new dataset.</p>
+<section id="Suppresing-the-default-intercept">
+<h3>Suppresing the default intercept<a class="headerlink" href="#Suppresing-the-default-intercept" title="Permalink to this headline">¶</a></h3>
+<p>By default, formulae includes an intercept in the resulting desing matrix. But this can be ommited. Just add a <code class="docutils literal notranslate"><span class="pre">0</span></code> to the model formula as in the following example.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span>dm = design_matrices(&quot;0 + x&quot;, data)
 dm.common.as_dataframe().head()
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1740,46 +2108,46 @@ dm.common.as_dataframe().head()
   <tbody>
     <tr>
       <th>0</th>
-      <td>1.361511</td>
+      <td>-0.351447</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>1.379059</td>
+      <td>-0.431129</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>0.666949</td>
+      <td>-0.412738</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>0.171964</td>
+      <td>0.574337</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>0.557267</td>
+      <td>1.561390</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">&quot;y1</span> <span class="pre">~</span> <span class="pre">-1</span> <span class="pre">+</span> <span class="pre">x&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;y1</span> <span class="pre">~</span> <span class="pre">x</span> <span class="pre">-</span> <span class="pre">1&quot;</span></code> are equivalent alternatives.</p>
-</div>
-</div>
-<div class="section" id="Operations-between-terms">
+</section>
+</section>
+<section id="Operations-between-terms">
 <h2>Operations between terms<a class="headerlink" href="#Operations-between-terms" title="Permalink to this headline">¶</a></h2>
 <p>It is possible someone wants to use a term that is the result of adding two other terms, such as <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">z</span></code>. However, if we do <code class="docutils literal notranslate"><span class="pre">&quot;y</span> <span class="pre">~</span> <span class="pre">x</span> <span class="pre">+</span> <span class="pre">z&quot;</span></code>, formulae will understand we want a model with two predictor terms, <code class="docutils literal notranslate"><span class="pre">x</span></code>, and <code class="docutils literal notranslate"><span class="pre">z</span></code>. Fortunately, there are two (equivalent) ways of telling formulae that we want a term that is the result of performing operations between other terms. This can be achieved either by using the <code class="docutils literal notranslate"><span class="pre">I()</span></code> wrapper or its shorthand <code class="docutils literal notranslate"><span class="pre">{}</span></code>.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>dm = design_matrices(&quot;y1 ~ I(x + z)&quot;, data)
+<span></span>dm = design_matrices(&quot;I(x + z)&quot;, data)
 dm.common.as_dataframe().head()
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1809,44 +2177,44 @@ dm.common.as_dataframe().head()
     <tr>
       <th>0</th>
       <td>1.0</td>
-      <td>3.361511</td>
+      <td>2.648553</td>
     </tr>
     <tr>
       <th>1</th>
       <td>1.0</td>
-      <td>3.379059</td>
+      <td>2.568871</td>
     </tr>
     <tr>
       <th>2</th>
       <td>1.0</td>
-      <td>1.666949</td>
+      <td>1.587262</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1.0</td>
-      <td>1.171964</td>
+      <td>3.574337</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1.0</td>
-      <td>1.557267</td>
+      <td>4.561390</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>dm = design_matrices(&quot;y1 ~ {x / z}&quot;, data)
+<span></span>dm = design_matrices(&quot;{x / z}&quot;, data)
 dm.common.as_dataframe().head()
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1876,40 +2244,40 @@ dm.common.as_dataframe().head()
     <tr>
       <th>0</th>
       <td>1.0</td>
-      <td>0.680755</td>
+      <td>-0.117149</td>
     </tr>
     <tr>
       <th>1</th>
       <td>1.0</td>
-      <td>0.689530</td>
+      <td>-0.143710</td>
     </tr>
     <tr>
       <th>2</th>
       <td>1.0</td>
-      <td>0.666949</td>
+      <td>-0.206369</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1.0</td>
-      <td>0.171964</td>
+      <td>0.191446</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1.0</td>
-      <td>0.557267</td>
+      <td>0.520463</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <p>As you may have noticed, the output shows <code class="docutils literal notranslate"><span class="pre">I()</span></code> instead of <code class="docutils literal notranslate"><span class="pre">{}</span></code>. That’s because <code class="docutils literal notranslate"><span class="pre">{}</span></code> is translated into <code class="docutils literal notranslate"><span class="pre">I()</span></code> internally.</p>
-</div>
-<div class="section" id="Categorical-responses">
+</section>
+<section id="Categorical-responses">
 <h2>Categorical responses<a class="headerlink" href="#Categorical-responses" title="Permalink to this headline">¶</a></h2>
-<p>Currently, formulae converts categorical responses into a binary representation. If the LHS of the formula is a categorical variable with more than two levels, the first level will be represented by a 1, and the rest will be represented by a 0.</p>
-<p>Recall <code class="docutils literal notranslate"><span class="pre">y2</span></code> is a categorical variable with levels <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">B</span></code> and <code class="docutils literal notranslate"><span class="pre">C</span></code>. In this case, formulae will interpret <code class="docutils literal notranslate"><span class="pre">A</span></code> as the reference class and it will be represented by a 1. All the rest are represented with a 0.</p>
+<p>Formulae can work with categorical responses with 2 or more levels. When the variable contains only two levels, formulae flags it as binary.</p>
+<p>Recall <code class="docutils literal notranslate"><span class="pre">y2</span></code> is a categorical variable with levels <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">B</span></code> and <code class="docutils literal notranslate"><span class="pre">C</span></code>. In this case, formulae will interpret <code class="docutils literal notranslate"><span class="pre">A</span></code> as the reference level and will set the <code class="docutils literal notranslate"><span class="pre">binary</span></code> flag to <code class="docutils literal notranslate"><span class="pre">False</span></code> since this variable contains more than two categories.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1919,7 +2287,7 @@ dm.response
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -1928,12 +2296,15 @@ ResponseVector(
   name: y2,
   type: categoric,
   length: 10,
-  refclass: A
+  levels: [&#39;A&#39;, &#39;B&#39;, &#39;C&#39;],
+  binary: False,
+  baseline: A
 )
 </pre></div></div>
 </div>
+<p>The <code class="docutils literal notranslate"><span class="pre">.design_vector</span></code> array is a column vector with the indexes of the levels as they appear in the variable.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1942,36 +2313,36 @@ ResponseVector(
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[1],
-       [0],
-       [1],
-       [0],
-       [0],
-       [0],
+array([[2],
        [1],
        [1],
        [1],
-       [0]])
+       [0],
+       [0],
+       [2],
+       [1],
+       [0],
+       [0]], dtype=int8)
 </pre></div></div>
 </div>
-<p>But it is also possible to override the default behavior and indicate the reference level with some syntax sugar. If you say <code class="docutils literal notranslate"><span class="pre">response['level']</span></code>, formulae will take level <code class="docutils literal notranslate"><span class="pre">'level'</span></code> as reference. For example</p>
+<p>It is also possible to override the default behavior and indicate the reference level with some syntax sugar. If you say <code class="docutils literal notranslate"><span class="pre">response[level]</span></code>, formulae will interpret <code class="docutils literal notranslate"><span class="pre">response</span></code> as a binary variable and set the <code class="docutils literal notranslate"><span class="pre">'level'</span></code> category as reference. For example</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>dm = design_matrices(&quot;y2[&#39;B&#39;] ~ x&quot;, data)
+<span></span>dm = design_matrices(&quot;y2[B] ~ x&quot;, data)
 dm.response
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -1980,12 +2351,14 @@ ResponseVector(
   name: y2,
   type: categoric,
   length: 10,
-  refclass: B
+  levels: [&#39;A&#39;, &#39;B&#39;, &#39;C&#39;],
+  binary: True,
+  success: B
 )
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1995,31 +2368,83 @@ dm.response.design_vector
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 array([[0],
        [1],
-       [0],
        [1],
        [1],
        [0],
        [0],
        [0],
+       [1],
        [0],
-       [1]])
+       [0]])
 </pre></div></div>
 </div>
+<p>If it is the case that the reference level contains spaces, we can wrap the response within quotes:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+</pre></div>
 </div>
-<div class="section" id="Group-specific-effects">
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span>dm = design_matrices(&quot;g[&#39;Group 3&#39;] ~ x&quot;, data)
+dm.response
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+ResponseVector(
+  name: g,
+  type: categoric,
+  length: 10,
+  levels: [&#39;Group 1&#39;, &#39;Group 2&#39;, &#39;Group 3&#39;],
+  binary: True,
+  success: Group 3
+)
+</pre></div></div>
+</div>
+<p>As with the predictors, the <code class="docutils literal notranslate"><span class="pre">binary()</span></code> function can be used on the LHS as well</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span>dm = design_matrices(&quot;binary(g, &#39;Group 3&#39;) ~ x&quot;, data)
+dm.response
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+ResponseVector(
+  name: binary(g, Group 3),
+  type: numeric,
+  length: 10
+)
+</pre></div></div>
+</div>
+<p>Note <code class="docutils literal notranslate"><span class="pre">binary()</span></code> outputs a numeric variable, so the response is recognized as numeric instead of categoric.</p>
+</section>
+<section id="Group-specific-effects">
 <h2>Group-specific effects<a class="headerlink" href="#Group-specific-effects" title="Permalink to this headline">¶</a></h2>
-<p>formulae also handles group-specific effects. They are specified using the pipe operator <code class="docutils literal notranslate"><span class="pre">|</span></code>, such as in <a class="reference external" href="https://CRAN.R-project.org/package=lme4">lme4</a> package from R. This terms are of the form <code class="docutils literal notranslate"><span class="pre">(expr|factor)</span></code> where the <code class="docutils literal notranslate"><span class="pre">expr</span></code> represents the effect and <code class="docutils literal notranslate"><span class="pre">factor</span></code> the group. <a class="reference external" href="https://cran.r-project.org/web/packages/lme4/vignettes/lmer.pdf">This vignette</a> from lme4 provides much better information on how this notation works. In a nutshell, group-specific intercepts are specified via
+<p>formulae also handles group-specific effects. They are specified using the pipe operator <code class="docutils literal notranslate"><span class="pre">|</span></code>, similar to the <a class="reference external" href="https://CRAN.R-project.org/package=lme4">lme4</a> R package. These terms are of the form <code class="docutils literal notranslate"><span class="pre">(expr|factor)</span></code> where the <code class="docutils literal notranslate"><span class="pre">expr</span></code> represents the effect and <code class="docutils literal notranslate"><span class="pre">factor</span></code> the group. <a class="reference external" href="https://cran.r-project.org/web/packages/lme4/vignettes/lmer.pdf">This vignette</a> from lme4 provides much better information on how this notation works. In a nutshell, group-specific intercepts are specified via
 <code class="docutils literal notranslate"><span class="pre">(1|group)</span></code> and group-specific slopes are specified via <code class="docutils literal notranslate"><span class="pre">(variable|group)</span></code>. The latter also adds a group-specific intercept by default. This can be overriden doing <code class="docutils literal notranslate"><span class="pre">(0</span> <span class="pre">+</span> <span class="pre">variable|group)</span></code>.</p>
 <p>First, let’s see a formula specifying a common predictor, <code class="docutils literal notranslate"><span class="pre">x</span></code>, and a group-specific intercept for each level of <code class="docutils literal notranslate"><span class="pre">g</span></code>.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2029,7 +2454,7 @@ dm.group
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -2048,7 +2473,7 @@ GroupEffectsMatrix(
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2057,7 +2482,7 @@ GroupEffectsMatrix(
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -2087,59 +2512,59 @@ GroupEffectsMatrix(
     <tr>
       <th>0</th>
       <td>1.0</td>
-      <td>1.361511</td>
+      <td>-0.351447</td>
     </tr>
     <tr>
       <th>1</th>
       <td>1.0</td>
-      <td>1.379059</td>
+      <td>-0.431129</td>
     </tr>
     <tr>
       <th>2</th>
       <td>1.0</td>
-      <td>0.666949</td>
+      <td>-0.412738</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1.0</td>
-      <td>0.171964</td>
+      <td>0.574337</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1.0</td>
-      <td>0.557267</td>
+      <td>1.561390</td>
     </tr>
     <tr>
       <th>5</th>
       <td>1.0</td>
-      <td>0.654634</td>
+      <td>-0.357137</td>
     </tr>
     <tr>
       <th>6</th>
       <td>1.0</td>
-      <td>0.249460</td>
+      <td>-0.453278</td>
     </tr>
     <tr>
       <th>7</th>
       <td>1.0</td>
-      <td>-0.626812</td>
+      <td>-0.039111</td>
     </tr>
     <tr>
       <th>8</th>
       <td>1.0</td>
-      <td>0.619571</td>
+      <td>1.882748</td>
     </tr>
     <tr>
       <th>9</th>
       <td>1.0</td>
-      <td>0.338624</td>
+      <td>0.549615</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2148,26 +2573,26 @@ GroupEffectsMatrix(
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 array([[0., 1., 0.],
        [1., 0., 0.],
-       [0., 0., 1.],
        [0., 1., 0.],
        [0., 1., 0.],
-       [0., 1., 0.],
-       [0., 0., 1.],
        [1., 0., 0.],
+       [0., 1., 0.],
        [0., 0., 1.],
+       [0., 1., 0.],
+       [0., 1., 0.],
        [0., 0., 1.]])
 </pre></div></div>
 </div>
-<p>If we now use <code class="docutils literal notranslate"><span class="pre">(x|g)</span></code> we get both the group-specific slope, as well as the intercept, because it is incldued by default.</p>
+<p>If we now use <code class="docutils literal notranslate"><span class="pre">(x|g)</span></code> we get both the group-specific slope, as well as the intercept, because it is included by default.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2177,7 +2602,7 @@ dm.group
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -2203,7 +2628,7 @@ GroupEffectsMatrix(
 </div>
 <p>We can access the different sub-matrices corresponding to each term as follows</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2212,25 +2637,25 @@ GroupEffectsMatrix(
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 array([[0., 1., 0.],
        [1., 0., 0.],
-       [0., 0., 1.],
        [0., 1., 0.],
        [0., 1., 0.],
-       [0., 1., 0.],
-       [0., 0., 1.],
        [1., 0., 0.],
+       [0., 1., 0.],
        [0., 0., 1.],
+       [0., 1., 0.],
+       [0., 1., 0.],
        [0., 0., 1.]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2239,26 +2664,26 @@ array([[0., 1., 0.],
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[ 0.        ,  1.36151086,  0.        ],
-       [ 1.37905918,  0.        ,  0.        ],
-       [ 0.        ,  0.        ,  0.66694943],
-       [ 0.        ,  0.17196362,  0.        ],
-       [ 0.        ,  0.55726654,  0.        ],
-       [ 0.        ,  0.65463436,  0.        ],
-       [ 0.        ,  0.        ,  0.24945962],
-       [-0.62681223, -0.        , -0.        ],
-       [ 0.        ,  0.        ,  0.61957115],
-       [ 0.        ,  0.        ,  0.33862397]])
+array([[-0.        , -0.351447  , -0.        ],
+       [-0.43112895, -0.        , -0.        ],
+       [-0.        , -0.41273793, -0.        ],
+       [ 0.        ,  0.57433652,  0.        ],
+       [ 1.56139001,  0.        ,  0.        ],
+       [-0.        , -0.35713698, -0.        ],
+       [-0.        , -0.        , -0.45327849],
+       [-0.        , -0.03911089, -0.        ],
+       [ 0.        ,  1.88274763,  0.        ],
+       [ 0.        ,  0.        ,  0.54961543]])
 </pre></div></div>
 </div>
 <p>But as with the common part, this default intercept can be removed</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2268,7 +2693,7 @@ dm.group # note there is no 1|x in the terms
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -2287,26 +2712,26 @@ GroupEffectsMatrix(
 </pre></div></div>
 </div>
 <p>As a final remark, we note that the <code class="docutils literal notranslate"><span class="pre">expr</span></code> part of a group-specific can also be a categorical variable or an interaction. Similar rules apply for the <code class="docutils literal notranslate"><span class="pre">factor</span></code> part.</p>
-</div>
-<div class="section" id="Evaluating-new-data">
+</section>
+<section id="Evaluating-new-data">
 <h2>Evaluating new data<a class="headerlink" href="#Evaluating-new-data" title="Permalink to this headline">¶</a></h2>
-<p>Both <code class="docutils literal notranslate"><span class="pre">CommonEffectsMatrix</span></code> and <code class="docutils literal notranslate"><span class="pre">GroupEffectsMatrix</span></code> are provided with a method that receives a data frame, with the same structure that the original data frame, and returns a new design matrix.</p>
+<p>Both <code class="docutils literal notranslate"><span class="pre">CommonEffectsMatrix</span></code> and <code class="docutils literal notranslate"><span class="pre">GroupEffectsMatrix</span></code> are provided with a method that receives a data frame, with the same structure as the original data frame, and returns a new design matrix.</p>
 <p>Suppose we have measured three variables, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">g</span></code> on some subjects. <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">x</span></code> are numerics, while <code class="docutils literal notranslate"><span class="pre">g</span></code> is a categorical variable that represents some grouping. We also have a model with a common slope, and both varying intercepts and slopes, where we want to standardize the numeric predictor before entering the model. The formula would be <code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">~</span> <span class="pre">scale(x)</span> <span class="pre">+</span> <span class="pre">(scale(x)|g)</span></code>.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span>data = pd.DataFrame({
-    &quot;y&quot;: np.random.normal(size=50),
-    &quot;x&quot;: np.random.normal(loc=200, scale=20, size=50),
-    &quot;g&quot;: np.random.choice([&quot;A&quot;, &quot;B&quot;, &quot;C&quot;], size=50)
+    &quot;y&quot;: rng.normal(size=50),
+    &quot;x&quot;: rng.normal(loc=200, scale=20, size=50),
+    &quot;g&quot;: rng.choice([&quot;A&quot;, &quot;B&quot;, &quot;C&quot;], size=50)
 })
 </pre></div>
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[41]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2325,20 +2750,20 @@ CommonEffectsMatrix(
   terms: {
     &#39;Intercept&#39;: {
       type: intercept,
-      full_names: [&#39;Intercept&#39;],
-      cols: slice(0, 1, None)
+      cols: slice(0, 1, None),
+      full_names: [&#39;Intercept&#39;]
     },
     &#39;scale(x)&#39;: {
       type: numeric,
-      full_names: [&#39;scale(x)&#39;],
-      cols: slice(1, 2, None)
+      cols: slice(1, 2, None),
+      full_names: [&#39;scale(x)&#39;]
     }
   }
 )
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2372,19 +2797,19 @@ GroupEffectsMatrix(
 </div>
 <p>And now suppose we have new data for a set of new subjects. We can derive both common and group-specific design matrices for these new individuals without having to specify the model again. We can instead use the <code class="docutils literal notranslate"><span class="pre">._evaluate_new_data()</span></code> method. This method takes a data frame and returns either a new <code class="docutils literal notranslate"><span class="pre">CommonEffectsMatrix</span></code> or a new <code class="docutils literal notranslate"><span class="pre">GroupEffectsMatrix</span></code> depending on which object the method was called.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[43]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span>data2 = pd.DataFrame({
-    &quot;x&quot;: np.random.normal(loc=180, scale=20,size=10),
-    &quot;g&quot;: np.random.choice([&quot;A&quot;, &quot;B&quot;, &quot;C&quot;], size=10)
+    &quot;x&quot;: rng.normal(loc=180, scale=20,size=10),
+    &quot;g&quot;: rng.choice([&quot;A&quot;, &quot;B&quot;, &quot;C&quot;], size=10)
 })
 </pre></div>
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[44]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2394,7 +2819,7 @@ common_new
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[44]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -2404,13 +2829,13 @@ CommonEffectsMatrix(
   terms: {
     &#39;Intercept&#39;: {
       type: intercept,
-      full_names: [&#39;Intercept&#39;],
-      cols: slice(0, 1, None)
+      cols: slice(0, 1, None),
+      full_names: [&#39;Intercept&#39;]
     },
     &#39;scale(x)&#39;: {
       type: numeric,
-      full_names: [&#39;scale(x)&#39;],
-      cols: slice(1, 2, None)
+      cols: slice(1, 2, None),
+      full_names: [&#39;scale(x)&#39;]
     }
   }
 )
@@ -2418,7 +2843,7 @@ CommonEffectsMatrix(
 </div>
 <p>And if we explore the design matrix for the common terms we notice the scaling of the new data used the mean and standard deviation <code class="docutils literal notranslate"><span class="pre">x</span></code> in the first dataset.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[45]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2427,7 +2852,7 @@ CommonEffectsMatrix(
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[45]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -2457,52 +2882,52 @@ CommonEffectsMatrix(
     <tr>
       <th>0</th>
       <td>1.0</td>
-      <td>0.093144</td>
+      <td>-1.111751</td>
     </tr>
     <tr>
       <th>1</th>
       <td>1.0</td>
-      <td>-0.792722</td>
+      <td>-1.113193</td>
     </tr>
     <tr>
       <th>2</th>
       <td>1.0</td>
-      <td>-1.275461</td>
+      <td>-0.820436</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1.0</td>
-      <td>-1.891837</td>
+      <td>-2.196410</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1.0</td>
-      <td>-1.410180</td>
+      <td>-2.131558</td>
     </tr>
     <tr>
       <th>5</th>
       <td>1.0</td>
-      <td>-1.762914</td>
+      <td>-1.244299</td>
     </tr>
     <tr>
       <th>6</th>
       <td>1.0</td>
-      <td>0.065393</td>
+      <td>-1.076445</td>
     </tr>
     <tr>
       <th>7</th>
       <td>1.0</td>
-      <td>-3.441713</td>
+      <td>-0.859853</td>
     </tr>
     <tr>
       <th>8</th>
       <td>1.0</td>
-      <td>-2.492593</td>
+      <td>-0.012279</td>
     </tr>
     <tr>
       <th>9</th>
       <td>1.0</td>
-      <td>-3.075939</td>
+      <td>-0.351255</td>
     </tr>
   </tbody>
 </table>
@@ -2510,7 +2935,7 @@ CommonEffectsMatrix(
 </div>
 <p>Something similar can be done with the group-specific part.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[46]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2520,7 +2945,7 @@ group_new
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[46]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -2545,7 +2970,7 @@ GroupEffectsMatrix(
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[41]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[47]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2554,55 +2979,47 @@ GroupEffectsMatrix(
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[41]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[47]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[ 0.        ,  0.        ,  0.09314421],
-       [-0.        , -0.        , -0.7927217 ],
-       [-0.        , -0.        , -1.27546133],
-       [-0.        , -0.        , -1.89183665],
-       [-0.        , -0.        , -1.41018013],
-       [-1.76291403, -0.        , -0.        ],
-       [ 0.        ,  0.        ,  0.06539344],
-       [-0.        , -3.44171315, -0.        ],
-       [-0.        , -0.        , -2.49259338],
-       [-0.        , -0.        , -3.07593863]])
+array([[-0.        , -1.11175056, -0.        ],
+       [-0.        , -1.11319326, -0.        ],
+       [-0.        , -0.        , -0.82043629],
+       [-2.19640995, -0.        , -0.        ],
+       [-0.        , -2.13155813, -0.        ],
+       [-1.24429866, -0.        , -0.        ],
+       [-1.07644467, -0.        , -0.        ],
+       [-0.        , -0.85985319, -0.        ],
+       [-0.01227858, -0.        , -0.        ],
+       [-0.35125497, -0.        , -0.        ]])
 </pre></div></div>
 </div>
-<p>Why the first column of zeros? Well, it looks like there’s nobody in the new data has <code class="docutils literal notranslate"><span class="pre">g</span> <span class="pre">==</span> <span class="pre">&quot;A&quot;</span></code></p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>data2[&quot;g&quot;].values
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-array([&#39;C&#39;, &#39;C&#39;, &#39;C&#39;, &#39;C&#39;, &#39;C&#39;, &#39;A&#39;, &#39;C&#39;, &#39;B&#39;, &#39;C&#39;, &#39;C&#39;], dtype=object)
-</pre></div></div>
-</div>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>
               
               
-              <div class='prev-next-bottom'>
-                
-    <a class='left-prev' id="prev-link" href="../index.html" title="previous page">Dependencies</a>
-    <a class='right-next' id="next-link" href="../api_reference.html" title="next page">API Reference</a>
-
-              </div>
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'> 
+    <a class='left-prev' id="prev-link" href="../index.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Dependencies</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="../api_reference.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">API Reference</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
               
           </main>
           
@@ -2610,20 +3027,19 @@ array([&#39;C&#39;, &#39;C&#39;, &#39;C&#39;, &#39;C&#39;, &#39;C&#39;, &#39;A&#
       </div>
     </div>
   
-  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
-
-  <footer class="footer mt-5 mt-md-0">
+  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2021, The developers of Bambi.<br/>
+    &copy; Copyright 2021, The developers of Bambi.<br>
 </p>
     </div>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.<br/>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.1.<br>
 </p>
     </div>
     

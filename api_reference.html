@@ -1,13 +1,15 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
-    <title>API Reference &#8212; Formulae 0.1.4 documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>API Reference &#8212; Formulae 0.2.0 documentation</title>
     
-  <link href="_static/css/theme.css" rel="stylesheet" />
-  <link href="_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+  <link href="_static/css/theme.css" rel="stylesheet">
+  <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -21,25 +23,25 @@
       
 
     
-    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/blank.css" />
     
-  <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
+  <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
 
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Internals" href="internals.html" />
     <link rel="prev" title="Getting started" href="notebooks/getting_started.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
     
   </head>
   <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
@@ -188,17 +190,17 @@
               
               <div>
                 
-  <div class="section" id="api-reference">
+  <section id="api-reference">
 <h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
 <p>This reference provides detailed documentation for all modules, classes, and
 methods in the current release of formulae.</p>
 <div class="toctree-wrapper compound">
 </div>
-<div class="section" id="module-formulae">
+<section id="module-formulae">
 <span id="formulae"></span><h2><a class="reference internal" href="#module-formulae" title="formulae"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formulae</span></code></a><a class="headerlink" href="#module-formulae" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="formulae.design_matrices">
-<code class="sig-prename descclassname">formulae.</code><code class="sig-name descname">design_matrices</code><span class="sig-paren">(</span><em class="sig-param">formula</em>, <em class="sig-param">data</em>, <em class="sig-param">na_action='drop'</em>, <em class="sig-param">eval_env=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#design_matrices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#formulae.design_matrices" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="formulae.design_matrices">
+<span class="sig-prename descclassname"><span class="pre">formulae.</span></span><span class="sig-name descname"><span class="pre">design_matrices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">formula</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">na_action</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'drop'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#design_matrices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.design_matrices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse model formula and obtain a <code class="docutils literal notranslate"><span class="pre">DesignMatrices</span></code> object containing objects representing
 the response and the design matrices for both the common and group specific effects.</p>
 <dl class="field-list simple">
@@ -209,7 +211,7 @@ the response and the design matrices for both the common and group specific effe
 <li><p><strong>na_action</strong> (<em>string</em>) – Describes what to do with missing values in <code class="docutils literal notranslate"><span class="pre">data</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;drop&quot;</span></code> means to drop
 all rows with a missing value, <code class="docutils literal notranslate"><span class="pre">&quot;error&quot;</span></code> means to raise an error. Defaults
 to <code class="docutils literal notranslate"><span class="pre">&quot;drop&quot;</span></code>.</p></li>
-<li><p><strong>eval_env</strong> (<em>integer</em>) – The number of environments we walk up in the stack starting from the function’s caller
+<li><p><strong>env</strong> (<em>integer</em>) – The number of environments we walk up in the stack starting from the function’s caller
 to capture the environment where formula is evaluated. Defaults to 0 which means
 the evaluation environment is the environment where <code class="docutils literal notranslate"><span class="pre">design_matrices</span></code> is called.</p></li>
 </ul>
@@ -224,9 +226,9 @@ the evaluation environment is the environment where <code class="docutils litera
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="formulae.model_description">
-<code class="sig-prename descclassname">formulae.</code><code class="sig-name descname">model_description</code><span class="sig-paren">(</span><em class="sig-param">formula</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/model_description.html#model_description"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#formulae.model_description" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="formulae.model_description">
+<span class="sig-prename descclassname"><span class="pre">formulae.</span></span><span class="sig-name descname"><span class="pre">model_description</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">formula</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/model_description.html#model_description"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.model_description" title="Permalink to this definition">¶</a></dt>
 <dd><p>Interpret model formula and obtain a model description.</p>
 <p>This function receives a string with a formula describing a statistical
 model and returns an object of class ModelTerms that describes the
@@ -244,25 +246,25 @@ model interpreted from the formula.</p>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-formulae.matrices">
+</section>
+<section id="module-formulae.matrices">
 <span id="formulae-matrices"></span><h2><a class="reference internal" href="#module-formulae.matrices" title="formulae.matrices"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formulae.matrices</span></code></a><a class="headerlink" href="#module-formulae.matrices" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="formulae.matrices.DesignMatrices">
-<em class="property">class </em><code class="sig-prename descclassname">formulae.matrices.</code><code class="sig-name descname">DesignMatrices</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">data</em>, <em class="sig-param">eval_env</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#DesignMatrices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#formulae.matrices.DesignMatrices" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt class="sig sig-object py" id="formulae.matrices.DesignMatrices">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.matrices.</span></span><span class="sig-name descname"><span class="pre">DesignMatrices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#DesignMatrices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.DesignMatrices" title="Permalink to this definition">¶</a></dt>
 <dd><p>A wrapper of the response, the common and group specific effects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<a class="reference internal" href="internals.html#formulae.terms.Model" title="formulae.terms.Model"><em>Model</em></a>) – The model description, the result of calling <code class="docutils literal notranslate"><span class="pre">model_description</span></code>.</p></li>
 <li><p><strong>data</strong> (<em>pandas.DataFrame</em>) – The data frame where variables are taken from.</p></li>
-<li><p><strong>eval_env</strong> (<em>EvalEnvironment</em>) – The environment where values and functions are taken from.</p></li>
+<li><p><strong>env</strong> (<em>Environment</em>) – The environment where values and functions are taken from.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="attribute">
-<dt id="formulae.matrices.DesignMatrices.response">
-<code class="sig-name descname">response</code><a class="headerlink" href="#formulae.matrices.DesignMatrices.response" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="formulae.matrices.DesignMatrices.response">
+<span class="sig-name descname"><span class="pre">response</span></span><a class="headerlink" href="#formulae.matrices.DesignMatrices.response" title="Permalink to this definition">¶</a></dt>
 <dd><p>The response in the model. Access its values with <code class="docutils literal notranslate"><span class="pre">self.response.design_vector</span></code>. It is
 <code class="docutils literal notranslate"><span class="pre">None</span></code> if there is no response term in the model.</p>
 <dl class="field-list simple">
@@ -272,9 +274,9 @@ model interpreted from the formula.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="formulae.matrices.DesignMatrices.common">
-<code class="sig-name descname">common</code><a class="headerlink" href="#formulae.matrices.DesignMatrices.common" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="formulae.matrices.DesignMatrices.common">
+<span class="sig-name descname"><span class="pre">common</span></span><a class="headerlink" href="#formulae.matrices.DesignMatrices.common" title="Permalink to this definition">¶</a></dt>
 <dd><p>The common effects (a.k.a. fixed effects) in the model. The design matrix can be accessed
 with <code class="docutils literal notranslate"><span class="pre">self.common.design_matrix</span></code>. The submatrix for a term is accessed via
 <code class="docutils literal notranslate"><span class="pre">self.common[term_name]</span></code>. It is <code class="docutils literal notranslate"><span class="pre">None</span></code> if there are no common terms in the
@@ -286,9 +288,9 @@ model.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="formulae.matrices.DesignMatrices.group">
-<code class="sig-name descname">group</code><a class="headerlink" href="#formulae.matrices.DesignMatrices.group" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="formulae.matrices.DesignMatrices.group">
+<span class="sig-name descname"><span class="pre">group</span></span><a class="headerlink" href="#formulae.matrices.DesignMatrices.group" title="Permalink to this definition">¶</a></dt>
 <dd><p>The group specific effects (a.k.a. random effects) in the model. The design matrix can be
 accessed with <code class="docutils literal notranslate"><span class="pre">self.group.design_matrix</span></code>. The submatrix for a term is accessed via
 <code class="docutils literal notranslate"><span class="pre">self.group[term_name]</span></code>. It is <code class="docutils literal notranslate"><span class="pre">None</span></code> if there are no group specific terms in the
@@ -302,19 +304,30 @@ model.</p>
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
               </div>
               
               
-              <div class='prev-next-bottom'>
-                
-    <a class='left-prev' id="prev-link" href="notebooks/getting_started.html" title="previous page">Getting started</a>
-    <a class='right-next' id="next-link" href="internals.html" title="next page">Internals</a>
-
-              </div>
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'> 
+    <a class='left-prev' id="prev-link" href="notebooks/getting_started.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Getting started</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="internals.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Internals</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
               
           </main>
           
@@ -322,20 +335,19 @@ model.</p>
       </div>
     </div>
   
-  <script src="_static/js/index.1c5a1a01449ed65a7b51.js"></script>
-
-  <footer class="footer mt-5 mt-md-0">
+  <script src="_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2021, The developers of Bambi.<br/>
+    &copy; Copyright 2021, The developers of Bambi.<br>
 </p>
     </div>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.<br/>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.1.<br>
 </p>
     </div>
     
