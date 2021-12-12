@@ -26,18 +26,18 @@ class Variable:
     def __init__(self, name, level=None, is_response=False):
         self.data = None
         self._intermediate_data = None
-        self._type = None
+        self.kind = None
         self.is_response = is_response
         self.name = name
         self.level = level
 
     def __hash__(self):
-        return hash((self._type, self.name, self.level))
+        return hash((self.kind, self.name, self.level))
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return self._type == other._type and self.name == other.name and self.level == other.level
+        return self.kind == other.kind and self.name == other.name and self.level == other.level
 
     def __repr__(self):
         return self.__str__()
@@ -58,7 +58,7 @@ class Variable:
     def set_type(self, data_mask):
         """Detemines the type of the variable.
 
-        Looks for the name of the variable in ``data_mask`` and sets the ``.type_`` property to
+        Looks for the name of the variable in ``data_mask`` and sets the ``.kind`` property to
         ``"numeric"`` or ``"categoric"`` depending on the type of the variable.
         It also stores the result of the intermediate evaluation in ``self._intermediate_data`` to
         save computing time later.
@@ -70,11 +70,11 @@ class Variable:
         """
         x = data_mask[self.name]
         if is_numeric_dtype(x):
-            self._type = "numeric"
+            self.kind = "numeric"
             if self.level is not None:
                 raise ValueError("Subset notation can't be used with a numeric variable.")
         elif is_string_dtype(x) or is_categorical_dtype(x):
-            self._type = "categoric"
+            self.kind = "categoric"
         else:
             raise ValueError(f"Variable is of an unrecognized type ({type(x)}).")
         self._intermediate_data = x
@@ -92,13 +92,13 @@ class Variable:
         """
 
         try:
-            if self._type is None:
+            if self.kind is None:
                 raise ValueError("Variable type is not set.")
-            if self._type not in ["numeric", "categoric"]:
-                raise ValueError(f"Variable is of an unrecognized type ({self._type}).")
-            if self._type == "numeric":
+            if self.kind not in ["numeric", "categoric"]:
+                raise ValueError(f"Variable is of an unrecognized type ({self.kind}).")
+            if self.kind == "numeric":
                 self.data = self._eval_numeric(self._intermediate_data)
-            elif self._type == "categoric":
+            elif self.kind == "categoric":
                 self.data = self._eval_categoric(self._intermediate_data, encoding)
         except:
             print("Unexpected error while trying to evaluate a Variable.", sys.exc_info()[0])
@@ -119,7 +119,7 @@ class Variable:
         Returns
         ----------
         result: dict
-            A dictionary with keys ``"value"`` and ``"type"``. The first contains the result of the
+            A dictionary with keys ``"value"`` and ``"kind"``. The first contains the result of the
             evaluation, and the latter is equal to ``"numeric"``.
         """
         if isinstance(x, np.ndarray):
@@ -130,7 +130,7 @@ class Variable:
             value = np.atleast_2d(x.to_numpy()).T
         else:
             raise ValueError(f"Variable is of an unrecognized type ({type(x)}).")
-        return {"value": value, "type": "numeric"}
+        return {"value": value, "kind": "numeric"}
 
     def _eval_categoric(self, x, encoding):
         """Finishes evaluation of a categoric variable.
@@ -149,7 +149,7 @@ class Variable:
         Returns
         ----------
         result: dict
-            A dictionary with keys ``"value"``, ``"type"``, ``"levels"``, ``"reference"``, and
+            A dictionary with keys ``"value"``, ``"kind"``, ``"levels"``, ``"reference"``, and
             ``"encoding"``. They represent the result of the evaluation, the type, which is
             ``"categoric"``, the levels observed in the variable, the level used as reference when
             using reduced encoding, and whether the encoding is ``"full"`` or ``"reduced"``.
@@ -188,7 +188,7 @@ class Variable:
                 encoding = "reduced"
         return {
             "value": value,
-            "type": "categoric",
+            "kind": "categoric",
             "levels": levels,
             "reference": reference,
             "encoding": encoding,
@@ -216,7 +216,7 @@ class Variable:
         if self.data is None:
             raise ValueError("self.data is None. This error shouldn't have happened!")
         x = data_mask[self.name]
-        if self._type == "numeric":
+        if self.kind == "numeric":
             return self._eval_numeric(x)["value"]
         else:
             return self._eval_new_data_categoric(x)

@@ -24,7 +24,7 @@ class Parser:
         # pass options to understand custom functionality
 
     def at_end(self):
-        return self.peek().type == "EOF"
+        return self.peek().kind == "EOF"
 
     def advance(self):  # pylint: disable=inconsistent-return-statements
         if not self.at_end():
@@ -43,7 +43,7 @@ class Parser:
         # Checks multiple types at once
         if self.at_end():
             return False
-        return self.peek().type in listify(types)
+        return self.peek().kind in listify(types)
 
     def match(self, types):
         if self.check(types):
@@ -52,14 +52,14 @@ class Parser:
         else:
             return False
 
-    def consume(self, _type, message):
+    def consume(self, kind, message):
         """Consumes the next Token
 
-        First, it checks if the next Token is of the expected type.
+        First, it checks if the next Token is of the expected kind.
         If True, it calls self.advance() and it's Saul Goodman.
         Otherwise, we've found an error.
         """
-        if self.check(_type):
+        if self.check(kind):
             return self.advance()
         else:
             raise ParseError(message)

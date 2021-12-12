@@ -86,10 +86,10 @@ class ResponseVector:
         A 1-dimensional numpy array containing the values of the response.
     name: string
         The name of the response term.
-    type: string
+    kind: string
         Either ``"numeric"`` or ``"categoric"``.
     baseline: string
-        The name of the class taken as reference if ``type = "categoric"``.
+        The name of the class taken as reference if ``kind = "categoric"``.
     """
 
     def __init__(self, term):
@@ -98,7 +98,7 @@ class ResponseVector:
         self.env = None
         self.design_vector = None
         self.name = None  # a string
-        self.type = None  # either numeric or categorical
+        self.kind = None  # either numeric or categorical
         self.baseline = None  # Not None for non-binary categorical variables
         self.success = None  # Not None for binary categorical variables
         self.levels = None  # Not None for categorical variables
@@ -114,9 +114,9 @@ class ResponseVector:
         self.term.set_data()
         self.name = self.term.term.name
         self.design_vector = self.term.term.data
-        self.type = self.term.term.metadata["type"]
+        self.kind = self.term.term.metadata["kind"]
 
-        if self.type == "categoric":
+        if self.kind == "categoric":
             self.binary = len(np.unique(self.design_vector)) == 2
             self.levels = self.term.term.metadata["levels"]
             if self.binary:
@@ -125,14 +125,14 @@ class ResponseVector:
                 self.baseline = self.term.term.metadata["reference"]
 
     def _evaluate_new_data(self, data):
-        if self.type == "proportion":
+        if self.kind == "proportion":
             return self.term.term.eval_new_data(data)
-        raise ValueError("Can't evaluate response term with type different to 'proportion'")
+        raise ValueError("Can't evaluate response term with kind different to 'proportion'")
 
     def as_dataframe(self):
         """Returns ``self.design_vector`` as a pandas.DataFrame."""
         data = pd.DataFrame(self.design_vector)
-        if self.type == "categoric":
+        if self.kind == "categoric":
             colname = f"{self.name}[{self.baseline}]"
         else:
             colname = self.name
@@ -145,10 +145,10 @@ class ResponseVector:
     def __str__(self):
         string_list = [
             f"name: {self.name}",
-            f"type: {self.type}",
+            f"kind: {self.kind}",
             f"length: {len(self.design_vector)}",
         ]
-        if self.type == "categoric":
+        if self.kind == "categoric":
             string_list += [f"levels: {self.levels}", f"binary: {self.binary}"]
             if self.binary:
                 string_list += [f"success: {self.success}"]
@@ -176,11 +176,11 @@ class CommonEffectsMatrix:
         A 2-dimensional numpy array containing the values of the design matrix.
     evaluated: bool
         Indicates if the terms have been evaluated at least once. The terms must have been evaluated
-        before calling ``self._evaluate_new_data()`` because we must know the type of each term
+        before calling ``self._evaluate_new_data()`` because we must know the kind of each term
         to correctly handle the new data passed and the terms here.
     terms_info: dict
         A dictionary that holds information related to each of the common specific terms, such as
-        ``"cols"``, ``"type"``, and ``"full_names"``. If ``"type"`` is ``"categoric"``, it also
+        ``"cols"``, ``"kind"``, and ``"full_names"``. If ``"kind"`` is ``"categoric"``, it also
         contains ``"groups"``, ``"encoding"``, ``"levels"``, and ``"reference"``.
         The keys are given by the term names.
     """
@@ -201,7 +201,7 @@ class CommonEffectsMatrix:
         ``self.env``.
 
         It also populates the dictionary ``self.terms_info`` with information related to each term,
-        such as the type, the columns they occupy in the design matrix and the names of the columns.
+        such as the kind, the columns they occupy in the design matrix and the names of the columns.
 
         Parameters
         ----------
@@ -220,7 +220,7 @@ class CommonEffectsMatrix:
         for term in self.model.terms:
             self.terms_info[term.name] = term.metadata
             delta = d[term.name].shape[1]
-            if term._type == "interaction":  # pylint: disable = protected-access
+            if term.kind == "interaction":
                 self.terms_info[term.name]["levels"] = self._interaction_levels(term.name)
             self.terms_info[term.name]["cols"] = slice(start, start + delta)
             self.terms_info[term.name]["full_names"] = self._term_full_names(term.name)
@@ -271,19 +271,19 @@ class CommonEffectsMatrix:
     def _term_full_names(self, name):  # pylint: disable=inconsistent-return-statements
         # Always returns a list
         term = self.terms_info[name]
-        _type = term["type"]
-        if _type == "intercept":
+        kind = term["kind"]
+        if kind == "intercept":
             return ["Intercept"]
-        elif _type in ["numeric", "offset"]:
+        elif kind in ["numeric", "offset"]:
             slice_ = term["cols"]
             slice_n = len(range(slice_.start, slice_.stop))
             # This is the case for a b-spline for example. This could be improved some day
             if slice_n > 1:
                 return [f"{name}[{i}]" for i in range(slice_n)]
             return [name]
-        elif _type == "interaction":
+        elif kind == "interaction":
             return interaction_label(term)
-        elif _type == "categoric":
+        elif kind == "categoric":
             # "levels" is present when we have dummy encoding (not just a vector of 0-1)
             if "levels" in term.keys():
                 # Ask if encoding is "full" or "reduced"
@@ -296,7 +296,7 @@ class CommonEffectsMatrix:
         terms = self.terms_info[name]["terms"]
         colnames = []
         for v in terms.values():
-            if v["type"] == "categoric":
+            if v["kind"] == "categoric":
                 levels = v["levels"] if v["encoding"] == "full" else v["levels"][1:]
                 colnames.append([str(level) for level in levels])
         if colnames:
@@ -356,12 +356,12 @@ class GroupEffectsMatrix:
         A 2 dimensional numpy array with the values of the design matrix.
     evaluated: bool
         Indicates if the terms have been evaluated at least once. The terms must have been evaluated
-        before calling ``self._evaluate_new_data()`` because we must know the type of each term
+        before calling ``self._evaluate_new_data()`` because we must know the kind of each term
         to correctly handle the new data passed and the terms here.
     terms_info: dict
         A dictionary that holds information related to each of the group specific terms, such as
-        the matrices ``"Xi"`` and ``"Ji"``, ``"cols"``, ``"type"``, and ``"full_names"``. If
-        ``"type"`` is ``"categoric"``, it also contains ``"groups"``, ``"encoding"``, ``"levels"``,
+        the matrices ``"Xi"`` and ``"Ji"``, ``"cols"``, ``"kind"``, and ``"full_names"``. If
+        ``"kind"`` is ``"categoric"``, it also contains ``"groups"``, ``"encoding"``, ``"levels"``,
         and ``"reference"``. The keys are given by the term names.
     """
 
@@ -381,7 +381,7 @@ class GroupEffectsMatrix:
         term.
 
         This method also sets the values of ``self.data`` and ``self.env``. It also populates
-        the dictionary ``self.terms_info`` with information related to each term,such as the type,
+        the dictionary ``self.terms_info`` with information related to each term,such as the kind,
         the columns and rows they occupy in the design matrix and the names of the columns.
 
         Parameters
@@ -411,7 +411,7 @@ class GroupEffectsMatrix:
             Z.append(Zi)
             name = term.get_name()
             self.terms_info[name] = {k: v for k, v in d.items() if k != "Zi"}
-            if self.terms_info[name]["type"] == "interaction":  # pylint: disable = protected-access
+            if self.terms_info[name]["kind"] == "interaction":
                 self.terms_info[name]["levels"] = self._interaction_levels(name)
             # Generate term names
             self.terms_info[name]["full_names"] = self._term_full_names(name, term.expr.name)
@@ -469,12 +469,12 @@ class GroupEffectsMatrix:
         # Always returns a list. This should be clearer in the future.
         term = self.terms_info[name]
         groups = term["groups"]
-        if term["type"] in ["intercept", "numeric"]:
+        if term["kind"] in ["intercept", "numeric"]:
             names = [f"{name}[{group}]" for group in groups]
-        elif term["type"] == "interaction":
+        elif term["kind"] == "interaction":
             levels = interaction_label(term)
             names = [f"{level}|{group}" for group in groups for level in levels]
-        elif term["type"] == "categoric":
+        elif term["kind"] == "categoric":
             if "levels" in term.keys():
                 # Ask if encoding is "full" or "reduced"
                 levels = term["levels"] if term["encoding"] == "full" else term["levels"][1:]
@@ -487,7 +487,7 @@ class GroupEffectsMatrix:
         terms = self.terms_info[name]["terms"]
         colnames = []
         for v in terms.values():
-            if v["type"] == "categoric":
+            if v["kind"] == "categoric":
                 levels = v["levels"] if v["encoding"] == "full" else v["levels"][1:]
                 colnames.append([str(level) for level in levels])
         if colnames:
@@ -598,7 +598,7 @@ def design_matrices(formula, data, na_action="drop", env=0):
 
 # Utils
 def term_str(term):
-    if term["type"] == "interaction":
+    if term["kind"] == "interaction":
         string_list = [f"{k}: {v}" for k, v in term.items() if k not in ["terms", "Xi", "Ji"]]
         string_vars = [f"'{k}': {{{spacify(term_str(v))}\n}}" for k, v in term["terms"].items()]
         string = multilinify(string_list + [f"vars: {{{spacify(multilinify(string_vars))}\n}}"])
@@ -611,9 +611,9 @@ def interaction_label(x):
     terms = x["terms"]
     colnames = []
     for k, v in terms.items():
-        if v["type"] == "numeric":
+        if v["kind"] == "numeric":
             colnames.append([k])
-        if v["type"] == "categoric":
+        if v["kind"] == "categoric":
             if "levels" in v.keys():
                 # ask whether encoding is full or reduced
                 if v["encoding"] == "full":

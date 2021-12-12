@@ -37,11 +37,11 @@ def test_variable_set_data_errors():
         x.set_data(True)
 
     with pytest.raises(ValueError):
-        x._type = "hello"
+        x.kind = "hello"
         x.set_data(True)
 
     with pytest.raises(Exception):
-        x._type = "categoric"
+        x.kind = "categoric"
         x.set_data(True)
 
 

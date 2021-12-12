@@ -23,16 +23,16 @@ class Intercept:
 
     def __init__(self):
         self.name = "Intercept"
-        self._type = "Intercept"
+        self.kind = "Intercept"
         self.data = None
         self.len = None
-        self.metadata = {"type": "intercept"}
+        self.metadata = {"kind": "intercept"}
 
     def __eq__(self, other):
         return isinstance(other, type(self))
 
     def __hash__(self):
-        return hash(self._type)
+        return hash(self.kind)
 
     def __add__(self, other):
         """Addition operator.
@@ -139,7 +139,7 @@ class NegatedIntercept:
 
     def __init__(self):
         self.name = "NegatedIntercept"
-        self._type = "Intercept"
+        self.kind = "Intercept"
 
     def __add__(self, other):
         """Addition operator.
@@ -213,7 +213,7 @@ class Term:
         Metadata associated with the term. If ``"numeric"`` or ``"categoric"`` it holds additional
         information in the component ``.data`` attribute. If ``"interaction"``, the keys are
         the name of the components and the values are dictionaries holding the metadata.
-    _type: string
+    kind: string
         Indicates the type of the term. Can be one of ``"numeric"``, ``"categoric"``, or
         ``"interaction"``.
     name: string
@@ -223,7 +223,7 @@ class Term:
     def __init__(self, *components):
         self.data = None
         self.metadata = {}
-        self._type = None
+        self.kind = None
         self.components = []
         self.component_types = None
         for component in components:
@@ -441,16 +441,13 @@ class Term:
                     f"is of the unexpected type {type(component)}."
                 )
         # Store the type of the components
-        self.component_types = {
-            component.name: component._type  # pylint: disable = protected-access
-            for component in self.components
-        }
+        self.component_types = {component.name: component.kind for component in self.components}
 
         # Determine whether this term is numeric, categoric, or an interaction.
         if len(self.components) > 1:
-            self._type = "interaction"  # pylint: disable = protected-access
+            self.kind = "interaction"
         else:
-            self._type = self.components[0]._type  # pylint: disable = protected-access
+            self.kind = self.components[0].kind
 
     def set_data(self, encoding):
         """Obtains and stores the final data object related to this term.
@@ -476,9 +473,9 @@ class Term:
                 encoding_ = encoding
             component.set_data(encoding_)
 
-        if self._type == "interaction":
+        if self.kind == "interaction":
             self.data = reduce(get_interaction_matrix, [c.data["value"] for c in self.components])
-            self.metadata["type"] = "interaction"
+            self.metadata["kind"] = "interaction"
             self.metadata["terms"] = {
                 c.name: {k: v for k, v in c.data.items() if k != "value"} for c in self.components
             }
@@ -503,7 +500,7 @@ class Term:
         result: np.array
             The values resulting from evaluating this term using the new data.
         """
-        if self._type == "interaction":
+        if self.kind == "interaction":
             result = reduce(
                 get_interaction_matrix, [c.eval_new_data(data) for c in self.components]
             )
@@ -606,19 +603,19 @@ class GroupSpecificTerm:
 
         The output contains the following information
 
-        * ``"type"``: The type of the ``expr`` term.
+        * ``"kind"``: The kind of the ``expr`` term.
         * ``"Xi"``: The design matrix for the ``expr`` term.
         * ``"Ji"``: The design matrix for the ``factor`` term.
         * ``"Zi"``: The design matrix for the group specific term.
         * ``"groups"``: The groups present in ``factor``.
 
-        If ``"type"`` is ``"categoric"``, the output dictionary also contains
+        If ``"kind"`` is ``"categoric"``, the output dictionary also contains
 
         * ``"levels"``: Levels of the term in ``expr``.
         * ``"reference"``: The level taken as baseline.
         * ``"encoding"``: The encoding of the term, either ``"full"`` or ``"reduced"``
 
-        If ``"type"`` is ``"interaction"``, the output dictionary also contains
+        If ``"kind"`` is ``"interaction"``, the output dictionary also contains
 
         * ``"terms"``: Metadata for each of the components in the interaction in ``expr``.
 
@@ -651,16 +648,16 @@ class GroupSpecificTerm:
                     "Can't set type on Term because at least one of the components "
                     f"is of the unexpected type {type(comp)}."
                 )
-            comp._type = "categoric"  # pylint: disable = protected-access
+            comp.kind = "categoric"  # pylint: disable = protected-access
 
         # Store the type of the components.
         # We know they are categoric.
         self.factor.component_types = {comp.name: "categoric" for comp in self.factor.components}
 
         if len(self.factor.components) > 1:
-            self.factor._type = "interaction"  # pylint: disable = protected-access
+            self.factor.kind = "interaction"  # pylint: disable = protected-access
         else:
-            self.factor._type = "categoric"  # pylint: disable = protected-access
+            self.factor.kind = "categoric"  # pylint: disable = protected-access
 
         # Pass encoding=True when setting data.
         self.factor.set_data(True)
@@ -678,17 +675,17 @@ class GroupSpecificTerm:
         Ji = self.factor.data
         Zi = linalg.khatri_rao(Ji.T, Xi.T).T
         out = {
-            "type": self.expr.metadata["type"],
+            "kind": self.expr.metadata["kind"],
             "Xi": Xi,
             "Ji": Ji,
             "Zi": Zi,
             "groups": self.groups,
         }
-        if self.expr._type == "categoric":  # pylint: disable = protected-access
+        if self.expr.kind == "categoric":
             out["levels"] = self.expr.metadata["levels"]
             out["reference"] = self.expr.metadata["reference"]
             out["encoding"] = self.expr.metadata["encoding"]
-        elif self.expr._type == "interaction":  # pylint: disable = protected-access
+        elif self.expr.kind == "interaction":
             out["terms"] = self.expr.metadata["terms"]
         return out
 
@@ -715,17 +712,17 @@ class GroupSpecificTerm:
         Ji = self.factor.eval_new_data(data)
         Zi = linalg.khatri_rao(Ji.T, Xi.T).T
         out = {
-            "type": self.expr.metadata["type"],
+            "kind": self.expr.metadata["kind"],
             "Xi": Xi,
             "Ji": Ji,
             "Zi": Zi,
             "groups": self.groups,
         }
-        if self.expr._type == "categoric":  # pylint: disable = protected-access
+        if self.expr.kind == "categoric":
             out["levels"] = self.expr.metadata["levels"]
             out["reference"] = self.expr.metadata["reference"]
             out["encoding"] = self.expr.metadata["encoding"]
-        elif self.expr._type == "interaction":  # pylint: disable = protected-access
+        elif self.expr.kind == "interaction":
             out["terms"] = self.expr.metadata["terms"]
         return out
 
@@ -1171,12 +1168,10 @@ class Model:
     def _encoding_groups(self):
         components = {}
         for term in self.common_terms:
-            if term._type == "interaction":  # pylint: disable = protected-access
-                components[term.name] = {
-                    c.name: c._type for c in term.components  # pylint: disable = protected-access
-                }
+            if term.kind == "interaction":
+                components[term.name] = {c.name: c.kind for c in term.components}
             else:
-                components[term.name] = term._type  # pylint: disable = protected-access
+                components[term.name] = term.kind
         # First, group with only categoric terms
         categoric_group = {}
         for k, v in components.items():

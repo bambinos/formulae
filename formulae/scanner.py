@@ -51,10 +51,10 @@ class Scanner:
         self.current += 1
         return True
 
-    def add_token(self, _type, literal=None):
+    def add_token(self, kind, literal=None):
         # Only literals have "literal != None"
         source = self.code[self.start : self.current]
-        self.tokens.append(Token(_type, source, literal))
+        self.tokens.append(Token(kind, source, literal))
 
     def scan_token(self):
         char = self.advance()
@@ -196,10 +196,10 @@ class Scanner:
         # Check if the identifier is a reserved word
         identifier = self.code[self.start : self.current]
         if identifier in self.keywords:
-            _type = self.keywords[identifier]
+            kind = self.keywords[identifier]
         else:
-            _type = "IDENTIFIER"
-        self.add_token(_type)
+            kind = "IDENTIFIER"
+        self.add_token(kind)
 
     def char(self):
         while self.peek() not in ["'", '"'] and not self.at_end():
@@ -225,4 +225,4 @@ class Scanner:
 
 
 def is_tilde(token):
-    return token.type == "TILDE"
+    return token.kind == "TILDE"

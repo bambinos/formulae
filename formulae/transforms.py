@@ -99,8 +99,8 @@ def C(x, reference=None, levels=None):
         categories = sorted(x.unique().tolist())
 
     # Create type and use it in the variable
-    cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
-    x = x.astype(cat_type)
+    kind = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
+    x = x.astype(kind)
     return x
 
 
@@ -136,9 +136,9 @@ class Proportion:
     Parameters
     ----------
     successes: ndarray
-        1D array containing data with ``int`` type.
+        1D array containing data with ``int`` dtype.
     trials: ndarray
-        1D array containing data with ``int`` type. Its values must be equal or larger than the
+        1D array containing data with ``int`` dtype. Its values must be equal or larger than the
         values in ``successes``
     trials_type: str
         Indicates whether ``trials`` is a constant value or not. It can be either ``"constant"``
@@ -203,15 +203,15 @@ class Offset:
 
         if isinstance(x, pd.Series):
             self.x = x.values
-            self.type = "variable"
+            self.kind = "variable"
         elif isinstance(x, (int, float)):
             self.x = x
-            self.type = "constant"
+            self.kind = "constant"
         else:
             raise ValueError("'x' must be a variable name or a number.")
 
     def eval(self):
-        if self.type == "variable":
+        if self.kind == "variable":
             return self.x.flatten()[:, np.newaxis]
         else:
             return np.ones((self.size, 1)) * self.x
