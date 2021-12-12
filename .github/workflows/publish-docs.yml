@@ -32,8 +32,6 @@ jobs:
           python setup.py install
 
       - name: Checkout gh-pages
-        # As we already did a deploy of gh-pages above, it is guaranteed to be there
-        # so check it out so we can selectively build docs below
         uses: actions/checkout@v2
         with:
           ref: gh-pages
@@ -41,14 +39,11 @@ jobs:
 
       - name: Build docs
         if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
-        # Use the args we normally pass to sphinx-build, but run sphinx-multiversion
         run: sphinx-build docs docs/_build
 
       - name: Publish Docs to gh-pages
-        # Only once from master or a tag
         if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
-        # We pin to the SHA, not the tag, for security reasons.
-        uses: peaceiris/actions-gh-pages@bbdfb200618d235585ad98e965f4aafc39b4c501 # v3.7.3
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/_build/html
