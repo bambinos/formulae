@@ -222,8 +222,8 @@ class CommonEffectsMatrix:
             delta = d[term.name].shape[1]
             if term._type == "interaction":  # pylint: disable = protected-access
                 self.terms_info[term.name]["levels"] = self._interaction_levels(term.name)
-            self.terms_info[term.name]["full_names"] = self._term_full_names(term.name)
             self.terms_info[term.name]["cols"] = slice(start, start + delta)
+            self.terms_info[term.name]["full_names"] = self._term_full_names(term.name)
             start += delta
 
         self.evaluated = True
@@ -275,6 +275,11 @@ class CommonEffectsMatrix:
         if _type == "intercept":
             return ["Intercept"]
         elif _type in ["numeric", "offset"]:
+            slice_ = term["cols"]
+            slice_n = len(range(slice_.start, slice_.stop))
+            # This is the case for a b-spline for example. This could be improved some day
+            if slice_n > 1:
+                return [f"{name}[{i}]" for i in range(slice_n)]
             return [name]
         elif _type == "interaction":
             return interaction_label(term)
