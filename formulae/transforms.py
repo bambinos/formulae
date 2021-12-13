@@ -360,6 +360,7 @@ class BSpline:
 TRANSFORMS = {
     "I": I,
     "C": C,
+    "B": binary,
     "binary": binary,
     "p": proportion,
     "prop": proportion,
