@@ -691,6 +691,47 @@ def test_binary_function():
         design_matrices("y ~ binary(x, 999)", data)
 
 
+def test_B_function():
+    size = 100
+    data = pd.DataFrame(
+        {
+            "y": np.random.randint(0, 5, size=size),
+            "x": np.random.randint(5, 10, size=size),
+            "g": np.random.choice(["a", "b", "c"], size=size),
+        }
+    )
+
+    # String value
+    term = design_matrices("y ~ B(g, 'c')", data).common["B(g, c)"].squeeze()
+    assert np.array_equal(np.where(term == 1), np.where(data["g"] == "c"))
+
+    # Numeric value
+    term = design_matrices("y ~ B(x, 7)", data).common["B(x, 7)"].squeeze()
+    assert np.array_equal(np.where(term == 1), np.where(data["x"] == 7))
+
+    # Variable name
+    # string
+    m = "b"
+    term = design_matrices("y ~ B(g, m)", data).common["B(g, m)"].squeeze()
+    assert np.array_equal(np.where(term == 1), np.where(data["g"] == m))
+
+    # numeric
+    z = 8
+    term = design_matrices("y ~ B(x, z)", data).common["B(x, z)"].squeeze()
+    assert np.array_equal(np.where(term == 1), np.where(data["x"] == z))
+
+    # Pass nothing
+    term = design_matrices("y ~ B(x)", data).common["B(x)"].squeeze()
+    assert np.array_equal(np.where(term == 1), np.where(data["x"] == 5))
+
+    # Values not found in the variable
+    with pytest.raises(ValueError):
+        design_matrices("y ~ B(g, 'Not found')", data)
+
+    with pytest.raises(ValueError):
+        design_matrices("y ~ B(x, 999)", data)
+
+
 def test_C_function():
     size = 100
     data = pd.DataFrame(
