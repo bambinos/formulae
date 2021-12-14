@@ -5,6 +5,10 @@ import pandas as pd
 
 from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
 
+from formulae.categorical import Treatment
+
+# NOTE: No need to use 2d arrays all the time now!
+
 
 class Variable:
     """Representation of a variable in a model Term.
@@ -30,6 +34,7 @@ class Variable:
         self.is_response = is_response
         self.name = name
         self.level = level
+        self._contrast_matrix = None
 
     def __hash__(self):
         return hash((self.kind, self.name, self.level))
@@ -71,8 +76,6 @@ class Variable:
         x = data_mask[self.name]
         if is_numeric_dtype(x):
             self.kind = "numeric"
-            if self.level is not None:
-                raise ValueError("Subset notation can't be used with a numeric variable.")
         elif is_string_dtype(x) or is_categorical_dtype(x):
             self.kind = "categoric"
         else:
@@ -123,11 +126,9 @@ class Variable:
             evaluation, and the latter is equal to ``"numeric"``.
         """
         if isinstance(x, np.ndarray):
-            value = np.atleast_2d(x)
-            if x.shape[0] == 1 and x.shape[1] > 1:
-                value = value.T
+            value = x
         elif isinstance(x, pd.Series):
-            value = np.atleast_2d(x.to_numpy()).T
+            value = x.values
         else:
             raise ValueError(f"Variable is of an unrecognized type ({type(x)}).")
         return {"value": value, "kind": "numeric"}
@@ -156,42 +157,50 @@ class Variable:
         """
         # If not ordered, we make it ordered.
         if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
-            categories = sorted(x.unique().tolist())
-            cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
-            x = x.astype(cat_type)
+            categories = sorted(np.unique(x).tolist())
+            dtype = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
+            x = pd.Categorical(x).astype(dtype)
+        else:
+            x = pd.Categorical(x)
 
         reference = x.min()
-        levels = x.cat.categories.tolist()
+        levels = x.categories.tolist()
 
         if self.is_response:
             # Will be binary, no matter how many levels
             if self.level is not None:
                 reference = self.level
-                value = np.where(x == reference, 1, 0)[:, np.newaxis]
+                value = np.where(x == reference, 1, 0)
             # Is binary, model first event
             elif len(x.unique()) == 2:
-                value = np.where(x == reference, 1, 0)[:, np.newaxis]
+                value = np.where(x == reference, 1, 0)
             # Isn't binary, no level has been passed, return codes.
             else:
-                value = pd.Categorical(x).codes[:, np.newaxis]
+                value = x.codes
         else:
             # Not always we receive a bool, so we need to check.
             if isinstance(encoding, list):
                 encoding = encoding[0]
             if isinstance(encoding, dict):
                 encoding = encoding[self.name]
+
+            # Treatment encoding by default
+            treatment = Treatment()
             if encoding:
-                value = pd.get_dummies(x).to_numpy()
+                contrast_matrix = treatment.code_with_intercept(levels)
                 encoding = "full"
             else:
-                value = pd.get_dummies(x, drop_first=True).to_numpy()
+                contrast_matrix = treatment.code_without_intercept(levels)
                 encoding = "reduced"
+            value = contrast_matrix.matrix[x.codes]
+            self._contrast_matrix = contrast_matrix
+
         return {
-            "value": value,
+            "encoding": encoding,
             "kind": "categoric",
             "levels": levels,
             "reference": reference,
-            "encoding": encoding,
+            "value": value,
         }
 
     def eval_new_data(self, data_mask):
@@ -211,7 +220,6 @@ class Variable:
             The rules for the shape of this array are the rules for ``self._eval_numeric()`` and
             ``self._eval_categoric()``. The first applies for numeric variables, the second for
             categoric ones.
-
         """
         if self.data is None:
             raise ValueError("self.data is None. This error shouldn't have happened!")
@@ -237,13 +245,16 @@ class Variable:
             number of dummy variables used in the numeric representation of the categorical
             variable.
         """
-        new_data_levels = pd.Categorical(x).dtype.categories.tolist()
-        if set(new_data_levels).issubset(set(self.data["levels"])):
-            series = pd.Categorical(x, categories=self.data["levels"])
-            drop_first = self.data["encoding"] == "reduced"
-            return pd.get_dummies(series, drop_first=drop_first).to_numpy()
+        new_data_levels = set(pd.Categorical(x).dtype.categories.tolist())
+        original_levels = set(self.data["levels"])
+        difference = new_data_levels - original_levels
+
+        if not difference:
+            idxs = pd.Categorical(x, categories=self.data["levels"]).codes
+            return self._contrast_matrix.matrix[idxs]
         else:
+            difference = [str(x) for x in difference]
             raise ValueError(
-                f"At least one of the levels for '{self.name}' in the new data was "
-                "not present in the original data set."
+                f"The levels {', '.join(difference)} in '{self.name}' are not present in "
+                "the original data set."
             )

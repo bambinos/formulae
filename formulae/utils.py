@@ -27,6 +27,13 @@ def flatten_list(nested_list):
 
 def get_interaction_matrix(x, y):
     l = []
+
+    if x.ndim == 1:
+        x = x[:, np.newaxis]
+
+    if y.ndim == 1:
+        y = y[:, np.newaxis]
+
     for j1 in range(x.shape[1]):
         for j2 in range(y.shape[1]):
             l.append(x[:, j1] * y[:, j2])

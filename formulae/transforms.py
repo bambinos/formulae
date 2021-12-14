@@ -54,6 +54,13 @@ def I(x):
     return x
 
 
+class CategoricalBox:
+    def __init__(self, data, contrast, levels):
+        self.data = data
+        self.contrast = contrast
+        self.levels = levels
+
+
 def C(x, reference=None, levels=None):
     """Make a variable categorical or manipulate the order of its levels.
 

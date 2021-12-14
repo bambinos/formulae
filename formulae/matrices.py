@@ -213,13 +213,16 @@ class CommonEffectsMatrix:
         self.data = data
         self.env = env
         d = self.model.eval(self.data, self.env)
-        self.design_matrix = np.hstack([d[key] for key in d.keys()])
+        self.design_matrix = np.column_stack([d[key] for key in d.keys()])
         self.terms_info = {}
         # Get types and column slices
         start = 0
         for term in self.model.terms:
             self.terms_info[term.name] = term.metadata
-            delta = d[term.name].shape[1]
+            if d[term.name].ndim == 2:
+                delta = d[term.name].shape[1]
+            else:
+                delta = 1
             if term.kind == "interaction":
                 self.terms_info[term.name]["levels"] = self._interaction_levels(term.name)
             self.terms_info[term.name]["cols"] = slice(start, start + delta)

@@ -118,7 +118,7 @@ class Intercept:
 
         It sets ``self.data`` equal to a numpy array of ones of length ``(self.len, 1)``.
         """
-        self.data = np.ones((self.len, 1))
+        self.data = np.ones(self.len)
 
     def eval_new_data(self, data):
         """Returns data for a new intercept.
@@ -126,7 +126,7 @@ class Intercept:
         The length of the new intercept is given by the number of rows in ``data``.
         """
         # it assumes data is a pandas DataFrame now
-        return np.ones((data.shape[0], 1))
+        return np.ones(data.shape[0])
 
 
 class NegatedIntercept:
@@ -673,6 +673,10 @@ class GroupSpecificTerm:
         self.expr.set_data(encoding)
         Xi = self.expr.data
         Ji = self.factor.data
+        if Xi.ndim == 1:
+            Xi = Xi[:, np.newaxis]
+        if Ji.ndim == 1:
+            Ji = Ji[:, np.newaxis]
         Zi = linalg.khatri_rao(Ji.T, Xi.T).T
         out = {
             "kind": self.expr.metadata["kind"],
@@ -710,6 +714,10 @@ class GroupSpecificTerm:
 
         Xi = self.expr.eval_new_data(data)
         Ji = self.factor.eval_new_data(data)
+        if Xi.ndim == 1:
+            Xi = Xi[:, np.newaxis]
+        if Ji.ndim == 1:
+            Ji = Ji[:, np.newaxis]
         Zi = linalg.khatri_rao(Ji.T, Xi.T).T
         out = {
             "kind": self.expr.metadata["kind"],

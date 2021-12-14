@@ -813,12 +813,12 @@ def test_predict_prop():
     # If trials is a variable, new dataset must have that variable
     dm = design_matrices("prop(y, n) ~ x", data)
     result = dm.response._evaluate_new_data(pd.DataFrame({"n": [10, 10, 30, 30]}))
-    assert (result == np.array([10, 10, 30, 30])[:, np.newaxis]).all()
+    assert (result == np.array([10, 10, 30, 30])).all()
 
     # If trials is a constant value, return that same value
     dm = design_matrices("prop(y, 70) ~ x", data)
     result = dm.response._evaluate_new_data(pd.DataFrame({"n": [10, 10, 30, 30]}))
-    assert (result == np.array([70, 70, 70, 70])[:, np.newaxis]).all()
+    assert (result == np.array([70, 70, 70, 70])).all()
 
 
 def test_predict_offset():

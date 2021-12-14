@@ -5,7 +5,7 @@ import pandas as pd
 
 from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
 
-from formulae.transforms import TRANSFORMS, Proportion, Offset
+from formulae.transforms import TRANSFORMS, CategoricalBox, Proportion, Offset
 from formulae.terms.call_utils import CallVarsExtractor
 
 
@@ -101,6 +101,8 @@ class Call:
             self.kind = "numeric"
         elif is_string_dtype(x) or is_categorical_dtype(x):
             self.kind = "categoric"
+        elif isinstance(x, CategoricalBox):
+            self.kind = "categoric"
         elif isinstance(x, Proportion):
             self.kind = "proportion"
         elif isinstance(x, Offset):
@@ -161,12 +163,9 @@ class Call:
             evaluation, and the latter is equal to ``"numeric"``.
         """
         if isinstance(x, np.ndarray):
-            if x.ndim == 1:
-                value = x[:, np.newaxis]
-            else:
-                value = x
+            value = x
         elif isinstance(x, pd.Series):
-            value = x.to_numpy()[:, np.newaxis]
+            value = x.values
         else:
             raise ValueError(f"Call result is of an unrecognized type ({type(x)}).")
         return {"value": value, "kind": "numeric"}
@@ -199,16 +198,19 @@ class Call:
             using reduced encoding, and whether the encoding is ``"full"`` or ``"reduced"``.
         """
 
+        # If not ordered, we make it ordered.
         if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
-            categories = sorted(x.unique().tolist())
-            cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
-            x = x.astype(cat_type)
+            categories = sorted(np.unique(x).tolist())
+            dtype = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
+            x = pd.Categorical(x).astype(dtype)
+        else:
+            x = pd.Categorical(x)
 
         reference = x.min()
-        levels = x.cat.categories.tolist()
+        levels = x.categories.tolist()
 
         if self.is_response:
-            value = np.atleast_2d(np.where(x == reference, 1, 0)).T
+            value = np.where(x == reference, 1, 0)
             encoding = None
         else:
             if isinstance(encoding, list):
@@ -221,6 +223,7 @@ class Call:
             else:
                 value = pd.get_dummies(x, drop_first=True).to_numpy()
                 encoding = "reduced"
+
         return {
             "value": value,
             "kind": "categoric",
@@ -267,24 +270,24 @@ class Call:
         elif self.kind == "proportion":
             if self._intermediate_data.trials_type == "constant":
                 # Return value passed in the second component
-                return np.ones((len(data_mask.index), 1)) * self.call.args[1].value
+                return np.ones(len(data_mask.index)) * self.call.args[1].value
             else:
                 # Extract name of the second component
                 name = self.call.args[1].name
                 values = data_mask[name]
                 if isinstance(values, pd.Series):
-                    values = values.values[:, np.newaxis]
+                    values = values.values
                 return values
         elif self.kind == "offset":
             if self._intermediate_data.kind == "constant":
                 # Return value passed as the argument
-                return np.ones((len(data_mask.index), 1)) * self.call.args[0].value
+                return np.ones(len(data_mask.index)) * self.call.args[0].value
             else:
                 # Extract name of the argument
                 name = self.call.args[0].name
                 values = data_mask[name]
                 if isinstance(values, pd.Series):
-                    values = values.values[:, np.newaxis]
+                    values = values.values
                 return values
 
     def _eval_new_data_categoric(self, x):
