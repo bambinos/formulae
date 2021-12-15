@@ -111,6 +111,9 @@ def C(x, reference=None, levels=None):
     return x
 
 
+# def C(x, contrast, levels):
+
+
 def binary(x, success=None):
     """Make a variable binary
 
@@ -374,4 +377,5 @@ TRANSFORMS = {
     "proportion": proportion,
     "offset": offset,
 }
+
 STATEFUL_TRANSFORMS = {"center": Center, "scale": Scale, "standardize": Scale, "bs": BSpline}

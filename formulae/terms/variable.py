@@ -7,8 +7,6 @@ from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_d
 
 from formulae.categorical import Treatment
 
-# NOTE: No need to use 2d arrays all the time now!
-
 
 class Variable:
     """Representation of a variable in a model Term.
@@ -245,7 +243,7 @@ class Variable:
             number of dummy variables used in the numeric representation of the categorical
             variable.
         """
-        new_data_levels = set(pd.Categorical(x).dtype.categories.tolist())
+        new_data_levels = set(pd.Categorical(x).categories.tolist())
         original_levels = set(self.data["levels"])
         difference = new_data_levels - original_levels
 

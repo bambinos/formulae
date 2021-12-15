@@ -4,7 +4,9 @@ import numpy as np
 class ContrastMatrix:
     def __init__(self, matrix, labels):
         if matrix.shape[1] != len(labels):
-            raise ValueError("PROBLEM!")
+            raise ValueError(
+                "The number of columns in the contrast matrix differs from the number of labels!"
+            )
         self.matrix = matrix
         self.labels = labels
 
@@ -93,3 +95,6 @@ class Sum:
         levels = levels[:omit_index] + levels[omit_index + 1 :]
         labels = [f"S.{level}" for level in levels]
         return ContrastMatrix(matrix, labels)
+
+
+ENCODINGS = {"Treatment": Treatment, "Sum": Sum}

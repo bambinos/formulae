@@ -1,6 +1,5 @@
 # VarLookUpDict and Environment are taken from Patsy library.
 # For more info see: https://github.com/pydata/patsy/blob/master/patsy/eval.py
-# pylint: disable=relative-beyond-top-level
 import inspect
 import numbers
 
@@ -65,9 +64,7 @@ class Environment:
         elif isinstance(env, numbers.Integral):
             depth = env + reference
         else:
-            raise TypeError(
-                "Parameter 'env' must be either an integer " "or an instance of Environment."
-            )
+            raise TypeError("'env' must be either an integer or an instance of Environment.")
         frame = inspect.currentframe()
         try:
             for _ in range(depth + 1):

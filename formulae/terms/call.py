@@ -5,7 +5,8 @@ import pandas as pd
 
 from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
 
-from formulae.transforms import TRANSFORMS, CategoricalBox, Proportion, Offset
+from formulae.categorical import ENCODINGS, CategoricalBox, Treatment
+from formulae.transforms import TRANSFORMS, Proportion, Offset
 from formulae.terms.call_utils import CallVarsExtractor
 
 
@@ -37,6 +38,7 @@ class Call:
         self.is_response = is_response
         self.call = call
         self.name = str(self.call)
+        self._contrast_matrix = None
 
     def __hash__(self):
         return hash(self.call)
@@ -94,14 +96,12 @@ class Call:
             The environment where values and functions are taken from.
         """
 
-        self.env = env.with_outer_namespace(TRANSFORMS)
+        self.env = env.with_outer_namespace({**TRANSFORMS, **ENCODINGS})
         x = self.call.eval(data_mask, self.env)
 
         if is_numeric_dtype(x):
             self.kind = "numeric"
-        elif is_string_dtype(x) or is_categorical_dtype(x):
-            self.kind = "categoric"
-        elif isinstance(x, CategoricalBox):
+        elif is_string_dtype(x) or is_categorical_dtype(x) or isinstance(x, CategoricalBox):
             self.kind = "categoric"
         elif isinstance(x, Proportion):
             self.kind = "proportion"
@@ -135,7 +135,10 @@ class Call:
             if self.kind == "numeric":
                 self.data = self._eval_numeric(self._intermediate_data)
             elif self.kind == "categoric":
-                self.data = self._eval_categoric(self._intermediate_data, encoding)
+                if isinstance(self._intermediate_data, CategoricalBox):
+                    self.data = self._eval_categorical_box(self._intermediate_data, encoding)
+                else:
+                    self.data = self._eval_categoric(self._intermediate_data, encoding)
             elif self.kind == "proportion":
                 self.data = self._eval_proportion(self._intermediate_data)
             elif self.kind == "offset":
@@ -217,18 +220,66 @@ class Call:
                 encoding = encoding[0]
             if isinstance(encoding, dict):
                 encoding = encoding[self.name]
+
+            # Treatment encoding by default
+            treatment = Treatment()
             if encoding:
-                value = pd.get_dummies(x).to_numpy()
+                contrast_matrix = treatment.code_with_intercept(levels)
                 encoding = "full"
             else:
-                value = pd.get_dummies(x, drop_first=True).to_numpy()
+                contrast_matrix = treatment.code_without_intercept(levels)
                 encoding = "reduced"
+            value = contrast_matrix.matrix[x.codes]
+            self._contrast_matrix = contrast_matrix
 
         return {
             "value": value,
             "kind": "categoric",
             "levels": levels,
             "reference": reference,
+            "encoding": encoding,
+        }
+
+    def _eval_categorical_box(self, box, encoding):
+        data = box.data
+        levels = box.levels
+        contrast = box.contrast  # We're not checking the class of box.contrast yet
+
+        if contrast is None:
+            contrast = Treatment()
+
+        # XTODO: Check contrast if of the expected type...
+        # XTODO: Check if data has an ordered type...
+        if levels is None:
+            categories = sorted(np.unique(data).tolist())
+        else:
+            # XTODO: check levels are in categories...
+            categories = levels
+
+        dtype = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
+        data = pd.Categorical(data).astype(dtype)
+
+        # This is bc 'encoding' is not very well polished in this pkg
+        if isinstance(encoding, list):
+            encoding = encoding[0]
+        if isinstance(encoding, dict):
+            encoding = encoding[self.name]
+
+        if encoding:
+            contrast_matrix = contrast.code_with_intercept(levels)
+            encoding = "full"
+        else:
+            contrast_matrix = contrast.code_without_intercept(levels)
+            encoding = "reduced"
+
+        value = contrast_matrix.matrix[data.codes]
+        self._contrast_matrix = contrast_matrix
+
+        return {
+            "value": value,
+            "kind": "categoric",
+            "levels": levels,
+            "reference": [],  # FIXME
             "encoding": encoding,
         }
 
@@ -306,15 +357,16 @@ class Call:
             number of dummy variables used in the numeric representation of the categorical
             variable.
         """
+        new_data_levels = set(pd.Categorical(x).categories.tolist())
+        original_levels = set(self.data["levels"])
+        difference = new_data_levels - original_levels
 
-        # Raise error if passing a level that was not observed.
-        new_data_levels = pd.Categorical(x).dtype.categories.tolist()
-        if set(new_data_levels).issubset(set(self.data["levels"])):
-            series = pd.Categorical(x, categories=self.data["levels"])
-            drop_first = self.data["encoding"] == "reduced"
-            return pd.get_dummies(series, drop_first=drop_first).to_numpy()
+        if not difference:
+            idxs = pd.Categorical(x, categories=self.data["levels"]).codes
+            return self._contrast_matrix.matrix[idxs]
         else:
+            difference = [str(x) for x in difference]
             raise ValueError(
-                f"At least one of the levels for '{self.name}' in the new data was "
-                "not present in the original data set."
+                f"The levels {', '.join(difference)} in '{self.name}' are not present in "
+                "the original data set."
             )
