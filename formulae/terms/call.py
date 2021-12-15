@@ -279,7 +279,7 @@ class Call:
             "value": value,
             "kind": "categoric",
             "levels": levels,
-            "reference": [],  # FIXME
+            "reference": [],  # XFIXME
             "encoding": encoding,
         }
 
