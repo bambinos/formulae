@@ -128,6 +128,9 @@ class Intercept:
         # it assumes data is a pandas DataFrame now
         return np.ones(data.shape[0])
 
+    def get_labels(self):
+        return ["Intercept"]
+
 
 class NegatedIntercept:
     """Internal representation of the opposite of a model intercept.
@@ -542,6 +545,29 @@ class Term:
             if component.name == name:
                 return component
 
+    def get_labels(self):
+        if self.kind in ["numeric", "offset"]:
+            shape = self.data.shape
+            if len(shape) == 2:
+                labels = [f"{self.name}[{i}]" for i in range(shape[1])]
+            else:
+                labels = [self.name]
+        elif self.kind == "categoric":
+            labels = self.components[0].contrast_matrix.labels
+            labels = [f"{self.name}[{label}]" for label in labels]
+        elif self.kind == "interaction":
+            colnames = []
+            for component in self.components:
+                if component.kind == "numeric":
+                    colnames.append([component.name])
+                elif component.kind == "categoric":
+                    labels = component.contrast_matrix.labels
+                    colnames.append([f"{component.name}[{label}]" for label in labels])
+            labels = [":".join(str_tuple) for str_tuple in list(itertools.product(*colnames))]
+        else:
+            raise ValueError(f"Unexpected Term kind {self.kind}")
+        return labels
+
 
 class GroupSpecificTerm:
     """Representation of a group specific term.
@@ -633,40 +659,41 @@ class GroupSpecificTerm:
         out: dict
             See above.
         """
-        # Factor must be considered categorical, and with full encoding. We set type and obtain
-        # data for the factor term manually.
+        # Factor must be considered categorical, and with full encoding.
+        # We set type and obtain data for the factor term manually.
 
         # Set type on each component to check data is behaved as expected and then
         # manually set type of the components to categoric.
-        for comp in self.factor.components:
-            if isinstance(comp, Variable):
-                comp.set_type(data)
-            elif isinstance(comp, Call):
-                comp.set_type(data, env)
+        for component in self.factor.components:
+            if isinstance(component, Variable):
+                component.set_type(data)
+            elif isinstance(component, Call):
+                component.set_type(data, env)
             else:
                 raise ValueError(
-                    "Can't set type on Term because at least one of the components "
-                    f"is of the unexpected type {type(comp)}."
+                    "Can't set type on GroupSpecificTerm because at least one of the components "
+                    f"is of the unexpected type {type(component)}."
                 )
-            comp.kind = "categoric"  # pylint: disable = protected-access
+            component.kind = "categoric"
 
         # Store the type of the components.
         # We know they are categoric.
-        self.factor.component_types = {comp.name: "categoric" for comp in self.factor.components}
+        self.factor.component_types = {c.name: "categoric" for c in self.factor.components}
 
         if len(self.factor.components) > 1:
-            self.factor.kind = "interaction"  # pylint: disable = protected-access
+            self.factor.kind = "interaction"
         else:
-            self.factor.kind = "categoric"  # pylint: disable = protected-access
+            self.factor.kind = "categoric"
 
         # Pass encoding=True when setting data.
         self.factor.set_data(True)
 
         # Obtain group names
         groups = []
-        for comp in self.factor.components:
+        for component in self.factor.components:
             # We're certain they are all categoric with full encoding.
-            groups.append([str(lvl) for lvl in comp.data["levels"]])
+            # FIXME: We have to take levels from contrast matrices!
+            groups.append([str(lvl) for lvl in component.data["levels"]])
         self.groups = [":".join(s) for s in list(itertools.product(*groups))]
 
         self.expr.set_type(data, env)

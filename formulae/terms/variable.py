@@ -32,7 +32,7 @@ class Variable:
         self.is_response = is_response
         self.name = name
         self.level = level
-        self._contrast_matrix = None
+        self.contrast_matrix = None
 
     def __hash__(self):
         return hash((self.kind, self.name, self.level))
@@ -46,7 +46,10 @@ class Variable:
         return self.__str__()
 
     def __str__(self):
-        return f"{self.__class__.__name__}({self.name}, level='{self.level}')"
+        args = self.name
+        if self.level is not None:
+            args += f", level='{self.level}'"
+        return f"{self.__class__.__name__}({args})"
 
     @property
     def var_names(self):
@@ -108,9 +111,8 @@ class Variable:
     def _eval_numeric(self, x):
         """Finishes evaluation of a numeric variable.
 
-        Converts the intermediate values in ``x`` into a numpy array of shape ``(n, 1)``,
-        where ``n`` is the number of observations. This method is used both in ``self.set_data``
-        and in ``self.eval_new_data``.
+        Converts the intermediate values in ``x`` into a 1d numpy array.
+        This method is used both in ``self.set_data`` and in ``self.eval_new_data``.
 
         Parameters
         ----------
@@ -191,7 +193,7 @@ class Variable:
                 contrast_matrix = treatment.code_without_intercept(levels)
                 encoding = "reduced"
             value = contrast_matrix.matrix[x.codes]
-            self._contrast_matrix = contrast_matrix
+            self.contrast_matrix = contrast_matrix
 
         return {
             "encoding": encoding,
@@ -249,7 +251,7 @@ class Variable:
 
         if not difference:
             idxs = pd.Categorical(x, categories=self.data["levels"]).codes
-            return self._contrast_matrix.matrix[idxs]
+            return self.contrast_matrix.matrix[idxs]
         else:
             difference = [str(x) for x in difference]
             raise ValueError(

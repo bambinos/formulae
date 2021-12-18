@@ -8,7 +8,7 @@ from formulae.terms import Variable
 
 def test_variable_str():
 
-    assert str(Variable("a")) == "Variable(a, level='None')"
+    assert str(Variable("a")) == "Variable(a)"
     assert str(Variable("a", "hi")) == "Variable(a, level='hi')"
 
     assert repr(Variable("a")) == str(Variable("a"))

@@ -38,7 +38,7 @@ class Call:
         self.is_response = is_response
         self.call = call
         self.name = str(self.call)
-        self._contrast_matrix = None
+        self.contrast_matrix = None
 
     def __hash__(self):
         return hash(self.call)
@@ -230,7 +230,7 @@ class Call:
                 contrast_matrix = treatment.code_without_intercept(levels)
                 encoding = "reduced"
             value = contrast_matrix.matrix[x.codes]
-            self._contrast_matrix = contrast_matrix
+            self.contrast_matrix = contrast_matrix
 
         return {
             "value": value,
@@ -243,17 +243,14 @@ class Call:
     def _eval_categorical_box(self, box, encoding):
         data = box.data
         levels = box.levels
-        contrast = box.contrast  # We're not checking the class of box.contrast yet
+        contrast = box.contrast
 
         if contrast is None:
             contrast = Treatment()
 
-        # XTODO: Check contrast if of the expected type...
-        # XTODO: Check if data has an ordered type...
         if levels is None:
-            categories = sorted(np.unique(data).tolist())
+            categories = sorted(list(set(data)))
         else:
-            # XTODO: check levels are in categories...
             categories = levels
 
         dtype = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
@@ -266,20 +263,20 @@ class Call:
             encoding = encoding[self.name]
 
         if encoding:
-            contrast_matrix = contrast.code_with_intercept(levels)
+            contrast_matrix = contrast.code_with_intercept(categories)
             encoding = "full"
         else:
-            contrast_matrix = contrast.code_without_intercept(levels)
+            contrast_matrix = contrast.code_without_intercept(categories)
             encoding = "reduced"
 
         value = contrast_matrix.matrix[data.codes]
-        self._contrast_matrix = contrast_matrix
+        self.contrast_matrix = contrast_matrix
 
         return {
             "value": value,
             "kind": "categoric",
-            "levels": levels,
-            "reference": [],  # XFIXME
+            "levels": categories,
+            "reference": [],  # FIXME
             "encoding": encoding,
         }
 
@@ -317,7 +314,10 @@ class Call:
             if self.kind == "numeric":
                 return self._eval_numeric(x)["value"]
             else:
-                return self._eval_new_data_categoric(x)
+                if isinstance(x, CategoricalBox):
+                    return self._eval_new_data_categorical_box(x)
+                else:
+                    return self._eval_new_data_categoric(x)
         elif self.kind == "proportion":
             if self._intermediate_data.trials_type == "constant":
                 # Return value passed in the second component
@@ -363,7 +363,22 @@ class Call:
 
         if not difference:
             idxs = pd.Categorical(x, categories=self.data["levels"]).codes
-            return self._contrast_matrix.matrix[idxs]
+            return self.contrast_matrix.matrix[idxs]
+        else:
+            difference = [str(x) for x in difference]
+            raise ValueError(
+                f"The levels {', '.join(difference)} in '{self.name}' are not present in "
+                "the original data set."
+            )
+
+    def _eval_new_data_categorical_box(self, x):
+        new_data_levels = set(x.data)
+        original_levels = set(self.data["levels"])
+        difference = new_data_levels - original_levels
+
+        if not difference:
+            idxs = pd.Categorical(x.data, categories=self.data["levels"]).codes
+            return self.contrast_matrix.matrix[idxs]
         else:
             difference = [str(x) for x in difference]
             raise ValueError(
