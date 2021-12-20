@@ -178,12 +178,6 @@ class Variable:
             else:
                 value = x.codes
         else:
-            # Not always we receive a bool, so we need to check.
-            if isinstance(encoding, list):
-                encoding = encoding[0]
-            if isinstance(encoding, dict):
-                encoding = encoding[self.name]
-
             # Treatment encoding by default
             treatment = Treatment()
             if encoding:

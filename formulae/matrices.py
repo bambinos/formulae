@@ -1,15 +1,11 @@
 # pylint: disable=relative-beyond-top-level
-import itertools
 import logging
 import textwrap
-
-from copy import deepcopy
 
 import numpy as np
 import pandas as pd
 
 from .environment import Environment
-from .terms import Model, Intercept
 from .model_description import model_description
 from .utils import flatten_list
 
@@ -54,12 +50,15 @@ class DesignMatrices:
         self.group = None
         self.model = model
 
+        # Evaluate terms in the model
+        self.model.eval(data, env)
+
         if self.model.response:
             self.response = ResponseVector(self.model.response)
             self.response._evaluate(data, env)
 
         if self.model.common_terms:
-            self.common = CommonEffectsMatrix(Model(*self.model.common_terms))
+            self.common = CommonEffectsMatrix(self.model.common_terms)
             self.common._evaluate(data, env)
 
         if self.model.group_terms:
@@ -185,8 +184,8 @@ class CommonEffectsMatrix:
         The keys are given by the term names.
     """
 
-    def __init__(self, model):
-        self.model = model
+    def __init__(self, terms):
+        self.terms = terms
         self.data = None
         self.env = None
         self.design_matrix = None
@@ -212,10 +211,9 @@ class CommonEffectsMatrix:
         """
         self.data = data
         self.env = env
-        self.model.eval(self.data, self.env)
-        self.design_matrix = np.column_stack([term.data for term in self.model.terms])
+        self.design_matrix = np.column_stack([term.data for term in self.terms])
         start = 0
-        for term in self.model.terms:
+        for term in self.terms:
             if term.data.ndim == 2:
                 delta = term.data.shape[1]
             else:
@@ -246,18 +244,16 @@ class CommonEffectsMatrix:
         """
         if not self.evaluated:
             raise ValueError("Can't evaluate new data on unevaluated matrix.")
-        new_instance = self.__class__(self.model)
+        new_instance = self.__class__(self.terms)
         new_instance.data = data
         new_instance.env = self.env
-        new_instance.design_matrix = np.column_stack(
-            [term.eval_new_data(data) for term in self.model.terms]
-        )
+        new_instance.design_matrix = np.column_stack([t.eval_new_data(data) for t in self.terms])
         new_instance.evaluated = True
         return new_instance
 
     def as_dataframe(self):
         """Returns `self.design_matrix` as a pandas.DataFrame."""
-        colnames = [term.get_labels() for term in self.model.terms]
+        colnames = [term.get_labels() for term in self.terms]
         data = pd.DataFrame(self.design_matrix, columns=list(flatten_list(colnames)))
         return data
 
@@ -350,26 +346,16 @@ class GroupEffectsMatrix:
         """
         self.data = data
         self.env = env
+        self.design_matrix = np.column_stack([term.data for term in self.terms])
         start = 0
-        Z = []
         for term in self.terms:
-            encoding = True
-            # If both (1|g) and (x|g) are in the model, then the encoding for x is False.
-            if not isinstance(term.expr, Intercept):
-                for term_ in self.terms:
-                    if term_.factor == term.factor and isinstance(term_.expr, Intercept):
-                        encoding = False
-            d = term.eval(self.data, self.env, encoding)
-
-            # Grab subcomponent of Z that corresponds to this term
-            Zi = d["Zi"]
-            delta = Zi.shape[1]
-            Z.append(Zi)
-            self.slices[term.get_name()] = slice(start, start + delta)
+            # TODO: I think everything we pass here has two columns...
+            if term.data.ndim == 2:
+                delta = term.data.shape[1]
+            else:
+                delta = 1
+            self.slices[term.name] = slice(start, start + delta)
             start += delta
-
-        if Z:
-            self.design_matrix = np.column_stack(Z)
         self.evaluated = True
 
     def _evaluate_new_data(self, data):
@@ -397,19 +383,10 @@ class GroupEffectsMatrix:
             raise ValueError("Can't evaluate new data on unevaluated matrix.")
 
         new_instance = self.__class__(self.terms)
-        start = 0
-        Z = []
-        for term in self.terms:
-            d = term.eval_new_data(data)
-            Zi = d["Zi"]
-            delta = Zi.shape[1]
-            Z.append(Zi)
-            new_instance.slices[term.get_name()] = slice(start, start + delta)
-            start += delta
         new_instance.data = data
         new_instance.env = self.env
-        if Z:
-            new_instance.design_matrix = np.column_stack(Z)
+        new_instance.design_matrix = np.column_stack([t.eval_new_data(data) for t in self.terms])
+        new_instance.evaluated = True
         return new_instance
 
     def __getitem__(self, term):
@@ -426,9 +403,9 @@ class GroupEffectsMatrix:
             A 2-dimensional numpy array that represents the sub-matrix corresponding to the
             term passed.
         """
-        if term not in self.terms_info:
+        if term not in self.slices:
             raise ValueError(f"'{term}' is not a valid term name")
-        return self.design_matrix[:, self.terms_info[term]["cols"]]
+        return self.design_matrix[:, self.slices[term]]
 
     def __repr__(self):
         return self.__str__()
@@ -437,8 +414,8 @@ class GroupEffectsMatrix:
         # string = [f"'{k}': {{{spacify(term_str(v))}\n}}" for k, v in self.terms_info.items()]
         # string = multilinify(string)
         string = [
-            # f"shape: {self.design_matrix.shape}",
-            f"terms: {{{spacify(string)}\n}}",
+            f"shape: {self.design_matrix.shape}",
+            # f"terms: {{{spacify(string)}\n}}",
         ]
         return f"GroupEffectsMatrix({wrapify(spacify(multilinify(string)))}\n)"
 

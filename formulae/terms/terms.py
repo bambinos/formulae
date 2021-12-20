@@ -443,8 +443,6 @@ class Term:
                     "Can't set type on Term because at least one of the components "
                     f"is of the unexpected type {type(component)}."
                 )
-        # Store the type of the components
-        self.component_types = {component.name: component.kind for component in self.components}
 
         # Determine whether this term is numeric, categoric, or an interaction.
         if len(self.components) > 1:
@@ -460,20 +458,19 @@ class Term:
 
         Parameters
         ----------
-        encoding: list or dict
+        encoding: dict or bool
             Indicates if it uses full or reduced encoding when the type of the variable is
             categoric.
         """
-        if isinstance(encoding, list) and len(encoding) == 1:
-            encoding = encoding[0]
-        else:
-            ValueError("encoding is a list of len > 1")
+
         for component in self.components:
             encoding_ = False
             if isinstance(encoding, dict):
                 encoding_ = encoding.get(component.name, False)
             elif isinstance(encoding, bool):
                 encoding_ = encoding
+            else:
+                raise ValueError(f"Encoding is of unexpected type {type(encoding)}")
             component.set_data(encoding_)
 
         if self.kind == "interaction":
@@ -588,18 +585,14 @@ class GroupSpecificTerm:
         The term for which we want to have a group specific term.
     factor: :class:`.Term`
         The factor that determines the groups in the group specific term.
-
-    Attributes
-    ----------
-    factor_type: pandas.core.dtypes.dtypes.CategoricalDtype
-        The type assigned to the grouping factor ``factor``. This is useful for when we need to
-        create a design matrix for new a new data set.
     """
 
     def __init__(self, expr, factor):
         self.expr = expr
         self.factor = factor
         self.groups = None
+        self.data = None
+        self.metadata = {}
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -619,13 +612,62 @@ class GroupSpecificTerm:
         ]
         return self.__class__.__name__ + "(\n  " + ",\n  ".join(strlist) + "\n)"
 
-    def eval(self, data, env, encoding):
+    def set_type(self, data, env):
+        # Set type on each component to check data is behaved as expected and then
+        # manually set type of the components to categoric.
+        for component in self.factor.components:
+            if isinstance(component, Variable):
+                component.set_type(data)
+            elif isinstance(component, Call):
+                component.set_type(data, env)
+            else:
+                raise ValueError(
+                    "Can't set type on GroupSpecificTerm because at least one of the components "
+                    f"is of the unexpected type {type(component)}."
+                )
+            component.kind = "categoric"
+
+        # Store the type of the components. Factors are considered categorical.
+        if len(self.factor.components) > 1:
+            self.factor.kind = "interaction"
+        else:
+            self.factor.kind = "categoric"
+
+        # Obtain group names
+        groups = []
+        for component in self.factor.components:
+            # We're certain they are all categoric with full encoding.
+            # FIXME: We have to take levels from contrast matrices!
+            groups.append([str(lvl) for lvl in component.data["levels"]])
+        self.groups = [":".join(s) for s in list(itertools.product(*groups))]
+
+        self.expr.set_type(data, env)
+
+    def set_data(self, encoding):
+        self.expr.set_data(encoding)
+        self.factor.set_data(True)  # Factor is a categorical term that always spans the intercept
+
+        Xi, Ji = self.expr.data, self.factor.data
+        if Xi.ndim == 1:
+            Xi = Xi[:, np.newaxis]
+        if Ji.ndim == 1:
+            Ji = Ji[:, np.newaxis]
+
+        self.data = linalg.khatri_rao(Ji.T, Xi.T).T  # Zi
+
+        if self.expr.kind == "categoric":
+            metadata = {"kind": "categoric", "encoding": self.expr.metadata["encoding"]}
+        elif self.expr.kind == "interaction":
+            metadata = {"kind": "interaction", "terms": self.expr.metadata["terms"]}
+
+        self.metadata.update(metadata)
+
+    def eval(self, encoding):
         """Evaluates term.
 
         First, it evaluates the variable in ``self.factor``, creates an oredered categorical data
-        type using its levels, and stores it in ``self.factor_type``. Then, it obtains the
-        design matrix for ``self.expr`` to finally produce the matrix for the group specific
-        effect.
+        type using its levels. Then, it obtains the design matrix for ``self.expr`` to finally
+        produce the matrix for the group specific effect.
 
         The output contains the following information
 
@@ -659,51 +701,19 @@ class GroupSpecificTerm:
         out: dict
             See above.
         """
-        # Factor must be considered categorical, and with full encoding.
-        # We set type and obtain data for the factor term manually.
 
-        # Set type on each component to check data is behaved as expected and then
-        # manually set type of the components to categoric.
-        for component in self.factor.components:
-            if isinstance(component, Variable):
-                component.set_type(data)
-            elif isinstance(component, Call):
-                component.set_type(data, env)
-            else:
-                raise ValueError(
-                    "Can't set type on GroupSpecificTerm because at least one of the components "
-                    f"is of the unexpected type {type(component)}."
-                )
-            component.kind = "categoric"
+        self.expr.set_data(encoding)
 
-        # Store the type of the components.
-        # We know they are categoric.
-        self.factor.component_types = {c.name: "categoric" for c in self.factor.components}
-
-        if len(self.factor.components) > 1:
-            self.factor.kind = "interaction"
-        else:
-            self.factor.kind = "categoric"
-
-        # Pass encoding=True when setting data.
+        # Factor is a categorical term that always spans the intercept
         self.factor.set_data(True)
 
-        # Obtain group names
-        groups = []
-        for component in self.factor.components:
-            # We're certain they are all categoric with full encoding.
-            # FIXME: We have to take levels from contrast matrices!
-            groups.append([str(lvl) for lvl in component.data["levels"]])
-        self.groups = [":".join(s) for s in list(itertools.product(*groups))]
-
-        self.expr.set_type(data, env)
-        self.expr.set_data(encoding)
         Xi = self.expr.data
         Ji = self.factor.data
         if Xi.ndim == 1:
             Xi = Xi[:, np.newaxis]
         if Ji.ndim == 1:
             Ji = Ji[:, np.newaxis]
+
         Zi = linalg.khatri_rao(Ji.T, Xi.T).T
         out = {
             "kind": self.expr.metadata["kind"],
@@ -746,6 +756,7 @@ class GroupSpecificTerm:
         if Ji.ndim == 1:
             Ji = Ji[:, np.newaxis]
         Zi = linalg.khatri_rao(Ji.T, Xi.T).T
+
         out = {
             "kind": self.expr.metadata["kind"],
             "Xi": Xi,
@@ -1186,7 +1197,7 @@ class Model:
         return var_names
 
     def set_types(self, data, env):
-        """Set the type of the common terms in the model.
+        """Set the type of the terms in the model.
 
         Calls ``.set_type()`` method on term in the model.
 
@@ -1197,10 +1208,10 @@ class Model:
         env: Environment
             The environment where values and functions are taken from.
         """
-        for term in self.common_terms:
+        for term in self.terms:
             term.set_type(data, env)
 
-    def _encoding_groups(self):
+    def _get_encoding_groups(self):
         components = {}
         for term in self.common_terms:
             if term.kind == "interaction":
@@ -1243,19 +1254,30 @@ class Model:
 
         return [categoric_group] + numeric_groups
 
-    def _encoding_bools(self):
+    def _get_encoding_bools(self):
         """Determine encodings for terms containing at least one categorical variable.
 
         This method returns dictionaries with ``True``/``False`` values.
-        ``True`` means the categorical variable uses 'levels' dummies.
-        ``False`` means the categorial variable uses 'levels - 1' dummies.
+        ``True`` means the categorical variable spans the intercept.
+        ``False`` means the categorial variable does not span the intercept.
         """
-        groups = self._encoding_groups()
+        groups = self._get_encoding_groups()
         l = [pick_contrasts(group) for group in groups]
         result = {}
         for d in l:
             result.update(d)
         return result
+
+    def add_extra_terms(self, encodings, data, env):
+        # Adds additional terms in the common part in case they're needed for full rankness
+        common_terms = self.common_terms.copy()
+        for term in common_terms:
+            encoding = encodings.get(term.name)
+            if hasattr(encoding, "__len__") and len(encoding) > 1:
+                # Last encoding is the one for the original term
+                for subencoding in encoding[:-1]:
+                    extra_term = create_extra_term(term, subencoding, data, env)
+                    self.common_terms.insert(self.common_terms.index(term), extra_term)
 
     def eval(self, data, env):
         """Evaluates terms in the model.
@@ -1276,55 +1298,38 @@ class Model:
             A dictionary where keys are the name of the terms and the values are their ``.data``
             attribute.
         """
+        # Set types on all terms
         self.set_types(data, env)
-        encodings = self._encoding_bools()
-        result = {}
 
-        # First, we have to add terms if the encoding implies so.
+        # Evaluate common terms
+        encodings = self._get_encoding_bools()
+        self.add_extra_terms(encodings, data, env)
 
-        # Group specific effects aren't evaluated here -- this may change
-        common_terms = self.common_terms.copy()
-        for term in common_terms:
-            term_encoding = False
+        # Need to get encodings again after creating possible extra terms
+        encodings = self._get_encoding_bools()
 
+        for term in self.common_terms:
             if term.name in encodings:
-                term_encoding = encodings[term.name]
-            if hasattr(term_encoding, "__len__") and len(term_encoding) > 1:
-                # we're in an interaction that added terms.
-                # we need to create and evaluate these extra terms.
-                # i.e. "y ~ g1:g2", both g1 and g2 categoric, is equivalent to "y ~ g2 + g1:g2"
-                # Possibly an interaction adds LOWER order terms, but NEVER HIGHER order terms.
-                for (idx, encoding) in enumerate(term_encoding):
-                    # Last term never adds any new term, it corresponds to the outer `term`.
-                    if idx == len(term_encoding) - 1:
-                        term.set_data(encoding)
-                        result[term.name] = term.data
-                    else:
-                        extra_term = _create_and_eval_extra_term(term, encoding, data, env)
-                        result[extra_term.name] = extra_term.data
-                        # Finally, add term to self.common_terms object, right before the term
-                        # that causes its addition.
-                        self.common_terms.insert(self.common_terms.index(term), extra_term)
+                # Since we added extra terms before, we can assume 'encodings' has lists of length 1
+                encoding = encodings[term.name][0]
             else:
-                # This term does not add any lower order term, so we just evaluate it as it is.
-                term.set_data(term_encoding)
-                result[term.name] = term.data
-        return result
+                encoding = False
+            term.set_data(encoding)
+
+        # Evaluate group-specific terms
+        for term in self.group_terms:
+            encoding = True
+            # If both (1|g) and (x|g) are in the model, then the encoding for x is False.
+            if not isinstance(term.expr, Intercept):
+                for t in self.terms:
+                    if t.factor == term.factor and isinstance(t.expr, Intercept):
+                        encoding = False
+            term.set_data(encoding)
 
 
-def _create_and_eval_extra_term(term, encoding, data, env):
-    if len(encoding) == 1:
-        component_name = list(encoding.keys())[0]
-        encoding_ = list(encoding.values())[0]
-        component = term.get_component(component_name)
-        extra_term = Term(component)
-    else:
-        component_names = [c.name for c in term.components]
-        encoding_ = encoding
-        components = [
-            term.get_component(name) for name in component_names if name in encoding.keys()
-        ]
-        extra_term = Term(*components)
+def create_extra_term(term, encoding, data, env):
+    component_names = [component.name for component in term.components]
+    components = [term.get_component(name) for name in component_names if name in encoding.keys()]
+    extra_term = Term(*components)
     extra_term.set_type(data, env)
-    extra_term.set_data(encoding_)
     return extra_term

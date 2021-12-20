@@ -212,15 +212,12 @@ class Call:
         reference = x.min()
         levels = x.categories.tolist()
 
+        print(f"{self.name}: {encoding}")
+
         if self.is_response:
             value = np.where(x == reference, 1, 0)
             encoding = None
         else:
-            if isinstance(encoding, list):
-                encoding = encoding[0]
-            if isinstance(encoding, dict):
-                encoding = encoding[self.name]
-
             # Treatment encoding by default
             treatment = Treatment()
             if encoding:
@@ -256,12 +253,7 @@ class Call:
         dtype = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
         data = pd.Categorical(data).astype(dtype)
 
-        # This is bc 'encoding' is not very well polished in this pkg
-        if isinstance(encoding, list):
-            encoding = encoding[0]
-        if isinstance(encoding, dict):
-            encoding = encoding[self.name]
-
+        print(f"{self.name}: {encoding}")
         if encoding:
             contrast_matrix = contrast.code_with_intercept(categories)
             encoding = "full"
