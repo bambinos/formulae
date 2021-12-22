@@ -162,8 +162,8 @@ class CommonEffectsMatrix:
     Parameters
     ----------
 
-    model : Model
-        A ``Model`` object containing only terms for the common effects of the model.
+    terms : list
+        A ...
     data: pandas.DataFrame
         The data frame where variables are taken from.
     env: Environment
@@ -185,7 +185,7 @@ class CommonEffectsMatrix:
     """
 
     def __init__(self, terms):
-        self.terms = terms
+        self.terms = {term.name: term for term in terms}
         self.data = None
         self.env = None
         self.design_matrix = None
@@ -199,8 +199,7 @@ class CommonEffectsMatrix:
         ``self.design_matrix``. This method also sets the values of ``self.data`` and
         ``self.env``.
 
-        It also populates the dictionary ``self.terms_info`` with information related to each term,
-        such as the kind, the columns they occupy in the design matrix and the names of the columns.
+        It also populates the dictionary ``self.slices`` ...
 
         Parameters
         ----------
@@ -211,9 +210,9 @@ class CommonEffectsMatrix:
         """
         self.data = data
         self.env = env
-        self.design_matrix = np.column_stack([term.data for term in self.terms])
+        self.design_matrix = np.column_stack([term.data for term in self.terms.values()])
         start = 0
-        for term in self.terms:
+        for term in self.terms.values():
             if term.data.ndim == 2:
                 delta = term.data.shape[1]
             else:
@@ -247,13 +246,15 @@ class CommonEffectsMatrix:
         new_instance = self.__class__(self.terms)
         new_instance.data = data
         new_instance.env = self.env
-        new_instance.design_matrix = np.column_stack([t.eval_new_data(data) for t in self.terms])
+        new_instance.design_matrix = np.column_stack(
+            [t.eval_new_data(data) for t in self.terms.values()]
+        )
         new_instance.evaluated = True
         return new_instance
 
     def as_dataframe(self):
         """Returns `self.design_matrix` as a pandas.DataFrame."""
-        colnames = [term.get_labels() for term in self.terms]
+        colnames = [term.labels for term in self.terms.values()]
         data = pd.DataFrame(self.design_matrix, columns=list(flatten_list(colnames)))
         return data
 
@@ -319,7 +320,7 @@ class GroupEffectsMatrix:
     """
 
     def __init__(self, terms):
-        self.terms = terms
+        self.terms = {term.name: term for term in terms}
         self.data = None
         self.env = None
         self.design_matrix = np.zeros((0, 0))
@@ -346,10 +347,10 @@ class GroupEffectsMatrix:
         """
         self.data = data
         self.env = env
-        self.design_matrix = np.column_stack([term.data for term in self.terms])
+        self.design_matrix = np.column_stack([term.data for term in self.terms.values()])
         start = 0
-        for term in self.terms:
-            # TODO: I think everything we pass here has two columns...
+        for term in self.terms.values():
+            # NOTE: I think everything we pass here has two columns...
             if term.data.ndim == 2:
                 delta = term.data.shape[1]
             else:
@@ -385,7 +386,9 @@ class GroupEffectsMatrix:
         new_instance = self.__class__(self.terms)
         new_instance.data = data
         new_instance.env = self.env
-        new_instance.design_matrix = np.column_stack([t.eval_new_data(data) for t in self.terms])
+        new_instance.design_matrix = np.column_stack(
+            [t.eval_new_data(data) for t in self.terms.values()]
+        )
         new_instance.evaluated = True
         return new_instance
 
@@ -520,3 +523,6 @@ def wrapify(string, width=100):
             wrapped = wrapper.wrap(line)
             l[idx] = "\n".join(wrapped) + "\n"
     return "".join(l)
+
+
+# Idea: Have a TermList class instead of having to use dictionaries?

@@ -23,10 +23,10 @@ class Intercept:
 
     def __init__(self):
         self.name = "Intercept"
-        self.kind = "Intercept"
+        self.kind = "intercept"
         self.data = None
         self.len = None
-        self.metadata = {"kind": "intercept"}
+        self.metadata = {}
 
     def __eq__(self, other):
         return isinstance(other, type(self))
@@ -37,11 +37,11 @@ class Intercept:
     def __add__(self, other):
         """Addition operator.
 
-        Generally this operator is used to explicitly add an intercept to a model. However, there
-        may be cases where the result is not a ``Model``, or does not contain an intercept.
+        Generally this operator is used to explicitly add an intercept to a model. There may be
+        cases where the result is not a ``Model``, or does not contain an intercept.
 
         * ``"1 + 0"`` and ``"1 + (-1)"`` return an empty model.
-        * ``"1 + 1"`` returns an intercept.
+        * ``"1 + 1"`` returns a single intercept.
         * ``"1 + x"`` and ``"1 + (x|g)"`` returns a model with both the term and the intercept.
         * ``"1 + (x + y)"`` adds an intercept to the model given by ``x`` and ``y``.
         """
@@ -71,7 +71,7 @@ class Intercept:
         elif isinstance(other, NegatedIntercept):
             return self
         elif isinstance(other, Model):
-            if self in other.common_terms:
+            if any(isinstance(term, type(self)) for term in other.common_terms):
                 return Model()
             else:
                 return self
@@ -79,10 +79,11 @@ class Intercept:
             return NotImplemented
 
     def __or__(self, other):
-        """Group-specific operator. Creates group-specific intercept.
+        """Group-specific interaction-like operator. Creates a group-specific intercept.
 
         This operation is usually surrounded by parenthesis. It is not actually required. They
-        are always used because ``|`` has lower precedence that the other common operators.
+        are always used because ``|`` has lower precedence than any of the other operators except
+        ``~``.
 
         This operator is distributed over the right-hand side, which means ``(1|g + h)`` is
         equivalent to ``(1|g) + (1|h)``.
@@ -110,7 +111,6 @@ class Intercept:
     def set_type(self, data, env):  # pylint: disable = unused-argument
         """Sets length of the intercept."""
         # Nothing goes here as the type is given by the class.
-        # Only works with DataFrames or Series so far
         self.len = data.shape[0]
 
     def set_data(self, encoding):  # pylint: disable = unused-argument
@@ -125,10 +125,10 @@ class Intercept:
 
         The length of the new intercept is given by the number of rows in ``data``.
         """
-        # it assumes data is a pandas DataFrame now
         return np.ones(data.shape[0])
 
-    def get_labels(self):
+    @property
+    def labels(self):
         return ["Intercept"]
 
 
@@ -142,7 +142,7 @@ class NegatedIntercept:
 
     def __init__(self):
         self.name = "NegatedIntercept"
-        self.kind = "Intercept"
+        self.kind = "intercept"
 
     def __add__(self, other):
         """Addition operator.
@@ -183,16 +183,16 @@ class NegatedIntercept:
 
     @property
     def var_names(self):
-        # This method should never be called. Leaving a set() to avoid harmless error.
+        # This method should never be called. Returning set() to avoid harmless error.
         return set()
 
-    def set_type(self, *args, **kwargs):
-        # This method should never be called. Leaving a pass to avoid harmless error.
-        pass
+    def set_type(self, *args, **kwargs):  # pylint: disable = unused-argument
+        # This method should never be called. Returning None to avoid harmless error.
+        return None
 
-    def set_data(self, *args, **kwargs):
-        # This method should never be called. Leaving a pass to avoid harmless error.
-        pass
+    def set_data(self, *args, **kwargs):  # pylint: disable = unused-argument
+        # This method should never be called. Returning None to avoid harmless error.
+        return None
 
 
 class Term:
@@ -210,7 +210,7 @@ class Term:
 
     Attributes
     ----------
-    data: dict
+    data: np.ndarray
         The values associated with the term as they go into the design matrix.
     metadata: dict
         Metadata associated with the term. If ``"numeric"`` or ``"categoric"`` it holds additional
@@ -228,11 +228,12 @@ class Term:
         self.metadata = {}
         self.kind = None
         self.components = []
-        self.component_types = None
         for component in components:
             if component not in self.components:
                 self.components.append(component)
-        self.name = ":".join([str(c.name) for c in self.components])
+        # XFIXME: It is not exactly as it was written (e.g. it does not have any potential space)
+        # Name should be obtained from the actual code that generated the terms
+        self.name = ":".join([str(component.name) for component in self.components])
 
     def __hash__(self):
         return hash(tuple(self.components))
@@ -358,7 +359,7 @@ class Term:
             return self
         elif isinstance(other, type(self)):
             if len(other.components) == 1 and isinstance(other.components[0].name, (int, float)):
-                raise TypeError("Interaction with numeric does not make sense.")
+                raise TypeError("Interaction with numbers does not make sense.")
             return Model(self, Term(*self.components, *other.components))
         elif isinstance(other, Model):
             products = product([self], other.common_terms)
@@ -368,7 +369,7 @@ class Term:
             return NotImplemented
 
     def __or__(self, other):
-        """Group-specific operator. Creates group-specific intercept.
+        """Group-specific operator. Creates a group-specific term.
 
         Intercepts are implicitly added.
 
@@ -471,11 +472,13 @@ class Term:
                 encoding_ = encoding
             else:
                 raise ValueError(f"Encoding is of unexpected type {type(encoding)}")
+
             component.set_data(encoding_)
 
         if self.kind == "interaction":
             self.data = reduce(get_interaction_matrix, [c.data["value"] for c in self.components])
             self.metadata["kind"] = "interaction"
+            # TODO: Update this! I want to keep the terms, not the **old metadata**
             self.metadata["terms"] = {
                 c.name: {k: v for k, v in c.data.items() if k != "value"} for c in self.components
             }
@@ -542,27 +545,18 @@ class Term:
             if component.name == name:
                 return component
 
-    def get_labels(self):
-        if self.kind in ["numeric", "offset"]:
-            shape = self.data.shape
-            if len(shape) == 2:
-                labels = [f"{self.name}[{i}]" for i in range(shape[1])]
-            else:
-                labels = [self.name]
-        elif self.kind == "categoric":
-            labels = self.components[0].contrast_matrix.labels
-            labels = [f"{self.name}[{label}]" for label in labels]
+    @property
+    def labels(self):
+        """Obtain labels of the columns in the design matrix associated with this Term"""
+        if self.kind is None:
+            return None
         elif self.kind == "interaction":
-            colnames = []
+            labels = []
             for component in self.components:
-                if component.kind == "numeric":
-                    colnames.append([component.name])
-                elif component.kind == "categoric":
-                    labels = component.contrast_matrix.labels
-                    colnames.append([f"{component.name}[{label}]" for label in labels])
-            labels = [":".join(str_tuple) for str_tuple in list(itertools.product(*colnames))]
+                labels.append(component.labels)
+            labels = [":".join(str_tuple) for str_tuple in list(itertools.product(*labels))]
         else:
-            raise ValueError(f"Unexpected Term kind {self.kind}")
+            labels = self.components[0].labels
         return labels
 
 
@@ -585,6 +579,18 @@ class GroupSpecificTerm:
         The term for which we want to have a group specific term.
     factor: :class:`.Term`
         The factor that determines the groups in the group specific term.
+
+    Attributes
+    ----------
+    data: np.ndarray
+        The values associated with the term as they go into the design matrix.
+    metadata: dict
+        Metadata associated with the term. If ``"numeric"`` or ``"categoric"`` it holds additional
+        information in the component ``.data`` attribute. If ``"interaction"``, the keys are
+        the name of the components and the values are dictionaries holding the metadata.
+    kind: string
+        Indicates the type of the term. Can be one of ``"numeric"``, ``"categoric"``, or
+        ``"interaction"``.
     """
 
     def __init__(self, expr, factor):
@@ -592,6 +598,7 @@ class GroupSpecificTerm:
         self.factor = factor
         self.groups = None
         self.data = None
+        self.kind = None
         self.metadata = {}
 
     def __eq__(self, other):
@@ -613,8 +620,9 @@ class GroupSpecificTerm:
         return self.__class__.__name__ + "(\n  " + ",\n  ".join(strlist) + "\n)"
 
     def set_type(self, data, env):
-        # Set type on each component to check data is behaved as expected and then
-        # manually set type of the components to categoric.
+        # Set type of 'factor'
+        # Set type on each component of the factor to check data is behaved as expected and then
+        # manually set their type to categoric.
         for component in self.factor.components:
             if isinstance(component, Variable):
                 component.set_type(data)
@@ -633,19 +641,18 @@ class GroupSpecificTerm:
         else:
             self.factor.kind = "categoric"
 
-        # Obtain group names
-        groups = []
-        for component in self.factor.components:
-            # We're certain they are all categoric with full encoding.
-            # FIXME: We have to take levels from contrast matrices!
-            groups.append([str(lvl) for lvl in component.data["levels"]])
-        self.groups = [":".join(s) for s in list(itertools.product(*groups))]
-
+        # Set type of 'expr'
         self.expr.set_type(data, env)
 
     def set_data(self, encoding):
         self.expr.set_data(encoding)
         self.factor.set_data(True)  # Factor is a categorical term that always spans the intercept
+
+        # Obtain group names. These are obtained from the labels of the contrast matrices
+        groups = []
+        for component in self.factor.components:
+            groups.append(component.contrast_matrix.labels)
+        self.groups = [":".join(s) for s in list(itertools.product(*groups))]
 
         Xi, Ji = self.expr.data, self.factor.data
         if Xi.ndim == 1:
@@ -656,10 +663,13 @@ class GroupSpecificTerm:
         self.data = linalg.khatri_rao(Ji.T, Xi.T).T  # Zi
 
         if self.expr.kind == "categoric":
-            metadata = {"kind": "categoric", "encoding": self.expr.metadata["encoding"]}
+            metadata = {"encoding": self.expr.metadata["encoding"]}
         elif self.expr.kind == "interaction":
-            metadata = {"kind": "interaction", "terms": self.expr.metadata["terms"]}
+            metadata = {"terms": self.expr.metadata["terms"]}
+        elif self.expr.kind in ["numeric", "intercept"]:
+            metadata = {}
 
+        self.kind = self.expr.kind
         self.metadata.update(metadata)
 
     def eval(self, encoding):
@@ -787,7 +797,8 @@ class GroupSpecificTerm:
         factor_names = self.factor.var_names.copy()
         return expr_names.union(factor_names)
 
-    def get_name(self):
+    @property
+    def name(self):
         """Obtain string representation of the name of the term.
 
         Returns
@@ -795,6 +806,7 @@ class GroupSpecificTerm:
         name: str
             The name of the term, such as ``1|g`` or ``var|g``.
         """
+        # XFIXME: Name is not actual name as it is was written!
         name = ""
         if isinstance(self.expr, Intercept):
             name += "1|"
@@ -808,6 +820,38 @@ class GroupSpecificTerm:
         else:
             raise ValueError("Invalid RHS expression for group specific term")
         return name
+
+    @property
+    def labels(self):
+        if self.kind is None:
+            labels = None
+
+        if self.kind == "intercept":
+            levels = ["1"]
+        else:
+            levels = self.expr.labels
+
+        labels = [f"{level}|{group}" for group in self.factor.labels for level in levels]
+        return labels
+
+
+def interaction_label(x):
+    terms = x["terms"]
+    colnames = []
+    for k, v in terms.items():
+        if v["kind"] == "numeric":
+            colnames.append([k])
+        if v["kind"] == "categoric":
+            if "levels" in v.keys():
+                # ask whether encoding is full or reduced
+                if v["encoding"] == "full":
+                    colnames.append([f"{k}[{level}]" for level in v["levels"]])
+                else:
+                    colnames.append([f"{k}[{level}]" for level in v["levels"][1:]])
+            else:
+                colnames.append([f"{k}[{v['reference']}]"])
+
+    return [":".join(str_tuple) for str_tuple in list(itertools.product(*colnames))]
 
 
 class Response:
@@ -1218,12 +1262,13 @@ class Model:
                 components[term.name] = {c.name: c.kind for c in term.components}
             else:
                 components[term.name] = term.kind
+
         # First, group with only categoric terms
         categoric_group = {}
         for k, v in components.items():
             if v == "categoric":
                 categoric_group[k] = [k]
-            elif v == "Intercept":
+            elif v == "intercept":
                 categoric_group[k] = []
             elif isinstance(v, dict):  # interaction
                 # If all categoric terms in the interaction

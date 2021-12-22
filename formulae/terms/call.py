@@ -147,6 +147,24 @@ class Call:
             print("Unexpected error while trying to evaluate a Call:", sys.exc_info()[0])
             raise
 
+    @property
+    def labels(self):
+        """Obtain labels of the columns in the design matrix associated with this Call"""
+        if self.kind is None:
+            raise ValueError("Call type is not set.")
+
+        if self.kind in ["numeric", "offset"]:
+            if self.data["value"].ndim == 2:
+                labels = [f"{self.name}[{i}]" for i in range(self.data["value"].shape[1])]
+            else:
+                labels = [self.name]
+        elif self.kind == "categoric":
+            labels = [f"{self.name}[{label}]" for label in self.contrast_matrix.labels]
+        else:
+            raise ValueError(f"Call is of an unrecognized type ({self.kind}).")
+
+        return labels
+
     def _eval_numeric(self, x):
         """Finishes evaluation of a numeric call.
 
@@ -304,34 +322,35 @@ class Call:
         if self.kind in ["numeric", "categoric"]:
             x = self.call.eval(data_mask, self.env)
             if self.kind == "numeric":
-                return self._eval_numeric(x)["value"]
+                result = self._eval_numeric(x)["value"]
             else:
                 if isinstance(x, CategoricalBox):
-                    return self._eval_new_data_categorical_box(x)
+                    result = self._eval_new_data_categorical_box(x)
                 else:
-                    return self._eval_new_data_categoric(x)
+                    result = self._eval_new_data_categoric(x)
         elif self.kind == "proportion":
             if self._intermediate_data.trials_type == "constant":
                 # Return value passed in the second component
-                return np.ones(len(data_mask.index)) * self.call.args[1].value
+                result = np.ones(len(data_mask.index)) * self.call.args[1].value
             else:
                 # Extract name of the second component
                 name = self.call.args[1].name
                 values = data_mask[name]
                 if isinstance(values, pd.Series):
                     values = values.values
-                return values
+                result = values
         elif self.kind == "offset":
             if self._intermediate_data.kind == "constant":
                 # Return value passed as the argument
-                return np.ones(len(data_mask.index)) * self.call.args[0].value
+                result = np.ones(len(data_mask.index)) * self.call.args[0].value
             else:
                 # Extract name of the argument
                 name = self.call.args[0].name
                 values = data_mask[name]
                 if isinstance(values, pd.Series):
                     values = values.values
-                return values
+                result = values
+        return result
 
     def _eval_new_data_categoric(self, x):
         """Evaluates the call with new data when the result of the call is categoric.

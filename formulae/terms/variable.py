@@ -108,6 +108,24 @@ class Variable:
             print("Unexpected error while trying to evaluate a Variable.", sys.exc_info()[0])
             raise
 
+    @property
+    def labels(self):
+        """Obtain labels of the columns in the design matrix associated with this Variable"""
+        if self.kind is None:
+            raise ValueError("Variable type is not set.")
+
+        if self.kind == "numeric":
+            if self.data["value"].ndim == 2:
+                labels = [f"{self.name}[{i}]" for i in range(self.data["value"].shape[1])]
+            else:
+                labels = [self.name]
+        elif self.kind == "categoric":
+            labels = [f"{self.name}[{label}]" for label in self.contrast_matrix.labels]
+        else:
+            raise ValueError(f"Variable is of an unrecognized type ({self.kind}).")
+
+        return labels
+
     def _eval_numeric(self, x):
         """Finishes evaluation of a numeric variable.
 
