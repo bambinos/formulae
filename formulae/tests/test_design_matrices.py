@@ -172,8 +172,8 @@ def test_categoric_encoding(data):
     assert dm.common.terms["g"].metadata["levels"] == sorted(list(data["g"].unique()))
     assert dm.common.terms["f"].metadata["encoding"] == "full"
     assert dm.common.terms["g"].metadata["encoding"] == "reduced"
-    assert dm.common.terms["f:g"].metadata["terms"]["f"].metadata["encoding"] == "reduced"
-    assert dm.common.terms["f:g"].metadata["terms"]["g"].metadata["encoding"] == "reduced"
+    assert dm.common.terms["f:g"].components[0].metadata["encoding"] == "reduced"
+    assert dm.common.terms["f:g"].components[1].metadata["encoding"] == "reduced"
     assert dm.common.design_matrix.shape == (20, 4)
 
     # Intercept, two categoric predictors with interaction
@@ -189,8 +189,8 @@ def test_categoric_encoding(data):
     assert dm.common.terms["g"].metadata["levels"] == sorted(list(data["g"].unique()))
     assert dm.common.terms["f"].metadata["encoding"] == "reduced"
     assert dm.common.terms["g"].metadata["encoding"] == "reduced"
-    assert dm.common.terms["f:g"].metadata["terms"]["f"].metadata["encoding"] == "reduced"
-    assert dm.common.terms["f:g"].metadata["terms"]["g"].metadata["encoding"] == "reduced"
+    assert dm.common.terms["f:g"].metadata["components"]["f"].metadata["encoding"] == "reduced"
+    assert dm.common.terms["f:g"].metadata["components"]["g"].metadata["encoding"] == "reduced"
     assert dm.common.design_matrix.shape == (20, 4)
 
     # No intercept, interaction between two categorics
@@ -198,8 +198,8 @@ def test_categoric_encoding(data):
     assert list(dm.common.terms.keys()) == ["f:g"]
     assert dm.common.terms["f:g"].kind == "interaction"
     assert dm.common.terms["f:g"].labels == ["f[A]:g[A]", "f[A]:g[B]", "f[B]:g[A]", "f[B]:g[B]"]
-    assert dm.common.terms["f:g"].metadata["terms"]["f"].metadata["encoding"] == "full"
-    assert dm.common.terms["f:g"].metadata["terms"]["g"].metadata["encoding"] == "full"
+    assert dm.common.terms["f:g"].metadata["components"]["f"].metadata["encoding"] == "full"
+    assert dm.common.terms["f:g"].metadata["components"]["g"].metadata["encoding"] == "full"
     assert dm.common.design_matrix.shape == (20, 4)
 
     # Intercept, interaction between two categorics
@@ -208,8 +208,8 @@ def test_categoric_encoding(data):
     assert list(dm.common.terms) == ["Intercept", "g", "f:g"]
     assert dm.common.terms["f:g"].kind == "interaction"
     assert dm.common.terms["f:g"].labels == ["f[B]:g[A]", "f[B]:g[B]"]
-    assert dm.common.terms["f:g"].metadata["terms"]["f"].metadata["encoding"] == "reduced"
-    assert dm.common.terms["f:g"].metadata["terms"]["g"].metadata["encoding"] == "full"
+    assert dm.common.terms["f:g"].metadata["components"]["f"].metadata["encoding"] == "reduced"
+    assert dm.common.terms["f:g"].metadata["components"]["g"].metadata["encoding"] == "full"
     assert dm.common.terms["g"].metadata["encoding"] == "reduced"
     assert dm.common.design_matrix.shape == (20, 4)
 
@@ -218,8 +218,8 @@ def test_categoric_encoding(data):
     assert list(dm.common.terms) == ["Intercept", "g", "f:g"]
     assert dm.common.terms["f:g"].kind == "interaction"
     assert dm.common.terms["f:g"].labels == ["f[B]:g[A]", "f[B]:g[B]"]
-    assert dm.common.terms["f:g"].metadata["terms"]["f"].terms["encoding"] == "reduced"
-    assert dm.common.terms["f:g"].metadata["terms"]["g"].terms["encoding"] == "full"
+    assert dm.common.terms["f:g"].metadata["components"]["f"].terms["encoding"] == "reduced"
+    assert dm.common.terms["f:g"].metadata["components"]["g"].terms["encoding"] == "full"
     assert dm.common.terms["g"].metadata["encoding"] == "reduced"
     assert dm.common.design_matrix.shape == (20, 4)
 
@@ -243,13 +243,13 @@ def test_categoric_encoding_with_numeric_interaction():
     assert list(dm.common.terms.keys()) == ["Intercept", "x1", "x2", "g", "f:g", "j", "h:j:x2"]
     assert dm.common.terms["g"]["encoding"] == "reduced"
     assert dm.common.terms["f:g"]["kind"] == "interaction"
-    assert dm.common.terms["f:g"]["terms"]["f"]["encoding"] == "reduced"
-    assert dm.common.terms["f:g"]["terms"]["g"]["encoding"] == "full"
+    assert dm.common.terms["f:g"]["components"]["f"]["encoding"] == "reduced"
+    assert dm.common.terms["f:g"]["components"]["g"]["encoding"] == "full"
     assert dm.common.terms["f:g"]["labels"] == ["f[B]:g[A]", "f[B]:g[B]"]
     assert dm.common.terms["j"]["encoding"] == "reduced"
-    assert dm.common.terms["h:j:x2"]["terms"]["h"]["encoding"] == "reduced"
-    assert dm.common.terms["h:j:x2"]["terms"]["j"]["encoding"] == "full"
-    assert dm.common.terms["h:j:x2"]["terms"]["x2"]["kind"] == "numeric"
+    assert dm.common.terms["h:j:x2"]["components"]["h"]["encoding"] == "reduced"
+    assert dm.common.terms["h:j:x2"]["components"]["j"]["encoding"] == "full"
+    assert dm.common.terms["h:j:x2"]["components"]["x2"]["kind"] == "numeric"
 
 
 def test_interactions(data):
@@ -270,7 +270,7 @@ def test_interactions(data):
     assert list(dm.common.terms.keys()) == ["Intercept", "x1", "g", "x1:g"]
     assert dm.common.terms["g"]["kind"] == "categoric"
     assert dm.common.terms["g"]["encoding"] == "reduced"
-    assert dm.common.terms["x1:g"]["terms"]["g"]["encoding"] == "reduced"
+    assert dm.common.terms["x1:g"]["components"]["g"]["encoding"] == "reduced"
 
     # "g" in "g" -> reduced
     # "g" in "x1:g" -> full because x1 is not present in formula
@@ -278,31 +278,31 @@ def test_interactions(data):
     assert list(dm.common.terms.keys()) == ["Intercept", "g", "x1:g"]
     assert dm.common.terms["g"]["kind"] == "categoric"
     assert dm.common.terms["g"]["encoding"] == "reduced"
-    assert dm.common.terms["x1:g"]["terms"]["g"]["encoding"] == "full"
+    assert dm.common.terms["x1:g"]["components"]["g"]["encoding"] == "full"
 
     # "g" in "x1:x2:g" is full, because x1:x2 is a new group and we don't have x1:x2 in the model
     dm = design_matrices("y ~ x1 + g + x1:g + x1:x2:g", data)
     assert list(dm.common.terms.keys()) == ["Intercept", "x1", "g", "x1:g", "x1:x2:g"]
     assert dm.common.terms["g"]["kind"] == "categoric"
     assert dm.common.terms["g"]["encoding"] == "reduced"
-    assert dm.common.terms["x1:g"]["terms"]["g"]["encoding"] == "reduced"
-    assert dm.common.terms["x1:x2:g"]["terms"]["g"]["encoding"] == "full"
+    assert dm.common.terms["x1:g"]["components"]["g"]["encoding"] == "reduced"
+    assert dm.common.terms["x1:x2:g"]["components"]["g"]["encoding"] == "full"
 
     # "g" in "x1:x2:g" is reduced, because x1:x2 is a new group and we have x1:x2 in the model
     dm = design_matrices("y ~ x1 + g + x1:x2 + x1:g + x1:x2:g", data)
     assert list(dm.common.terms.keys()) == ["Intercept", "x1", "g", "x1:x2", "x1:g", "x1:x2:g"]
     assert dm.common.terms["g"]["kind"] == "categoric"
     assert dm.common.terms["g"]["encoding"] == "reduced"
-    assert dm.common.terms["x1:g"]["terms"]["g"]["encoding"] == "reduced"
-    assert dm.common.terms["x1:x2:g"]["terms"]["g"]["encoding"] == "reduced"
+    assert dm.common.terms["x1:g"]["components"]["g"]["encoding"] == "reduced"
+    assert dm.common.terms["x1:x2:g"]["components"]["g"]["encoding"] == "reduced"
 
     # And now, since we don't have intercept, x1 and x1:x2 all "g" are full
     dm = design_matrices("y ~ 0 + g + x1:g + x1:x2:g", data)
     assert list(dm.common.terms.keys()) == ["g", "x1:g", "x1:x2:g"]
     assert dm.common.terms["g"]["kind"] == "categoric"
     assert dm.common.terms["g"]["encoding"] == "full"
-    assert dm.common.terms["x1:g"]["terms"]["g"]["encoding"] == "full"
-    assert dm.common.terms["x1:x2:g"]["terms"]["g"]["encoding"] == "full"
+    assert dm.common.terms["x1:g"]["components"]["g"]["encoding"] == "full"
+    assert dm.common.terms["x1:x2:g"]["components"]["g"]["encoding"] == "full"
 
     # Two numerics
     dm = design_matrices("y ~ x1:x2", data)

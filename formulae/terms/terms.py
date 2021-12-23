@@ -477,11 +477,6 @@ class Term:
 
         if self.kind == "interaction":
             self.data = reduce(get_interaction_matrix, [c.data["value"] for c in self.components])
-            self.metadata["kind"] = "interaction"
-            # TODO: Update this! I want to keep the terms, not the **old metadata**
-            self.metadata["terms"] = {
-                c.name: {k: v for k, v in c.data.items() if k != "value"} for c in self.components
-            }
         else:
             component = self.components[0]
             self.data = component.data["value"]
@@ -665,7 +660,7 @@ class GroupSpecificTerm:
         if self.expr.kind == "categoric":
             metadata = {"encoding": self.expr.metadata["encoding"]}
         elif self.expr.kind == "interaction":
-            metadata = {"terms": self.expr.metadata["terms"]}
+            metadata = {}
         elif self.expr.kind in ["numeric", "intercept"]:
             metadata = {}
 
@@ -736,8 +731,6 @@ class GroupSpecificTerm:
             out["levels"] = self.expr.metadata["levels"]
             out["reference"] = self.expr.metadata["reference"]
             out["encoding"] = self.expr.metadata["encoding"]
-        elif self.expr.kind == "interaction":
-            out["terms"] = self.expr.metadata["terms"]
         return out
 
     def eval_new_data(self, data):
@@ -778,8 +771,6 @@ class GroupSpecificTerm:
             out["levels"] = self.expr.metadata["levels"]
             out["reference"] = self.expr.metadata["reference"]
             out["encoding"] = self.expr.metadata["encoding"]
-        elif self.expr.kind == "interaction":
-            out["terms"] = self.expr.metadata["terms"]
         return out
 
     @property
@@ -833,25 +824,6 @@ class GroupSpecificTerm:
 
         labels = [f"{level}|{group}" for group in self.factor.labels for level in levels]
         return labels
-
-
-def interaction_label(x):
-    terms = x["terms"]
-    colnames = []
-    for k, v in terms.items():
-        if v["kind"] == "numeric":
-            colnames.append([k])
-        if v["kind"] == "categoric":
-            if "levels" in v.keys():
-                # ask whether encoding is full or reduced
-                if v["encoding"] == "full":
-                    colnames.append([f"{k}[{level}]" for level in v["levels"]])
-                else:
-                    colnames.append([f"{k}[{level}]" for level in v["levels"][1:]])
-            else:
-                colnames.append([f"{k}[{v['reference']}]"])
-
-    return [":".join(str_tuple) for str_tuple in list(itertools.product(*colnames))]
 
 
 class Response:
