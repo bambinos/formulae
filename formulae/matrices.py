@@ -55,15 +55,15 @@ class DesignMatrices:
 
         if self.model.response:
             self.response = ResponseVector(self.model.response)
-            self.response._evaluate(data, env)
+            self.response.evaluate(data, env)
 
         if self.model.common_terms:
             self.common = CommonEffectsMatrix(self.model.common_terms)
-            self.common._evaluate(data, env)
+            self.common.evaluate(data, env)
 
         if self.model.group_terms:
             self.group = GroupEffectsMatrix(self.model.group_terms)
-            self.group._evaluate(data, env)
+            self.group.evaluate(data, env)
 
 
 class ResponseVector:
@@ -103,7 +103,7 @@ class ResponseVector:
         self.levels = None  # Not None for categorical variables
         self.binary = None  # Not None for categorical variables (either True or False)
 
-    def _evaluate(self, data, env):
+    def evaluate(self, data, env):
         """Evaluates ``self.term`` inside the data mask provided by ``data`` and
         updates ``self.design_vector`` and ``self.name``.
         """
@@ -123,7 +123,7 @@ class ResponseVector:
             else:
                 self.baseline = self.term.term.metadata["reference"]
 
-    def _evaluate_new_data(self, data):
+    def evaluate_new_data(self, data):
         if self.kind == "proportion":
             return self.term.term.eval_new_data(data)
         raise ValueError("Can't evaluate response term with kind different to 'proportion'")
@@ -192,7 +192,7 @@ class CommonEffectsMatrix:
         self.evaluated = False
         self.slices = {}
 
-    def _evaluate(self, data, env):
+    def evaluate(self, data, env):
         """Obtain design matrix for common effects.
 
         Evaluates ``self.model`` inside the data mask provided by ``data`` and updates
@@ -221,7 +221,7 @@ class CommonEffectsMatrix:
             start += delta
         self.evaluated = True
 
-    def _evaluate_new_data(self, data):
+    def evaluate_new_data(self, data):
         """Evaluates common terms with new data and return a new instance of
         ``CommonEffectsMatrix``.
 
@@ -327,7 +327,7 @@ class GroupEffectsMatrix:
         self.slices = {}
         self.evaluated = False
 
-    def _evaluate(self, data, env):
+    def evaluate(self, data, env):
         """Evaluate group specific terms.
 
         This evaluates ``self.terms`` inside the data mask provided by ``data`` and the environment
@@ -359,7 +359,7 @@ class GroupEffectsMatrix:
             start += delta
         self.evaluated = True
 
-    def _evaluate_new_data(self, data):
+    def evaluate_new_data(self, data):
         """Evaluates group specific terms with new data and return a new instance of
         ``GroupEffectsMatrix``.
 

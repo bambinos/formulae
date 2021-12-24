@@ -30,9 +30,9 @@ class Variable:
         self.name = name
         self.reference = level
         self.contrast_matrix = None
-        self.encoding = None
         self.kind = None
         self.levels = None
+        self.spans_intercept = None
         self.value = None
         self._intermediate_data = None
 
@@ -72,8 +72,7 @@ class Variable:
 
         Looks for the name of the variable in ``data_mask`` and sets the ``.kind`` property to
         ``"numeric"`` or ``"categoric"`` depending on the type of the variable.
-        It also stores the result of the intermediate evaluation in ``self._intermediate_data`` to
-        save computing time later.
+        It also stores the result of the intermediate evaluation in ``self._intermediate_data``.
 
         Parameters
         ----------
@@ -89,16 +88,14 @@ class Variable:
             raise ValueError(f"Variable is of an unrecognized type ({type(x)}).")
         self._intermediate_data = x
 
-    def set_data(self, encoding=None):
+    def set_data(self, spans_intercept=None):
         """Obtains and stores the final data object related to this variable.
-
-        The result is stored in ``self.data``.
 
         Parameters
         ----------
-        encoding: bool
-            Indicates if it uses full or reduced encoding when the type of the variable is
-            categoric. Omitted when the variable is numeric.
+        spans_intercept: bool
+            Indicates if the encoding of categorical variables spans the intercept or not.
+            Omitted when the variable is numeric.
         """
 
         try:
@@ -109,7 +106,7 @@ class Variable:
             if self.kind == "numeric":
                 self.eval_numeric(self._intermediate_data)
             elif self.kind == "categoric":
-                self.eval_categoric(self._intermediate_data, encoding)
+                self.eval_categoric(self._intermediate_data, spans_intercept)
         except:
             print("Unexpected error while trying to evaluate a Variable.", sys.exc_info()[0])
             raise
@@ -118,7 +115,6 @@ class Variable:
         """Finishes evaluation of a numeric variable.
 
         Converts the intermediate values in ``x`` into a 1d numpy array.
-        This method is used both in ``self.set_data`` and in ``self.eval_new_data``.
 
         Parameters
         ----------
@@ -132,7 +128,7 @@ class Variable:
         else:
             raise ValueError(f"Variable is of an unrecognized type ({type(x)}).")
 
-    def eval_categoric(self, x, encoding):
+    def eval_categoric(self, x, spans_intercept):
         """Finishes evaluation of a categoric variable.
 
         Converts the intermediate values in ``x`` into a numpy array of shape ``(n, p)``, where
@@ -143,16 +139,9 @@ class Variable:
         ----------
         x: np.ndarray or pd.Series
             The intermediate values of the variable.
-        encoding: bool
-            Indicates if it uses full or reduced encoding.
-
-        Returns
-        ----------
-        result: dict
-            A dictionary with keys ``"value"``, ``"kind"``, ``"levels"``, ``"reference"``, and
-            ``"encoding"``. They represent the result of the evaluation, the type, which is
-            ``"categoric"``, the levels observed in the variable, the level used as reference when
-            using reduced encoding, and whether the encoding is ``"full"`` or ``"reduced"``.
+        spans_intercept: bool
+            Indicates if the encoding of categorical variables spans the intercept or not.
+            Omitted when the variable is numeric.
         """
         # If not ordered, we make it ordered.
         if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
@@ -162,36 +151,22 @@ class Variable:
         else:
             x = pd.Categorical(x)
 
-        reference = x.min()
-        levels = x.categories.tolist()
+        self.levels = x.categories.tolist()
 
-        # TODO: What to do with response terms???
-        if self.is_response:
-            # Will be binary, no matter how many levels
-            if self.reference is not None:
-                reference = self.reference
-                value = np.where(x == reference, 1, 0)
-            # Is binary, model first event
-            elif len(x.unique()) == 2:
-                value = np.where(x == reference, 1, 0)
-            # Isn't binary, no level has been passed, return codes.
-            else:
-                value = x.codes
+        # Result of 'variable[level]' is always binary
+        if self.is_response and self.reference is not None:
+            value = np.where(x == self.reference, 1, 0)
         else:
             # Treatment encoding by default
             treatment = Treatment()
-            if encoding:
-                contrast_matrix = treatment.code_with_intercept(levels)
-                encoding = "full"
+            if spans_intercept:
+                self.contrast_matrix = treatment.code_with_intercept(self.levels)
             else:
-                contrast_matrix = treatment.code_without_intercept(levels)
-                encoding = "reduced"
-            value = contrast_matrix.matrix[x.codes]
-            self.contrast_matrix = contrast_matrix
+                self.contrast_matrix = treatment.code_without_intercept(self.levels)
+            value = self.contrast_matrix.matrix[x.codes]
 
         self.value = value
-        self.levels = levels
-        self.encoding = encoding
+        self.spans_intercept = spans_intercept
 
     def eval_new_data(self, data_mask):
         """Evaluates the variable with new data.

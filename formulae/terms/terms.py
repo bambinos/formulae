@@ -17,7 +17,7 @@ from formulae.terms.variable import Variable
 
 _log = logging.getLogger("formulae")
 
-
+# TODO: Components have 'value' and terms have 'data'... which one should be kept?
 class Intercept:
     """Internal representation of a model intercept."""
 
@@ -26,7 +26,6 @@ class Intercept:
         self.kind = "intercept"
         self.data = None
         self.len = None
-        self.metadata = {}
 
     def __eq__(self, other):
         return isinstance(other, type(self))
@@ -212,27 +211,21 @@ class Term:
     ----------
     data: np.ndarray
         The values associated with the term as they go into the design matrix.
-    metadata: dict
-        Metadata associated with the term. If ``"numeric"`` or ``"categoric"`` it holds additional
-        information in the component ``.data`` attribute. If ``"interaction"``, the keys are
-        the name of the components and the values are dictionaries holding the metadata.
     kind: string
-        Indicates the type of the term. Can be one of ``"numeric"``, ``"categoric"``, or
-        ``"interaction"``.
+        Indicates the type of the term.
+        Can be one of ``"numeric"``, ``"categoric"``, or ``"interaction"``.
     name: string
         The name of the term as it was originally written in the model formula.
     """
 
     def __init__(self, *components):
-        self.data = None
-        self.metadata = {}
-        self.kind = None
         self.components = []
         for component in components:
             if component not in self.components:
                 self.components.append(component)
-        # XFIXME: It is not exactly as it was written (e.g. it does not have any potential space)
-        # Name should be obtained from the actual code that generated the terms
+        self.data = None
+        self.kind = None
+        # FIXME: Name is not exactly as it was written (e.g. it does not have any potential space)
         self.name = ":".join([str(component.name) for component in self.components])
 
     def __hash__(self):
@@ -328,8 +321,8 @@ class Term:
 
         * ``"x : x"`` equals to ``"x"``
         * ``"x : y"`` is the interaction between ``"x"`` and ``"y"``
-        * ``x:(y:z)"`` equals to just ``"x:y:z"``
-        * ``(x:y):u"`` equals to just ``"x:y:u"``
+        * ``x:(y:z)"`` equals to ``"x:y:z"``
+        * ``(x:y):u"`` equals to ``"x:y:u"``
         * ``"(x:y):(u + v)"`` equals to ``"x:y:u + x:y:v"``
         """
         if self == other:
@@ -451,7 +444,7 @@ class Term:
         else:
             self.kind = self.components[0].kind
 
-    def set_data(self, encoding):
+    def set_data(self, spans_intercept):
         """Obtains and stores the final data object related to this term.
 
         Calls ``.set_data()`` method on each component in the term. Then, it uses the ``.data``
@@ -465,22 +458,20 @@ class Term:
         """
 
         for component in self.components:
-            encoding_ = False
-            if isinstance(encoding, dict):
-                encoding_ = encoding.get(component.name, False)
-            elif isinstance(encoding, bool):
-                encoding_ = encoding
+            spans_intercept_ = False
+            if isinstance(spans_intercept, dict):
+                spans_intercept_ = spans_intercept.get(component.name, False)
+            elif isinstance(spans_intercept, bool):
+                spans_intercept_ = spans_intercept
             else:
-                raise ValueError(f"Encoding is of unexpected type {type(encoding)}.")
+                raise ValueError(f"Encoding is of unexpected type {type(spans_intercept_)}.")
 
-            component.set_data(encoding_)
+            component.set_data(spans_intercept_)
 
         if self.kind == "interaction":
-            self.data = reduce(get_interaction_matrix, [c.data["value"] for c in self.components])
+            self.data = reduce(get_interaction_matrix, [c.value for c in self.components])
         else:
-            component = self.components[0]
-            self.data = component.data["value"]
-            self.metadata = {k: v for k, v in component.data.items() if k != "value"}
+            self.data = self.components[0].value
 
     def eval_new_data(self, data):
         """Evaluates the term with new data.
@@ -517,9 +508,7 @@ class Term:
         var_names: set
             The names of the variables involved in the term.
         """
-        var_names = set()
-        for component in self.components:
-            var_names.update(component.var_names)
+        var_names = set().union(*[component.var_names for component in self.components])
         return var_names
 
     def get_component(self, name):  # pylint: disable = inconsistent-return-statements
@@ -591,10 +580,9 @@ class GroupSpecificTerm:
     def __init__(self, expr, factor):
         self.expr = expr
         self.factor = factor
-        self.groups = None
         self.data = None
+        self.groups = None
         self.kind = None
-        self.metadata = {}
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -639,8 +627,8 @@ class GroupSpecificTerm:
         # Set type of 'expr'
         self.expr.set_type(data, env)
 
-    def set_data(self, encoding):
-        self.expr.set_data(encoding)
+    def set_data(self, spans_intercept):
+        self.expr.set_data(spans_intercept)
         self.factor.set_data(True)  # Factor is a categorical term that always spans the intercept
 
         # Obtain group names. These are obtained from the labels of the contrast matrices
@@ -656,82 +644,7 @@ class GroupSpecificTerm:
             Ji = Ji[:, np.newaxis]
 
         self.data = linalg.khatri_rao(Ji.T, Xi.T).T  # Zi
-
-        if self.expr.kind == "categoric":
-            metadata = {"encoding": self.expr.metadata["encoding"]}
-        elif self.expr.kind == "interaction":
-            metadata = {}
-        elif self.expr.kind in ["numeric", "intercept"]:
-            metadata = {}
-
         self.kind = self.expr.kind
-        self.metadata.update(metadata)
-
-    def eval(self, encoding):
-        """Evaluates term.
-
-        First, it evaluates the variable in ``self.factor``, creates an oredered categorical data
-        type using its levels. Then, it obtains the design matrix for ``self.expr`` to finally
-        produce the matrix for the group specific effect.
-
-        The output contains the following information
-
-        * ``"kind"``: The kind of the ``expr`` term.
-        * ``"Xi"``: The design matrix for the ``expr`` term.
-        * ``"Ji"``: The design matrix for the ``factor`` term.
-        * ``"Zi"``: The design matrix for the group specific term.
-        * ``"groups"``: The groups present in ``factor``.
-
-        If ``"kind"`` is ``"categoric"``, the output dictionary also contains
-
-        * ``"levels"``: Levels of the term in ``expr``.
-        * ``"reference"``: The level taken as baseline.
-        * ``"encoding"``: The encoding of the term, either ``"full"`` or ``"reduced"``
-
-        If ``"kind"`` is ``"interaction"``, the output dictionary also contains
-
-        * ``"terms"``: Metadata for each of the components in the interaction in ``expr``.
-
-        Parameters
-        ----------
-        data: pandas.DataFrame
-            The data frame where variables are taken from.
-        env: Environment
-            The environment where values and functions are taken from.
-        encoding: bool
-            Whether to use full or reduced rank encoding when ``expr`` is categoric.
-
-        Returns
-        -------
-        out: dict
-            See above.
-        """
-
-        self.expr.set_data(encoding)
-
-        # Factor is a categorical term that always spans the intercept
-        self.factor.set_data(True)
-
-        Xi = self.expr.data
-        Ji = self.factor.data
-        if Xi.ndim == 1:
-            Xi = Xi[:, np.newaxis]
-        if Ji.ndim == 1:
-            Ji = Ji[:, np.newaxis]
-
-        Zi = linalg.khatri_rao(Ji.T, Xi.T).T
-        out = {
-            "kind": self.expr.metadata["kind"],
-            "Xi": Xi,
-            "Ji": Ji,
-            "Zi": Zi,
-            "groups": self.groups,
-        }
-        if self.expr.kind == "categoric":
-            out["levels"] = self.expr.metadata["levels"]
-            out["reference"] = self.expr.metadata["reference"]
-            out["encoding"] = self.expr.metadata["encoding"]
-        return out
 
     def eval_new_data(self, data):
         """Evaluates the term with new data.
@@ -748,10 +661,8 @@ class GroupSpecificTerm:
 
         Returns
         ----------
-        out: dict
-            Same rules as in :meth:`eval <GroupSpecificTerm.eval>`.
+        Zi: np.ndarray
         """
-
         Xi = self.expr.eval_new_data(data)
         Ji = self.factor.eval_new_data(data)
         if Xi.ndim == 1:
@@ -759,19 +670,7 @@ class GroupSpecificTerm:
         if Ji.ndim == 1:
             Ji = Ji[:, np.newaxis]
         Zi = linalg.khatri_rao(Ji.T, Xi.T).T
-
-        out = {
-            "kind": self.expr.metadata["kind"],
-            "Xi": Xi,
-            "Ji": Ji,
-            "Zi": Zi,
-            "groups": self.groups,
-        }
-        if self.expr.kind == "categoric":
-            out["levels"] = self.expr.metadata["levels"]
-            out["reference"] = self.expr.metadata["reference"]
-            out["encoding"] = self.expr.metadata["encoding"]
-        return out
+        return Zi
 
     @property
     def var_names(self):
@@ -797,7 +696,7 @@ class GroupSpecificTerm:
         name: str
             The name of the term, such as ``1|g`` or ``var|g``.
         """
-        # XFIXME: Name is not actual name as it is was written!
+        # FIXME: Name is not actual name as it is was written!
         name = ""
         if isinstance(self.expr, Intercept):
             name += "1|"
@@ -816,12 +715,10 @@ class GroupSpecificTerm:
     def labels(self):
         if self.kind is None:
             labels = None
-
         if self.kind == "intercept":
             levels = ["1"]
         else:
             levels = self.expr.labels
-
         labels = [f"{level}|{group}" for group in self.factor.labels for level in levels]
         return labels
 
@@ -883,9 +780,9 @@ class Response:
         """Set type of the response term."""
         self.term.set_type(data, env)
 
-    def set_data(self, encoding=False):
+    def set_data(self):
         """Set data of the response term."""
-        self.term.set_data(encoding)
+        self.term.set_data(spans_intercept=True)
 
 
 ACCEPTED_TERMS = (Term, GroupSpecificTerm, Intercept, NegatedIntercept)
@@ -1190,10 +1087,7 @@ class Model:
         components: list
             A list containing all components from common terms in the model.
         """
-        # Note: Check whether this method is really necessary.
-        return [
-            comp for term in self.common_terms if isinstance(term, Term) for comp in term.components
-        ]
+        return [c for term in self.common_terms if isinstance(term, Term) for c in term.components]
 
     @property
     def var_names(self):
@@ -1299,21 +1193,12 @@ class Model:
     def eval(self, data, env):
         """Evaluates terms in the model.
 
-        Only common effects are evaluated here. Group specific terms are evaluated individually
-        in :class:`GroupEffectsMatrix <formulae.matrices.GroupEffectsMatrix>`.
-
         Parameters
         ----------
         data: pd.DataFrame
             The data frame where variables are taken from
         env: Environment
             The environment where values and functions are taken from.
-
-        Returns
-        -------
-        result: dict
-            A dictionary where keys are the name of the terms and the values are their ``.data``
-            attribute.
         """
         # Set types on all terms
         self.set_types(data, env)
