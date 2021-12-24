@@ -471,7 +471,7 @@ class Term:
             elif isinstance(encoding, bool):
                 encoding_ = encoding
             else:
-                raise ValueError(f"Encoding is of unexpected type {type(encoding)}")
+                raise ValueError(f"Encoding is of unexpected type {type(encoding)}.")
 
             component.set_data(encoding_)
 
