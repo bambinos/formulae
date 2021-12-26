@@ -497,20 +497,6 @@ class Term:
             result = self.components[0].eval_new_data(data)
         return result
 
-    @property
-    def var_names(self):
-        """Returns the name of the variables in the term as a set.
-
-        Loops through each component and updates the set with the ``.var_names`` of each component.
-
-        Returns
-        ----------
-        var_names: set
-            The names of the variables involved in the term.
-        """
-        var_names = set().union(*[component.var_names for component in self.components])
-        return var_names
-
     def get_component(self, name):  # pylint: disable = inconsistent-return-statements
         """Returns a component by name.
 
@@ -530,10 +516,24 @@ class Term:
                 return component
 
     @property
+    def var_names(self):
+        """Returns the name of the variables in the term as a set.
+
+        Loops through each component and updates the set with the ``.var_names`` of each component.
+
+        Returns
+        ----------
+        var_names: set
+            The names of the variables involved in the term.
+        """
+        var_names = set().union(*[component.var_names for component in self.components])
+        return var_names
+
+    @property
     def labels(self):
         """Obtain labels of the columns in the design matrix associated with this Term"""
         if self.kind is None:
-            return None
+            labels = None
         elif self.kind == "interaction":
             labels = []
             for component in self.components:
@@ -542,6 +542,25 @@ class Term:
         else:
             labels = self.components[0].labels
         return labels
+
+    @property
+    def levels(self):
+        """Obtain levels of the columns in the design matrix associated with this Term
+
+        It is like .labels, without the name of the terms
+        """
+        if self.kind is None or self.kind == "numeric":
+            levels = None
+        elif self.kind == "interaction":
+            levels = []
+            for component in self.components:
+                if component.contrast_matrix is not None:
+                    levels.append(component.contrast_matrix.labels)
+            if levels:
+                levels = [", ".join(str_tuple) for str_tuple in list(itertools.product(*levels))]
+        else:
+            levels = self.components[0].contrast_matrix.labels
+        return levels
 
 
 class GroupSpecificTerm:

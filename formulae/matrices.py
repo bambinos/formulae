@@ -93,15 +93,15 @@ class ResponseVector:
 
     def __init__(self, term):
         self.term = term
-        self.data = None
-        self.env = None
-        self.design_vector = None
-        self.name = None  # a string
-        self.kind = None  # either numeric or categorical
+        self.name = self.term.term.name
         self.baseline = None  # Not None for non-binary categorical variables
-        self.success = None  # Not None for binary categorical variables
-        self.levels = None  # Not None for categorical variables
         self.binary = None  # Not None for categorical variables (either True or False)
+        self.data = None
+        self.design_vector = None
+        self.env = None
+        self.kind = None
+        self.levels = None  # Not None for categorical variables
+        self.success = None  # Not None for binary categorical variables
 
     def evaluate(self, data, env):
         """Evaluates ``self.term`` inside the data mask provided by ``data`` and
@@ -111,17 +111,16 @@ class ResponseVector:
         self.env = env
         self.term.set_type(self.data, self.env)
         self.term.set_data()
-        self.name = self.term.term.name
+        self.kind = self.term.term.kind
         self.design_vector = self.term.term.data
-        self.kind = self.term.term.metadata["kind"]
 
         if self.kind == "categoric":
-            self.binary = len(np.unique(self.design_vector)) == 2
-            self.levels = self.term.term.metadata["levels"]
+            self.binary = self.design_vector.shape[1] == 1 and len(set(self.design_vector)) == 2
+            # self.levels = self.term.term.levels
             if self.binary:
-                self.success = self.term.term.metadata["reference"]
+                self.success = self.term.term.components[0].reference
             else:
-                self.baseline = self.term.term.metadata["reference"]
+                self.baseline = self.term.term.components[0].reference
 
     def evaluate_new_data(self, data):
         if self.kind == "proportion":
@@ -130,12 +129,7 @@ class ResponseVector:
 
     def as_dataframe(self):
         """Returns ``self.design_vector`` as a pandas.DataFrame."""
-        data = pd.DataFrame(self.design_vector)
-        if self.kind == "categoric":
-            colname = f"{self.name}[{self.baseline}]"
-        else:
-            colname = self.name
-        data.columns = [colname]
+        data = pd.DataFrame(self.design_vector, columns=self.term.term.labels)
         return data
 
     def __repr__(self):
