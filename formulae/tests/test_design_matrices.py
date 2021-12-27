@@ -101,16 +101,15 @@ def test_common_predictor(data):
     assert list(dm.common.terms) == ["Intercept", "x1"]
     assert dm.common.terms["x1"].kind == "numeric"
     assert dm.common.terms["x1"].labels == ["x1"]
+    assert dm.common.terms["x1"].levels is None
 
-    # uses alphabetic order
-    # reference is the first value by default
-    # reduced because we included intercept
+    # 'f' does not span intercept because the intercept is already icluded
     dm = design_matrices("y ~ f", data)
     assert list(dm.common.terms) == ["Intercept", "f"]
     assert dm.common.terms["f"].kind == "categoric"
     assert dm.common.terms["f"].labels == [f"f[{l}]" for l in sorted(data["f"].unique())[1:]]
-    assert dm.common.terms["f"].metadata["levels"] == sorted(list(data["f"].unique()))
-    assert dm.common.terms["f"].metadata["encoding"] == "reduced"
+    assert dm.common.terms["f"].levels == sorted(list(data["f"].unique()))[1:]
+    assert dm.common.terms["f"].spans_intercept == False
 
 
 def test_categoric_encoding(data):
@@ -119,8 +118,8 @@ def test_categoric_encoding(data):
     assert list(dm.common.terms) == ["f"]
     assert dm.common.terms["f"].kind == "categoric"
     assert dm.common.terms["f"].labels == [f"f[{l}]" for l in sorted(data["f"].unique())]
-    assert dm.common.terms["f"].metadata["levels"] == sorted(list(data["f"].unique()))
-    assert dm.common.terms["f"].metadata["encoding"] == "full"
+    assert dm.common.terms["f"].levels == sorted(list(data["f"].unique()))
+    assert dm.common.terms["f"].spans_intercept is True
     assert dm.common.design_matrix.shape == (20, 2)
 
     # Intercept, one categoric predictor
@@ -128,8 +127,8 @@ def test_categoric_encoding(data):
     assert list(dm.common.terms) == ["Intercept", "f"]
     assert dm.common.terms["f"].kind == "categoric"
     assert dm.common.terms["f"].labels == [f"f[{l}]" for l in sorted(data["f"].unique())[1:]]
-    assert dm.common.terms["f"].metadata["levels"] == sorted(list(data["f"].unique()))
-    assert dm.common.terms["f"].metadata["encoding"] == "reduced"
+    assert dm.common.terms["f"].levels == sorted(list(data["f"].unique()))[1:]
+    assert dm.common.terms["f"].spans_intercept is False
 
     assert dm.common.design_matrix.shape == (20, 2)
 
@@ -140,10 +139,10 @@ def test_categoric_encoding(data):
     assert dm.common.terms["g"].kind == "categoric"
     assert dm.common.terms["f"].labels == [f"f[{l}]" for l in sorted(data["f"].unique())]
     assert dm.common.terms["g"].labels == [f"g[{l}]" for l in sorted(data["g"].unique())[1:]]
-    assert dm.common.terms["f"].metadata["levels"] == sorted(list(data["f"].unique()))
-    assert dm.common.terms["g"].metadata["levels"] == sorted(list(data["g"].unique()))
-    assert dm.common.terms["f"].metadata["encoding"] == "full"
-    assert dm.common.terms["g"].metadata["encoding"] == "reduced"
+    assert dm.common.terms["f"].levels == sorted(list(data["f"].unique()))
+    assert dm.common.terms["g"].levels == sorted(list(data["g"].unique()))[1:]
+    assert dm.common.terms["f"].spans_intercept is True
+    assert dm.common.terms["g"].spans_intercept is False
     assert dm.common.design_matrix.shape == (20, 3)
 
     # Intercept, two additive categoric predictors
@@ -153,10 +152,10 @@ def test_categoric_encoding(data):
     assert dm.common.terms["g"].kind == "categoric"
     assert dm.common.terms["f"].labels == [f"f[{l}]" for l in sorted(data["f"].unique())[1:]]
     assert dm.common.terms["g"].labels == [f"g[{l}]" for l in sorted(data["g"].unique())[1:]]
-    assert dm.common.terms["f"].metadata["levels"] == sorted(list(data["f"].unique()))
-    assert dm.common.terms["g"].metadata["levels"] == sorted(list(data["g"].unique()))
-    assert dm.common.terms["f"].metadata["encoding"] == "reduced"
-    assert dm.common.terms["g"].metadata["encoding"] == "reduced"
+    assert dm.common.terms["f"].levels == sorted(list(data["f"].unique()))[1:]
+    assert dm.common.terms["g"].levels == sorted(list(data["g"].unique()))[1:]
+    assert dm.common.terms["f"].spans_intercept is False
+    assert dm.common.terms["g"].spans_intercept is False
     assert dm.common.design_matrix.shape == (20, 3)
 
     # No intercept, two categoric predictors with interaction
@@ -168,12 +167,14 @@ def test_categoric_encoding(data):
     assert dm.common.terms["f"].labels == [f"f[{l}]" for l in sorted(data["f"].unique())]
     assert dm.common.terms["g"].labels == [f"g[{l}]" for l in sorted(data["g"].unique())[1:]]
     assert dm.common.terms["f:g"].labels == ["f[B]:g[B]"]
-    assert dm.common.terms["f"].metadata["levels"] == sorted(list(data["f"].unique()))
-    assert dm.common.terms["g"].metadata["levels"] == sorted(list(data["g"].unique()))
-    assert dm.common.terms["f"].metadata["encoding"] == "full"
-    assert dm.common.terms["g"].metadata["encoding"] == "reduced"
-    assert dm.common.terms["f:g"].components[0].metadata["encoding"] == "reduced"
-    assert dm.common.terms["f:g"].components[1].metadata["encoding"] == "reduced"
+    assert dm.common.terms["f"].levels == sorted(list(data["f"].unique()))
+    assert dm.common.terms["g"].levels == sorted(list(data["g"].unique()))[1:]
+    assert dm.common.terms["f:g"].levels == ["B, B"]
+    assert dm.common.terms["f"].spans_intercept is True
+    assert dm.common.terms["g"].spans_intercept is False
+    assert dm.common.terms["f:g"].spans_intercept is False
+    assert dm.common.terms["f:g"].components[0].spans_intercept is False
+    assert dm.common.terms["f:g"].components[1].spans_intercept is False
     assert dm.common.design_matrix.shape == (20, 4)
 
     # Intercept, two categoric predictors with interaction
@@ -185,42 +186,46 @@ def test_categoric_encoding(data):
     assert dm.common.terms["f"].labels == [f"f[{l}]" for l in sorted(data["f"].unique())[1:]]
     assert dm.common.terms["g"].labels == [f"g[{l}]" for l in sorted(data["g"].unique())[1:]]
     assert dm.common.terms["f:g"].labels == ["f[B]:g[B]"]
-    assert dm.common.terms["f"].metadata["levels"] == sorted(list(data["f"].unique()))
-    assert dm.common.terms["g"].metadata["levels"] == sorted(list(data["g"].unique()))
-    assert dm.common.terms["f"].metadata["encoding"] == "reduced"
-    assert dm.common.terms["g"].metadata["encoding"] == "reduced"
-    assert dm.common.terms["f:g"].metadata["components"]["f"].metadata["encoding"] == "reduced"
-    assert dm.common.terms["f:g"].metadata["components"]["g"].metadata["encoding"] == "reduced"
+    assert dm.common.terms["f"].levels == sorted(list(data["f"].unique()))[1:]
+    assert dm.common.terms["g"].levels == sorted(list(data["g"].unique()))[1:]
+    assert dm.common.terms["f"].spans_intercept is False
+    assert dm.common.terms["g"].spans_intercept is False
+    assert dm.common.terms["f:g"].components[0].spans_intercept is False
+    assert dm.common.terms["f:g"].components[1].spans_intercept is False
     assert dm.common.design_matrix.shape == (20, 4)
 
     # No intercept, interaction between two categorics
     dm = design_matrices("y ~ 0 + f:g", data)
-    assert list(dm.common.terms.keys()) == ["f:g"]
+    assert list(dm.common.terms) == ["f:g"]
     assert dm.common.terms["f:g"].kind == "interaction"
     assert dm.common.terms["f:g"].labels == ["f[A]:g[A]", "f[A]:g[B]", "f[B]:g[A]", "f[B]:g[B]"]
-    assert dm.common.terms["f:g"].metadata["components"]["f"].metadata["encoding"] == "full"
-    assert dm.common.terms["f:g"].metadata["components"]["g"].metadata["encoding"] == "full"
+    assert dm.common.terms["f:g"].spans_intercept is True
+    assert dm.common.terms["f:g"].components[0].spans_intercept is True
+    assert dm.common.terms["f:g"].components[1].spans_intercept is True
     assert dm.common.design_matrix.shape == (20, 4)
 
     # Intercept, interaction between two categorics
-    # It adds "g" -> It uses Patsy algorithm... look there if you're curious.
+    # It adds "g" -> It uses Patsy algorithm..
     dm = design_matrices("y ~ 1 + f:g", data)
     assert list(dm.common.terms) == ["Intercept", "g", "f:g"]
+    # FIXME: This spans_intercept should be False, BUT IT IS TRUE!
+    assert dm.common.terms["g"].spans_intercept is False
     assert dm.common.terms["f:g"].kind == "interaction"
     assert dm.common.terms["f:g"].labels == ["f[B]:g[A]", "f[B]:g[B]"]
-    assert dm.common.terms["f:g"].metadata["components"]["f"].metadata["encoding"] == "reduced"
-    assert dm.common.terms["f:g"].metadata["components"]["g"].metadata["encoding"] == "full"
-    assert dm.common.terms["g"].metadata["encoding"] == "reduced"
+    assert dm.common.terms["f:g"].spans_intercept is False
+    assert dm.common.terms["f:g"].components[0].spans_intercept is False
+    assert dm.common.terms["f:g"].components[1].spans_intercept is True
     assert dm.common.design_matrix.shape == (20, 4)
 
     # Same than before
     dm = design_matrices("y ~ 1 + g + f:g", data)
     assert list(dm.common.terms) == ["Intercept", "g", "f:g"]
+    assert dm.common.terms["g"].spans_intercept is False
     assert dm.common.terms["f:g"].kind == "interaction"
     assert dm.common.terms["f:g"].labels == ["f[B]:g[A]", "f[B]:g[B]"]
-    assert dm.common.terms["f:g"].metadata["components"]["f"].terms["encoding"] == "reduced"
-    assert dm.common.terms["f:g"].metadata["components"]["g"].terms["encoding"] == "full"
-    assert dm.common.terms["g"].metadata["encoding"] == "reduced"
+    assert dm.common.terms["f:g"].spans_intercept is False
+    assert dm.common.terms["f:g"].components[0].spans_intercept is False
+    assert dm.common.terms["f:g"].components[1].spans_intercept is True
     assert dm.common.design_matrix.shape == (20, 4)
 
 

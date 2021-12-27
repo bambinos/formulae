@@ -562,6 +562,15 @@ class Term:
             levels = self.components[0].contrast_matrix.labels
         return levels
 
+    @property
+    def spans_intercept(self):
+        """Does this term spans the intercept?
+
+        True if all the components span the intercept
+        TODO: Think twice if this is right
+        """
+        return all(component.spans_intercept for component in self.components)
+
 
 class GroupSpecificTerm:
     """Representation of a group specific term.
