@@ -1205,6 +1205,7 @@ class Model:
         result = {}
         for d in l:
             result.update(d)
+        print(f"result:\n{result}")
         return result
 
     def add_extra_terms(self, encodings, data, env):
@@ -1258,8 +1259,17 @@ class Model:
 
 
 def create_extra_term(term, encoding, data, env):
+    """
+    If there are numeric components it means this is an interaction term that has both numeric
+    and categoric components. The categoric part of the term we create comes in 'encoding', we
+    then need to add the numeric ones.
+
+    For example, if we have 'h' and 'j' categoric and 'x' numeric and then we do 'x + h:j:x',
+    it expands to 'x + j:x + h:j:x' for full-rankness.
+    """
     component_names = [component.name for component in term.components]
     components = [term.get_component(name) for name in component_names if name in encoding.keys()]
-    extra_term = Term(*components)
+    components += [component for component in term.components if component.kind == "numeric"]
+    extra_term = Term(*deepcopy(components))
     extra_term.set_type(data, env)
     return extra_term

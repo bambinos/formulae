@@ -2,6 +2,9 @@
 
 ## v0.2.x Unreleased
 
+
+h:j:x2 returned h:j:x2 + j, when we need h:j:x2 + j:x2
+
 ## v0.2.0
 
 - Added `bs()`, a stateful transformation for basis splines (#52)

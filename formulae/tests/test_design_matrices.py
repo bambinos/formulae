@@ -230,31 +230,31 @@ def test_categoric_encoding(data):
 
 
 def test_categoric_encoding_with_numeric_interaction():
-    np.random.seed(1234)
+    rng = np.random.default_rng(1234)
     size = 20
     data = pd.DataFrame(
         {
-            "y": np.random.uniform(size=size),
-            "x1": np.random.uniform(size=size),
-            "x2": np.random.uniform(size=size),
+            "y": rng.uniform(size=size),
+            "x1": rng.uniform(size=size),
+            "x2": rng.uniform(size=size),
             "x3": [1, 2, 3, 4] * 5,
-            "f": np.random.choice(["A", "B"], size=size),
-            "g": np.random.choice(["A", "B"], size=size),
-            "h": np.random.choice(["A", "B"], size=size),
-            "j": np.random.choice(["A", "B"], size=size),
+            "f": rng.choice(["A", "B"], size=size),
+            "g": rng.choice(["A", "B"], size=size),
+            "h": rng.choice(["A", "B"], size=size),
+            "j": rng.choice(["A", "B"], size=size),
         }
     )
     dm = design_matrices("y ~ x1 + x2 + f:g + h:j:x2", data)
-    assert list(dm.common.terms.keys()) == ["Intercept", "x1", "x2", "g", "f:g", "j", "h:j:x2"]
-    assert dm.common.terms["g"]["encoding"] == "reduced"
-    assert dm.common.terms["f:g"]["kind"] == "interaction"
-    assert dm.common.terms["f:g"]["components"]["f"]["encoding"] == "reduced"
-    assert dm.common.terms["f:g"]["components"]["g"]["encoding"] == "full"
-    assert dm.common.terms["f:g"]["labels"] == ["f[B]:g[A]", "f[B]:g[B]"]
-    assert dm.common.terms["j"]["encoding"] == "reduced"
-    assert dm.common.terms["h:j:x2"]["components"]["h"]["encoding"] == "reduced"
-    assert dm.common.terms["h:j:x2"]["components"]["j"]["encoding"] == "full"
-    assert dm.common.terms["h:j:x2"]["components"]["x2"]["kind"] == "numeric"
+    assert list(dm.common.terms) == ["Intercept", "x1", "x2", "g", "f:g", "j:x2", "h:j:x2"]
+    assert dm.common.terms["g"].spans_intercept is False
+    assert dm.common.terms["f:g"].kind == "interaction"
+    assert dm.common.terms["f:g"].labels == ["f[B]:g[A]", "f[B]:g[B]"]
+    assert dm.common.terms["f:g"].components[0].spans_intercept is False
+    assert dm.common.terms["f:g"].components[1].spans_intercept is True
+    assert dm.common.terms["j:x2"].spans_intercept is False
+    assert dm.common.terms["h:j:x2"].components[0].spans_intercept is False
+    assert dm.common.terms["h:j:x2"].components[1].spans_intercept is True
+    assert dm.common.terms["h:j:x2"].components[2].kind == "numeric"
 
 
 def test_interactions(data):
