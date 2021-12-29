@@ -1205,7 +1205,6 @@ class Model:
         result = {}
         for d in l:
             result.update(d)
-        print(f"result:\n{result}")
         return result
 
     def add_extra_terms(self, encodings, data, env):
