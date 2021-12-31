@@ -359,16 +359,14 @@ def test_built_in_transforms(data):
     assert list(dm.common.terms) == ["C(x3)"]
     assert dm.common.terms["C(x3)"].kind == "categoric"
     assert dm.common.terms["C(x3)"].spans_intercept is True
-    assert dm.common.terms["C(x3)"].levels == [1, 2, 3, 4]
+    assert dm.common.terms["C(x3)"].levels == ["1", "2", "3", "4"]
     assert dm.common.terms["C(x3)"].labels == ["C(x3)[1]", "C(x3)[2]", "C(x3)[3]", "C(x3)[4]"]
 
     # Specify levels, different to observed
-    # FIXME: This is not supported anymore I think?
     lvls = [3, 2, 4, 1]
     dm = design_matrices("y ~ C(x3, levels=lvls)", data)
     assert dm.common.terms["C(x3, levels = lvls)"].kind == "categoric"
-    assert dm.common.terms["C(x3, levels = lvls)"]["reference"] == 3
-    assert dm.common.terms["C(x3, levels = lvls)"].levels == lvls
+    assert dm.common.terms["C(x3, levels = lvls)"].levels == ["2", "4", "1"]
 
     # Pass a reference not in the data
     with pytest.raises(ValueError):

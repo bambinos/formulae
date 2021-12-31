@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+
 import numpy as np
 import pandas as pd
 
@@ -81,9 +83,7 @@ class CategoricalBox:
     @contrast.setter
     def contrast(self, value):
         if not (isinstance(value, (Treatment, Sum)) or value is None):
-            raise ValueError(
-                "The contrast argument in a CategoricalBox must be a Treatment or Sum instance"
-            )
+            raise ValueError("The contrast argument in must be an instance of Encoding")
         self._contrast = value
 
     @property
@@ -96,8 +96,23 @@ class CategoricalBox:
             raise ValueError("The levels beign assigned and the levels in the data differ")
         self._levels = value
 
+#pylint: disable=R0921
+# https://stackoverflow.com/questions/8261526/how-to-fix-pylint-warning-abstract-class-not-referenced
+class Encoding(ABC):
+    @abstractmethod
+    def __init__(self):
+        pass
 
-class Treatment:
+    @abstractmethod
+    def code_with_intercept(self):
+        pass
+
+    @abstractmethod
+    def code_without_intercept(self):
+        pass
+
+
+class Treatment(Encoding):
     def __init__(self, reference=None):
         """reference is the value of the reference itself"""
         self.reference = reference
@@ -128,7 +143,7 @@ class Treatment:
         return ContrastMatrix(contrast, labels)
 
 
-class Sum:
+class Sum(Encoding):
     def __init__(self, omit=None):
         """
         Compares the mean of each level to the mean-of-means.
