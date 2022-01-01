@@ -96,20 +96,15 @@ class CategoricalBox:
             raise ValueError("The levels beign assigned and the levels in the data differ")
         self._levels = value
 
-#pylint: disable=R0921
 # https://stackoverflow.com/questions/8261526/how-to-fix-pylint-warning-abstract-class-not-referenced
 class Encoding(ABC):
     @abstractmethod
-    def __init__(self):
-        pass
+    def code_with_intercept(self, levels):
+        return
 
     @abstractmethod
-    def code_with_intercept(self):
-        pass
-
-    @abstractmethod
-    def code_without_intercept(self):
-        pass
+    def code_without_intercept(self, levels):
+        return
 
 
 class Treatment(Encoding):
@@ -160,7 +155,7 @@ class Sum(Encoding):
     def _omit_index(self, levels):
         """Returns a number between 0 and len(levels) - 1"""
         if self.omit is None:
-            # This assumes we use the last one as default...
+            # By default, omit the lats level.
             return len(levels) - 1
         else:
             return levels.index(self.omit)
