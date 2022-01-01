@@ -380,8 +380,8 @@ def test_built_in_transforms(data):
     d2 = dm2.common.terms["f"]
     assert d1.kind == d2.kind
     assert d1.levels == d2.levels
-    assert d1["reference"] == d2["reference"]
-    assert d1["encoding"] == d2["encoding"]
+
+    assert d1.spans_intercept == d2.spans_intercept
     assert not d1.labels == d2.labels  # because one is 'C(f)' and other is 'f'
     assert all(dm.common["C(f)"] == dm2.common["f"])
 
@@ -433,11 +433,7 @@ def test_categoric_group_specific():
     list(dm.group.terms.keys()) == ["1|BMI", "C(age_grp)[1]|BMI", "C(age_grp)[2]|BMI"]
 
     dm = design_matrices("BP ~ 0 + (0 + C(age_grp)|BMI)", data)
-    list(dm.group.terms.keys()) == [
-        "C(age_grp)[0]|BMI",
-        "C(age_grp)[1]|BMI",
-        "C(age_grp)[2]|BMI",
-    ]
+    list(dm.group.terms) == ["C(age_grp)[0]|BMI", "C(age_grp)[1]|BMI", "C(age_grp)[2]|BMI"]
 
 
 def test_interactions_in_group_specific(pixel):
@@ -466,12 +462,12 @@ def test_interactions_in_group_specific(pixel):
     assert (intercept_by_side == intercept_by_side_original).all()
     assert (intercept_by_side_dog == intercept_by_side_dog_original).all()
 
-    # Assert full names
-    names = [f"day[{d}]|{g}" for g in [1, 2, 3] for d in [2, 4, 6]]
+    # Assert labels
+    names = [f"day[{d}]|Dog[{g}]" for g in [1, 2, 3] for d in [2, 4, 6]]
     assert dm.group.terms["day|Dog"].labels == names
     names = [f"1|Side[{s}]" for s in ["L", "R"]]
     assert dm.group.terms["1|Side"].labels == names
-    names = [f"1|Side:Dog[{s}:{d}]" for s in ["L", "R"] for d in [1, 2, 3]]
+    names = [f"1|Side[{s}]:Dog[{d}]" for s in ["L", "R"] for d in [1, 2, 3]]
     assert dm.group.terms["1|Side:Dog"].labels == names
 
     # Another design matrix
@@ -481,8 +477,10 @@ def test_interactions_in_group_specific(pixel):
     # Assert values in the design matrix
     assert (dog_and_side_by_day == dog_and_side_by_day_original).all()
 
-    # Assert full names
-    names = [f"Dog[{d}]:Side[{s}]|{g}" for g in [2, 4, 6] for d in [1, 2, 3] for s in ["L", "R"]]
+    # Assert labels
+    names = [
+        f"Dog[{d}]:Side[{s}]|day[{g}]" for g in [2, 4, 6] for d in [1, 2, 3] for s in ["L", "R"]
+    ]
     assert dm.group.terms["Dog:Side|day"].labels == names
 
 
@@ -550,52 +548,47 @@ def test_categoric_responses():
         }
     )
 
-    # Multi-level response
+    # Multi-level response. Response is a design matrix of dummies that span the intercept.
     response = design_matrices("y1 ~ x", data).response
-    assert list(np.unique(response.design_vector)) == [0, 1, 2]
+    assert list(np.unique(response.design_vector)) == [0, 1]
     assert response.levels == ["A", "B", "C"]
     assert response.binary is False
-    assert response.baseline == "A"
     assert response.success is None
 
     # Multi-level response, explicitly converted to binary
     response = design_matrices("y1['A'] ~ x", data).response
     assert list(np.unique(response.design_vector)) == [0, 1]
-    assert response.levels == ["A", "B", "C"]
+    assert response.levels is None  # when binary, levels is None by design
     assert response.binary is True
-    assert response.baseline is None
     assert response.success == "A"
 
-    # Default binary response
+    # Response has two levels but it is not flagged as binary because it was not converted to that
+    # TODO: Revisit if this logic is fine
     response = design_matrices("y2 ~ x", data).response
     assert list(np.unique(response.design_vector)) == [0, 1]
     assert response.levels == ["A", "B"]
-    assert response.binary is True
-    assert response.baseline is None
-    assert response.success == "A"
+    assert response.binary is False
+    assert response.success is None
 
     # Binary response with explicit level
     response = design_matrices("y2['B'] ~ x", data).response
     assert list(np.unique(response.design_vector)) == [0, 1]
-    assert response.levels == ["A", "B"]
+    assert response.levels is None
     assert response.binary is True
-    assert response.baseline is None
     assert response.success == "B"
 
     # Binary response with explicit level passed as identifier
     response = design_matrices("y2[B] ~ x", data).response
     assert list(np.unique(response.design_vector)) == [0, 1]
-    assert response.levels == ["A", "B"]
+    assert response.levels is None
     assert response.binary is True
-    assert response.baseline is None
     assert response.success == "B"
 
     # Binary response with explicit level with spaces
     response = design_matrices("y3['Bye bye'] ~ x", data).response
     assert list(np.unique(response.design_vector)) == [0, 1]
-    assert response.levels == ["Bye bye", "Hi there", "What??"]
+    assert response.levels is None
     assert response.binary is True
-    assert response.baseline is None
     assert response.success == "Bye bye"
 
     # Users trying to use nested brackets (WHY?)
@@ -693,70 +686,62 @@ def test_B_function():
 
 def test_C_function():
     size = 100
+    rng = np.random.default_rng(1234)
     data = pd.DataFrame(
         {
-            "y": np.random.randint(0, 5, size=size),
-            "x": np.random.randint(5, 10, size=size),
-            "g": np.random.choice(["a", "b", "c"], size=size),
+            "y": rng.integers(0, 5, size=size),
+            "x": rng.integers(5, 10, size=size),
+            "g": rng.choice(["a", "b", "c"], size=size),
         }
     )
 
     term = design_matrices("y ~ C(x)", data).common.terms["C(x)"]
     assert term.kind == "categoric"
-    assert term.levels == [5, 6, 7, 8, 9]
-    assert term["reference"] == 5
+    assert term.levels == ["6", "7", "8", "9"]
+    assert term.data.shape == (100, 4)
 
-    term = design_matrices("y ~ C(x, 7)", data).common.terms["C(x, 7)"]
+    levels = [6, 8, 5, 7, 9]
+    term = design_matrices("y ~ C(x, levels=levels)", data).common.terms["C(x, levels = levels)"]
     assert term.kind == "categoric"
-    assert term.levels == [7, 5, 6, 8, 9]
-    assert term["reference"] == 7
+    assert term.levels == [str(level) for level in levels[1:]]
+    assert term.data.shape == (100, 4)
 
-    l = [6, 8, 5, 7, 9]
-    term = design_matrices("y ~ C(x, levels=l)", data).common.terms["C(x, levels = l)"]
+    levels = ["b", "c", "a"]
+    term = design_matrices("y ~ C(g, levels=levels)", data).common.terms["C(g, levels = levels)"]
     assert term.kind == "categoric"
-    assert term.levels == l
-    assert term["reference"] == 6
+    assert term.levels == levels[1:]
+    assert term.data.shape == (100, 2)
 
-    term = design_matrices("y ~ C(g)", data).common.terms["C(g)"]
-    assert term.kind == "categoric"
-    assert term.levels == ["a", "b", "c"]
-    assert term["reference"] == "a"
+    # TODO: Add tests using the 'contrasts' arguments to pass Treatment and Sum encodings
 
-    term = design_matrices("y ~ C(g, 'c')", data).common.terms["C(g, c)"]
-    assert term.kind == "categoric"
-    assert term.levels == ["c", "a", "b"]
-    assert term["reference"] == "c"
 
-    l = ["b", "c", "a"]
-    term = design_matrices("y ~ C(g, levels=l)", data).common.terms["C(g, levels = l)"]
-    assert term.kind == "categoric"
-    assert term.levels == l
-    assert term["reference"] == "b"
-
-    with pytest.raises(ValueError):
-        design_matrices("y ~ C(g, 'c', levels=l)", data)
+# NOTE: B(g, 'c') is then looked up ad B(g, c).
+# From the second it is impossible to tell if c is a literal or variable
 
 
 def test_offset():
     size = 100
+    rng = np.random.default_rng(1234)
     data = pd.DataFrame(
         {
-            "y": np.random.randint(0, 5, size=size),
-            "x": np.random.randint(5, 10, size=size),
+            "y": rng.integers(0, 5, size=size),
+            "x": rng.integers(5, 10, size=size),
             "g": np.random.choice(["a", "b", "c"], size=size),
         }
     )
 
     dm = design_matrices("y ~ offset(x)", data)
     term = dm.common.terms["offset(x)"]
-    assert term["kind"] == "offset"
+    assert term.kind == "offset"
     assert term.labels == ["offset(x)"]
-    assert (dm.common["offset(x)"].flatten() == data["x"]).all()
+    assert (dm.common["offset(x)"].flatten() == data["x"].values).all()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match=re.escape("offset() can only be used with numeric variables")
+    ):
         design_matrices("y ~ offset(g)", data)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=re.escape("offset() cannot be used as a response term.")):
         design_matrices("offset(y) ~ x", data)
 
 
@@ -771,12 +756,12 @@ def test_predict_prop():
 
     # If trials is a variable, new dataset must have that variable
     dm = design_matrices("prop(y, n) ~ x", data)
-    result = dm.response._evaluate_new_data(pd.DataFrame({"n": [10, 10, 30, 30]}))
+    result = dm.response.evaluate_new_data(pd.DataFrame({"n": [10, 10, 30, 30]}))
     assert (result == np.array([10, 10, 30, 30])).all()
 
     # If trials is a constant value, return that same value
     dm = design_matrices("prop(y, 70) ~ x", data)
-    result = dm.response._evaluate_new_data(pd.DataFrame({"n": [10, 10, 30, 30]}))
+    result = dm.response.evaluate_new_data(pd.DataFrame({"n": [10, 10, 30, 30]}))
     assert (result == np.array([70, 70, 70, 70])).all()
 
 
@@ -791,10 +776,10 @@ def test_predict_offset():
 
     # If offset is a variable, new dataset must have that variable
     dm = design_matrices("y ~ x + offset(x)", data)
-    result = dm.common._evaluate_new_data(pd.DataFrame({"x": [1, 2, 3]}))["offset(x)"]
+    result = dm.common.evaluate_new_data(pd.DataFrame({"x": [1, 2, 3]}))["offset(x)"]
     assert (result == np.array([1, 2, 3])[:, np.newaxis]).all()
 
     # If offset is a constant value, return that same value
     dm = design_matrices("y ~ x + offset(10)", data)
-    result = dm.common._evaluate_new_data(pd.DataFrame({"x": [1, 2, 3]}))["offset(10)"]
+    result = dm.common.evaluate_new_data(pd.DataFrame({"x": [1, 2, 3]}))["offset(10)"]
     assert (result == np.array([10, 10, 10])[:, np.newaxis]).all()

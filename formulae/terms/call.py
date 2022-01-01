@@ -245,7 +245,7 @@ class Call:
 
     def eval_offset(self, offset):
         if self.is_response:
-            raise ValueError("'offset() cannot be used as a response term.")
+            raise ValueError("offset() cannot be used as a response term.")
         self.value = offset.eval()
 
     def eval_new_data(self, data_mask):

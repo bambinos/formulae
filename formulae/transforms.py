@@ -223,7 +223,7 @@ class Offset:
 
     def eval(self):
         if self.kind == "variable":
-            return self.x.flatten()[:, np.newaxis]
+            return self.x.flatten()
         else:
             return np.ones((self.size, 1)) * self.x
 

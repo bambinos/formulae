@@ -87,14 +87,11 @@ class ResponseVector:
         The name of the response term.
     kind: string
         Either ``"numeric"`` or ``"categoric"``.
-    baseline: string
-        The name of the class taken as reference if ``kind = "categoric"``.
     """
 
     def __init__(self, term):
         self.term = term
         self.name = self.term.term.name
-        self.baseline = None  # Not None for non-binary categorical variables
         self.binary = None  # Not None for categorical variables (either True or False)
         self.data = None
         self.design_vector = None
@@ -115,12 +112,10 @@ class ResponseVector:
         self.design_vector = self.term.term.data
 
         if self.kind == "categoric":
-            self.binary = self.design_vector.shape[1] == 1 and len(set(self.design_vector)) == 2
-            # self.levels = self.term.term.levels
+            self.binary = self.design_vector.ndim == 1 and len(set(self.design_vector)) == 2
+            self.levels = self.term.term.levels
             if self.binary:
                 self.success = self.term.term.components[0].reference
-            else:
-                self.baseline = self.term.term.components[0].reference
 
     def evaluate_new_data(self, data):
         if self.kind == "proportion":
@@ -142,11 +137,11 @@ class ResponseVector:
             f"length: {len(self.design_vector)}",
         ]
         if self.kind == "categoric":
-            string_list += [f"levels: {self.levels}", f"binary: {self.binary}"]
+            string_list += [f"binary: {self.binary}"]
             if self.binary:
                 string_list += [f"success: {self.success}"]
             else:
-                string_list += [f"baseline: {self.baseline}"]
+                string_list += [f"levels: {self.levels}"]
         return f"ResponseVector({wrapify(spacify(multilinify(string_list)))}\n)"
 
 
@@ -237,12 +232,13 @@ class CommonEffectsMatrix:
         """
         if not self.evaluated:
             raise ValueError("Can't evaluate new data on unevaluated matrix.")
-        new_instance = self.__class__(self.terms)
+        new_instance = self.__class__(self.terms.values())
         new_instance.data = data
         new_instance.env = self.env
         new_instance.design_matrix = np.column_stack(
             [t.eval_new_data(data) for t in self.terms.values()]
         )
+        new_instance.slices = self.slices
         new_instance.evaluated = True
         return new_instance
 
@@ -383,6 +379,7 @@ class GroupEffectsMatrix:
         new_instance.design_matrix = np.column_stack(
             [t.eval_new_data(data) for t in self.terms.values()]
         )
+        new_instance.slices = self.slices
         new_instance.evaluated = True
         return new_instance
 

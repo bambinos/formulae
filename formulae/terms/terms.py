@@ -559,7 +559,11 @@ class Term:
             if levels:
                 levels = [", ".join(str_tuple) for str_tuple in list(itertools.product(*levels))]
         else:
-            levels = self.components[0].contrast_matrix.labels
+            component = self.components[0]
+            if component.is_response and component.reference is not None:
+                levels = None
+            else:
+                levels = component.contrast_matrix.labels
         return levels
 
     @property
@@ -567,7 +571,6 @@ class Term:
         """Does this term spans the intercept?
 
         True if all the components span the intercept
-        TODO: Think twice if this is right
         """
         return all(component.spans_intercept for component in self.components)
 
@@ -1251,7 +1254,7 @@ class Model:
             encoding = True
             # If both (1|g) and (x|g) are in the model, then the encoding for x is False.
             if not isinstance(term.expr, Intercept):
-                for t in self.terms:
+                for t in self.group_terms:
                     if t.factor == term.factor and isinstance(t.expr, Intercept):
                         encoding = False
             term.set_data(encoding)
