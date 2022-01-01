@@ -96,7 +96,7 @@ class CategoricalBox:
             raise ValueError("The levels beign assigned and the levels in the data differ")
         self._levels = value
 
-# https://stackoverflow.com/questions/8261526/how-to-fix-pylint-warning-abstract-class-not-referenced
+
 class Encoding(ABC):
     @abstractmethod
     def code_with_intercept(self, levels):
@@ -114,7 +114,7 @@ class Treatment(Encoding):
 
     def code_with_intercept(self, levels):
         """This contrast matrix spans the intercept"""
-        contrast = np.eye(len(levels))
+        contrast = np.eye(len(levels), dtype=int)
         labels = [str(level) for level in levels]
         return ContrastMatrix(contrast, labels)
 
@@ -129,7 +129,7 @@ class Treatment(Encoding):
             else:
                 raise ValueError("reference not in levels")
 
-        eye = np.eye(len(levels) - 1)
+        eye = np.eye(len(levels) - 1, dtype=int)
         contrast = np.vstack(
             (eye[:reference, :], np.zeros((1, len(levels) - 1)), eye[reference:, :])
         )
@@ -163,8 +163,8 @@ class Sum(Encoding):
     def _sum_contrast(self, levels):
         n = len(levels)
         omit_index = self._omit_index(levels)
-        eye = np.eye(n - 1)
-        out = np.empty((n, n - 1))
+        eye = np.eye(n - 1, dtype=int)
+        out = np.empty((n, n - 1), dtype=int)
 
         out[:omit_index, :] = eye[:omit_index, :]
         out[omit_index, :] = -1
@@ -173,7 +173,7 @@ class Sum(Encoding):
 
     def code_with_intercept(self, levels):
         contrast = self.code_without_intercept(levels)
-        matrix = np.column_stack((np.ones(len(levels)), contrast.matrix))
+        matrix = np.column_stack((np.ones(len(levels), dtype=int), contrast.matrix))
 
         labels = ["mean"] + contrast.labels
         return ContrastMatrix(matrix, labels)
