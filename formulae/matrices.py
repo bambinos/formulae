@@ -164,7 +164,7 @@ class CommonEffectsMatrix:
         A 2-dimensional numpy array containing the values of the design matrix.
     evaluated: bool
         Indicates if the terms have been evaluated at least once. The terms must have been evaluated
-        before calling ``self._evaluate_new_data()`` because we must know the kind of each term
+        before calling ``self.evaluate_new_data()`` because we must know the kind of each term
         to correctly handle the new data passed and the terms here.
     terms_info: dict
         A dictionary that holds information related to each of the common specific terms, such as
@@ -300,7 +300,7 @@ class GroupEffectsMatrix:
         A 2 dimensional numpy array with the values of the design matrix.
     evaluated: bool
         Indicates if the terms have been evaluated at least once. The terms must have been evaluated
-        before calling ``self._evaluate_new_data()`` because we must know the kind of each term
+        before calling ``self.evaluate_new_data()`` because we must know the kind of each term
         to correctly handle the new data passed and the terms here.
     terms_info: dict
         A dictionary that holds information related to each of the group specific terms, such as
@@ -373,7 +373,7 @@ class GroupEffectsMatrix:
         if not self.evaluated:
             raise ValueError("Can't evaluate new data on unevaluated matrix.")
 
-        new_instance = self.__class__(self.terms)
+        new_instance = self.__class__(self.terms.values())
         new_instance.data = data
         new_instance.env = self.env
         new_instance.design_matrix = np.column_stack(

@@ -60,9 +60,11 @@ def test_call_eval_numeric():
     arr = np.array([1, 2, 3, 4])
     series = pd.Series([1, 2, 3, 4])
 
-    # Row vectors are transposed to column vectors
-    assert np.array_equal(x._eval_numeric(arr)["value"], arr)
-    assert np.array_equal(x._eval_numeric(series)["value"], arr)
+    x.eval_numeric(arr)
+    assert np.array_equal(x.value, arr)
+
+    x.eval_numeric(series)
+    assert np.array_equal(x.value, arr)
 
     with pytest.raises(ValueError):
-        x._eval_numeric([1, 2, 3])
+        x.eval_numeric([1, 2, 3])

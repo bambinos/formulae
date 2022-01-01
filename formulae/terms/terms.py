@@ -17,7 +17,7 @@ from formulae.terms.variable import Variable
 
 _log = logging.getLogger("formulae")
 
-# TODO: Components have 'value' and terms have 'data'... which one should be kept?
+# XTODO: Components have 'value' and terms have 'data'... which one should be kept?
 class Intercept:
     """Internal representation of a model intercept."""
 
@@ -225,7 +225,7 @@ class Term:
                 self.components.append(component)
         self.data = None
         self.kind = None
-        # FIXME: Name is not exactly as it was written (e.g. it does not have any potential space)
+        # XFIXME: Name is not exactly as it was written (e.g. it does not have any potential space)
         self.name = ":".join([str(component.name) for component in self.components])
 
     def __hash__(self):
@@ -727,7 +727,7 @@ class GroupSpecificTerm:
         name: str
             The name of the term, such as ``1|g`` or ``var|g``.
         """
-        # FIXME: Name is not actual name as it is was written!
+        # XFIXME: Name is not actual name as it is was written!
         name = ""
         if isinstance(self.expr, Intercept):
             name += "1|"

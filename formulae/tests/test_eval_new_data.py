@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 import numpy as np
@@ -6,7 +8,7 @@ import pandas as pd
 from formulae.environment import Environment
 from formulae.parser import Parser
 from formulae.scanner import Scanner
-from formulae.terms import Variable, Call, Term, Model
+from formulae.terms import Variable, Call
 from formulae.matrices import design_matrices
 
 from formulae.terms.call_resolver import LazyCall, LazyVariable
@@ -36,7 +38,7 @@ def test_term_new_data_numeric():
     var_term = Variable(var_expr.name.lexeme, var_expr.level)
     var_term.set_type(data)
     var_term.set_data()
-    assert (var_term.data["value"].T == [10, 10, 10]).all()
+    assert (var_term.value == [10, 10, 10]).all()
     data = pd.DataFrame({"x": [1, 2, 3]})
     assert (var_term.eval_new_data(data).T == [1, 2, 3]).all()
 
@@ -49,9 +51,9 @@ def test_call_new_data_numeric_stateful_transform():
     call_term = Call(LazyCall("center", [LazyVariable("x")], {}))
     call_term.set_type(data, env)
     call_term.set_data()
-    assert (call_term.data["value"].T == [0, 0, 0]).all()
+    assert (call_term.value == [0, 0, 0]).all()
     data = pd.DataFrame({"x": [1, 2, 3]})
-    assert (call_term.eval_new_data(data).T == [-9.0, -8.0, -7.0]).all()
+    assert (call_term.eval_new_data(data) == [-9.0, -8.0, -7.0]).all()
 
 
 def test_term_new_data_categoric():
@@ -61,15 +63,17 @@ def test_term_new_data_categoric():
     var_expr = Parser(Scanner("x").scan(False)).parse()
     var_term = Variable(var_expr.name.lexeme, var_expr.level)
     var_term.set_type(data)
-    var_term.set_data(encoding=True)
-    assert (np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]) == var_term.data["value"]).all()
+    var_term.set_data(spans_intercept=True)
+    assert (np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]) == var_term.value).all()
 
     data = pd.DataFrame({"x": ["B", "C"]})
     assert (var_term.eval_new_data(data) == np.array([[0, 1, 0], [0, 0, 1]])).all()
 
     # It remembers it saw "A", "B", and "C", but not "D".
     # So when you pass a new level, it raises a ValueError.
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="The levels D in 'x' are not present in the original data set."
+    ):
         data = pd.DataFrame({"x": ["B", "C", "D"]})
         var_term.eval_new_data(data)
 
@@ -79,14 +83,16 @@ def test_term_new_data_categoric():
     var_term = Variable(var_expr.name.lexeme, var_expr.level)
     var_term.set_type(data)
     var_term.set_data()
-    assert (np.array([[0, 0], [1, 0], [0, 1]]) == var_term.data["value"]).all()
+    assert (np.array([[0, 0], [1, 0], [0, 1]]) == var_term.value).all()
 
     data = pd.DataFrame({"x": ["A", "C"]})
     assert (var_term.eval_new_data(data) == np.array([[0, 0], [0, 1]])).all()
 
     # It remembers it saw "A", "B", and "C", but not "D".
     # So when you pass a new level, it raises a ValueError.
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="The levels D in 'x' are not present in the original data set."
+    ):
         data = pd.DataFrame({"x": ["B", "C", "D"]})
         var_term.eval_new_data(data)
 
@@ -98,13 +104,16 @@ def test_call_new_data_categoric_stateful_transform():
     # Full rank encoding
     call_term = Call(LazyCall("C", [LazyVariable("x")], {}))
     call_term.set_type(data, env)
-    call_term.set_data(encoding=True)
-    assert (np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]) == call_term.data["value"]).all()
+    call_term.set_data(spans_intercept=True)
+    assert (np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]) == call_term.value).all()
 
     data = pd.DataFrame({"x": [2, 3]})
     assert (call_term.eval_new_data(data) == np.array([[0, 1, 0], [0, 0, 1]])).all()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match=re.escape("The levels 4 in 'C(x)' are not present in the original data set"),
+    ):
         data = pd.DataFrame({"x": [2, 3, 4]})
         call_term.eval_new_data(data)
 
@@ -113,38 +122,41 @@ def test_call_new_data_categoric_stateful_transform():
     call_term = Call(LazyCall("C", [LazyVariable("x")], {}))
     call_term.set_type(data, env)
     call_term.set_data()
-    assert (np.array([[0, 0], [1, 0], [0, 1]]) == call_term.data["value"]).all()
+    assert (np.array([[0, 0], [1, 0], [0, 1]]) == call_term.value).all()
 
     data = pd.DataFrame({"x": [1, 3]})
     assert (call_term.eval_new_data(data) == np.array([[0, 0], [0, 1]])).all()
 
     # It remembers it saw "A", "B", and "C", but not "D".
     # So when you pass a new level, it raises a ValueError.
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match=re.escape("The levels 4 in 'C(x)' are not present in the original data set"),
+    ):
         data = pd.DataFrame({"x": [2, 3, 4]})
         call_term.eval_new_data(data)
 
 
 def test_model_numeric_common(data, data2):
     dm = design_matrices("y ~ np.exp(x) + z", data)
-    common2 = dm.common._evaluate_new_data(data2)
+    common2 = dm.common.evaluate_new_data(data2)
     assert np.allclose(np.exp(data2["x"]), common2["np.exp(x)"].flatten())
     assert np.allclose(data2["z"], common2["z"].flatten())
 
     dm = design_matrices("y ~ center(x) + scale(z)", data)
     common1 = dm.common
-    common2 = dm.common._evaluate_new_data(data2)
+    common2 = dm.common.evaluate_new_data(data2)
 
     # First, assert stateful transforms remember the original parameter values
-    t1_mean1 = common1.model.terms[1].components[0].call.stateful_transform.mean
-    t1_mean2 = common2.model.terms[1].components[0].call.stateful_transform.mean
+    t1_mean1 = common1.terms["center(x)"].components[0].call.stateful_transform.mean
+    t1_mean2 = common2.terms["center(x)"].components[0].call.stateful_transform.mean
     assert np.allclose(t1_mean1, 0, atol=1)
     assert np.allclose(t1_mean1, t1_mean2)
 
-    t2_mean1 = common1.model.terms[2].components[0].call.stateful_transform.mean
-    t2_mean2 = common2.model.terms[2].components[0].call.stateful_transform.mean
-    t2_std1 = common1.model.terms[2].components[0].call.stateful_transform.std
-    t2_std2 = common2.model.terms[2].components[0].call.stateful_transform.std
+    t2_mean1 = common1.terms["scale(z)"].components[0].call.stateful_transform.mean
+    t2_mean2 = common2.terms["scale(z)"].components[0].call.stateful_transform.mean
+    t2_std1 = common1.terms["scale(z)"].components[0].call.stateful_transform.std
+    t2_std2 = common2.terms["scale(z)"].components[0].call.stateful_transform.std
     assert np.allclose(t2_mean1, 0, atol=1)
     assert np.allclose(t2_std1, 1, atol=1)
     assert np.allclose(t2_mean1, t2_mean2)
@@ -158,15 +170,15 @@ def test_model_numeric_common(data, data2):
 def test_model_categoric_common(data, data2):
     dm = design_matrices("y ~ g1", data)
     common1 = dm.common
-    common2 = common1._evaluate_new_data(data2)
+    common2 = common1.evaluate_new_data(data2)
     arr = np.array([0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0])
 
-    assert common1.terms_info["g1"] == common2.terms_info["g1"]
+    assert common1.terms["g1"] == common2.terms["g1"]
     assert np.allclose(common2["g1"].flatten(), arr)
 
     dm = design_matrices("y ~ 0 + C(u)", data)
     common1 = dm.common
-    common2 = common1._evaluate_new_data(data2)
+    common2 = common1.evaluate_new_data(data2)
     arr = np.array(
         [
             [1, 0, 0],
@@ -187,32 +199,29 @@ def test_model_categoric_common(data, data2):
             [0, 1, 0],
         ]
     )
-    assert common1.terms_info["C(u)"] == common2.terms_info["C(u)"]
+    assert common1.terms["C(u)"] == common2.terms["C(u)"]
     assert (common2["C(u)"] == arr).all()
 
 
 def test_model_numeric_group(data, data2):
     dm = design_matrices("y ~ (x|g1)", data)
     group1 = dm.group
-    group2 = group1._evaluate_new_data(data2)
+    group2 = group1.evaluate_new_data(data2)
 
-    d1 = {k: v for k, v in group1.terms_info["1|g1"].items() if k not in ["idxs", "Xi", "Ji"]}
-    d2 = {k: v for k, v in group2.terms_info["1|g1"].items() if k not in ["idxs", "Xi", "Ji"]}
-    assert d1 == d2
+    # These even share their ID..
+    # NOTE: Terms are the same, but the design matrices change because they're based on != data
+    assert group1.terms["1|g1"] == group2.terms["1|g1"]
+    assert group1.terms["x|g1"] == group2.terms["x|g1"]
 
-    d1 = {k: v for k, v in group1.terms_info["x|g1"].items() if k not in ["idxs", "Xi", "Ji"]}
-    d2 = {k: v for k, v in group2.terms_info["x|g1"].items() if k not in ["idxs", "Xi", "Ji"]}
-    assert d1 == d2
+    #
 
 
 def test_model_categoric_group(data, data2):
     dm = design_matrices("y ~ (0 + g1|g2)", data)
     group1 = dm.group
-    group2 = group1._evaluate_new_data(data2)
+    group2 = group1.evaluate_new_data(data2)
 
-    d1 = {k: v for k, v in group1.terms_info["g1|g2"].items() if k not in ["idxs", "Xi", "Ji"]}
-    d2 = {k: v for k, v in group2.terms_info["g1|g2"].items() if k not in ["idxs", "Xi", "Ji"]}
-    assert d1 == d2
+    assert group1.terms["g1|g2"] == group2.terms["g1|g2"]
 
     arr = np.array(
         [
@@ -234,7 +243,6 @@ def test_model_categoric_group(data, data2):
             [0, 0, 0, 1],
         ]
     )
-
     assert (group2["g1|g2"] == arr).all()
 
 
@@ -242,7 +250,7 @@ def test_nested_transform(data, data2):
     # Nested transformation still remembers original parameters
     common = design_matrices("I(center(x) ** 2)", data).common
 
-    x = common._evaluate_new_data(data2)["I(center(x) ** 2)"]
+    x = common.evaluate_new_data(data2)["I(center(x) ** 2)"]
     y = (data2["x"] - data["x"].mean()) ** 2
 
     assert np.allclose(x.flatten(), np.array(y).flatten())
@@ -251,7 +259,7 @@ def test_nested_transform(data, data2):
     # with a binary operator
     common = design_matrices("scale(np.exp(x) + 1)", data).common
 
-    x = common._evaluate_new_data(data2)["scale(np.exp(x) + 1)"]
+    x = common.evaluate_new_data(data2)["scale(np.exp(x) + 1)"]
     y = (np.exp(data2["x"]) + 1 - np.mean(np.exp(data["x"]) + 1)) / np.std(np.exp(data["x"]) + 1)
     assert np.allclose(x.flatten(), np.array(y).flatten())
 
@@ -272,8 +280,8 @@ def test_components_arent_shared():
     )
 
     common = design_matrices("y ~ 0 + x*g", data).common
-    assert not id(common.model.terms[0].components[0]) == id(common.model.terms[2].components[0])
-    assert not id(common.model.terms[1].components[0]) == id(common.model.terms[2].components[1])
+    assert id(common.terms["x"].components[0]) != id(common.terms["x:g"].components[0])
+    assert id(common.terms["g"].components[0]) != id(common.terms["x:g"].components[1])
 
     new_data = data = pd.DataFrame(
         {
@@ -283,7 +291,7 @@ def test_components_arent_shared():
         }
     )
 
-    new_common = common._evaluate_new_data(new_data)
+    new_common = common.evaluate_new_data(new_data)
     assert new_common.design_matrix.shape[1] == 6
 
 
@@ -296,6 +304,6 @@ def test_eval_new_data_when_evaluated_false(data, data2):
     group.evaluated = False
 
     with pytest.raises(ValueError):
-        common._evaluate_new_data(data2)
+        common.evaluate_new_data(data2)
     with pytest.raises(ValueError):
-        group._evaluate_new_data(data2)
+        group.evaluate_new_data(data2)

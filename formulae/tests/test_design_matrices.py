@@ -7,7 +7,7 @@ import pandas as pd
 from formulae.matrices import design_matrices
 from formulae.parser import ParseError
 
-# TODO: See interaction names.. they don't always work as expected
+# XTODO: See interaction names.. they don't always work as expected
 @pytest.fixture(scope="module")
 def data():
     np.random.seed(1234)
@@ -208,7 +208,6 @@ def test_categoric_encoding(data):
     # It adds "g" -> It uses Patsy algorithm..
     dm = design_matrices("y ~ 1 + f:g", data)
     assert list(dm.common.terms) == ["Intercept", "g", "f:g"]
-    # FIXME: This spans_intercept should be False, BUT IT IS TRUE!
     assert dm.common.terms["g"].spans_intercept is False
     assert dm.common.terms["f:g"].kind == "interaction"
     assert dm.common.terms["f:g"].labels == ["f[B]:g[A]", "f[B]:g[B]"]
@@ -373,7 +372,6 @@ def test_built_in_transforms(data):
         dm = design_matrices("y ~ C(x3, 5)", data)
 
     # Pass categoric, remains unchanged
-    # FIXME: Reference also not supported
     dm = design_matrices("y ~ C(f)", data)
     dm2 = design_matrices("y ~ f", data)
     d1 = dm.common.terms["C(f)"]
@@ -563,7 +561,7 @@ def test_categoric_responses():
     assert response.success == "A"
 
     # Response has two levels but it is not flagged as binary because it was not converted to that
-    # TODO: Revisit if this logic is fine
+    # XTODO: Revisit if this logic is fine
     response = design_matrices("y2 ~ x", data).response
     assert list(np.unique(response.design_vector)) == [0, 1]
     assert response.levels == ["A", "B"]
@@ -712,7 +710,7 @@ def test_C_function():
     assert term.levels == levels[1:]
     assert term.data.shape == (100, 2)
 
-    # TODO: Add tests using the 'contrasts' arguments to pass Treatment and Sum encodings
+    # X: Add tests using the 'contrasts' arguments to pass Treatment and Sum encodings
 
 
 # NOTE: B(g, 'c') is then looked up ad B(g, c).

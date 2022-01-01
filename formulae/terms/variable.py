@@ -183,7 +183,7 @@ class Variable:
         ----------
         result: np.array
             The rules for the shape of this array are the rules for ``self.eval_numeric()`` and
-            ``self._eval_categoric()``. The first applies for numeric variables, the second for
+            ``self.eval_categoric()``. The first applies for numeric variables, the second for
             categoric ones.
         """
         if self.value is None:

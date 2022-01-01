@@ -31,7 +31,7 @@ def test_varlookup_contains():
     assert "d" not in lookup
 
 
-def test_evalenv_namespace():
+def testevalenv_namespace():
     a = 1
     b = "hello friend"
     c = [1, 2, 3]

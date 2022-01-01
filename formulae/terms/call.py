@@ -120,7 +120,7 @@ class Call:
         It does not support multi-level categoric responses yet.
         If ``self.is_response`` is ``True`` and the variable is of a categoric type, this method
         returns a 1d array of 0-1 instead of a matrix.
-        # TODO: Fix previous point
+        # XTODO: Fix previous point
         In practice, it just completes the evaluation that started with ``self.set_type()``.
 
         Parameters
@@ -229,6 +229,7 @@ class Call:
 
         dtype = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
         data = pd.Categorical(data).astype(dtype)
+        self.levels = categories
 
         if spans_intercept:
             self.contrast_matrix = contrast.code_with_intercept(categories)
@@ -263,8 +264,8 @@ class Call:
         Returns
         ----------
         result: np.array
-            The rules for the shape of this array are the rules for ``self._eval_numeric()`` and
-            ``self._eval_categoric()``. The first applies for numeric calls, the second for
+            The rules for the shape of this array are the rules for ``self.eval_numeric()`` and
+            ``self.eval_categoric()``. The first applies for numeric calls, the second for
             categoric ones.
         """
         if self.kind in ["numeric", "categoric"]:
