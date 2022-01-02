@@ -424,13 +424,19 @@ class GroupEffectsMatrix:
         return self.__str__()
 
     def __str__(self):
-        # string = [f"'{k}': {{{spacify(term_str(v))}\n}}" for k, v in self.terms_info.items()]
-        # string = multilinify(string)
-        string = [
-            f"shape: {self.design_matrix.shape}",
-            # f"terms: {{{spacify(string)}\n}}",
-        ]
-        return f"GroupEffectsMatrix({wrapify(spacify(multilinify(string)))}\n)"
+        entries = []
+        for name, term in self.terms.items():
+            content = [f"kind: {term.kind}", f"groups: {term.groups}"]
+            if hasattr(term.expr, "levels") and term.expr.levels is not None:
+                content += [f"levels: {term.expr.levels}"]
+            content += [slice_to_column(self.slices[name])]
+            entries += [f"{name}{wrapify(spacify(multilinify(content, '')))}"]
+        msg = (
+            f"GroupEffectsMatrix with shape {self.design_matrix.shape}\n"
+            f"Terms:{spacify(multilinify(entries, ''))}\n\n"
+            "To access the actual design vector do 'np.array(this_obj)'"
+        )
+        return msg
 
 
 def design_matrices(formula, data, na_action="drop", env=0):
