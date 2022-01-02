@@ -5,12 +5,23 @@ import pandas as pd
 
 
 class ContrastMatrix:
+    """A representation of a contrast matrix
+
+    Parameters
+    ----------
+    contrast: 2-dimensional np.array
+        The contrast matrix as a numpy array.
+    labels: list or tuple
+        The labels for the columns of the contrast matrix. Its length must match the number of
+        columns in the contrast matrix.
+    """
+
     def __init__(self, matrix, labels):
         self.matrix = matrix
         self.labels = labels
         if matrix.shape[1] != len(labels):
             raise ValueError(
-                "The number of columns in the contrast matrix is not equal to the number of labels!"
+                "The number of columns in the contrast matrix is not equal to the number of labels"
             )
 
     @property
@@ -50,13 +61,16 @@ class ContrastMatrix:
 
 
 class CategoricalBox:
-    """
+    """A container with information to encode categorical data
+
+    Parameters
+    ----------
     data: 1d array-like
         The data converted to categorical.
     contrast: Encoding
-        An instance that represents the contrast matrix used to encode the categorical variable
+        An instance that represents the contrast matrix used to encode the categorical variable.
     levels: list or tuple
-        The order of the levels.
+        The levels in ``data`` in the desired order.
     """
 
     def __init__(self, data, contrast, levels):
@@ -102,28 +116,45 @@ class CategoricalBox:
 
 
 class Encoding(ABC):
+    """Abstract class for custom Encodings"""
+
     @abstractmethod
     def code_with_intercept(self, levels):
+        """This contrast matrix spans the intercept"""
         return
 
     @abstractmethod
     def code_without_intercept(self, levels):
+        """This contrast matrix _does not_ spans the intercept"""
         return
 
 
 class Treatment(Encoding):
     def __init__(self, reference=None):
-        """reference is the value of the reference itself"""
+        """Treatment encoding
+
+        This is also known as dummy encoding.
+
+        When the encoding is not full-rank, one level is taken as reference and the coefficients
+        are the difference between each level and the reference. In that case the intercept
+        represents the mean of the reference level.
+
+        When the encoding is of full-rank, there's a dummy variable for each level representing
+        the mean of the level.
+
+        Parameters
+        ----------
+        reference: str
+            The level to take as reference
+        """
         self.reference = reference
 
     def code_with_intercept(self, levels):
-        """This contrast matrix spans the intercept"""
         contrast = np.eye(len(levels), dtype=int)
         labels = [str(level) for level in levels]
         return ContrastMatrix(contrast, labels)
 
     def code_without_intercept(self, levels):
-        """This contrast matrix _does not_ spans the intercept"""
         # First category is the default reference
         if self.reference is None:
             reference = 0
@@ -144,14 +175,21 @@ class Treatment(Encoding):
 
 class Sum(Encoding):
     def __init__(self, omit=None):
-        """
-        Compares the mean of each level to the mean-of-means.
+        """Sum-to-zero encoding
 
-        For full-rank coding, a standard intercept term is added.
-        This intercept represents the mean of the variable.
+        This is also known as deviation encoding. It compares the the mean of each level to the
+        grand mean (aka mean-of-means).
+
+        For full-rank coding, an intercept term is added. This intercept represents the mean
+        of the variable.
 
         One level must be omitted to avoid redundancy. By default, this is the last level, but this
         can be adjusted via the `omit` argument.
+
+        Parameters
+        ----------
+        omit: str
+            The level to omit.
         """
         self.omit = omit
 
@@ -190,9 +228,3 @@ class Sum(Encoding):
 
 
 ENCODINGS = {"Treatment": Treatment, "Sum": Sum}
-
-# Idea:
-# C is for Categorical, it can accept one encoding such as Treatment or Sum
-# B is for Binary, it can accept a reference level
-# T is for Treatment, it is the same than using C and Treatment encoding
-# S is for Sum, it is the same than using C and Sum encoding
