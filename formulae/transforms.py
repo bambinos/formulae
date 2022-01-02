@@ -106,7 +106,7 @@ def binary(x, success=None):
     booleans = x == success
     if not sum(booleans):
         raise ValueError(f"No value in 'x' is equal to \"{success}\"")
-    return np.where(booleans, 1, 0)[:, np.newaxis]
+    return np.where(booleans, 1, 0)
 
 
 class Proportion:
