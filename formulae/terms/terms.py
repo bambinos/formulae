@@ -117,14 +117,14 @@ class Intercept:
 
         It sets ``self.data`` equal to a numpy array of ones of length ``(self.len, 1)``.
         """
-        self.data = np.ones(self.len)
+        self.data = np.ones(self.len, dtype=int)
 
     def eval_new_data(self, data):
         """Returns data for a new intercept.
 
         The length of the new intercept is given by the number of rows in ``data``.
         """
-        return np.ones(data.shape[0])
+        return np.ones(data.shape[0], dtype=int)
 
     @property
     def labels(self):
