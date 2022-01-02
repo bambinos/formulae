@@ -53,7 +53,7 @@ class CategoricalBox:
     """
     data: 1d array-like
         The data converted to categorical.
-    contrast: ContrastMatrix
+    contrast: Encoding
         An instance that represents the contrast matrix used to encode the categorical variable
     levels: list or tuple
         The order of the levels.
@@ -82,6 +82,7 @@ class CategoricalBox:
 
     @contrast.setter
     def contrast(self, value):
+        # Allows to do C(x, Treatment) instead of C(x, Treatment())
         if callable(value):
             value = value()
 
@@ -145,7 +146,6 @@ class Sum(Encoding):
     def __init__(self, omit=None):
         """
         Compares the mean of each level to the mean-of-means.
-        In a balanced design, compares the mean of each level to the overall mean.
 
         For full-rank coding, a standard intercept term is added.
         This intercept represents the mean of the variable.
