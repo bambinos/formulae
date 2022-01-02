@@ -687,34 +687,135 @@ def test_C_function():
     rng = np.random.default_rng(1234)
     data = pd.DataFrame(
         {
-            "y": rng.integers(0, 5, size=size),
             "x": rng.integers(5, 10, size=size),
             "g": rng.choice(["a", "b", "c"], size=size),
         }
     )
 
-    term = design_matrices("y ~ C(x)", data).common.terms["C(x)"]
+    term = design_matrices("C(x)", data).common.terms["C(x)"]
     assert term.kind == "categoric"
     assert term.levels == ["6", "7", "8", "9"]
     assert term.data.shape == (100, 4)
 
     levels = [6, 8, 5, 7, 9]
-    term = design_matrices("y ~ C(x, levels=levels)", data).common.terms["C(x, levels = levels)"]
+    term = design_matrices("C(x, levels=levels)", data).common.terms["C(x, levels = levels)"]
     assert term.kind == "categoric"
     assert term.levels == [str(level) for level in levels[1:]]
     assert term.data.shape == (100, 4)
 
     levels = ["b", "c", "a"]
-    term = design_matrices("y ~ C(g, levels=levels)", data).common.terms["C(g, levels = levels)"]
+    term = design_matrices("C(g, levels=levels)", data).common.terms["C(g, levels = levels)"]
     assert term.kind == "categoric"
     assert term.levels == levels[1:]
     assert term.data.shape == (100, 2)
 
-    # X: Add tests using the 'contrasts' arguments to pass Treatment and Sum encodings
+    # Treatment encoding, the default
+    t1 = design_matrices("C(x, Treatment)", data).common.terms["C(x, Treatment)"]
+    t2 = design_matrices("C(x, Treatment())", data).common.terms["C(x, Treatment())"]
+    t3 = design_matrices("C(x, Treatment(5))", data).common.terms["C(x, Treatment(5))"]
+    t4 = design_matrices("C(x)", data).common.terms["C(x)"]
+
+    assert np.array_equal(t1.data, t2.data)
+    assert np.array_equal(t1.data, t3.data)
+    assert np.array_equal(t1.data, t4.data)
+
+    t1 = design_matrices("C(g, Treatment)", data).common.terms["C(g, Treatment)"]
+    t2 = design_matrices("C(g, Treatment())", data).common.terms["C(g, Treatment())"]
+    t3 = design_matrices("C(g, Treatment('a'))", data).common.terms["C(g, Treatment(a))"]
+    t4 = design_matrices("C(g)", data).common.terms["C(g)"]
+
+    assert np.array_equal(t1.data, t2.data)
+    assert np.array_equal(t1.data, t3.data)
+    assert np.array_equal(t1.data, t4.data)
+
+    # Sum encoding, not the default
+    t1 = design_matrices("C(x, Sum)", data).common.terms["C(x, Sum)"]
+    t2 = design_matrices("C(x, Sum())", data).common.terms["C(x, Sum())"]
+    t3 = design_matrices("C(x, Sum(9))", data).common.terms["C(x, Sum(9))"]
+
+    assert np.array_equal(t1.data, t2.data)
+    assert np.array_equal(t1.data, t3.data)
+
+    t1 = design_matrices("C(g, Sum)", data).common.terms["C(g, Sum)"]
+    t2 = design_matrices("C(g, Sum())", data).common.terms["C(g, Sum())"]
+    t3 = design_matrices("C(g, Sum('c'))", data).common.terms["C(g, Sum(c))"]
+
+    assert np.array_equal(t1.data, t2.data)
+    assert np.array_equal(t1.data, t3.data)
 
 
 # NOTE: B(g, 'c') is then looked up ad B(g, c).
 # From the second it is impossible to tell if c is a literal or variable
+
+
+def test_C_aliases():
+    size = 100
+    rng = np.random.default_rng(1234)
+    data = pd.DataFrame(
+        {
+            "x": rng.integers(5, 10, size=size),
+            "g": rng.choice(["a", "b", "c"], size=size),
+        }
+    )
+
+    t1 = design_matrices("S(x)", data).common.terms["S(x)"]
+    t2 = design_matrices("C(x, Sum)", data).common.terms["C(x, Sum)"]
+
+    assert np.array_equal(t1.data, t2.data)
+
+    t1 = design_matrices("T(x)", data).common.terms["T(x)"]
+    t2 = design_matrices("C(x, Treatment)", data).common.terms["C(x, Treatment)"]
+
+    assert np.array_equal(t1.data, t2.data)
+
+
+def test_S_function():
+    size = 100
+    rng = np.random.default_rng(1234)
+    data = pd.DataFrame(
+        {
+            "x": rng.integers(5, 10, size=size),
+            "g": rng.choice(["a", "b", "c"], size=size),
+        }
+    )
+
+    term = design_matrices("0 + S(x)", data).common.terms["S(x)"]
+    assert term.labels == ["S(x)[mean]"] + [f"S(x)[{l}]" for l in [5, 6, 7, 8]]
+
+    term = design_matrices("S(x, 7)", data).common.terms["S(x, 7)"]
+    assert term.labels == [f"S(x, 7)[{l}]" for l in [5, 6, 8, 9]]
+
+    # It still drops last level, no matter we changed the order
+    levels = [9, 8, 7, 6, 5]
+    term = design_matrices("S(x, levels = levels)", data).common.terms["S(x, levels = levels)"]
+    assert term.labels == [f"S(x, levels = levels)[{l}]" for l in levels[:-1]]
+
+    term = design_matrices("S(x, 6, levels)", data).common.terms["S(x, 6, levels)"]
+    assert term.labels == [f"S(x, 6, levels)[{l}]" for l in [9, 8, 7, 5]]
+
+
+def test_T_function():
+    size = 100
+    rng = np.random.default_rng(1234)
+    data = pd.DataFrame(
+        {
+            "x": rng.integers(5, 10, size=size),
+            "g": rng.choice(["a", "b", "c"], size=size),
+        }
+    )
+    term = design_matrices("0 + T(x)", data).common.terms["T(x)"]
+    assert term.labels == [f"T(x)[{l}]" for l in [5, 6, 7, 8, 9]]
+
+    term = design_matrices("T(x, 7)", data).common.terms["T(x, 7)"]
+    assert term.labels == [f"T(x, 7)[{l}]" for l in [5, 6, 8, 9]]
+
+    # It still drops first level, no matter we changed the order
+    levels = [9, 8, 7, 6, 5]
+    term = design_matrices("T(x, levels = levels)", data).common.terms["T(x, levels = levels)"]
+    assert term.labels == [f"T(x, levels = levels)[{l}]" for l in levels[1:]]
+
+    term = design_matrices("T(x, 6, levels)", data).common.terms["T(x, 6, levels)"]
+    assert term.labels == [f"T(x, 6, levels)[{l}]" for l in [9, 8, 7, 5]]
 
 
 def test_offset():

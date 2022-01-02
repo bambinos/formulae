@@ -9,7 +9,8 @@
 
 ### Maintenance and fixes
 
-* Fixed a bug in the addition of lower order terms when the original higher order term wasn't full-rank. 
+* Fixed a bug in the addition of lower order terms when the original higher order term wasn't full-rank.
+* Columns for categorical terms are integer by default. They are casted to float only if there are other float-valued columns in the design matrix.
 
 ## v0.2.0
 
