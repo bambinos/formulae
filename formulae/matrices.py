@@ -127,22 +127,29 @@ class ResponseVector:
         data = pd.DataFrame(self.design_vector, columns=self.term.term.labels)
         return data
 
+    def __array__(self):
+        return self.design_vector
+
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        string_list = [
+        entries = [
             f"name: {self.name}",
             f"kind: {self.kind}",
             f"length: {len(self.design_vector)}",
         ]
         if self.kind == "categoric":
-            string_list += [f"binary: {self.binary}"]
+            entries += [f"binary: {self.binary}"]
             if self.binary:
-                string_list += [f"success: {self.success}"]
+                entries += [f"success: {self.success}"]
             else:
-                string_list += [f"levels: {self.levels}"]
-        return f"ResponseVector({wrapify(spacify(multilinify(string_list)))}\n)"
+                entries += [f"levels: {self.levels}"]
+        msg = (
+            f"ResponseVector{wrapify(spacify(multilinify(entries, '')))}\n\n"
+            "To access the actual design vector do 'np.array(this_obj)'"
+        )
+        return msg
 
 
 class CommonEffectsMatrix:
@@ -266,17 +273,26 @@ class CommonEffectsMatrix:
             raise ValueError(f"'{term}' is not a valid term name")
         return self.design_matrix[:, self.slices[term]]
 
+    def __array__(self):
+        return self.design_matrix
+
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        # string = [f"'{k}': {{{spacify(term_str(v))}\n}}" for k, v in self.terms_info.items()]
-        # string = multilinify(string)
-        string = [
-            f"shape: {self.design_matrix.shape}",
-            # f"terms: {{{spacify(string)}\n}}",
-        ]
-        return f"CommonEffectsMatrix({wrapify(spacify(multilinify(string)))}\n)"
+        entries = []
+        for name, term in self.terms.items():
+            content = [f"kind: {term.kind}"]
+            if hasattr(term, "levels") and term.levels is not None:
+                content += [f"levels: {term.levels}"]
+            content += [slice_to_column(self.slices[name])]
+            entries += [f"{name}{wrapify(spacify(multilinify(content, '')))}"]
+        msg = (
+            f"CommonEffectsMatrix with shape {self.design_matrix.shape}\n"
+            f"Terms:{spacify(multilinify(entries, ''))}\n\n"
+            "To access the actual design vector do 'np.array(this_obj)'"
+        )
+        return msg
 
 
 class GroupEffectsMatrix:
@@ -401,6 +417,9 @@ class GroupEffectsMatrix:
             raise ValueError(f"'{term}' is not a valid term name")
         return self.design_matrix[:, self.slices[term]]
 
+    def __array__(self):
+        return self.design_matrix
+
     def __repr__(self):
         return self.__str__()
 
@@ -514,6 +533,13 @@ def wrapify(string, width=100):
             wrapped = wrapper.wrap(line)
             l[idx] = "\n".join(wrapped) + "\n"
     return "".join(l)
+
+
+def slice_to_column(s):
+    if s.stop - s.start > 1:
+        return f"columns: {s.start}:{s.stop}"
+    else:
+        return f"column: {s.start}"
 
 
 # Idea: Have a TermList class instead of having to use dictionaries?

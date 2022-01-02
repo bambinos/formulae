@@ -6,6 +6,7 @@
 
 - We can create our own encodings such as Treatment or Sum encoding. These are subclasses of `Encoding`.
 - Added two aliases `T` and `S` that are shorthands of `C(var, Treatment)` and `C(var, Sum)` respectively.
+- DesignVector, CommonEffectsMatrix and GroupEffectsMatrix now retrieve their values when passed to `np.array()` and `np.asarray()`.
 
 ### Maintenance and fixes
 
