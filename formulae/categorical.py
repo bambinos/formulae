@@ -82,7 +82,10 @@ class CategoricalBox:
 
     @contrast.setter
     def contrast(self, value):
-        if not (isinstance(value, (Treatment, Sum)) or value is None):
+        if callable(value):
+            value = value()
+
+        if not (isinstance(value, Encoding) or value is None):
             raise ValueError("The contrast argument in must be an instance of Encoding")
         self._contrast = value
 
