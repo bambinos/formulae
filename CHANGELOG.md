@@ -1,9 +1,15 @@
 # Change Log
 
-## v0.2.x Unreleased
+## v0.3.0 Unreleased
 
+### New features
 
-h:j:x2 returned h:j:x2 + j, when we need h:j:x2 + j:x2
+- We can create our own encodings such as Treatment or Sum encoding. These are subclasses of `Encoding`.
+- Added two aliases `T` and `S` that are shorthands of `C(var, Treatment)` and `C(var, Sum)` respectively.
+
+### Maintenance and fixes
+
+* Fixed a bug in the addition of lower order terms when the original higher order term wasn't full-rank. 
 
 ## v0.2.0
 
