@@ -238,7 +238,7 @@ class Variable:
             raise ValueError("Variable type is not set.")
 
         if self.kind == "numeric":
-            if self.value.ndim == 2:
+            if self.value.ndim == 2 and self.value.shape[1] > 1:
                 labels = [f"{self.name}[{i}]" for i in range(self.value.shape[1])]
             else:
                 labels = [self.name]

@@ -355,7 +355,7 @@ class Call:
         if self.kind is None:
             raise ValueError("Call type is not set.")
         if self.kind in ["numeric", "offset"]:
-            if self.value.ndim == 2:
+            if self.value.ndim == 2 and self.value.shape[1] > 1:
                 labels = [f"{self.name}[{i}]" for i in range(self.value.shape[1])]
             else:
                 labels = [self.name]
