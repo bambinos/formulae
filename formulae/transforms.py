@@ -336,6 +336,51 @@ class BSpline:
         return basis
 
 
+class Polynomial:
+    # TODO: Give appropriate credit to Matthew Wardrop for this implementation
+    # TODO: Document
+    def __init__(self):
+        self.params_set = False
+        self.degree = 1
+        self.raw = False
+        self.alpha = {}
+        self.norms2 = {}
+
+    def __call__(self, x, degree, raw=False):
+        if not self.params_set:
+            self.degree = degree
+            self.raw = raw
+        return self.eval(x)
+
+    def eval(self, x):
+        if self.raw:
+            return np.column_stack([np.power(x, k) for k in range(1, self.degree + 1)])
+
+        def get_alpha(k):
+            if k not in self.alpha:
+                self.alpha[k] = np.sum(x * P[:, k] ** 2) / np.sum(P[:, k] ** 2)
+            return self.alpha[k]
+
+        def get_norm(k):
+            if k not in self.norms2:
+                self.norms2[k] = np.sum(P[:, k] ** 2)
+            return self.norms2[k]
+
+        def get_beta(k):
+            return get_norm(k) / get_norm(k - 1)
+
+        P = np.empty((x.shape[0], self.degree + 1))
+        P[:, 0] = 1
+
+        for i in range(1, self.degree + 1):
+            P[:, i] = (x - get_alpha(i - 1)) * P[:, i - 1]
+            if i >= 2:
+                P[:, i] -= get_beta(i - 1) * P[:, i - 2]
+
+        P /= np.array([np.sqrt(get_norm(k)) for k in range(0, self.degree + 1)])
+        return P[:, 1:]
+
+
 TRANSFORMS = {
     "B": binary,
     "binary": binary,
@@ -349,4 +394,10 @@ TRANSFORMS = {
     "T": T,
 }
 
-STATEFUL_TRANSFORMS = {"center": Center, "scale": Scale, "standardize": Scale, "bs": BSpline}
+STATEFUL_TRANSFORMS = {
+    "bs": BSpline,
+    "center": Center,
+    "poly": Polynomial,
+    "scale": Scale,
+    "standardize": Scale,
+}
