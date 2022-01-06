@@ -7,14 +7,15 @@
 - We can create our own encodings such as Treatment or Sum encoding. These are subclasses of `Encoding`.
 - Added two aliases `T` and `S` that are shorthands of `C(var, Treatment)` and `C(var, Sum)` respectively.
 - DesignVector, CommonEffectsMatrix and GroupEffectsMatrix now retrieve their values when passed to `np.array()` and `np.asarray()`.
+- Add `poly()` stateful transform.
 
 ### Maintenance and fixes
 
-* Fixed a bug in the addition of lower order terms when the original higher order term wasn't full-rank.
-* Columns for categorical terms are integer by default. They are casted to float only if there are other float-valued columns in the design matrix.
-* Updated __str__ and __repr__ methods of `ResponseVector`, `CommonEffectsMatrix`, and `GroupEffectsMatrix`.
-* Added __str__ and __repr__ methods for `DesignMatrices`.
-* Added __get_item__ method for `DesignMatrices`.
+- Fixed a bug in the addition of lower order terms when the original higher order term wasn't full-rank.
+- Columns for categorical terms are integer by default. They are casted to float only if there are other float-valued columns in the design matrix.
+- Updated __str__ and __repr__ methods of `ResponseVector`, `CommonEffectsMatrix`, and `GroupEffectsMatrix`.
+- Added __str__ and __repr__ methods for `DesignMatrices`.
+- Added __get_item__ method for `DesignMatrices`.
 
 ## v0.2.0
 

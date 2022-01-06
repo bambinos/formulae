@@ -337,8 +337,25 @@ class BSpline:
 
 
 class Polynomial:
-    # TODO: Give appropriate credit to Matthew Wardrop for this implementation
-    # TODO: Document
+    """Polynomial transformation
+
+    The computation of this transformation is borrowed from the implementation in the
+    Formulaic library written by Matthew Wardrop.
+
+    The original implementation and more documentation can be found here:
+    https://github.com/matthewwardrop/formulaic/blob/main/formulaic/transforms/poly.py
+
+    Parameters
+    ----------
+    x: 1d array-like
+        The data.
+    degree: int
+        The degree of the polynomial terms to compute. If degree is k, with k > 1, this
+        transformation computes the polinomials x^1, x^2, ...x^k.
+    raw: bool
+        Whether to use raw polynomials or orthonormal ones. Defaults to False.
+    """
+
     def __init__(self):
         self.params_set = False
         self.degree = 1
@@ -346,7 +363,7 @@ class Polynomial:
         self.alpha = {}
         self.norms2 = {}
 
-    def __call__(self, x, degree, raw=False):
+    def __call__(self, x, degree=1, raw=False):
         if not self.params_set:
             self.degree = degree
             self.raw = raw
