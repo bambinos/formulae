@@ -7,19 +7,21 @@ import pandas as pd
 from formulae.matrices import design_matrices
 from formulae.parser import ParseError
 
-# XTODO: See interaction names.. they don't always work as expected
+
 @pytest.fixture(scope="module")
 def data():
-    np.random.seed(1234)
+    rng = np.random.default_rng(1234)
     size = 20
     data = pd.DataFrame(
         {
-            "y": np.random.uniform(size=size),
-            "x1": np.random.uniform(size=size),
-            "x2": np.random.uniform(size=size),
+            "y": rng.uniform(size=size),
+            "x1": rng.uniform(size=size),
+            "x2": rng.uniform(size=size),
             "x3": [1, 2, 3, 4] * 5,
-            "f": np.random.choice(["A", "B"], size=size),
-            "g": np.random.choice(["A", "B"], size=size),
+            "f": rng.choice(["A", "B"], size=size),
+            "g": rng.choice(["A", "B"], size=size),
+            "h": rng.choice(["A", "B"], size=size),
+            "j": rng.choice(["A", "B"], size=size),
         }
     )
     return data
@@ -42,6 +44,18 @@ def pixel():
     data = data[data["day"].isin([2, 4, 6])]
     data = data.sort_values(["Dog", "Side", "day"])
     data = data.reset_index(drop=True)
+    return data
+
+
+@pytest.fixture(scope="module")
+def beetle():
+    data = pd.DataFrame(
+        {
+            "x": np.array([1.6907, 1.7242, 1.7552, 1.7842, 1.8113, 1.8369, 1.8610, 1.8839]),
+            "n": np.array([59, 60, 62, 56, 63, 59, 62, 60]),
+            "y": np.array([6, 13, 18, 28, 52, 53, 61, 60]),
+        }
+    )
     return data
 
 
@@ -228,21 +242,7 @@ def test_categoric_encoding(data):
     assert dm.common.design_matrix.shape == (20, 4)
 
 
-def test_categoric_encoding_with_numeric_interaction():
-    rng = np.random.default_rng(1234)
-    size = 20
-    data = pd.DataFrame(
-        {
-            "y": rng.uniform(size=size),
-            "x1": rng.uniform(size=size),
-            "x2": rng.uniform(size=size),
-            "x3": [1, 2, 3, 4] * 5,
-            "f": rng.choice(["A", "B"], size=size),
-            "g": rng.choice(["A", "B"], size=size),
-            "h": rng.choice(["A", "B"], size=size),
-            "j": rng.choice(["A", "B"], size=size),
-        }
-    )
+def test_categoric_encoding_with_numeric_interaction(data):
     dm = design_matrices("y ~ x1 + x2 + f:g + h:j:x2", data)
     assert list(dm.common.terms) == ["Intercept", "x1", "x2", "g", "f:g", "j:x2", "h:j:x2"]
     assert dm.common.terms["g"].spans_intercept is False
@@ -482,34 +482,26 @@ def test_interactions_in_group_specific(pixel):
     assert dm.group.terms["Dog:Side|day"].labels == names
 
 
-def test_prop_response():
-    data = pd.DataFrame(
-        {
-            "x": np.array([1.6907, 1.7242, 1.7552, 1.7842, 1.8113, 1.8369, 1.8610, 1.8839]),
-            "n": np.array([59, 60, 62, 56, 63, 59, 62, 60]),
-            "y": np.array([6, 13, 18, 28, 52, 53, 61, 60]),
-        }
-    )
-
-    response = design_matrices("prop(y, n) ~ x", data).response
+def test_prop_response(beetle):
+    response = design_matrices("prop(y, n) ~ x", beetle).response
     assert response.kind == "proportion"
     assert response.design_vector.shape == (8, 2)
     assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
 
     # Admit integer values for 'n'
-    response = design_matrices("prop(y, 62) ~ x", data).response
+    response = design_matrices("prop(y, 62) ~ x", beetle).response
     assert response.kind == "proportion"
     assert response.design_vector.shape == (8, 2)
     assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
 
     # Use aliases
-    response = design_matrices("proportion(y, n) ~ x", data).response
+    response = design_matrices("proportion(y, n) ~ x", beetle).response
     assert response.kind == "proportion"
     assert response.design_vector.shape == (8, 2)
     assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
 
     # Use aliases
-    response = design_matrices("p(y, n) ~ x", data).response
+    response = design_matrices("p(y, n) ~ x", beetle).response
     assert response.kind == "proportion"
     assert response.design_vector.shape == (8, 2)
     assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
@@ -844,41 +836,25 @@ def test_offset():
         design_matrices("offset(y) ~ x", data)
 
 
-def test_predict_prop():
-    data = pd.DataFrame(
-        {
-            "x": np.array([1.6907, 1.7242, 1.7552, 1.7842, 1.8113, 1.8369, 1.8610, 1.8839]),
-            "n": np.array([59, 60, 62, 56, 63, 59, 62, 60]),
-            "y": np.array([6, 13, 18, 28, 52, 53, 61, 60]),
-        }
-    )
-
+def test_predict_prop(beetle):
     # If trials is a variable, new dataset must have that variable
-    dm = design_matrices("prop(y, n) ~ x", data)
+    dm = design_matrices("prop(y, n) ~ x", beetle)
     result = dm.response.evaluate_new_data(pd.DataFrame({"n": [10, 10, 30, 30]}))
     assert (result == np.array([10, 10, 30, 30])).all()
 
     # If trials is a constant value, return that same value
-    dm = design_matrices("prop(y, 70) ~ x", data)
+    dm = design_matrices("prop(y, 70) ~ x", beetle)
     result = dm.response.evaluate_new_data(pd.DataFrame({"n": [10, 10, 30, 30]}))
     assert (result == np.array([70, 70, 70, 70])).all()
 
 
-def test_predict_offset():
-    data = pd.DataFrame(
-        {
-            "x": np.array([1.6907, 1.7242, 1.7552, 1.7842, 1.8113, 1.8369, 1.8610, 1.8839]),
-            "n": np.array([59, 60, 62, 56, 63, 59, 62, 60]),
-            "y": np.array([6, 13, 18, 28, 52, 53, 61, 60]),
-        }
-    )
-
+def test_predict_offset(beetle):
     # If offset is a variable, new dataset must have that variable
-    dm = design_matrices("y ~ x + offset(x)", data)
+    dm = design_matrices("y ~ x + offset(x)", beetle)
     result = dm.common.evaluate_new_data(pd.DataFrame({"x": [1, 2, 3]}))["offset(x)"]
     assert (result == np.array([1, 2, 3])[:, np.newaxis]).all()
 
     # If offset is a constant value, return that same value
-    dm = design_matrices("y ~ x + offset(10)", data)
+    dm = design_matrices("y ~ x + offset(10)", beetle)
     result = dm.common.evaluate_new_data(pd.DataFrame({"x": [1, 2, 3]}))["offset(10)"]
     assert (result == np.array([10, 10, 10])[:, np.newaxis]).all()
