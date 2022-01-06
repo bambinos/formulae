@@ -65,6 +65,33 @@ class DesignMatrices:
             self.group = GroupEffectsMatrix(self.model.group_terms)
             self.group.evaluate(data, env)
 
+    def __getitem__(self, index):
+        return (self.response, self.common, self.group)[index]
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        entries = []
+        if self.response:
+            entries += [glue_and_align("Response: ", self.response.design_vector.shape, 25)]
+
+        if self.common:
+            entries += [glue_and_align("Common: ", self.common.design_matrix.shape, 25)]
+
+        if self.group:
+            entries += [glue_and_align("Group-specific: ", self.group.design_matrix.shape, 25)]
+
+        msg = (
+            "DesignMatrices\n\n"
+            + glue_and_align("", "(rows, cols)", 25)
+            + "\n"
+            + "\n".join(entries)
+            + "\n\n"
+            + "Use .reponse, .common, or .group to access the different members."
+        )
+        return msg
+
 
 class ResponseVector:
     """Representation of the respose vector of a model.
@@ -546,6 +573,17 @@ def slice_to_column(s):
         return f"columns: {s.start}:{s.stop}"
     else:
         return f"column: {s.start}"
+
+
+def glue_and_align(key, value, width):
+    key = str(key)
+    value = str(value)
+    key_n = len(key)
+    value_n = len(value)
+    if width > (key_n + value_n):
+        return key + value.rjust(width - key_n)
+    else:
+        return key + value
 
 
 # Idea: Have a TermList class instead of having to use dictionaries?

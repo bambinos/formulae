@@ -120,12 +120,12 @@ class Encoding(ABC):
 
     @abstractmethod
     def code_with_intercept(self, levels):
-        """This contrast matrix spans the intercept"""
+        """This contrast matrix _does_ span the intercept"""
         return
 
     @abstractmethod
     def code_without_intercept(self, levels):
-        """This contrast matrix _does not_ spans the intercept"""
+        """This contrast matrix _does not_ span the intercept"""
         return
 
 
@@ -135,12 +135,12 @@ class Treatment(Encoding):
 
         This is also known as dummy encoding.
 
-        When the encoding is not full-rank, one level is taken as reference and the coefficients
-        are the difference between each level and the reference. In that case the intercept
-        represents the mean of the reference level.
+        When the encoding is not full-rank, one level is taken as reference and the regression
+        coefficients measure the difference between the each level and the reference. In that case,
+        the intercept represents the mean of the reference level.
 
         When the encoding is of full-rank, there's a dummy variable for each level representing
-        the mean of the level.
+        its mean.
 
         Parameters
         ----------
@@ -181,7 +181,7 @@ class Sum(Encoding):
         grand mean (aka mean-of-means).
 
         For full-rank coding, an intercept term is added. This intercept represents the mean
-        of the variable.
+        of the response variable.
 
         One level must be omitted to avoid redundancy. By default, this is the last level, but this
         can be adjusted via the `omit` argument.
