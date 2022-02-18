@@ -104,7 +104,7 @@ def test_reuse_state(data):
     value = poly(data, degree=3)
 
     # Reuse transformation but with different data
-    value = poly(data ** 2, degree=3)
+    value = poly(data**2, degree=3)
 
     assert value.shape[1] == 3
 
@@ -143,4 +143,4 @@ def test_reuse_state(data):
 
 def test_raw(data):
     poly = Polynomial()
-    assert np.allclose(poly(data, 3, raw=True), np.array([data, data ** 2, data ** 3]).T)
+    assert np.allclose(poly(data, 3, raw=True), np.array([data, data**2, data**3]).T)
