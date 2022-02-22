@@ -16,6 +16,7 @@
 - Updated __str__ and __repr__ methods of `ResponseVector`, `CommonEffectsMatrix`, and `GroupEffectsMatrix`.
 - Added __str__ and __repr__ methods for `DesignMatrices`.
 - Added __get_item__ method for `DesignMatrices`.
+- Added support for comparison operators within function calls.
 
 ## v0.2.0
 

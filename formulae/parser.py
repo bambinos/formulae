@@ -9,7 +9,7 @@ class ParseError(Exception):
     pass
 
 
-class Parser:
+class Parser: # pylint: disable=too-many-public-methods
     """Parses a sequence of Tokens and returns an abstract syntax tree.
 
     Parameters
@@ -95,8 +95,18 @@ class Parser:
         return expr
 
     def random_effect(self):
-        expr = self.addition()
+        expr = self.comparison()
         while self.match(["PIPE"]):
+            operator = self.previous()
+            right = self.comparison()
+            expr = Binary(expr, operator, right)
+        return expr
+
+    def comparison(self):
+        expr = self.addition()
+        while self.match(
+            ["EQUAL_EQUAL", "BANG_EQUAL", "LESS_EQUAL", "LESS", "GREATER_EQUAL", "GREATER"]
+        ):
             operator = self.previous()
             right = self.addition()
             expr = Binary(expr, operator, right)

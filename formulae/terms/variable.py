@@ -186,8 +186,6 @@ class Variable:
             ``self.eval_categoric()``. The first applies for numeric variables, the second for
             categoric ones.
         """
-        if self.value is None:
-            raise ValueError("'self.value' is None. This error shouldn't have happened!")
         x = data_mask[self.name]
         if self.kind == "numeric":
             return self.eval_new_data_numeric(x)
@@ -195,11 +193,7 @@ class Variable:
             return self.eval_new_data_categoric(x)
 
     def eval_new_data_numeric(self, x):
-        if isinstance(x, np.ndarray):
-            value = x
-        elif isinstance(x, pd.Series):
-            value = x.values
-        return value
+        return np.asarray(x)
 
     def eval_new_data_categoric(self, x):
         """Evaluates the variable with new data when variable is categoric.
@@ -234,9 +228,7 @@ class Variable:
     @property
     def labels(self):
         """Obtain labels of the columns in the design matrix associated with this Variable"""
-        if self.kind is None:
-            raise ValueError("Variable type is not set.")
-
+        labels = None
         if self.kind == "numeric":
             if self.value.ndim == 2 and self.value.shape[1] > 1:
                 labels = [f"{self.name}[{i}]" for i in range(self.value.shape[1])]
@@ -244,7 +236,5 @@ class Variable:
                 labels = [self.name]
         elif self.kind == "categoric":
             labels = [f"{self.name}[{label}]" for label in self.contrast_matrix.labels]
-        else:
-            raise ValueError(f"Variable is of an unrecognized type ({self.kind}).")
 
         return labels

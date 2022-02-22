@@ -22,7 +22,7 @@ class Assign:
 
     def __str__(self):
         right = "  ".join(str(self.value).splitlines(True))
-        return f"Assign(\n  name= {self.name}, \n  value= {right}\n)"
+        return f"Assign(name={self.name}, value={right})"
 
     def accept(self, visitor):
         return visitor.visitAssignExpr(self)

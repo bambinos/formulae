@@ -31,6 +31,12 @@ class LazyOperator:
         "pow": "**",
         "mul": "*",
         "truediv": "/",
+        "eq": "==",
+        "ne": "!=",
+        "le": "<=",
+        "lt": "<",
+        "ge": ">=",
+        "gt": ">",
     }
 
     def __init__(self, op, *args):
@@ -43,9 +49,6 @@ class LazyOperator:
             return f"{self.symbol}{self.args[0]}"
         else:
             return f"{self.args[0]} {self.symbol} {self.args[1]}"
-
-    def __repr__(self):
-        return self.__str__()
 
     def __hash__(self):
         return hash((self.symbol, *self.args))
@@ -98,9 +101,6 @@ class LazyVariable:
 
     def __str__(self):
         return self.name
-
-    def __repr__(self):
-        return self.__str__()
 
     def __hash__(self):
         return hash((self.name))
@@ -161,14 +161,8 @@ class LazyValue:
     def __str__(self):
         return str(self.value)
 
-    def __repr__(self):
-        return self.__str__()
-
     def __eq__(self, other):
         return isinstance(other, type(self)) and self.value == other.value
-
-    def __hash__(self):
-        return hash((self.value))
 
     def accept(self, visitor):
         return visitor.visitLazyValue(self)
@@ -222,9 +216,6 @@ class LazyCall:
         kwargs = [f"{name} = {str(arg)}" for name, arg in self.kwargs.items()]
         return f"{self.callee}({', '.join(args + kwargs)})"
 
-    def __repr__(self):
-        return self.__str__()
-
     def __hash__(self):
         return hash((self.callee, *self.args, *self.kwargs))
 
@@ -259,7 +250,6 @@ class LazyCall:
         if self.stateful_transform:
             callee = self.stateful_transform
         else:
-            # callee = env.eval(self.callee)
             callee = get_function_from_module(self.callee, env)
 
         args = [arg.eval(data_mask, env) for arg in self.args]
@@ -277,6 +267,12 @@ class CallResolver:
         "STAR_STAR": operator.pow,
         "STAR": operator.mul,
         "SLASH": operator.truediv,
+        "EQUAL_EQUAL": operator.eq,
+        "BANG_EQUAL": operator.ne,
+        "LESS_EQUAL": operator.le,
+        "LESS": operator.lt,
+        "GREATER_EQUAL": operator.ge,
+        "GREATER": operator.gt,
     }
 
     UNARY_OPERATORS = {"PLUS": operator.pos, "MINUS": operator.neg}
@@ -338,7 +334,6 @@ def get_function_from_module(name, env):
         if inner_modules_names:
             inner_module = getattr(module, inner_modules_names[0])
             for inner_module_name in inner_modules_names[1:]:
-                # print(name)
                 inner_module = getattr(inner_module, inner_module_name)
             fun = getattr(inner_module, function_name)
         else:

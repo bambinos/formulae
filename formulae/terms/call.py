@@ -284,11 +284,7 @@ class Call:
         return result
 
     def eval_new_data_numeric(self, x):
-        if isinstance(x, np.ndarray):
-            value = x
-        elif isinstance(x, pd.Series):
-            value = x.values
-        return value
+        return np.asarray(x)
 
     def eval_new_data_categoric(self, x):
         """Evaluates the call with new data when the result of the call is categoric.
@@ -352,8 +348,7 @@ class Call:
     @property
     def labels(self):
         """Obtain labels of the columns in the design matrix associated with this Call"""
-        if self.kind is None:
-            raise ValueError("Call type is not set.")
+        labels = None
         if self.kind in ["numeric", "offset"]:
             if self.value.ndim == 2 and self.value.shape[1] > 1:
                 labels = [f"{self.name}[{i}]" for i in range(self.value.shape[1])]
@@ -361,7 +356,5 @@ class Call:
                 labels = [self.name]
         elif self.kind == "categoric":
             labels = [f"{self.name}[{label}]" for label in self.contrast_matrix.labels]
-        else:
-            raise ValueError(f"Call is of an unrecognized type ({self.kind}).")
 
         return labels

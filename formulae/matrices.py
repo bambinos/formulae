@@ -74,17 +74,17 @@ class DesignMatrices:
     def __str__(self):
         entries = []
         if self.response:
-            entries += [glue_and_align("Response: ", self.response.design_vector.shape, 25)]
+            entries += [glue_and_align("Response: ", self.response.design_vector.shape, 30)]
 
         if self.common:
-            entries += [glue_and_align("Common: ", self.common.design_matrix.shape, 25)]
+            entries += [glue_and_align("Common: ", self.common.design_matrix.shape, 30)]
 
         if self.group:
-            entries += [glue_and_align("Group-specific: ", self.group.design_matrix.shape, 25)]
+            entries += [glue_and_align("Group-specific: ", self.group.design_matrix.shape, 30)]
 
         msg = (
             "DesignMatrices\n\n"
-            + glue_and_align("", "(rows, cols)", 25)
+            + glue_and_align("", "(rows, cols)", 30)
             + "\n"
             + "\n".join(entries)
             + "\n\n"
@@ -139,7 +139,10 @@ class ResponseVector:
         self.design_vector = self.term.term.data
 
         if self.kind == "categoric":
-            self.binary = self.design_vector.ndim == 1 and len(set(self.design_vector)) == 2
+            # NOTE: Why we have self.design_vector.ndim == 1?
+            #       Terms are flagged as binary only when built through response[level].
+            #       Does it make sense???
+            self.binary = self.design_vector.ndim == 1 and len(np.unique(self.design_vector)) == 2
             self.levels = self.term.term.levels
             if self.binary:
                 self.success = self.term.term.components[0].reference
@@ -317,7 +320,7 @@ class CommonEffectsMatrix:
         msg = (
             f"CommonEffectsMatrix with shape {self.design_matrix.shape}\n"
             f"Terms:{spacify(multilinify(entries, ''))}\n\n"
-            "To access the actual design vector do 'np.array(this_obj)'"
+            "To access the actual design matrix do 'np.array(this_obj)'"
         )
         return msg
 
@@ -461,7 +464,7 @@ class GroupEffectsMatrix:
         msg = (
             f"GroupEffectsMatrix with shape {self.design_matrix.shape}\n"
             f"Terms:{spacify(multilinify(entries, ''))}\n\n"
-            "To access the actual design vector do 'np.array(this_obj)'"
+            "To access the actual design matrix do 'np.array(this_obj)'"
         )
         return msg
 
@@ -504,9 +507,6 @@ def design_matrices(formula, data, na_action="drop", env=0):
     if data.shape[0] == 0:
         raise ValueError("'data' does not contain any observation.")
 
-    if data.shape[1] == 0:
-        raise ValueError("'data' does not contain any variable.")
-
     if na_action not in ["drop", "error"]:
         raise ValueError("'na_action' must be either 'drop' or 'error'")
 
@@ -537,16 +537,6 @@ def design_matrices(formula, data, na_action="drop", env=0):
 
 
 # Utils
-def term_str(term):
-    if term["kind"] == "interaction":
-        string_list = [f"{k}: {v}" for k, v in term.items() if k not in ["terms", "Xi", "Ji"]]
-        string_vars = [f"'{k}': {{{spacify(term_str(v))}\n}}" for k, v in term["terms"].items()]
-        string = multilinify(string_list + [f"vars: {{{spacify(multilinify(string_vars))}\n}}"])
-    else:
-        string = multilinify([f"{k}: {v}" for k, v in term.items() if k not in ["Xi", "Ji"]])
-    return string
-
-
 def spacify(string):
     return "  " + "  ".join(string.splitlines(True))
 

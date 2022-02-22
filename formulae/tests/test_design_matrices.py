@@ -4,8 +4,14 @@ import re
 import numpy as np
 import pandas as pd
 
-from formulae.matrices import design_matrices
+from formulae.matrices import (
+    design_matrices,
+    ResponseVector,
+    CommonEffectsMatrix,
+    GroupEffectsMatrix,
+)
 from formulae.parser import ParseError
+from formulae.resolver import ResolverError
 
 
 @pytest.fixture(scope="module")
@@ -24,6 +30,8 @@ def data():
             "j": rng.choice(["A", "B"], size=size),
         }
     )
+
+    data["g"] = pd.Categorical(data["g"], categories=["A", "B"], ordered=True)
     return data
 
 
@@ -858,3 +866,243 @@ def test_predict_offset(beetle):
     dm = design_matrices("y ~ x + offset(10)", beetle)
     result = dm.common.evaluate_new_data(pd.DataFrame({"x": [1, 2, 3]}))["offset(10)"]
     assert (result == np.array([10, 10, 10])[:, np.newaxis]).all()
+
+
+def test_builtin_names(data):
+    # Test the case where we pass a builtin in a function
+    def f(x, add):
+        if add:
+            return x + 1
+        else:
+            return x
+
+    design_matrices("f(x1, False)", data)
+    design_matrices("f(x1, True)", data)
+
+    # Test the case where the variable does not exists
+    with pytest.raises(KeyError):
+        design_matrices("f(xn, True)", data)
+
+
+def test_unary_operators(data):
+    design_matrices("+x1", data)
+
+    with pytest.raises(ResolverError, match="Unary negation can only be applied to '0' or '1'"):
+        design_matrices("-x1", data)
+
+
+def test_special_funciton_calls(data):
+    def f(x):
+        return x
+
+    # visit quoted name
+    design_matrices("f(`x1`)", data)
+
+    # visit grouping expression
+    design_matrices("f((x1 + x2))", data)
+
+
+def test_design_matrices_multiple_assignment(data):
+    response, common, group = design_matrices("y ~ x1 + (x1|x3)", data)
+
+    assert isinstance(response, ResponseVector)
+    assert isinstance(common, CommonEffectsMatrix)
+    assert isinstance(group, GroupEffectsMatrix)
+
+
+def test_design_matrices_repr_and_str(data):
+    dm = design_matrices("y ~ x1 + (x1|x3)", data)
+
+    text = (
+        "DesignMatrices\n\n"
+        "                  (rows, cols)\n"
+        "Response:                (20,)\n"
+        "Common:                (20, 2)\n"
+        "Group-specific:        (20, 8)\n\n"
+        "Use .reponse, .common, or .group to access the different members."
+    )
+
+    assert repr(dm) == text
+    assert str(dm) == text
+
+
+def test_attempt_to_evaluate_non_proportion_response(data):
+    response, _, _ = design_matrices("y ~ x1", data)
+
+    with pytest.raises(
+        ValueError, match="Can't evaluate response term with kind different to 'proportion'"
+    ):
+        response.evaluate_new_data(data)
+
+
+def test_response_as_data_frame(data):
+    response, _, _ = design_matrices("y ~ x1", data)
+
+    response_as_df = response.as_dataframe()
+    assert response_as_df.columns.tolist() == ["y"]
+    assert (response_as_df["y"] == data["y"]).all()
+
+
+def test_response_as_array(data):
+    response, _, _ = design_matrices("y ~ x1", data)
+    assert (np.asarray(response) == data["y"]).all()
+
+
+def test_response_repr_and_str(data):
+    response, _, _ = design_matrices("y ~ x1", data)
+    text = (
+        "ResponseVector  \n"
+        "  name: y\n"
+        "  kind: numeric\n"
+        "  length: 20\n\n"
+        "To access the actual design vector do 'np.array(this_obj)'"
+    )
+    assert str(response) == text
+    assert repr(response) == text
+
+    response, _, _ = design_matrices("g ~ x1", data)
+    text = (
+        "ResponseVector  \n"
+        "  name: g\n"
+        "  kind: categoric\n"
+        "  length: 20\n"
+        "  binary: False\n"
+        "  levels: ['A', 'B']\n\n"
+        "To access the actual design vector do 'np.array(this_obj)'"
+    )
+    assert str(response) == text
+    assert repr(response) == text
+
+    response, _, _ = design_matrices("g ~ x1", data)
+    text = (
+        "ResponseVector  \n"
+        "  name: g\n"
+        "  kind: categoric\n"
+        "  length: 20\n"
+        "  binary: False\n"
+        "  levels: ['A', 'B']\n\n"
+        "To access the actual design vector do 'np.array(this_obj)'"
+    )
+    assert str(response) == text
+    assert repr(response) == text
+
+    response, _, _ = design_matrices("g[A] ~ x1", data)
+    text = (
+        "ResponseVector  \n"
+        "  name: g\n"
+        "  kind: categoric\n"
+        "  length: 20\n"
+        "  binary: True\n"
+        "  success: A\n\n"
+        "To access the actual design vector do 'np.array(this_obj)'"
+    )
+    str(response) == text
+
+
+def test_common_as_data_frame(data):
+    _, common, _ = design_matrices("g ~ x1 + x2", data)
+    common_as_dataframe = common.as_dataframe()
+    assert common_as_dataframe.columns.tolist() == ["Intercept", "x1", "x2"]
+    assert (common_as_dataframe["Intercept"] == 1).all()
+    assert (common_as_dataframe["x1"] == data["x1"]).all()
+    assert (common_as_dataframe["x2"] == data["x2"]).all()
+
+
+def test_common_get_bad_key(data):
+    _, common, _ = design_matrices("g ~ x1 + x2", data)
+
+    with pytest.raises(ValueError, match="is not a valid term name"):
+        common["blabla"]
+
+
+def test_common_as_array(data):
+    _, common, _ = design_matrices("g ~ x1 + x2", data)
+    assert np.asarray(common).shape == (20, 3)
+
+
+def test_common_repr_and_str(data):
+    _, common, _ = design_matrices("y ~ x1 + f", data)
+    text = (
+        "CommonEffectsMatrix with shape (20, 3)\n"
+        "Terms:  \n"
+        "  Intercept  \n"
+        "    kind: intercept\n"
+        "    column: 0\n"
+        "  x1  \n"
+        "    kind: numeric\n"
+        "    column: 1\n"
+        "  f  \n"
+        "    kind: categoric\n"
+        "    levels: ['B']\n"
+        "    column: 2\n\n"
+        "To access the actual design matrix do 'np.array(this_obj)'"
+    )
+    assert str(common) == text
+    assert repr(common) == text
+
+
+def test_group_specific_get_bad_key(data):
+    _, _, group = design_matrices("y ~ 1 + (x1|g)", data)
+
+    with pytest.raises(ValueError, match="is not a valid term name"):
+        group["blabla"]
+
+
+def test_group_specific_as_array(data):
+    _, _, group = design_matrices("y ~ 1 + (x1|g)", data)
+    assert np.asarray(group).shape == (20, 4)
+
+
+def test_group_specific_repr_and_str(data):
+    _, _, group = design_matrices("y ~ 1 + (x1|g) + (h|g)", data)
+    text = (
+        "GroupEffectsMatrix with shape (20, 6)\n"
+        "Terms:  \n"
+        "  1|g  \n"
+        "    kind: intercept\n"
+        "    groups: ['A', 'B']\n"
+        "    columns: 0:2\n"
+        "  x1|g  \n"
+        "    kind: numeric\n"
+        "    groups: ['A', 'B']\n"
+        "    columns: 2:4\n"
+        "  h|g  \n"
+        "    kind: categoric\n"
+        "    groups: ['A', 'B']\n"
+        "    levels: ['B']\n"
+        "    columns: 4:6\n\n"
+        "To access the actual design matrix do 'np.array(this_obj)'"
+    )
+    assert str(group) == text
+    assert repr(group) == text
+
+
+def test_formula_not_string(data):
+    with pytest.raises(ValueError, match="'formula' must be a string."):
+        design_matrices(True, data)
+
+
+def test_data_not_data_frame(data):
+    with pytest.raises(ValueError, match="'data' must be a pandas.DataFrame."):
+        design_matrices("y ~ x", np.asarray(data))
+
+
+def test_data_is_empty(data):
+    with pytest.raises(ValueError, match="'data' does not contain any observation."):
+        design_matrices("y ~ x", data.iloc[:0])
+
+
+def test_wrong_na_action(data):
+    with pytest.raises(ValueError, match="'na_action' must be either 'drop' or 'error'"):
+        design_matrices("y ~ x1", data, na_action="whatever")
+
+
+def test_drop_na_rows(data):
+    data["x3"] = data["x3"].replace({3: np.nan})
+    design_matrices("y ~ x3", data, na_action="drop")
+
+
+def test_raise_na_rows(data):
+    data["x3"] = data["x3"].replace({3: np.nan})
+    with pytest.raises(ValueError, match="incomplete rows"):
+        design_matrices("y ~ x3", data, na_action="error")
