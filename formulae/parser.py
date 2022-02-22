@@ -9,7 +9,7 @@ class ParseError(Exception):
     pass
 
 
-class Parser: # pylint: disable=too-many-public-methods
+class Parser:  # pylint: disable=too-many-public-methods
     """Parses a sequence of Tokens and returns an abstract syntax tree.
 
     Parameters
