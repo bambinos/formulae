@@ -48,7 +48,7 @@ class ContrastMatrix:
 
         self._labels = value
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         msg = (
             f"{self.__class__.__name__}\n"
             f"Matrix:\n{self.matrix}\n\n"
@@ -56,7 +56,7 @@ class ContrastMatrix:
         )
         return msg
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
 
@@ -119,12 +119,12 @@ class Encoding(ABC):
     """Abstract class for custom Encodings"""
 
     @abstractmethod
-    def code_with_intercept(self, levels):
+    def code_with_intercept(self, levels):  # pragma: no cover
         """This contrast matrix _does_ span the intercept"""
         return
 
     @abstractmethod
-    def code_without_intercept(self, levels):
+    def code_without_intercept(self, levels):  # pragma: no cover
         """This contrast matrix _does not_ span the intercept"""
         return
 

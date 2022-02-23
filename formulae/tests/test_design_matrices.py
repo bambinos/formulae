@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 import pytest
 import re
 
@@ -900,6 +901,13 @@ def test_special_funciton_calls(data):
 
     # visit grouping expression
     design_matrices("f((x1 + x2))", data)
+
+    # comparison
+    design_matrices("f(x3 > 1)", data)
+
+    # proportion not in response
+    with pytest.raises(ValueError, match="can only be used as a response term"):
+        design_matrices("proportion(x3, 10)", data)
 
 
 def test_design_matrices_multiple_assignment(data):

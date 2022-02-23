@@ -176,9 +176,6 @@ class Parser:  # pylint: disable=too-many-public-methods
             identifier = self.previous()
             if self.match("LEFT_BRACKET"):
                 level = self.primary()
-                if not isinstance(level, (Literal, Variable)):
-                    raise ParseError("Subset notation only allows a string or an identifer.")
-
                 if isinstance(level, Literal) and not isinstance(level.value, str):
                     raise ParseError("Subset notation only allows a string or an identifer.")
 
@@ -206,5 +203,5 @@ class Parser:  # pylint: disable=too-many-public-methods
             expr = self.expression()
             self.consume("RIGHT_BRACE", "Expect '}' after expression.")
             return Call(Variable(Token("IDENTIFIER", "I")), [expr])
-        else:
+        else:  # pragma: no cover
             raise ParseError(f"Don't know how to parse '{self.peek().lexeme}'")

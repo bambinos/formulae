@@ -36,7 +36,7 @@ class VarLookupDict:
     def keys(self):
         return [list(d.keys()) for d in self._dicts]
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return f"{self.__class__.__name__}({self._dicts})"
 
 
@@ -83,6 +83,3 @@ class Environment:
 
     def __ne__(self, other):
         return not self == other
-
-    def __hash__(self):
-        return hash((Environment, tuple(self._namespace_ids())))

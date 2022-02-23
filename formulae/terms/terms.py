@@ -52,7 +52,7 @@ class Intercept:
             return Model(self, other)
         elif isinstance(other, Model):
             return Model(self) + other
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __sub__(self, other):
@@ -74,7 +74,7 @@ class Intercept:
                 return Model()
             else:
                 return self
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __or__(self, other):
@@ -93,13 +93,13 @@ class Intercept:
             products = product([self], other.common_terms)
             terms = [GroupSpecificTerm(p[0], p[1]) for p in products]
             return Model(*terms)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return f"{self.__class__.__name__}()"
 
     @property
@@ -165,7 +165,7 @@ class NegatedIntercept:
             return Model(self, other)
         elif isinstance(other, Model):
             return Model(self) + other
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __eq__(self, other):
@@ -174,22 +174,22 @@ class NegatedIntercept:
     def __or__(self, other):
         raise ValueError("At least include an intercept in '|' operation")
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return f"{self.__class__.__name__}()"
 
     @property
-    def var_names(self):
+    def var_names(self):  # pragma: no cover
         # This method should never be called. Returning set() to avoid harmless error.
         return set()
 
-    def set_type(self, *args, **kwargs):  # pylint: disable = unused-argument
+    def set_type(self, *args, **kwargs):  # pylint: disable = unused-argument # pragma: no cover
         # This method should never be called. Returning None to avoid harmless error.
         return None
 
-    def set_data(self, *args, **kwargs):  # pylint: disable = unused-argument
+    def set_data(self, *args, **kwargs):  # pylint: disable = unused-argument # pragma: no cover
         # This method should never be called. Returning None to avoid harmless error.
         return None
 
@@ -225,7 +225,6 @@ class Term:
                 self.components.append(component)
         self.data = None
         self.kind = None
-        # XFIXME: Name is not exactly as it was written (e.g. it does not have any potential space)
         self.name = ":".join([str(component.name) for component in self.components])
 
     def __hash__(self):
@@ -257,7 +256,7 @@ class Term:
             return Model(self, other)
         elif isinstance(other, Model):
             return Model(self) + other
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __sub__(self, other):
@@ -282,7 +281,7 @@ class Term:
                 return Model()
             else:
                 return self
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __mul__(self, other):
@@ -310,7 +309,7 @@ class Term:
                 Term(*deepcopy(p[0].components), *deepcopy(p[1].components)) for p in products
             ]
             return Model(*terms) + Model(*iterms)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __matmul__(self, other):
@@ -335,7 +334,7 @@ class Term:
             products = product([self], other.common_terms)
             iterms = [Term(*p[0].components, *p[1].components) for p in products]
             return Model(*iterms)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __truediv__(self, other):
@@ -383,7 +382,7 @@ class Term:
             ]
             slopes = [GroupSpecificTerm(p[0], p[1]) for p in product([self], other.common_terms)]
             return Model(*intercepts, *slopes)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __pow__(self, other):
@@ -402,13 +401,13 @@ class Term:
                 c[0].name,
             )
             return self
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         string = "[" + ", ".join([str(component) for component in self.components]) + "]"
         return f"{self.__class__.__name__}({string})"
 
@@ -623,10 +622,10 @@ class GroupSpecificTerm:
     def __hash__(self):
         return hash((self.expr, self.factor))
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         strlist = [
             f"expr= {'  '.join(str(self.expr).splitlines(True))}",
             f"factor= {'  '.join(str(self.factor).splitlines(True))}",
@@ -727,7 +726,6 @@ class GroupSpecificTerm:
         name: str
             The name of the term, such as ``1|g`` or ``var|g``.
         """
-        # XFIXME: Name is not actual name as it is was written!
         name = ""
         if isinstance(self.expr, Intercept):
             name += "1|"
@@ -793,13 +791,13 @@ class Response:
             return Model(other, response=self)
         elif isinstance(other, Model):
             return other.add_response(self)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return f"{self.__class__.__name__}({self.term})"
 
     @property
@@ -866,7 +864,7 @@ class Model:
             for term in other.terms:
                 self.add_term(term)
             return self
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __sub__(self, other):
@@ -896,7 +894,7 @@ class Model:
             if other in self.group_terms:
                 self.group_terms.remove(other)
             return self
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __matmul__(self, other):
@@ -919,7 +917,7 @@ class Model:
             products = product(self.common_terms, [other])
             iterms = [Term(*p[0].components, *p[1].components) for p in products]
             return Model(*iterms)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __mul__(self, other):
@@ -951,7 +949,7 @@ class Model:
             terms = self.common_terms + [other]
             iterms = [Term(*p[0].components, *p[1].components) for p in products]
             return Model(*terms) + Model(*iterms)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __pow__(self, other):
@@ -993,7 +991,7 @@ class Model:
         elif isinstance(other, Model):
             iterms = [Term(*self.common_components, comp) for comp in other.common_components]
             return self + Model(*iterms)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __or__(self, other):
@@ -1035,13 +1033,13 @@ class Model:
             products = product(self.common_terms, other.common_terms)
             terms = [GroupSpecificTerm(p[0], p[1]) for p in products]
             return Model(*terms)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         terms = [str(term) for term in self.common_terms]
         if self.response is not None:
             terms.insert(0, str(self.response))
