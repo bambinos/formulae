@@ -1114,3 +1114,20 @@ def test_raise_na_rows(data):
     data["x3"] = data["x3"].replace({3: np.nan})
     with pytest.raises(ValueError, match="incomplete rows"):
         design_matrices("y ~ x3", data, na_action="error")
+
+
+def test_design_matrices_categoric_call(data):
+    def f(x):
+        return pd.Categorical(x)
+
+    def f_ordered(x):
+        return pd.Categorical(x, categories=np.unique(x), ordered=True)
+
+    # does not span intercept
+    design_matrices("y ~ f(x3) + f_ordered(g)", data)
+
+    # spans intercept
+    dm = design_matrices("y ~ 0 + f(g)", data)
+
+    # Evaluate new data
+    dm.common.evaluate_new_data(data)

@@ -19,7 +19,7 @@ class ContrastMatrix:
     def __init__(self, matrix, labels):
         self.matrix = matrix
         self.labels = labels
-        if matrix.shape[1] != len(labels):
+        if matrix.shape[1] != len(labels):  # pragma: no cover
             raise ValueError(
                 "The number of columns in the contrast matrix is not equal to the number of labels"
             )
@@ -30,7 +30,9 @@ class ContrastMatrix:
 
     @matrix.setter
     def matrix(self, value):
-        if not (isinstance(value, np.ndarray) and value.dtype.kind in "if" and value.ndim == 2):
+        if not (
+            isinstance(value, np.ndarray) and value.dtype.kind in "if" and value.ndim == 2
+        ):  # pragma: no cover
             raise ValueError("The matrix argument must be a 2d numerical numpy array")
         self._matrix = value
 
@@ -40,10 +42,10 @@ class ContrastMatrix:
 
     @labels.setter
     def labels(self, value):
-        if not isinstance(value, (list, tuple)):
+        if not isinstance(value, (list, tuple)):  # pragma: no cover
             raise ValueError("The labels argument must be a list or a tuple")
 
-        if not all(isinstance(i, str) for i in value):
+        if not all(isinstance(i, str) for i in value):  # pragma: no cover
             raise ValueError("The items in the labels argument must be of type 'str'")
 
         self._labels = value
@@ -86,7 +88,7 @@ class CategoricalBox:
     def data(self, value):
         if isinstance(value, pd.Series):
             value = value.values
-        if not (isinstance(value, np.ndarray) and value.ndim == 1):
+        if not (isinstance(value, np.ndarray) and value.ndim == 1):  # pragma: no cover
             raise ValueError("The data argument must be one dimensional array-like")
         self._data = value
 
@@ -100,7 +102,7 @@ class CategoricalBox:
         if callable(value):
             value = value()
 
-        if not (isinstance(value, Encoding) or value is None):
+        if not (isinstance(value, Encoding) or value is None):  # pragma: no cover
             raise ValueError("The contrast argument in must be an instance of Encoding")
         self._contrast = value
 
@@ -110,7 +112,7 @@ class CategoricalBox:
 
     @levels.setter
     def levels(self, value):
-        if value is not None and set(value) != set(self.data):
+        if value is not None and set(value) != set(self.data):  # pragma: no cover
             raise ValueError("The levels beign assigned and the levels in the data differ")
         self._levels = value
 
@@ -161,7 +163,7 @@ class Treatment(Encoding):
         else:
             if self.reference in levels:
                 reference = levels.index(self.reference)
-            else:
+            else:  # pragma: no cover
                 raise ValueError("reference not in levels")
 
         eye = np.eye(len(levels) - 1, dtype=int)
