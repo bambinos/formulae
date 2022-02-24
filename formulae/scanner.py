@@ -21,7 +21,6 @@ class Scanner:
         self.start = 0
         self.current = 0
         self.tokens = []
-        self.keywords = {}
 
         if not len(self.code):
             raise ScanError("'code' is a string of length 0.")
@@ -193,13 +192,7 @@ class Scanner:
         # 'mod.function' is also an identifier
         while self.peek().isalnum() or self.peek() in [".", "_"]:
             self.advance()
-        # Check if the identifier is a reserved word
-        identifier = self.code[self.start : self.current]
-        if identifier in self.keywords:
-            kind = self.keywords[identifier]
-        else:
-            kind = "IDENTIFIER"
-        self.add_token(kind)
+        self.add_token("IDENTIFIER")
 
     def char(self):
         while self.peek() not in ["'", '"'] and not self.at_end():

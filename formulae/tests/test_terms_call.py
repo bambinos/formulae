@@ -53,17 +53,18 @@ def test_call_set_data_errors():
         x.set_data(True)
 
 
-@pytest.mark.skip(reason="I doubt it's possible the call object has to evaluates a row vector")
 def test_call_eval_numeric():
     f = lambda x: x
     x = call("f(x)")
 
-    arr = np.array([[1, 2, 3, 4]])
+    arr = np.array([1, 2, 3, 4])
     series = pd.Series([1, 2, 3, 4])
 
-    # Row vectors are transposed to column vectors
-    assert np.array_equal(x._eval_numeric(arr)["value"], arr.T)
-    assert np.array_equal(x._eval_numeric(series)["value"], arr.T)
+    x.eval_numeric(arr)
+    assert np.array_equal(x.value, arr)
+
+    x.eval_numeric(series)
+    assert np.array_equal(x.value, arr)
 
     with pytest.raises(ValueError):
-        x._eval_numeric([1, 2, 3])
+        x.eval_numeric([1, 2, 3])

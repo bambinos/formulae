@@ -1,5 +1,11 @@
-from formulae.expr import Assign, Grouping, Binary, Unary, Call, Variable, QuotedName, Literal
-from formulae.parser import Parser
+import pytest
+
+import pandas as pd
+
+from formulae import design_matrices
+
+from formulae.expr import Assign, Grouping, Binary, Call, Variable, QuotedName, Literal
+from formulae.parser import Parser, ParseError
 from formulae.scanner import Scanner
 from formulae.token import Token
 
@@ -43,7 +49,7 @@ def test_parse_call():
         Call(Variable(Token("IDENTIFIER", "module.f")), [Variable(Token("IDENTIFIER", "x"))]),
     )
     p = parse("{x + y}")
-    p == Binary(
+    assert p == Binary(
         Literal(1),
         Token("PLUS", "+"),
         Call(
@@ -244,3 +250,17 @@ def test_parse_complex_expressions():
     )
 
     assert p == ast
+
+
+def test_parser_invalid_assignment_target():
+    f = lambda x: x
+    data = pd.DataFrame({"y": [1, 2], "x": [1, 2]})
+    with pytest.raises(ParseError, match="Invalid assignment target."):
+        design_matrices("y ~ f(1=x)", data)
+
+
+def test_unclosed_function_call():
+    f = lambda x: x
+    data = pd.DataFrame({"y": [1, 2], "x": [1, 2]})
+    with pytest.raises(ParseError, match="after arguments"):
+        design_matrices("y ~ f(x", data)

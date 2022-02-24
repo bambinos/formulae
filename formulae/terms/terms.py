@@ -17,16 +17,15 @@ from formulae.terms.variable import Variable
 
 _log = logging.getLogger("formulae")
 
-
+# XTODO: Components have 'value' and terms have 'data'... which one should be kept?
 class Intercept:
     """Internal representation of a model intercept."""
 
     def __init__(self):
         self.name = "Intercept"
-        self.kind = "Intercept"
+        self.kind = "intercept"
         self.data = None
         self.len = None
-        self.metadata = {"kind": "intercept"}
 
     def __eq__(self, other):
         return isinstance(other, type(self))
@@ -37,11 +36,11 @@ class Intercept:
     def __add__(self, other):
         """Addition operator.
 
-        Generally this operator is used to explicitly add an intercept to a model. However, there
-        may be cases where the result is not a ``Model``, or does not contain an intercept.
+        Generally this operator is used to explicitly add an intercept to a model. There may be
+        cases where the result is not a ``Model``, or does not contain an intercept.
 
         * ``"1 + 0"`` and ``"1 + (-1)"`` return an empty model.
-        * ``"1 + 1"`` returns an intercept.
+        * ``"1 + 1"`` returns a single intercept.
         * ``"1 + x"`` and ``"1 + (x|g)"`` returns a model with both the term and the intercept.
         * ``"1 + (x + y)"`` adds an intercept to the model given by ``x`` and ``y``.
         """
@@ -53,7 +52,7 @@ class Intercept:
             return Model(self, other)
         elif isinstance(other, Model):
             return Model(self) + other
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __sub__(self, other):
@@ -71,18 +70,19 @@ class Intercept:
         elif isinstance(other, NegatedIntercept):
             return self
         elif isinstance(other, Model):
-            if self in other.common_terms:
+            if any(isinstance(term, type(self)) for term in other.common_terms):
                 return Model()
             else:
                 return self
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __or__(self, other):
-        """Group-specific operator. Creates group-specific intercept.
+        """Group-specific interaction-like operator. Creates a group-specific intercept.
 
         This operation is usually surrounded by parenthesis. It is not actually required. They
-        are always used because ``|`` has lower precedence that the other common operators.
+        are always used because ``|`` has lower precedence than any of the other operators except
+        ``~``.
 
         This operator is distributed over the right-hand side, which means ``(1|g + h)`` is
         equivalent to ``(1|g) + (1|h)``.
@@ -93,13 +93,13 @@ class Intercept:
             products = product([self], other.common_terms)
             terms = [GroupSpecificTerm(p[0], p[1]) for p in products]
             return Model(*terms)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return f"{self.__class__.__name__}()"
 
     @property
@@ -110,7 +110,6 @@ class Intercept:
     def set_type(self, data, env):  # pylint: disable = unused-argument
         """Sets length of the intercept."""
         # Nothing goes here as the type is given by the class.
-        # Only works with DataFrames or Series so far
         self.len = data.shape[0]
 
     def set_data(self, encoding):  # pylint: disable = unused-argument
@@ -118,15 +117,18 @@ class Intercept:
 
         It sets ``self.data`` equal to a numpy array of ones of length ``(self.len, 1)``.
         """
-        self.data = np.ones((self.len, 1))
+        self.data = np.ones(self.len, dtype=int)
 
     def eval_new_data(self, data):
         """Returns data for a new intercept.
 
         The length of the new intercept is given by the number of rows in ``data``.
         """
-        # it assumes data is a pandas DataFrame now
-        return np.ones((data.shape[0], 1))
+        return np.ones(data.shape[0], dtype=int)
+
+    @property
+    def labels(self):
+        return ["Intercept"]
 
 
 class NegatedIntercept:
@@ -139,7 +141,7 @@ class NegatedIntercept:
 
     def __init__(self):
         self.name = "NegatedIntercept"
-        self.kind = "Intercept"
+        self.kind = "intercept"
 
     def __add__(self, other):
         """Addition operator.
@@ -163,7 +165,7 @@ class NegatedIntercept:
             return Model(self, other)
         elif isinstance(other, Model):
             return Model(self) + other
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __eq__(self, other):
@@ -172,24 +174,24 @@ class NegatedIntercept:
     def __or__(self, other):
         raise ValueError("At least include an intercept in '|' operation")
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return f"{self.__class__.__name__}()"
 
     @property
-    def var_names(self):
-        # This method should never be called. Leaving a set() to avoid harmless error.
+    def var_names(self):  # pragma: no cover
+        # This method should never be called. Returning set() to avoid harmless error.
         return set()
 
-    def set_type(self, *args, **kwargs):
-        # This method should never be called. Leaving a pass to avoid harmless error.
-        pass
+    def set_type(self, *args, **kwargs):  # pylint: disable = unused-argument # pragma: no cover
+        # This method should never be called. Returning None to avoid harmless error.
+        return None
 
-    def set_data(self, *args, **kwargs):
-        # This method should never be called. Leaving a pass to avoid harmless error.
-        pass
+    def set_data(self, *args, **kwargs):  # pylint: disable = unused-argument # pragma: no cover
+        # This method should never be called. Returning None to avoid harmless error.
+        return None
 
 
 class Term:
@@ -207,29 +209,23 @@ class Term:
 
     Attributes
     ----------
-    data: dict
+    data: np.ndarray
         The values associated with the term as they go into the design matrix.
-    metadata: dict
-        Metadata associated with the term. If ``"numeric"`` or ``"categoric"`` it holds additional
-        information in the component ``.data`` attribute. If ``"interaction"``, the keys are
-        the name of the components and the values are dictionaries holding the metadata.
     kind: string
-        Indicates the type of the term. Can be one of ``"numeric"``, ``"categoric"``, or
-        ``"interaction"``.
+        Indicates the type of the term.
+        Can be one of ``"numeric"``, ``"categoric"``, or ``"interaction"``.
     name: string
         The name of the term as it was originally written in the model formula.
     """
 
     def __init__(self, *components):
-        self.data = None
-        self.metadata = {}
-        self.kind = None
         self.components = []
-        self.component_types = None
         for component in components:
             if component not in self.components:
                 self.components.append(component)
-        self.name = ":".join([str(c.name) for c in self.components])
+        self.data = None
+        self.kind = None
+        self.name = ":".join([str(component.name) for component in self.components])
 
     def __hash__(self):
         return hash(tuple(self.components))
@@ -260,7 +256,7 @@ class Term:
             return Model(self, other)
         elif isinstance(other, Model):
             return Model(self) + other
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __sub__(self, other):
@@ -285,7 +281,7 @@ class Term:
                 return Model()
             else:
                 return self
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __mul__(self, other):
@@ -313,7 +309,7 @@ class Term:
                 Term(*deepcopy(p[0].components), *deepcopy(p[1].components)) for p in products
             ]
             return Model(*terms) + Model(*iterms)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __matmul__(self, other):
@@ -324,8 +320,8 @@ class Term:
 
         * ``"x : x"`` equals to ``"x"``
         * ``"x : y"`` is the interaction between ``"x"`` and ``"y"``
-        * ``x:(y:z)"`` equals to just ``"x:y:z"``
-        * ``(x:y):u"`` equals to just ``"x:y:u"``
+        * ``x:(y:z)"`` equals to ``"x:y:z"``
+        * ``(x:y):u"`` equals to ``"x:y:u"``
         * ``"(x:y):(u + v)"`` equals to ``"x:y:u + x:y:v"``
         """
         if self == other:
@@ -338,7 +334,7 @@ class Term:
             products = product([self], other.common_terms)
             iterms = [Term(*p[0].components, *p[1].components) for p in products]
             return Model(*iterms)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __truediv__(self, other):
@@ -355,7 +351,7 @@ class Term:
             return self
         elif isinstance(other, type(self)):
             if len(other.components) == 1 and isinstance(other.components[0].name, (int, float)):
-                raise TypeError("Interaction with numeric does not make sense.")
+                raise TypeError("Interaction with numbers does not make sense.")
             return Model(self, Term(*self.components, *other.components))
         elif isinstance(other, Model):
             products = product([self], other.common_terms)
@@ -365,7 +361,7 @@ class Term:
             return NotImplemented
 
     def __or__(self, other):
-        """Group-specific operator. Creates group-specific intercept.
+        """Group-specific operator. Creates a group-specific term.
 
         Intercepts are implicitly added.
 
@@ -386,7 +382,7 @@ class Term:
             ]
             slopes = [GroupSpecificTerm(p[0], p[1]) for p in product([self], other.common_terms)]
             return Model(*intercepts, *slopes)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __pow__(self, other):
@@ -405,13 +401,13 @@ class Term:
                 c[0].name,
             )
             return self
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         string = "[" + ", ".join([str(component) for component in self.components]) + "]"
         return f"{self.__class__.__name__}({string})"
 
@@ -440,8 +436,6 @@ class Term:
                     "Can't set type on Term because at least one of the components "
                     f"is of the unexpected type {type(component)}."
                 )
-        # Store the type of the components
-        self.component_types = {component.name: component.kind for component in self.components}
 
         # Determine whether this term is numeric, categoric, or an interaction.
         if len(self.components) > 1:
@@ -449,7 +443,7 @@ class Term:
         else:
             self.kind = self.components[0].kind
 
-    def set_data(self, encoding):
+    def set_data(self, spans_intercept):
         """Obtains and stores the final data object related to this term.
 
         Calls ``.set_data()`` method on each component in the term. Then, it uses the ``.data``
@@ -457,32 +451,26 @@ class Term:
 
         Parameters
         ----------
-        encoding: list or dict
+        encoding: dict or bool
             Indicates if it uses full or reduced encoding when the type of the variable is
             categoric.
         """
-        if isinstance(encoding, list) and len(encoding) == 1:
-            encoding = encoding[0]
-        else:
-            ValueError("encoding is a list of len > 1")
+
         for component in self.components:
-            encoding_ = False
-            if isinstance(encoding, dict):
-                encoding_ = encoding.get(component.name, False)
-            elif isinstance(encoding, bool):
-                encoding_ = encoding
-            component.set_data(encoding_)
+            spans_intercept_ = False
+            if isinstance(spans_intercept, dict):
+                spans_intercept_ = spans_intercept.get(component.name, False)
+            elif isinstance(spans_intercept, bool):
+                spans_intercept_ = spans_intercept
+            else:
+                raise ValueError(f"Encoding is of unexpected type {type(spans_intercept_)}.")
+
+            component.set_data(spans_intercept_)
 
         if self.kind == "interaction":
-            self.data = reduce(get_interaction_matrix, [c.data["value"] for c in self.components])
-            self.metadata["kind"] = "interaction"
-            self.metadata["terms"] = {
-                c.name: {k: v for k, v in c.data.items() if k != "value"} for c in self.components
-            }
+            self.data = reduce(get_interaction_matrix, [c.value for c in self.components])
         else:
-            component = self.components[0]
-            self.data = component.data["value"]
-            self.metadata = {k: v for k, v in component.data.items() if k != "value"}
+            self.data = self.components[0].value
 
     def eval_new_data(self, data):
         """Evaluates the term with new data.
@@ -508,22 +496,6 @@ class Term:
             result = self.components[0].eval_new_data(data)
         return result
 
-    @property
-    def var_names(self):
-        """Returns the name of the variables in the term as a set.
-
-        Loops through each component and updates the set with the ``.var_names`` of each component.
-
-        Returns
-        ----------
-        var_names: set
-            The names of the variables involved in the term.
-        """
-        var_names = set()
-        for component in self.components:
-            var_names.update(component.var_names)
-        return var_names
-
     def get_component(self, name):  # pylint: disable = inconsistent-return-statements
         """Returns a component by name.
 
@@ -541,6 +513,65 @@ class Term:
         for component in self.components:
             if component.name == name:
                 return component
+
+    @property
+    def var_names(self):
+        """Returns the name of the variables in the term as a set.
+
+        Loops through each component and updates the set with the ``.var_names`` of each component.
+
+        Returns
+        ----------
+        var_names: set
+            The names of the variables involved in the term.
+        """
+        var_names = set().union(*[component.var_names for component in self.components])
+        return var_names
+
+    @property
+    def labels(self):
+        """Obtain labels of the columns in the design matrix associated with this Term"""
+        if self.kind is None:
+            labels = None
+        elif self.kind == "interaction":
+            labels = []
+            for component in self.components:
+                labels.append(component.labels)
+            labels = [":".join(str_tuple) for str_tuple in list(itertools.product(*labels))]
+        else:
+            labels = self.components[0].labels
+        return labels
+
+    @property
+    def levels(self):
+        """Obtain levels of the columns in the design matrix associated with this Term
+
+        It is like .labels, without the name of the terms
+        """
+        if self.kind is None or self.kind == "numeric":
+            levels = None
+        elif self.kind == "interaction":
+            levels = []
+            for component in self.components:
+                if component.contrast_matrix is not None:
+                    levels.append(component.contrast_matrix.labels)
+            if levels:
+                levels = [", ".join(str_tuple) for str_tuple in list(itertools.product(*levels))]
+        else:
+            component = self.components[0]
+            if component.is_response and component.reference is not None:
+                levels = None
+            else:
+                levels = component.contrast_matrix.labels
+        return levels
+
+    @property
+    def spans_intercept(self):
+        """Does this term spans the intercept?
+
+        True if all the components span the intercept
+        """
+        return all(component.spans_intercept for component in self.components)
 
 
 class GroupSpecificTerm:
@@ -565,15 +596,23 @@ class GroupSpecificTerm:
 
     Attributes
     ----------
-    factor_type: pandas.core.dtypes.dtypes.CategoricalDtype
-        The type assigned to the grouping factor ``factor``. This is useful for when we need to
-        create a design matrix for new a new data set.
+    data: np.ndarray
+        The values associated with the term as they go into the design matrix.
+    metadata: dict
+        Metadata associated with the term. If ``"numeric"`` or ``"categoric"`` it holds additional
+        information in the component ``.data`` attribute. If ``"interaction"``, the keys are
+        the name of the components and the values are dictionaries holding the metadata.
+    kind: string
+        Indicates the type of the term. Can be one of ``"numeric"``, ``"categoric"``, or
+        ``"interaction"``.
     """
 
     def __init__(self, expr, factor):
         self.expr = expr
         self.factor = factor
+        self.data = None
         self.groups = None
+        self.kind = None
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -583,111 +622,59 @@ class GroupSpecificTerm:
     def __hash__(self):
         return hash((self.expr, self.factor))
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         strlist = [
             f"expr= {'  '.join(str(self.expr).splitlines(True))}",
             f"factor= {'  '.join(str(self.factor).splitlines(True))}",
         ]
         return self.__class__.__name__ + "(\n  " + ",\n  ".join(strlist) + "\n)"
 
-    def eval(self, data, env, encoding):
-        """Evaluates term.
-
-        First, it evaluates the variable in ``self.factor``, creates an oredered categorical data
-        type using its levels, and stores it in ``self.factor_type``. Then, it obtains the
-        design matrix for ``self.expr`` to finally produce the matrix for the group specific
-        effect.
-
-        The output contains the following information
-
-        * ``"kind"``: The kind of the ``expr`` term.
-        * ``"Xi"``: The design matrix for the ``expr`` term.
-        * ``"Ji"``: The design matrix for the ``factor`` term.
-        * ``"Zi"``: The design matrix for the group specific term.
-        * ``"groups"``: The groups present in ``factor``.
-
-        If ``"kind"`` is ``"categoric"``, the output dictionary also contains
-
-        * ``"levels"``: Levels of the term in ``expr``.
-        * ``"reference"``: The level taken as baseline.
-        * ``"encoding"``: The encoding of the term, either ``"full"`` or ``"reduced"``
-
-        If ``"kind"`` is ``"interaction"``, the output dictionary also contains
-
-        * ``"terms"``: Metadata for each of the components in the interaction in ``expr``.
-
-        Parameters
-        ----------
-        data: pandas.DataFrame
-            The data frame where variables are taken from.
-        env: Environment
-            The environment where values and functions are taken from.
-        encoding: bool
-            Whether to use full or reduced rank encoding when ``expr`` is categoric.
-
-        Returns
-        -------
-        out: dict
-            See above.
-        """
-        # Factor must be considered categorical, and with full encoding. We set type and obtain
-        # data for the factor term manually.
-
-        # Set type on each component to check data is behaved as expected and then
-        # manually set type of the components to categoric.
-        for comp in self.factor.components:
-            if isinstance(comp, Variable):
-                comp.set_type(data)
-            elif isinstance(comp, Call):
-                comp.set_type(data, env)
+    def set_type(self, data, env):
+        # Set type of 'factor'
+        # Set type on each component of the factor to check data is behaved as expected and then
+        # manually set their type to categoric.
+        for component in self.factor.components:
+            if isinstance(component, Variable):
+                component.set_type(data)
+            elif isinstance(component, Call):
+                component.set_type(data, env)
             else:
                 raise ValueError(
-                    "Can't set type on Term because at least one of the components "
-                    f"is of the unexpected type {type(comp)}."
+                    "Can't set type on GroupSpecificTerm because at least one of the components "
+                    f"is of the unexpected type {type(component)}."
                 )
-            comp.kind = "categoric"  # pylint: disable = protected-access
+            component.kind = "categoric"
 
-        # Store the type of the components.
-        # We know they are categoric.
-        self.factor.component_types = {comp.name: "categoric" for comp in self.factor.components}
-
+        # Store the type of the components. Factors are considered categorical.
         if len(self.factor.components) > 1:
-            self.factor.kind = "interaction"  # pylint: disable = protected-access
+            self.factor.kind = "interaction"
         else:
-            self.factor.kind = "categoric"  # pylint: disable = protected-access
+            self.factor.kind = "categoric"
 
-        # Pass encoding=True when setting data.
-        self.factor.set_data(True)
+        # Set type of 'expr'
+        self.expr.set_type(data, env)
 
-        # Obtain group names
+    def set_data(self, spans_intercept):
+        self.expr.set_data(spans_intercept)
+        self.factor.set_data(True)  # Factor is a categorical term that always spans the intercept
+
+        # Obtain group names. These are obtained from the labels of the contrast matrices
         groups = []
-        for comp in self.factor.components:
-            # We're certain they are all categoric with full encoding.
-            groups.append([str(lvl) for lvl in comp.data["levels"]])
+        for component in self.factor.components:
+            groups.append(component.contrast_matrix.labels)
         self.groups = [":".join(s) for s in list(itertools.product(*groups))]
 
-        self.expr.set_type(data, env)
-        self.expr.set_data(encoding)
-        Xi = self.expr.data
-        Ji = self.factor.data
-        Zi = linalg.khatri_rao(Ji.T, Xi.T).T
-        out = {
-            "kind": self.expr.metadata["kind"],
-            "Xi": Xi,
-            "Ji": Ji,
-            "Zi": Zi,
-            "groups": self.groups,
-        }
-        if self.expr.kind == "categoric":
-            out["levels"] = self.expr.metadata["levels"]
-            out["reference"] = self.expr.metadata["reference"]
-            out["encoding"] = self.expr.metadata["encoding"]
-        elif self.expr.kind == "interaction":
-            out["terms"] = self.expr.metadata["terms"]
-        return out
+        Xi, Ji = self.expr.data, self.factor.data
+        if Xi.ndim == 1:
+            Xi = Xi[:, np.newaxis]
+        if Ji.ndim == 1:
+            Ji = Ji[:, np.newaxis]
+
+        self.data = linalg.khatri_rao(Ji.T, Xi.T).T  # Zi
+        self.kind = self.expr.kind
 
     def eval_new_data(self, data):
         """Evaluates the term with new data.
@@ -704,27 +691,16 @@ class GroupSpecificTerm:
 
         Returns
         ----------
-        out: dict
-            Same rules as in :meth:`eval <GroupSpecificTerm.eval>`.
+        Zi: np.ndarray
         """
-
         Xi = self.expr.eval_new_data(data)
         Ji = self.factor.eval_new_data(data)
+        if Xi.ndim == 1:
+            Xi = Xi[:, np.newaxis]
+        if Ji.ndim == 1:
+            Ji = Ji[:, np.newaxis]
         Zi = linalg.khatri_rao(Ji.T, Xi.T).T
-        out = {
-            "kind": self.expr.metadata["kind"],
-            "Xi": Xi,
-            "Ji": Ji,
-            "Zi": Zi,
-            "groups": self.groups,
-        }
-        if self.expr.kind == "categoric":
-            out["levels"] = self.expr.metadata["levels"]
-            out["reference"] = self.expr.metadata["reference"]
-            out["encoding"] = self.expr.metadata["encoding"]
-        elif self.expr.kind == "interaction":
-            out["terms"] = self.expr.metadata["terms"]
-        return out
+        return Zi
 
     @property
     def var_names(self):
@@ -741,7 +717,8 @@ class GroupSpecificTerm:
         factor_names = self.factor.var_names.copy()
         return expr_names.union(factor_names)
 
-    def get_name(self):
+    @property
+    def name(self):
         """Obtain string representation of the name of the term.
 
         Returns
@@ -762,6 +739,17 @@ class GroupSpecificTerm:
         else:
             raise ValueError("Invalid RHS expression for group specific term")
         return name
+
+    @property
+    def labels(self):
+        if self.kind is None:
+            labels = None
+        if self.kind == "intercept":
+            levels = ["1"]
+        else:
+            levels = self.expr.labels
+        labels = [f"{level}|{group}" for group in self.factor.labels for level in levels]
+        return labels
 
 
 class Response:
@@ -803,13 +791,13 @@ class Response:
             return Model(other, response=self)
         elif isinstance(other, Model):
             return other.add_response(self)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return f"{self.__class__.__name__}({self.term})"
 
     @property
@@ -821,9 +809,9 @@ class Response:
         """Set type of the response term."""
         self.term.set_type(data, env)
 
-    def set_data(self, encoding=False):
+    def set_data(self):
         """Set data of the response term."""
-        self.term.set_data(encoding)
+        self.term.set_data(spans_intercept=True)
 
 
 ACCEPTED_TERMS = (Term, GroupSpecificTerm, Intercept, NegatedIntercept)
@@ -876,7 +864,7 @@ class Model:
             for term in other.terms:
                 self.add_term(term)
             return self
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __sub__(self, other):
@@ -906,7 +894,7 @@ class Model:
             if other in self.group_terms:
                 self.group_terms.remove(other)
             return self
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __matmul__(self, other):
@@ -929,7 +917,7 @@ class Model:
             products = product(self.common_terms, [other])
             iterms = [Term(*p[0].components, *p[1].components) for p in products]
             return Model(*iterms)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __mul__(self, other):
@@ -961,7 +949,7 @@ class Model:
             terms = self.common_terms + [other]
             iterms = [Term(*p[0].components, *p[1].components) for p in products]
             return Model(*terms) + Model(*iterms)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __pow__(self, other):
@@ -1003,7 +991,7 @@ class Model:
         elif isinstance(other, Model):
             iterms = [Term(*self.common_components, comp) for comp in other.common_components]
             return self + Model(*iterms)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     def __or__(self, other):
@@ -1045,13 +1033,13 @@ class Model:
             products = product(self.common_terms, other.common_terms)
             terms = [GroupSpecificTerm(p[0], p[1]) for p in products]
             return Model(*terms)
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         terms = [str(term) for term in self.common_terms]
         if self.response is not None:
             terms.insert(0, str(self.response))
@@ -1128,10 +1116,7 @@ class Model:
         components: list
             A list containing all components from common terms in the model.
         """
-        # Note: Check whether this method is really necessary.
-        return [
-            comp for term in self.common_terms if isinstance(term, Term) for comp in term.components
-        ]
+        return [c for term in self.common_terms if isinstance(term, Term) for c in term.components]
 
     @property
     def var_names(self):
@@ -1151,7 +1136,7 @@ class Model:
         return var_names
 
     def set_types(self, data, env):
-        """Set the type of the common terms in the model.
+        """Set the type of the terms in the model.
 
         Calls ``.set_type()`` method on term in the model.
 
@@ -1162,22 +1147,23 @@ class Model:
         env: Environment
             The environment where values and functions are taken from.
         """
-        for term in self.common_terms:
+        for term in self.terms:
             term.set_type(data, env)
 
-    def _encoding_groups(self):
+    def _get_encoding_groups(self):
         components = {}
         for term in self.common_terms:
             if term.kind == "interaction":
                 components[term.name] = {c.name: c.kind for c in term.components}
             else:
                 components[term.name] = term.kind
+
         # First, group with only categoric terms
         categoric_group = {}
         for k, v in components.items():
             if v == "categoric":
                 categoric_group[k] = [k]
-            elif v == "Intercept":
+            elif v == "intercept":
                 categoric_group[k] = []
             elif isinstance(v, dict):  # interaction
                 # If all categoric terms in the interaction
@@ -1208,25 +1194,33 @@ class Model:
 
         return [categoric_group] + numeric_groups
 
-    def _encoding_bools(self):
+    def _get_encoding_bools(self):
         """Determine encodings for terms containing at least one categorical variable.
 
         This method returns dictionaries with ``True``/``False`` values.
-        ``True`` means the categorical variable uses 'levels' dummies.
-        ``False`` means the categorial variable uses 'levels - 1' dummies.
+        ``True`` means the categorical variable spans the intercept.
+        ``False`` means the categorial variable does not span the intercept.
         """
-        groups = self._encoding_groups()
+        groups = self._get_encoding_groups()
         l = [pick_contrasts(group) for group in groups]
         result = {}
         for d in l:
             result.update(d)
         return result
 
+    def add_extra_terms(self, encodings, data, env):
+        # Adds additional terms in the common part in case they're needed for full rankness
+        common_terms = self.common_terms.copy()
+        for term in common_terms:
+            encoding = encodings.get(term.name)
+            if hasattr(encoding, "__len__") and len(encoding) > 1:
+                # Last encoding is the one for the original term
+                for subencoding in encoding[:-1]:
+                    extra_term = create_extra_term(term, subencoding, data, env)
+                    self.common_terms.insert(self.common_terms.index(term), extra_term)
+
     def eval(self, data, env):
         """Evaluates terms in the model.
-
-        Only common effects are evaluated here. Group specific terms are evaluated individually
-        in :class:`GroupEffectsMatrix <formulae.matrices.GroupEffectsMatrix>`.
 
         Parameters
         ----------
@@ -1234,62 +1228,48 @@ class Model:
             The data frame where variables are taken from
         env: Environment
             The environment where values and functions are taken from.
-
-        Returns
-        -------
-        result: dict
-            A dictionary where keys are the name of the terms and the values are their ``.data``
-            attribute.
         """
+        # Set types on all terms
         self.set_types(data, env)
-        encodings = self._encoding_bools()
-        result = {}
 
-        # First, we have to add terms if the encoding implies so.
+        # Evaluate common terms
+        encodings = self._get_encoding_bools()
+        self.add_extra_terms(encodings, data, env)
 
-        # Group specific effects aren't evaluated here -- this may change
-        common_terms = self.common_terms.copy()
-        for term in common_terms:
-            term_encoding = False
+        # Need to get encodings again after creating possible extra terms
+        encodings = self._get_encoding_bools()
 
+        for term in self.common_terms:
             if term.name in encodings:
-                term_encoding = encodings[term.name]
-            if hasattr(term_encoding, "__len__") and len(term_encoding) > 1:
-                # we're in an interaction that added terms.
-                # we need to create and evaluate these extra terms.
-                # i.e. "y ~ g1:g2", both g1 and g2 categoric, is equivalent to "y ~ g2 + g1:g2"
-                # Possibly an interaction adds LOWER order terms, but NEVER HIGHER order terms.
-                for (idx, encoding) in enumerate(term_encoding):
-                    # Last term never adds any new term, it corresponds to the outer `term`.
-                    if idx == len(term_encoding) - 1:
-                        term.set_data(encoding)
-                        result[term.name] = term.data
-                    else:
-                        extra_term = _create_and_eval_extra_term(term, encoding, data, env)
-                        result[extra_term.name] = extra_term.data
-                        # Finally, add term to self.common_terms object, right before the term
-                        # that causes its addition.
-                        self.common_terms.insert(self.common_terms.index(term), extra_term)
+                # Since we added extra terms before, we can assume 'encodings' has lists of length 1
+                encoding = encodings[term.name][0]
             else:
-                # This term does not add any lower order term, so we just evaluate it as it is.
-                term.set_data(term_encoding)
-                result[term.name] = term.data
-        return result
+                encoding = False
+            term.set_data(encoding)
+
+        # Evaluate group-specific terms
+        for term in self.group_terms:
+            encoding = True
+            # If both (1|g) and (x|g) are in the model, then the encoding for x is False.
+            if not isinstance(term.expr, Intercept):
+                for t in self.group_terms:
+                    if t.factor == term.factor and isinstance(t.expr, Intercept):
+                        encoding = False
+            term.set_data(encoding)
 
 
-def _create_and_eval_extra_term(term, encoding, data, env):
-    if len(encoding) == 1:
-        component_name = list(encoding.keys())[0]
-        encoding_ = list(encoding.values())[0]
-        component = term.get_component(component_name)
-        extra_term = Term(component)
-    else:
-        component_names = [c.name for c in term.components]
-        encoding_ = encoding
-        components = [
-            term.get_component(name) for name in component_names if name in encoding.keys()
-        ]
-        extra_term = Term(*components)
+def create_extra_term(term, encoding, data, env):
+    """
+    If there are numeric components it means this is an interaction term that has both numeric
+    and categoric components. The categoric part of the term we create comes in 'encoding', we
+    then need to add the numeric ones.
+
+    For example, if we have 'h' and 'j' categoric and 'x' numeric and then we do 'x + h:j:x',
+    it expands to 'x + j:x + h:j:x' for full-rankness.
+    """
+    component_names = [component.name for component in term.components]
+    components = [term.get_component(name) for name in component_names if name in encoding.keys()]
+    components += [component for component in term.components if component.kind == "numeric"]
+    extra_term = Term(*deepcopy(components))
     extra_term.set_type(data, env)
-    extra_term.set_data(encoding_)
     return extra_term

@@ -9,20 +9,17 @@ class Assign:
         self.name = name
         self.value = value
 
-    def __hash__(self):
-        return hash((self.name, self.value))
-
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
         return self.name == other.name and self.value == other.value
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         right = "  ".join(str(self.value).splitlines(True))
-        return f"Assign(\n  name= {self.name}, \n  value= {right}\n)"
+        return f"Assign(name={self.name}, value={right}\n)"
 
     def accept(self, visitor):
         return visitor.visitAssignExpr(self)
@@ -32,18 +29,15 @@ class Grouping:
     def __init__(self, expression):
         self.expression = expression
 
-    def __hash__(self):
-        return hash((self.expression, self.expression))
-
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
         return self.expression == other.expression
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "Grouping(\n  " + "  ".join(str(self.expression).splitlines(True)) + "\n)"
 
     def accept(self, visitor):
@@ -56,9 +50,6 @@ class Binary:
         self.operator = operator
         self.right = right
 
-    def __hash__(self):
-        return hash((self.left, self.operator, self.right))
-
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
@@ -68,10 +59,10 @@ class Binary:
             and self.right == other.right
         )
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         left = "  ".join(str(self.left).splitlines(True))
         right = "  ".join(str(self.right).splitlines(True))
         string_list = ["left=" + left, "op=" + str(self.operator.lexeme), "right=" + right]
@@ -86,18 +77,15 @@ class Unary:
         self.operator = operator
         self.right = right
 
-    def __hash__(self):
-        return hash((self.operator, self.right))
-
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
         return self.operator == other.operator and self.right == other.right
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         right = "  ".join(str(self.right).splitlines(True))
         string_list = ["op=" + str(self.operator.lexeme), "right=" + right]
         return "Unary(\n  " + ", ".join(string_list) + "\n)"
@@ -113,18 +101,15 @@ class Call:
         self.callee = callee
         self.args = args
 
-    def __hash__(self):
-        return hash((self.callee, self.args))
-
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
         return self.callee == other.callee and self.args == other.args
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         string_list = [
             "callee=" + str(self.callee),
             "args=" + "  ".join(str(self.args).splitlines(True)),
@@ -140,18 +125,15 @@ class Variable:
         self.name = name
         self.level = level
 
-    def __hash__(self):
-        return hash((self.name, self.level))
-
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
         return self.name == other.name and self.level == other.level
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         string_list = ["name=" + self.name.lexeme]
         if self.level is not None:
             string_list.append("level=" + self.level.value)
@@ -167,18 +149,15 @@ class QuotedName:
     def __init__(self, expression):
         self.expression = expression
 
-    def __hash__(self):
-        return hash((self.expression))
-
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
         return self.expression == other.expression
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "QuotedName(" + self.expression.lexeme + ")"
 
     def accept(self, visitor):
@@ -189,18 +168,15 @@ class Literal:
     def __init__(self, value):
         self.value = value
 
-    def __hash__(self):
-        return hash((self.value))
-
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
         return self.value == other.value
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "Literal(" + str(self.value) + ")"
 
     def accept(self, visitor):

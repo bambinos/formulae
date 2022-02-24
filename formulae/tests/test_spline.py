@@ -143,7 +143,8 @@ def test_degree(sequence):
 
 
 def test_basic_through_design_matrices(data):
-    matrix = design_matrices("bs(seq, 3) - 1", data).common.design_matrix
+    dm = design_matrices("bs(seq, 3) - 1", data)
+    matrix = dm.common.design_matrix
     true = np.array(
         [
             [
@@ -219,6 +220,8 @@ def test_basic_through_design_matrices(data):
     )
 
     assert np.allclose(matrix, true.T)
+    labels = dm.common.terms["bs(seq, 3)"].labels
+    assert labels == ["bs(seq, 3)[0]", "bs(seq, 3)[1]", "bs(seq, 3)[2]"]
 
 
 def test_intercept(sequence):

@@ -5,6 +5,8 @@ import pandas as pd
 
 from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
 
+from formulae.categorical import Treatment
+
 
 class Variable:
     """Representation of a variable in a model Term.
@@ -24,26 +26,36 @@ class Variable:
     """
 
     def __init__(self, name, level=None, is_response=False):
-        self.data = None
-        self._intermediate_data = None
-        self.kind = None
         self.is_response = is_response
         self.name = name
-        self.level = level
+        self.reference = level
+        self.contrast_matrix = None
+        self.kind = None
+        self.levels = None
+        self.spans_intercept = None
+        self.value = None
+        self._intermediate_data = None
 
     def __hash__(self):
-        return hash((self.kind, self.name, self.level))
+        return hash((self.kind, self.name, self.reference))
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return self.kind == other.kind and self.name == other.name and self.level == other.level
+        return (
+            self.kind == other.kind
+            and self.name == other.name
+            and self.reference == other.reference
+        )
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        return f"{self.__class__.__name__}({self.name}, level='{self.level}')"
+        args = self.name
+        if self.reference is not None:
+            args += f", reference='{self.reference}'"
+        return f"{self.__class__.__name__}({args})"
 
     @property
     def var_names(self):
@@ -60,8 +72,7 @@ class Variable:
 
         Looks for the name of the variable in ``data_mask`` and sets the ``.kind`` property to
         ``"numeric"`` or ``"categoric"`` depending on the type of the variable.
-        It also stores the result of the intermediate evaluation in ``self._intermediate_data`` to
-        save computing time later.
+        It also stores the result of the intermediate evaluation in ``self._intermediate_data``.
 
         Parameters
         ----------
@@ -71,24 +82,20 @@ class Variable:
         x = data_mask[self.name]
         if is_numeric_dtype(x):
             self.kind = "numeric"
-            if self.level is not None:
-                raise ValueError("Subset notation can't be used with a numeric variable.")
         elif is_string_dtype(x) or is_categorical_dtype(x):
             self.kind = "categoric"
         else:
             raise ValueError(f"Variable is of an unrecognized type ({type(x)}).")
         self._intermediate_data = x
 
-    def set_data(self, encoding=None):
+    def set_data(self, spans_intercept=None):
         """Obtains and stores the final data object related to this variable.
-
-        The result is stored in ``self.data``.
 
         Parameters
         ----------
-        encoding: bool
-            Indicates if it uses full or reduced encoding when the type of the variable is
-            categoric. Omitted when the variable is numeric.
+        spans_intercept: bool
+            Indicates if the encoding of categorical variables spans the intercept or not.
+            Omitted when the variable is numeric.
         """
 
         try:
@@ -97,42 +104,31 @@ class Variable:
             if self.kind not in ["numeric", "categoric"]:
                 raise ValueError(f"Variable is of an unrecognized type ({self.kind}).")
             if self.kind == "numeric":
-                self.data = self._eval_numeric(self._intermediate_data)
+                self.eval_numeric(self._intermediate_data)
             elif self.kind == "categoric":
-                self.data = self._eval_categoric(self._intermediate_data, encoding)
+                self.eval_categoric(self._intermediate_data, spans_intercept)
         except:
             print("Unexpected error while trying to evaluate a Variable.", sys.exc_info()[0])
             raise
 
-    def _eval_numeric(self, x):
+    def eval_numeric(self, x):
         """Finishes evaluation of a numeric variable.
 
-        Converts the intermediate values in ``x`` into a numpy array of shape ``(n, 1)``,
-        where ``n`` is the number of observations. This method is used both in ``self.set_data``
-        and in ``self.eval_new_data``.
+        Converts the intermediate values in ``x`` into a 1d numpy array.
 
         Parameters
         ----------
         x: np.ndarray or pd.Series
             The intermediate values of the variable.
-
-        Returns
-        ----------
-        result: dict
-            A dictionary with keys ``"value"`` and ``"kind"``. The first contains the result of the
-            evaluation, and the latter is equal to ``"numeric"``.
         """
         if isinstance(x, np.ndarray):
-            value = np.atleast_2d(x)
-            if x.shape[0] == 1 and x.shape[1] > 1:
-                value = value.T
+            self.value = x
         elif isinstance(x, pd.Series):
-            value = np.atleast_2d(x.to_numpy()).T
+            self.value = x.values
         else:
             raise ValueError(f"Variable is of an unrecognized type ({type(x)}).")
-        return {"value": value, "kind": "numeric"}
 
-    def _eval_categoric(self, x, encoding):
+    def eval_categoric(self, x, spans_intercept):
         """Finishes evaluation of a categoric variable.
 
         Converts the intermediate values in ``x`` into a numpy array of shape ``(n, p)``, where
@@ -143,56 +139,34 @@ class Variable:
         ----------
         x: np.ndarray or pd.Series
             The intermediate values of the variable.
-        encoding: bool
-            Indicates if it uses full or reduced encoding.
-
-        Returns
-        ----------
-        result: dict
-            A dictionary with keys ``"value"``, ``"kind"``, ``"levels"``, ``"reference"``, and
-            ``"encoding"``. They represent the result of the evaluation, the type, which is
-            ``"categoric"``, the levels observed in the variable, the level used as reference when
-            using reduced encoding, and whether the encoding is ``"full"`` or ``"reduced"``.
+        spans_intercept: bool
+            Indicates if the encoding of categorical variables spans the intercept or not.
+            Omitted when the variable is numeric.
         """
         # If not ordered, we make it ordered.
         if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
-            categories = sorted(x.unique().tolist())
-            cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
-            x = x.astype(cat_type)
-
-        reference = x.min()
-        levels = x.cat.categories.tolist()
-
-        if self.is_response:
-            # Will be binary, no matter how many levels
-            if self.level is not None:
-                reference = self.level
-                value = np.where(x == reference, 1, 0)[:, np.newaxis]
-            # Is binary, model first event
-            elif len(x.unique()) == 2:
-                value = np.where(x == reference, 1, 0)[:, np.newaxis]
-            # Isn't binary, no level has been passed, return codes.
-            else:
-                value = pd.Categorical(x).codes[:, np.newaxis]
+            categories = sorted(np.unique(x).tolist())
+            dtype = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
+            x = pd.Categorical(x).astype(dtype)
         else:
-            # Not always we receive a bool, so we need to check.
-            if isinstance(encoding, list):
-                encoding = encoding[0]
-            if isinstance(encoding, dict):
-                encoding = encoding[self.name]
-            if encoding:
-                value = pd.get_dummies(x).to_numpy()
-                encoding = "full"
+            x = pd.Categorical(x)
+
+        self.levels = x.categories.tolist()
+
+        # Result of 'variable[level]' is always binary
+        if self.is_response and self.reference is not None:
+            value = np.where(x == self.reference, 1, 0)
+        else:
+            # Treatment encoding by default
+            treatment = Treatment()
+            if spans_intercept:
+                self.contrast_matrix = treatment.code_with_intercept(self.levels)
             else:
-                value = pd.get_dummies(x, drop_first=True).to_numpy()
-                encoding = "reduced"
-        return {
-            "value": value,
-            "kind": "categoric",
-            "levels": levels,
-            "reference": reference,
-            "encoding": encoding,
-        }
+                self.contrast_matrix = treatment.code_without_intercept(self.levels)
+            value = self.contrast_matrix.matrix[x.codes]
+
+        self.value = value
+        self.spans_intercept = spans_intercept
 
     def eval_new_data(self, data_mask):
         """Evaluates the variable with new data.
@@ -208,20 +182,20 @@ class Variable:
         Returns
         ----------
         result: np.array
-            The rules for the shape of this array are the rules for ``self._eval_numeric()`` and
-            ``self._eval_categoric()``. The first applies for numeric variables, the second for
+            The rules for the shape of this array are the rules for ``self.eval_numeric()`` and
+            ``self.eval_categoric()``. The first applies for numeric variables, the second for
             categoric ones.
-
         """
-        if self.data is None:
-            raise ValueError("self.data is None. This error shouldn't have happened!")
         x = data_mask[self.name]
         if self.kind == "numeric":
-            return self._eval_numeric(x)["value"]
+            return self.eval_new_data_numeric(x)
         else:
-            return self._eval_new_data_categoric(x)
+            return self.eval_new_data_categoric(x)
 
-    def _eval_new_data_categoric(self, x):
+    def eval_new_data_numeric(self, x):
+        return np.asarray(x)
+
+    def eval_new_data_categoric(self, x):
         """Evaluates the variable with new data when variable is categoric.
 
         This method also checks the levels observed in the new data frame are included within the
@@ -237,13 +211,30 @@ class Variable:
             number of dummy variables used in the numeric representation of the categorical
             variable.
         """
-        new_data_levels = pd.Categorical(x).dtype.categories.tolist()
-        if set(new_data_levels).issubset(set(self.data["levels"])):
-            series = pd.Categorical(x, categories=self.data["levels"])
-            drop_first = self.data["encoding"] == "reduced"
-            return pd.get_dummies(series, drop_first=drop_first).to_numpy()
+        new_data_levels = set(x)
+        original_levels = set(self.levels)
+        difference = new_data_levels - original_levels
+
+        if not difference:
+            idxs = pd.Categorical(x, categories=self.levels).codes
+            return self.contrast_matrix.matrix[idxs]
         else:
+            difference = [str(x) for x in difference]
             raise ValueError(
-                f"At least one of the levels for '{self.name}' in the new data was "
-                "not present in the original data set."
+                f"The levels {', '.join(difference)} in '{self.name}' are not present in "
+                "the original data set."
             )
+
+    @property
+    def labels(self):
+        """Obtain labels of the columns in the design matrix associated with this Variable"""
+        labels = None
+        if self.kind == "numeric":
+            if self.value.ndim == 2 and self.value.shape[1] > 1:
+                labels = [f"{self.name}[{i}]" for i in range(self.value.shape[1])]
+            else:
+                labels = [self.name]
+        elif self.kind == "categoric":
+            labels = [f"{self.name}[{label}]" for label in self.contrast_matrix.labels]
+
+        return labels

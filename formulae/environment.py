@@ -1,6 +1,5 @@
 # VarLookUpDict and Environment are taken from Patsy library.
 # For more info see: https://github.com/pydata/patsy/blob/master/patsy/eval.py
-# pylint: disable=relative-beyond-top-level
 import inspect
 import numbers
 
@@ -37,7 +36,7 @@ class VarLookupDict:
     def keys(self):
         return [list(d.keys()) for d in self._dicts]
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return f"{self.__class__.__name__}({self._dicts})"
 
 
@@ -65,9 +64,7 @@ class Environment:
         elif isinstance(env, numbers.Integral):
             depth = env + reference
         else:
-            raise TypeError(
-                "Parameter 'env' must be either an integer " "or an instance of Environment."
-            )
+            raise TypeError("'env' must be either an integer or an instance of Environment.")
         frame = inspect.currentframe()
         try:
             for _ in range(depth + 1):
@@ -86,6 +83,3 @@ class Environment:
 
     def __ne__(self, other):
         return not self == other
-
-    def __hash__(self):
-        return hash((Environment, tuple(self._namespace_ids())))

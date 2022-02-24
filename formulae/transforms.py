@@ -4,6 +4,8 @@ import pandas as pd
 from pandas.api.types import is_numeric_dtype
 from scipy.interpolate import splev
 
+from formulae.categorical import CategoricalBox, Sum, Treatment
+
 # Stateful transformations.
 # These transformations have memory about the state of parameters that are
 # required to compute the transformation and are obtained as a subproduct of the
@@ -54,54 +56,31 @@ def I(x):
     return x
 
 
-def C(x, reference=None, levels=None):
-    """Make a variable categorical or manipulate the order of its levels.
+def C(data, contrast=None, levels=None):
+    if isinstance(data, CategoricalBox):
+        if contrast is None:
+            contrast = data.contrast
+        if levels is None:
+            levels = data.levels
+        data = data.data
+    return CategoricalBox(data, contrast, levels)
 
-    This is an internal function only accesible through the formula interface.
 
-    Parameters
-    ----------
+def S(data, omit=None, levels=None):
+    """Convert to categorical using Treatment encoding
 
-    x: pd.Series
-        The object containing the variable to be converted to categorical.
-    reference: str, numeric or None
-        The reference level. This is used when the goal is only to only change the level taken
-        as reference but not the order of the others. Defaults to ``None`` which means this
-        feature is disabled and the variable is categorized according to the levels specified in
-        ``levels`` or the order of the levels after calling ``sorted()``.
-    levels: list or None
-        A list describing the desired order for the categorical variable. Defaults to ``None``
-        which means either ``reference`` is used or the order of the levels after calling
-        ``sorted()``
-
-    Returns
-    ----------
-    x: pd.Series
-        An ordered categorical series.
+    It is a shorthand for C(x, Sum)
     """
+    return CategoricalBox(data, Sum(omit), levels)
 
-    if reference is not None and levels is not None:
-        raise ValueError("At least one of 'reference' or 'levels' must be None.")
 
-    if reference is not None:
-        # If the variable has categories, use their order.
-        if hasattr(x.dtype, "categories"):
-            categories = list(x.dtype.categories)
+def T(data, ref=None, levels=None):
+    """Convert to categorical using Treatment encoding
 
-        # If the variable does not have categories use `sorted()`.
-        else:
-            categories = sorted(x.unique().tolist())
-        # Send reference to the first place
-        categories.insert(0, categories.pop(categories.index(reference)))
-    elif levels is not None:
-        categories = levels
-    elif not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
-        categories = sorted(x.unique().tolist())
-
-    # Create type and use it in the variable
-    kind = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
-    x = x.astype(kind)
-    return x
+    It is a shorthand for C(x, Treatment)
+    """
+    contrast = Treatment(ref)
+    return CategoricalBox(data, contrast, levels)
 
 
 def binary(x, success=None):
@@ -127,7 +106,7 @@ def binary(x, success=None):
     booleans = x == success
     if not sum(booleans):
         raise ValueError(f"No value in 'x' is equal to \"{success}\"")
-    return np.where(booleans, 1, 0)[:, np.newaxis]
+    return np.where(booleans, 1, 0)
 
 
 class Proportion:
@@ -212,7 +191,7 @@ class Offset:
 
     def eval(self):
         if self.kind == "variable":
-            return self.x.flatten()[:, np.newaxis]
+            return self.x.flatten()
         else:
             return np.ones((self.size, 1)) * self.x
 
@@ -357,14 +336,85 @@ class BSpline:
         return basis
 
 
+class Polynomial:
+    """Polynomial transformation
+
+    The computation of this transformation is borrowed from the implementation in the
+    Formulaic library written by Matthew Wardrop.
+
+    The original implementation and more documentation can be found here:
+    https://github.com/matthewwardrop/formulaic/blob/main/formulaic/transforms/poly.py
+
+    Parameters
+    ----------
+    x: 1d array-like
+        The data.
+    degree: int
+        The degree of the polynomial terms to compute. If degree is k, with k > 1, this
+        transformation computes the polinomials x^1, x^2, ...x^k.
+    raw: bool
+        Whether to use raw polynomials or orthonormal ones. Defaults to False.
+    """
+
+    def __init__(self):
+        self.params_set = False
+        self.degree = 1
+        self.raw = False
+        self.alpha = {}
+        self.norms2 = {}
+
+    def __call__(self, x, degree=1, raw=False):
+        if not self.params_set:
+            self.degree = degree
+            self.raw = raw
+        return self.eval(x)
+
+    def eval(self, x):
+        if self.raw:
+            return np.column_stack([np.power(x, k) for k in range(1, self.degree + 1)])
+
+        def get_alpha(k):
+            if k not in self.alpha:
+                self.alpha[k] = np.sum(x * P[:, k] ** 2) / np.sum(P[:, k] ** 2)
+            return self.alpha[k]
+
+        def get_norm(k):
+            if k not in self.norms2:
+                self.norms2[k] = np.sum(P[:, k] ** 2)
+            return self.norms2[k]
+
+        def get_beta(k):
+            return get_norm(k) / get_norm(k - 1)
+
+        P = np.empty((x.shape[0], self.degree + 1))
+        P[:, 0] = 1
+
+        for i in range(1, self.degree + 1):
+            P[:, i] = (x - get_alpha(i - 1)) * P[:, i - 1]
+            if i >= 2:
+                P[:, i] -= get_beta(i - 1) * P[:, i - 2]
+
+        P /= np.array([np.sqrt(get_norm(k)) for k in range(0, self.degree + 1)])
+        return P[:, 1:]
+
+
 TRANSFORMS = {
-    "I": I,
-    "C": C,
     "B": binary,
     "binary": binary,
+    "C": C,
+    "I": I,
+    "offset": offset,
     "p": proportion,
     "prop": proportion,
     "proportion": proportion,
-    "offset": offset,
+    "S": S,
+    "T": T,
 }
-STATEFUL_TRANSFORMS = {"center": Center, "scale": Scale, "standardize": Scale, "bs": BSpline}
+
+STATEFUL_TRANSFORMS = {
+    "bs": BSpline,
+    "center": Center,
+    "poly": Polynomial,
+    "scale": Scale,
+    "standardize": Scale,
+}

@@ -5,7 +5,7 @@ from formulae.model_description import model_description
 from formulae.terms import Variable, Call, Intercept, Term, GroupSpecificTerm, Model, Response
 from formulae.terms.call_resolver import LazyCall, LazyVariable, get_function_from_module
 
-# TODO:
+# XTODO:
 # test repeated terms
 # tests for CallTerms, ModelTerms, GroupSpecificTerm and so on...
 

@@ -37,7 +37,7 @@ class Resolver:
             return expr.left.accept(self) / expr.right.accept(self)
         elif otype == "PIPE":
             return expr.left.accept(self) | expr.right.accept(self)
-        else:
+        else:  # pragma: no cover
             raise ResolverError("Couldn't resolve BinaryExpr with otype '" + otype + "'")
 
     def visitUnaryExpr(self, expr):
@@ -52,7 +52,7 @@ class Resolver:
                 return Intercept()
             else:
                 raise ResolverError("Unary negation can only be applied to '0' or '1'")
-        else:
+        else:  # pragma: no cover
             raise ResolverError("Couldn't resolve UnaryExpr with otype '" + otype + "'")
 
     def visitCallExpr(self, expr):

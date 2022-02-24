@@ -5,6 +5,7 @@ import pandas as pd
 
 from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
 
+from formulae.categorical import ENCODINGS, CategoricalBox, Treatment
 from formulae.transforms import TRANSFORMS, Proportion, Offset
 from formulae.terms.call_utils import CallVarsExtractor
 
@@ -30,13 +31,16 @@ class Call:
     """
 
     def __init__(self, call, is_response=False):
-        self.data = None
-        self.env = None
-        self._intermediate_data = None
-        self.kind = None
-        self.is_response = is_response
         self.call = call
+        self.is_response = is_response
         self.name = str(self.call)
+        self.contrast_matrix = None
+        self.env = None
+        self.kind = None
+        self.levels = None
+        self.spans_intercept = None
+        self.value = None
+        self._intermediate_data = None
 
     def __hash__(self):
         return hash(self.call)
@@ -94,55 +98,58 @@ class Call:
             The environment where values and functions are taken from.
         """
 
-        self.env = env.with_outer_namespace(TRANSFORMS)
+        self.env = env.with_outer_namespace({**TRANSFORMS, **ENCODINGS})
         x = self.call.eval(data_mask, self.env)
 
         if is_numeric_dtype(x):
             self.kind = "numeric"
-        elif is_string_dtype(x) or is_categorical_dtype(x):
+        elif is_string_dtype(x) or is_categorical_dtype(x) or isinstance(x, CategoricalBox):
             self.kind = "categoric"
-        elif isinstance(x, Proportion):
-            self.kind = "proportion"
         elif isinstance(x, Offset):
             self.kind = "offset"
             x.set_size(len(data_mask.index))
+        elif isinstance(x, Proportion):
+            self.kind = "proportion"
         else:
             raise ValueError(f"Call result is of an unrecognized type ({type(x)}).")
         self._intermediate_data = x
 
-    def set_data(self, encoding=False):
+    def set_data(self, spans_intercept=False):
         """Finishes the evaluation of the call according to its type.
 
-        Evaluates the call according to its type and stores the result in ``.data``. It does not
-        support multi-level categoric responses yet. If ``self.is_response`` is ``True`` and the
-        variable is of a categoric type, this method returns a 1d array of 0-1 instead of a matrix.
-
+        It does not support multi-level categoric responses yet.
+        If ``self.is_response`` is ``True`` and the variable is of a categoric type, this method
+        returns a 1d array of 0-1 instead of a matrix.
+        # XTODO: Fix previous point
         In practice, it just completes the evaluation that started with ``self.set_type()``.
 
         Parameters
         ----------
-        encoding: bool
-            Indicates if it uses full or reduced encoding when the type of the call is
-            categoric. Omitted when the result of the call is numeric.
+        spans_intercept: bool
+            Indicates if the encoding of categorical variables spans the intercept or not.
+            Omitted when the variable is numeric.
         """
         try:
             if self.kind is None:
                 raise ValueError("Call result type is not set.")
-            if self.kind not in ["numeric", "categoric", "proportion", "offset"]:
-                raise ValueError(f"Call result is of an unrecognized type ({self.kind}).")
             if self.kind == "numeric":
-                self.data = self._eval_numeric(self._intermediate_data)
+                self.eval_numeric(self._intermediate_data)
             elif self.kind == "categoric":
-                self.data = self._eval_categoric(self._intermediate_data, encoding)
-            elif self.kind == "proportion":
-                self.data = self._eval_proportion(self._intermediate_data)
+                if isinstance(self._intermediate_data, CategoricalBox):
+                    self.eval_categorical_box(self._intermediate_data, spans_intercept)
+                else:
+                    self.eval_categoric(self._intermediate_data, spans_intercept)
             elif self.kind == "offset":
-                self.data = self._eval_offset(self._intermediate_data)
+                self.eval_offset(self._intermediate_data)
+            elif self.kind == "proportion":
+                self.eval_proportion(self._intermediate_data)
+            else:
+                raise ValueError(f"Call result is of an unrecognized type ({self.kind}).")
         except:
             print("Unexpected error while trying to evaluate a Call:", sys.exc_info()[0])
             raise
 
-    def _eval_numeric(self, x):
+    def eval_numeric(self, x):
         """Finishes evaluation of a numeric call.
 
         Converts the intermediate values of the call into a numpy array of shape ``(n, 1)``,
@@ -161,17 +168,13 @@ class Call:
             evaluation, and the latter is equal to ``"numeric"``.
         """
         if isinstance(x, np.ndarray):
-            if x.ndim == 1:
-                value = x[:, np.newaxis]
-            else:
-                value = x
+            self.value = x
         elif isinstance(x, pd.Series):
-            value = x.to_numpy()[:, np.newaxis]
+            self.value = x.values
         else:
             raise ValueError(f"Call result is of an unrecognized type ({type(x)}).")
-        return {"value": value, "kind": "numeric"}
 
-    def _eval_categoric(self, x, encoding):
+    def eval_categoric(self, x, spans_intercept):
         """Finishes evaluation of categoric call.
 
         First, it checks whether the intermediate evaluation returned is ordered. If not, it
@@ -187,59 +190,66 @@ class Call:
         ----------
         x: np.ndarray or pd.Series
             The intermediate values of the variable.
-        encoding: bool
-            Indicates if it uses full or reduced encoding.
-
-        Returns
-        ----------
-        result: dict
-            A dictionary with keys ``"value"``, ``"kind"``, ``"levels"``, ``"reference"``, and
-            ``"encoding"``. They represent the result of the evaluation, the type, which is
-            ``"categoric"``, the levels observed in the variable, the level used as reference when
-            using reduced encoding, and whether the encoding is ``"full"`` or ``"reduced"``.
+        spans_intercept: bool
+            Indicates if the encoding of categorical variables spans the intercept or not.
+            Omitted when the variable is numeric.
         """
 
+        # If not ordered, we make it ordered.
         if not hasattr(x.dtype, "ordered") or not x.dtype.ordered:
-            categories = sorted(x.unique().tolist())
-            cat_type = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
-            x = x.astype(cat_type)
-
-        reference = x.min()
-        levels = x.cat.categories.tolist()
-
-        if self.is_response:
-            value = np.atleast_2d(np.where(x == reference, 1, 0)).T
-            encoding = None
+            categories = sorted(np.unique(x).tolist())
+            dtype = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
+            x = pd.Categorical(x).astype(dtype)
         else:
-            if isinstance(encoding, list):
-                encoding = encoding[0]
-            if isinstance(encoding, dict):
-                encoding = encoding[self.name]
-            if encoding:
-                value = pd.get_dummies(x).to_numpy()
-                encoding = "full"
-            else:
-                value = pd.get_dummies(x, drop_first=True).to_numpy()
-                encoding = "reduced"
-        return {
-            "value": value,
-            "kind": "categoric",
-            "levels": levels,
-            "reference": reference,
-            "encoding": encoding,
-        }
+            x = pd.Categorical(x)
 
-    def _eval_proportion(self, proportion):
+        self.levels = x.categories.tolist()
+
+        treatment = Treatment()
+        if spans_intercept:
+            self.contrast_matrix = treatment.code_with_intercept(self.levels)
+        else:
+            self.contrast_matrix = treatment.code_without_intercept(self.levels)
+
+        self.value = self.contrast_matrix.matrix[x.codes]
+        self.spans_intercept = spans_intercept
+
+    def eval_categorical_box(self, box, spans_intercept):
+        data = box.data
+        levels = box.levels
+        contrast = box.contrast
+
+        if contrast is None:
+            contrast = Treatment()
+
+        if levels is None:
+            categories = sorted(list(set(data)))
+        else:
+            categories = levels
+
+        dtype = pd.api.types.CategoricalDtype(categories=categories, ordered=True)
+        data = pd.Categorical(data).astype(dtype)
+        self.levels = categories
+
+        if spans_intercept:
+            self.contrast_matrix = contrast.code_with_intercept(categories)
+        else:
+            self.contrast_matrix = contrast.code_without_intercept(categories)
+
+        self.value = self.contrast_matrix.matrix[data.codes]
+        self.spans_intercept = spans_intercept
+
+    def eval_proportion(self, proportion):
         if not self.is_response:
-            raise ValueError("'prop()' can only be used in the context of a response term.")
-        return {"value": proportion.eval(), "kind": "proportion"}
+            raise ValueError("'proportion()' can only be used as a response term.")
+        self.value = proportion.eval()
 
-    def _eval_offset(self, offset):
+    def eval_offset(self, offset):
         if self.is_response:
-            raise ValueError("'offset() cannot be used in the context of a response term.")
-        return {"value": offset.eval(), "kind": "offset"}
+            raise ValueError("offset() cannot be used as a response term.")
+        self.value = offset.eval()
 
-    def eval_new_data(self, data_mask):  # pylint: disable = inconsistent-return-statements
+    def eval_new_data(self, data_mask):
         """Evaluates the function call with new data.
 
         This method evaluates the function call within a new data mask. If the transformation
@@ -254,40 +264,29 @@ class Call:
         Returns
         ----------
         result: np.array
-            The rules for the shape of this array are the rules for ``self._eval_numeric()`` and
-            ``self._eval_categoric()``. The first applies for numeric calls, the second for
+            The rules for the shape of this array are the rules for ``self.eval_numeric()`` and
+            ``self.eval_categoric()``. The first applies for numeric calls, the second for
             categoric ones.
         """
         if self.kind in ["numeric", "categoric"]:
             x = self.call.eval(data_mask, self.env)
             if self.kind == "numeric":
-                return self._eval_numeric(x)["value"]
+                result = self.eval_new_data_numeric(x)
+            elif isinstance(x, CategoricalBox):
+                result = self.eval_new_data_categorical_box(x)
             else:
-                return self._eval_new_data_categoric(x)
-        elif self.kind == "proportion":
-            if self._intermediate_data.trials_type == "constant":
-                # Return value passed in the second component
-                return np.ones((len(data_mask.index), 1)) * self.call.args[1].value
-            else:
-                # Extract name of the second component
-                name = self.call.args[1].name
-                values = data_mask[name]
-                if isinstance(values, pd.Series):
-                    values = values.values[:, np.newaxis]
-                return values
+                result = self.eval_new_data_categoric(x)
         elif self.kind == "offset":
-            if self._intermediate_data.kind == "constant":
-                # Return value passed as the argument
-                return np.ones((len(data_mask.index), 1)) * self.call.args[0].value
-            else:
-                # Extract name of the argument
-                name = self.call.args[0].name
-                values = data_mask[name]
-                if isinstance(values, pd.Series):
-                    values = values.values[:, np.newaxis]
-                return values
+            result = self.eval_new_data_offset(data_mask)
+        elif self.kind == "proportion":
+            result = self.eval_new_data_proportion(data_mask)
 
-    def _eval_new_data_categoric(self, x):
+        return result
+
+    def eval_new_data_numeric(self, x):
+        return np.asarray(x)
+
+    def eval_new_data_categoric(self, x):
         """Evaluates the call with new data when the result of the call is categoric.
 
         This method also checks the levels observed in the new data frame are included within the
@@ -303,15 +302,59 @@ class Call:
             number of dummy variables used in the numeric representation of the categorical
             variable.
         """
+        new_data_levels = set(x)
+        original_levels = set(self.levels)
+        difference = new_data_levels - original_levels
 
-        # Raise error if passing a level that was not observed.
-        new_data_levels = pd.Categorical(x).dtype.categories.tolist()
-        if set(new_data_levels).issubset(set(self.data["levels"])):
-            series = pd.Categorical(x, categories=self.data["levels"])
-            drop_first = self.data["encoding"] == "reduced"
-            return pd.get_dummies(series, drop_first=drop_first).to_numpy()
+        if not difference:
+            idxs = pd.Categorical(x, categories=self.levels).codes
+            return self.contrast_matrix.matrix[idxs]
         else:
+            difference = [str(x) for x in difference]
             raise ValueError(
-                f"At least one of the levels for '{self.name}' in the new data was "
-                "not present in the original data set."
+                f"The levels {', '.join(difference)} in '{self.name}' are not present in "
+                "the original data set."
             )
+
+    def eval_new_data_categorical_box(self, x):
+        return self.eval_new_data_categoric(x.data)
+
+    def eval_new_data_offset(self, data_mask):
+        if self._intermediate_data.kind == "constant":
+            # Return value passed as the argument
+            result = np.ones(len(data_mask.index)) * self.call.args[0].value
+        else:
+            # Extract name of the argument
+            name = self.call.args[0].name
+            values = data_mask[name]
+            if isinstance(values, pd.Series):
+                values = values.values
+            result = values
+        return result
+
+    def eval_new_data_proportion(self, data_mask):
+        if self._intermediate_data.trials_type == "constant":
+            # Return value passed in the second component
+            result = np.ones(len(data_mask.index)) * self.call.args[1].value
+        else:
+            # Extract name of the second component
+            name = self.call.args[1].name
+            values = data_mask[name]
+            if isinstance(values, pd.Series):
+                values = values.values
+            result = values
+        return result
+
+    @property
+    def labels(self):
+        """Obtain labels of the columns in the design matrix associated with this Call"""
+        labels = None
+        if self.kind in ["numeric", "offset"]:
+            if self.value.ndim == 2 and self.value.shape[1] > 1:
+                labels = [f"{self.name}[{i}]" for i in range(self.value.shape[1])]
+            else:
+                labels = [self.name]
+        elif self.kind == "categoric":
+            labels = [f"{self.name}[{label}]" for label in self.contrast_matrix.labels]
+
+        return labels

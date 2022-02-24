@@ -9,7 +9,7 @@ class ParseError(Exception):
     pass
 
 
-class Parser:
+class Parser:  # pylint: disable=too-many-public-methods
     """Parses a sequence of Tokens and returns an abstract syntax tree.
 
     Parameters
@@ -95,8 +95,18 @@ class Parser:
         return expr
 
     def random_effect(self):
-        expr = self.addition()
+        expr = self.comparison()
         while self.match(["PIPE"]):
+            operator = self.previous()
+            right = self.comparison()
+            expr = Binary(expr, operator, right)
+        return expr
+
+    def comparison(self):
+        expr = self.addition()
+        while self.match(
+            ["EQUAL_EQUAL", "BANG_EQUAL", "LESS_EQUAL", "LESS", "GREATER_EQUAL", "GREATER"]
+        ):
             operator = self.previous()
             right = self.addition()
             expr = Binary(expr, operator, right)
@@ -166,9 +176,6 @@ class Parser:
             identifier = self.previous()
             if self.match("LEFT_BRACKET"):
                 level = self.primary()
-                if not isinstance(level, (Literal, Variable)):
-                    raise ParseError("Subset notation only allows a string or an identifer.")
-
                 if isinstance(level, Literal) and not isinstance(level.value, str):
                     raise ParseError("Subset notation only allows a string or an identifer.")
 
@@ -196,5 +203,5 @@ class Parser:
             expr = self.expression()
             self.consume("RIGHT_BRACE", "Expect '}' after expression.")
             return Call(Variable(Token("IDENTIFIER", "I")), [expr])
-        else:
+        else:  # pragma: no cover
             raise ParseError(f"Don't know how to parse '{self.peek().lexeme}'")
