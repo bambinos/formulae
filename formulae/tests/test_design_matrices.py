@@ -371,7 +371,7 @@ def test_built_in_transforms(data):
     assert dm.common.terms["C(x3)"].labels == ["C(x3)[1]", "C(x3)[2]", "C(x3)[3]", "C(x3)[4]"]
 
     # Specify levels, different to observed
-    lvls = [3, 2, 4, 1]
+    lvls = [3, 2, 4, 1]  # noqa
     dm = design_matrices("y ~ C(x3, levels=lvls)", data)
     assert dm.common.terms["C(x3, levels = lvls)"].kind == "categoric"
     assert dm.common.terms["C(x3, levels = lvls)"].levels == ["2", "4", "1"]
@@ -1101,13 +1101,20 @@ def test_data_is_empty(data):
 
 
 def test_wrong_na_action(data):
-    with pytest.raises(ValueError, match="'na_action' must be either 'drop' or 'error'"):
+    with pytest.raises(ValueError, match="'na_action' must be either 'drop', 'error' or 'pass'"):
         design_matrices("y ~ x1", data, na_action="whatever")
 
 
 def test_drop_na_rows(data):
     data["x3"] = data["x3"].replace({3: np.nan})
-    design_matrices("y ~ x3", data, na_action="drop")
+    dm = design_matrices("y ~ x3", data, na_action="drop")
+    assert dm.common.as_dataframe().shape[0] == 15
+
+
+def test_pass_na_rows(data):
+    data["x3"] = data["x3"].replace({3: np.nan})
+    dm = design_matrices("y ~ x3", data, na_action="pass")
+    assert dm.common.as_dataframe().shape[0] == 20
 
 
 def test_raise_na_rows(data):
