@@ -469,7 +469,7 @@ class GroupEffectsMatrix:
         return msg
 
 
-def design_matrices(formula, data, na_action="drop", env=0):
+def design_matrices(formula, data, na_action="drop", env=0, extra_namespace=None):
     """Parse model formula and obtain a ``DesignMatrices`` object containing objects representing
     the response and the design matrices for both the common and group specific effects.
 
@@ -487,6 +487,9 @@ def design_matrices(formula, data, na_action="drop", env=0):
         The number of environments we walk up in the stack starting from the function's caller
         to capture the environment where formula is evaluated. Defaults to 0 which means
         the evaluation environment is the environment where ``design_matrices`` is called.
+    extra_namespace: dict
+        Additional user supplied transformations to include in the environment where the formula
+        is evaluated. Defaults to ``None``.
 
     Returns
     ----------
@@ -510,7 +513,10 @@ def design_matrices(formula, data, na_action="drop", env=0):
     if na_action not in ["drop", "error", "pass"]:
         raise ValueError("'na_action' must be either 'drop', 'error' or 'pass'")
 
+    extra_namespace = extra_namespace or {}
+
     env = Environment.capture(env, reference=1)
+    env = env.with_outer_namespace(extra_namespace)
 
     description = model_description(formula)
 
