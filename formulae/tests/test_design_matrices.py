@@ -1138,3 +1138,12 @@ def test_design_matrices_categoric_call(data):
 
     # Evaluate new data
     dm.common.evaluate_new_data(data)
+
+
+def test_extra_namespace(data):
+    extra_namespace = {"myfunc": np.log}
+    dm = design_matrices(
+        "y ~ myfunc(x3) + x3", data, na_action="drop", extra_namespace=extra_namespace
+    )
+    df = dm.common.as_dataframe()
+    assert df["myfunc(x3)"].equals(np.log(df["x3"]))
