@@ -481,8 +481,8 @@ def design_matrices(formula, data, na_action="drop", env=0):
         The data frame where variables in the formula are taken from.
     na_action: string
         Describes what to do with missing values in ``data``. ``"drop"`` means to drop
-        all rows with a missing value, ``"error"`` means to raise an error. Defaults
-        to ``"drop"``.
+        all rows with a missing value, ``"error"`` means to raise an error,
+        ``"pass"`` means to to keep all. Defaults to ``"drop"``.
     env: integer
         The number of environments we walk up in the stack starting from the function's caller
         to capture the environment where formula is evaluated. Defaults to 0 which means
@@ -507,8 +507,8 @@ def design_matrices(formula, data, na_action="drop", env=0):
     if data.shape[0] == 0:
         raise ValueError("'data' does not contain any observation.")
 
-    if na_action not in ["drop", "error"]:
-        raise ValueError("'na_action' must be either 'drop' or 'error'")
+    if na_action not in ["drop", "error", "pass"]:
+        raise ValueError("'na_action' must be either 'drop', 'error' or 'pass'")
 
     env = Environment.capture(env, reference=1)
 
@@ -522,7 +522,13 @@ def design_matrices(formula, data, na_action="drop", env=0):
     incomplete_rows_n = incomplete_rows.sum()
 
     if incomplete_rows_n > 0:
-        if na_action == "drop":
+        if na_action == "pass":
+            _log.info(
+                "Keeping %s/%s rows with at least one missing value in the dataset.",
+                incomplete_rows_n,
+                data.shape[0],
+            )
+        elif na_action == "drop":
             _log.info(
                 "Automatically removing %s/%s rows from the dataset.",
                 incomplete_rows_n,
