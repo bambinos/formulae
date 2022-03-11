@@ -262,21 +262,16 @@
     {
      "data": {
       "text/plain": [
-       "CommonEffectsMatrix(  \n",
-       "  shape: (10, 2),\n",
-       "  terms: {  \n",
-       "    'Intercept': {  \n",
-       "      type: intercept,\n",
-       "      cols: slice(0, 1, None),\n",
-       "      full_names: ['Intercept']\n",
-       "    },\n",
-       "    'x': {  \n",
-       "      type: numeric,\n",
-       "      cols: slice(1, 2, None),\n",
-       "      full_names: ['x']\n",
-       "    }\n",
-       "  }\n",
-       ")"
+       "CommonEffectsMatrix with shape (10, 2)\n",
+       "Terms:  \n",
+       "  Intercept  \n",
+       "    kind: intercept\n",
+       "    column: 0\n",
+       "  x  \n",
+       "    kind: numeric\n",
+       "    column: 1\n",
+       "\n",
+       "To access the actual design matrix do 'np.array(this_obj)'"
       ]
      },
      "execution_count": 4,
@@ -328,80 +323,31 @@
   },
   {
    "cell_type": "markdown",
-   "id": "professional-pride",
+   "id": "90ef5349",
    "metadata": {},
    "source": [
-    "Or call the `.as_dataframe()` method to return a data frame."
+    "Or `np.array(dm.common)`"
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "egyptian-plate",
+   "id": "bf9039c9",
    "metadata": {},
    "outputs": [
     {
      "data": {
-      "text/html": [
-       "<div>\n",
-       "<style scoped>\n",
-       "    .dataframe tbody tr th:only-of-type {\n",
-       "        vertical-align: middle;\n",
-       "    }\n",
-       "\n",
-       "    .dataframe tbody tr th {\n",
-       "        vertical-align: top;\n",
-       "    }\n",
-       "\n",
-       "    .dataframe thead th {\n",
-       "        text-align: right;\n",
-       "    }\n",
-       "</style>\n",
-       "<table border=\"1\" class=\"dataframe\">\n",
-       "  <thead>\n",
-       "    <tr style=\"text-align: right;\">\n",
-       "      <th></th>\n",
-       "      <th>Intercept</th>\n",
-       "      <th>x</th>\n",
-       "    </tr>\n",
-       "  </thead>\n",
-       "  <tbody>\n",
-       "    <tr>\n",
-       "      <th>0</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>-0.351447</td>\n",
-       "    </tr>\n",
-       "    <tr>\n",
-       "      <th>1</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>-0.431129</td>\n",
-       "    </tr>\n",
-       "    <tr>\n",
-       "      <th>2</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>-0.412738</td>\n",
-       "    </tr>\n",
-       "    <tr>\n",
-       "      <th>3</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>0.574337</td>\n",
-       "    </tr>\n",
-       "    <tr>\n",
-       "      <th>4</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>1.561390</td>\n",
-       "    </tr>\n",
-       "  </tbody>\n",
-       "</table>\n",
-       "</div>"
-      ],
       "text/plain": [
-       "   Intercept         x\n",
-       "0        1.0 -0.351447\n",
-       "1        1.0 -0.431129\n",
-       "2        1.0 -0.412738\n",
-       "3        1.0  0.574337\n",
-       "4        1.0  1.561390"
+       "array([[ 1.        , -0.351447  ],\n",
+       "       [ 1.        , -0.43112895],\n",
+       "       [ 1.        , -0.41273793],\n",
+       "       [ 1.        ,  0.57433652],\n",
+       "       [ 1.        ,  1.56139001],\n",
+       "       [ 1.        , -0.35713698],\n",
+       "       [ 1.        , -0.45327849],\n",
+       "       [ 1.        , -0.03911089],\n",
+       "       [ 1.        ,  1.88274763],\n",
+       "       [ 1.        ,  0.54961543]])"
       ]
      },
      "execution_count": 6,
@@ -410,21 +356,21 @@
     }
    ],
    "source": [
-    "dm.common.as_dataframe().head()"
+    "np.array(dm.common)"
    ]
   },
   {
    "cell_type": "markdown",
-   "id": "f41c55db",
+   "id": "professional-pride",
    "metadata": {},
    "source": [
-    "Note the response term can be omitted and we still obtain the design matrix for the common predictors"
+    "Or call the `.as_dataframe()` method to return a data frame."
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "3fb94076",
+   "id": "egyptian-plate",
    "metadata": {},
    "outputs": [
     {
@@ -497,6 +443,93 @@
     }
    ],
    "source": [
+    "dm.common.as_dataframe().head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f41c55db",
+   "metadata": {},
+   "source": [
+    "Note the response term can be omitted and we still obtain the design matrix for the common predictors"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "3fb94076",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>Intercept</th>\n",
+       "      <th>x</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>1.0</td>\n",
+       "      <td>-0.351447</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1.0</td>\n",
+       "      <td>-0.431129</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>1.0</td>\n",
+       "      <td>-0.412738</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>1.0</td>\n",
+       "      <td>0.574337</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>1.0</td>\n",
+       "      <td>1.561390</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   Intercept         x\n",
+       "0        1.0 -0.351447\n",
+       "1        1.0 -0.431129\n",
+       "2        1.0 -0.412738\n",
+       "3        1.0  0.574337\n",
+       "4        1.0  1.561390"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
     "dm = design_matrices(\"x\", data)\n",
     "dm.common.as_dataframe().head()"
    ]
@@ -515,7 +548,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 8,
+   "execution_count": 9,
    "id": "scheduled-repair",
    "metadata": {},
    "outputs": [
@@ -589,7 +622,7 @@
        "4        1.0         0.0         0.0"
       ]
      },
-     "execution_count": 8,
+     "execution_count": 9,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -609,7 +642,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 9,
+   "execution_count": 10,
    "id": "exciting-ultimate",
    "metadata": {},
    "outputs": [
@@ -683,7 +716,7 @@
        "4           1           0           0"
       ]
      },
-     "execution_count": 9,
+     "execution_count": 10,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -703,7 +736,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 10,
+   "execution_count": 11,
    "id": "final-lucas",
    "metadata": {},
    "outputs": [
@@ -777,7 +810,7 @@
        "4        1.0      0.0      1.0"
       ]
      },
-     "execution_count": 10,
+     "execution_count": 11,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -797,7 +830,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 11,
+   "execution_count": 12,
    "id": "sustained-orleans",
    "metadata": {},
    "outputs": [
@@ -871,7 +904,7 @@
        "4        1.0                    1.0                    0.0"
       ]
      },
-     "execution_count": 11,
+     "execution_count": 12,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -880,100 +913,6 @@
     "# 2 is taken as baseline, and then it comes 3 and 1.\n",
     "lvl = [2, 3, 1]\n",
     "dm = design_matrices(\"C(z, levels=lvl)\", data)\n",
-    "dm.common.as_dataframe().head()"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "id": "broken-morgan",
-   "metadata": {},
-   "source": [
-    "`C()` also allows us to change only the reference level. In the next chunk of code we use `C(z, 2)` to indicate that we want `2` to be the reference level, and leave all the other levels as default."
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 12,
-   "id": "linear-retreat",
-   "metadata": {},
-   "outputs": [
-    {
-     "data": {
-      "text/html": [
-       "<div>\n",
-       "<style scoped>\n",
-       "    .dataframe tbody tr th:only-of-type {\n",
-       "        vertical-align: middle;\n",
-       "    }\n",
-       "\n",
-       "    .dataframe tbody tr th {\n",
-       "        vertical-align: top;\n",
-       "    }\n",
-       "\n",
-       "    .dataframe thead th {\n",
-       "        text-align: right;\n",
-       "    }\n",
-       "</style>\n",
-       "<table border=\"1\" class=\"dataframe\">\n",
-       "  <thead>\n",
-       "    <tr style=\"text-align: right;\">\n",
-       "      <th></th>\n",
-       "      <th>Intercept</th>\n",
-       "      <th>C(z, 2)[1]</th>\n",
-       "      <th>C(z, 2)[3]</th>\n",
-       "    </tr>\n",
-       "  </thead>\n",
-       "  <tbody>\n",
-       "    <tr>\n",
-       "      <th>0</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>0.0</td>\n",
-       "      <td>1.0</td>\n",
-       "    </tr>\n",
-       "    <tr>\n",
-       "      <th>1</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>0.0</td>\n",
-       "      <td>1.0</td>\n",
-       "    </tr>\n",
-       "    <tr>\n",
-       "      <th>2</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>0.0</td>\n",
-       "      <td>0.0</td>\n",
-       "    </tr>\n",
-       "    <tr>\n",
-       "      <th>3</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>0.0</td>\n",
-       "      <td>1.0</td>\n",
-       "    </tr>\n",
-       "    <tr>\n",
-       "      <th>4</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>0.0</td>\n",
-       "      <td>1.0</td>\n",
-       "    </tr>\n",
-       "  </tbody>\n",
-       "</table>\n",
-       "</div>"
-      ],
-      "text/plain": [
-       "   Intercept  C(z, 2)[1]  C(z, 2)[3]\n",
-       "0        1.0         0.0         1.0\n",
-       "1        1.0         0.0         1.0\n",
-       "2        1.0         0.0         0.0\n",
-       "3        1.0         0.0         1.0\n",
-       "4        1.0         0.0         1.0"
-      ]
-     },
-     "execution_count": 12,
-     "metadata": {},
-     "output_type": "execute_result"
-    }
-   ],
-   "source": [
-    "dm = design_matrices(\"C(z, 2)\", data)\n",
     "dm.common.as_dataframe().head()"
    ]
   },
@@ -1019,28 +958,28 @@
        "  <tbody>\n",
        "    <tr>\n",
        "      <th>0</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>0.0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>1</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>0.0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>2</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>1.0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>3</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>0.0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>4</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>0.0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
        "    </tr>\n",
        "  </tbody>\n",
        "</table>\n",
@@ -1048,11 +987,11 @@
       ],
       "text/plain": [
        "   Intercept  binary(z, 2)\n",
-       "0        1.0           0.0\n",
-       "1        1.0           0.0\n",
-       "2        1.0           1.0\n",
-       "3        1.0           0.0\n",
-       "4        1.0           0.0"
+       "0          1             0\n",
+       "1          1             0\n",
+       "2          1             1\n",
+       "3          1             0\n",
+       "4          1             0"
       ]
      },
      "execution_count": 13,
@@ -1107,28 +1046,28 @@
        "  <tbody>\n",
        "    <tr>\n",
        "      <th>0</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>0.0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>1</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>1.0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>2</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>0.0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>3</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>0.0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>4</th>\n",
-       "      <td>1.0</td>\n",
-       "      <td>1.0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
        "    </tr>\n",
        "  </tbody>\n",
        "</table>\n",
@@ -1136,11 +1075,11 @@
       ],
       "text/plain": [
        "   Intercept  binary(g, Group 1)\n",
-       "0        1.0                 0.0\n",
-       "1        1.0                 1.0\n",
-       "2        1.0                 0.0\n",
-       "3        1.0                 0.0\n",
-       "4        1.0                 1.0"
+       "0          1                   0\n",
+       "1          1                   1\n",
+       "2          1                   0\n",
+       "3          1                   0\n",
+       "4          1                   1"
       ]
      },
      "execution_count": 14,
@@ -2306,7 +2245,7 @@
     "\n",
     "Formulae can work with categorical responses with 2 or more levels. When the variable contains only two levels, formulae flags it as binary.\n",
     "\n",
-    "Recall `y2` is a categorical variable with levels `A`, `B` and `C`. In this case, formulae will interpret `A` as the reference level and will set the `binary` flag to `False` since this variable contains more than two categories."
+    "Recall `y2` is a categorical variable with levels `A`, `B` and `C`. In this case, formulae set the `binary` flag to `False` since this variable contains more than two categories."
    ]
   },
   {
@@ -2318,14 +2257,14 @@
     {
      "data": {
       "text/plain": [
-       "ResponseVector(  \n",
-       "  name: y2,\n",
-       "  type: categoric,\n",
-       "  length: 10,\n",
-       "  levels: ['A', 'B', 'C'],\n",
-       "  binary: False,\n",
-       "  baseline: A\n",
-       ")"
+       "ResponseVector  \n",
+       "  name: y2\n",
+       "  kind: categoric\n",
+       "  length: 10\n",
+       "  binary: False\n",
+       "  levels: ['A', 'B', 'C']\n",
+       "\n",
+       "To access the actual design vector do 'np.array(this_obj)'"
       ]
      },
      "execution_count": 27,
@@ -2343,7 +2282,7 @@
    "id": "9c604a55",
    "metadata": {},
    "source": [
-    "The `.design_vector` array is a column vector with the indexes of the levels as they appear in the variable."
+    "The `.design_vector` array is a dummy based design matrix where each column represents a level of the response"
    ]
   },
   {
@@ -2355,16 +2294,16 @@
     {
      "data": {
       "text/plain": [
-       "array([[2],\n",
-       "       [1],\n",
-       "       [1],\n",
-       "       [1],\n",
-       "       [0],\n",
-       "       [0],\n",
-       "       [2],\n",
-       "       [1],\n",
-       "       [0],\n",
-       "       [0]], dtype=int8)"
+       "array([[0, 0, 1],\n",
+       "       [0, 1, 0],\n",
+       "       [0, 1, 0],\n",
+       "       [0, 1, 0],\n",
+       "       [1, 0, 0],\n",
+       "       [1, 0, 0],\n",
+       "       [0, 0, 1],\n",
+       "       [0, 1, 0],\n",
+       "       [1, 0, 0],\n",
+       "       [1, 0, 0]])"
       ]
      },
      "execution_count": 28,
@@ -2377,6 +2316,36 @@
    ]
   },
   {
+   "cell_type": "code",
+   "execution_count": 29,
+   "id": "24395f20",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([[0, 0, 1],\n",
+       "       [0, 1, 0],\n",
+       "       [0, 1, 0],\n",
+       "       [0, 1, 0],\n",
+       "       [1, 0, 0],\n",
+       "       [1, 0, 0],\n",
+       "       [0, 0, 1],\n",
+       "       [0, 1, 0],\n",
+       "       [1, 0, 0],\n",
+       "       [1, 0, 0]])"
+      ]
+     },
+     "execution_count": 29,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "np.array(dm.response)"
+   ]
+  },
+  {
    "cell_type": "markdown",
    "id": "amateur-contest",
    "metadata": {},
@@ -2386,24 +2355,24 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 29,
+   "execution_count": 30,
    "id": "social-bahrain",
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "ResponseVector(  \n",
-       "  name: y2,\n",
-       "  type: categoric,\n",
-       "  length: 10,\n",
-       "  levels: ['A', 'B', 'C'],\n",
-       "  binary: True,\n",
+       "ResponseVector  \n",
+       "  name: y2\n",
+       "  kind: categoric\n",
+       "  length: 10\n",
+       "  binary: True\n",
        "  success: B\n",
-       ")"
+       "\n",
+       "To access the actual design vector do 'np.array(this_obj)'"
       ]
      },
-     "execution_count": 29,
+     "execution_count": 30,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -2415,33 +2384,24 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 30,
+   "execution_count": 31,
    "id": "rapid-deposit",
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "array([[0],\n",
-       "       [1],\n",
-       "       [1],\n",
-       "       [1],\n",
-       "       [0],\n",
-       "       [0],\n",
-       "       [0],\n",
-       "       [1],\n",
-       "       [0],\n",
-       "       [0]])"
+       "array([0, 1, 1, 1, 0, 0, 0, 1, 0, 0])"
       ]
      },
-     "execution_count": 30,
+     "execution_count": 31,
      "metadata": {},
      "output_type": "execute_result"
     }
    ],
    "source": [
     "# 'y2' is equal to B in four cases\n",
-    "dm.response.design_vector"
+    "np.array(dm.response)"
    ]
   },
   {
@@ -2454,24 +2414,24 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 31,
+   "execution_count": 32,
    "id": "36be2de7",
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "ResponseVector(  \n",
-       "  name: g,\n",
-       "  type: categoric,\n",
-       "  length: 10,\n",
-       "  levels: ['Group 1', 'Group 2', 'Group 3'],\n",
-       "  binary: True,\n",
+       "ResponseVector  \n",
+       "  name: g\n",
+       "  kind: categoric\n",
+       "  length: 10\n",
+       "  binary: True\n",
        "  success: Group 3\n",
-       ")"
+       "\n",
+       "To access the actual design vector do 'np.array(this_obj)'"
       ]
      },
-     "execution_count": 31,
+     "execution_count": 32,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -2491,21 +2451,22 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 32,
+   "execution_count": 33,
    "id": "8cd32b33",
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "ResponseVector(  \n",
-       "  name: binary(g, Group 3),\n",
-       "  type: numeric,\n",
+       "ResponseVector  \n",
+       "  name: binary(g, Group 3)\n",
+       "  kind: numeric\n",
        "  length: 10\n",
-       ")"
+       "\n",
+       "To access the actual design vector do 'np.array(this_obj)'"
       ]
      },
-     "execution_count": 32,
+     "execution_count": 33,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -2537,27 +2498,24 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 33,
+   "execution_count": 34,
    "id": "indirect-hanging",
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "GroupEffectsMatrix(  \n",
-       "  shape: (10, 3),\n",
-       "  terms: {  \n",
-       "    '1|g': {  \n",
-       "      type: intercept,\n",
-       "      groups: ['Group 1', 'Group 2', 'Group 3'],\n",
-       "      full_names: ['1|g[Group 1]', '1|g[Group 2]', '1|g[Group 3]'],\n",
-       "      cols: slice(0, 3, None)\n",
-       "    }\n",
-       "  }\n",
-       ")"
+       "GroupEffectsMatrix with shape (10, 3)\n",
+       "Terms:  \n",
+       "  1|g  \n",
+       "    kind: intercept\n",
+       "    groups: ['Group 1', 'Group 2', 'Group 3']\n",
+       "    columns: 0:3\n",
+       "\n",
+       "To access the actual design matrix do 'np.array(this_obj)'"
       ]
      },
-     "execution_count": 33,
+     "execution_count": 34,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -2569,7 +2527,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 34,
+   "execution_count": 35,
    "id": "bronze-ethnic",
    "metadata": {},
    "outputs": [
@@ -2667,7 +2625,7 @@
        "9        1.0  0.549615"
       ]
      },
-     "execution_count": 34,
+     "execution_count": 35,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -2678,32 +2636,32 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 35,
+   "execution_count": 36,
    "id": "material-strength",
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "array([[0., 1., 0.],\n",
-       "       [1., 0., 0.],\n",
-       "       [0., 1., 0.],\n",
-       "       [0., 1., 0.],\n",
-       "       [1., 0., 0.],\n",
-       "       [0., 1., 0.],\n",
-       "       [0., 0., 1.],\n",
-       "       [0., 1., 0.],\n",
-       "       [0., 1., 0.],\n",
-       "       [0., 0., 1.]])"
+       "array([[0, 1, 0],\n",
+       "       [1, 0, 0],\n",
+       "       [0, 1, 0],\n",
+       "       [0, 1, 0],\n",
+       "       [1, 0, 0],\n",
+       "       [0, 1, 0],\n",
+       "       [0, 0, 1],\n",
+       "       [0, 1, 0],\n",
+       "       [0, 1, 0],\n",
+       "       [0, 0, 1]])"
       ]
      },
-     "execution_count": 35,
+     "execution_count": 36,
      "metadata": {},
      "output_type": "execute_result"
     }
    ],
    "source": [
-    "dm.group.design_matrix"
+    "np.array(dm.group)"
    ]
   },
   {
@@ -2716,33 +2674,28 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 36,
+   "execution_count": 37,
    "id": "parliamentary-access",
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "GroupEffectsMatrix(  \n",
-       "  shape: (10, 6),\n",
-       "  terms: {  \n",
-       "    '1|g': {  \n",
-       "      type: intercept,\n",
-       "      groups: ['Group 1', 'Group 2', 'Group 3'],\n",
-       "      full_names: ['1|g[Group 1]', '1|g[Group 2]', '1|g[Group 3]'],\n",
-       "      cols: slice(0, 3, None)\n",
-       "    },\n",
-       "    'x|g': {  \n",
-       "      type: numeric,\n",
-       "      groups: ['Group 1', 'Group 2', 'Group 3'],\n",
-       "      full_names: ['x|g[Group 1]', 'x|g[Group 2]', 'x|g[Group 3]'],\n",
-       "      cols: slice(3, 6, None)\n",
-       "    }\n",
-       "  }\n",
-       ")"
+       "GroupEffectsMatrix with shape (10, 6)\n",
+       "Terms:  \n",
+       "  1|g  \n",
+       "    kind: intercept\n",
+       "    groups: ['Group 1', 'Group 2', 'Group 3']\n",
+       "    columns: 0:3\n",
+       "  x|g  \n",
+       "    kind: numeric\n",
+       "    groups: ['Group 1', 'Group 2', 'Group 3']\n",
+       "    columns: 3:6\n",
+       "\n",
+       "To access the actual design matrix do 'np.array(this_obj)'"
       ]
      },
-     "execution_count": 36,
+     "execution_count": 37,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -2762,7 +2715,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 37,
+   "execution_count": 38,
    "id": "fifth-grass",
    "metadata": {},
    "outputs": [
@@ -2781,7 +2734,7 @@
        "       [0., 0., 1.]])"
       ]
      },
-     "execution_count": 37,
+     "execution_count": 38,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -2792,7 +2745,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 38,
+   "execution_count": 39,
    "id": "impressive-repeat",
    "metadata": {},
    "outputs": [
@@ -2811,7 +2764,7 @@
        "       [ 0.        ,  0.        ,  0.54961543]])"
       ]
      },
-     "execution_count": 38,
+     "execution_count": 39,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -2830,27 +2783,24 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 39,
+   "execution_count": 40,
    "id": "stainless-scottish",
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "GroupEffectsMatrix(  \n",
-       "  shape: (10, 3),\n",
-       "  terms: {  \n",
-       "    'x|g': {  \n",
-       "      type: numeric,\n",
-       "      groups: ['Group 1', 'Group 2', 'Group 3'],\n",
-       "      full_names: ['x|g[Group 1]', 'x|g[Group 2]', 'x|g[Group 3]'],\n",
-       "      cols: slice(0, 3, None)\n",
-       "    }\n",
-       "  }\n",
-       ")"
+       "GroupEffectsMatrix with shape (10, 3)\n",
+       "Terms:  \n",
+       "  x|g  \n",
+       "    kind: numeric\n",
+       "    groups: ['Group 1', 'Group 2', 'Group 3']\n",
+       "    columns: 0:3\n",
+       "\n",
+       "To access the actual design matrix do 'np.array(this_obj)'"
       ]
      },
-     "execution_count": 39,
+     "execution_count": 40,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -2888,7 +2838,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 40,
+   "execution_count": 41,
    "id": "hairy-monster",
    "metadata": {},
    "outputs": [],
@@ -2902,7 +2852,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 41,
+   "execution_count": 42,
    "id": "bibliographic-impression",
    "metadata": {},
    "outputs": [
@@ -2910,21 +2860,16 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "CommonEffectsMatrix(  \n",
-      "  shape: (50, 2),\n",
-      "  terms: {  \n",
-      "    'Intercept': {  \n",
-      "      type: intercept,\n",
-      "      cols: slice(0, 1, None),\n",
-      "      full_names: ['Intercept']\n",
-      "    },\n",
-      "    'scale(x)': {  \n",
-      "      type: numeric,\n",
-      "      cols: slice(1, 2, None),\n",
-      "      full_names: ['scale(x)']\n",
-      "    }\n",
-      "  }\n",
-      ")\n"
+      "CommonEffectsMatrix with shape (50, 2)\n",
+      "Terms:  \n",
+      "  Intercept  \n",
+      "    kind: intercept\n",
+      "    column: 0\n",
+      "  scale(x)  \n",
+      "    kind: numeric\n",
+      "    column: 1\n",
+      "\n",
+      "To access the actual design matrix do 'np.array(this_obj)'\n"
      ]
     }
    ],
@@ -2935,7 +2880,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 42,
+   "execution_count": 43,
    "id": "hollywood-professional",
    "metadata": {},
    "outputs": [
@@ -2943,23 +2888,18 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "GroupEffectsMatrix(  \n",
-      "  shape: (50, 6),\n",
-      "  terms: {  \n",
-      "    '1|g': {  \n",
-      "      type: intercept,\n",
-      "      groups: ['A', 'B', 'C'],\n",
-      "      full_names: ['1|g[A]', '1|g[B]', '1|g[C]'],\n",
-      "      cols: slice(0, 3, None)\n",
-      "    },\n",
-      "    'scale(x)|g': {  \n",
-      "      type: numeric,\n",
-      "      groups: ['A', 'B', 'C'],\n",
-      "      full_names: ['scale(x)|g[A]', 'scale(x)|g[B]', 'scale(x)|g[C]'],\n",
-      "      cols: slice(3, 6, None)\n",
-      "    }\n",
-      "  }\n",
-      ")\n"
+      "GroupEffectsMatrix with shape (50, 6)\n",
+      "Terms:  \n",
+      "  1|g  \n",
+      "    kind: intercept\n",
+      "    groups: ['A', 'B', 'C']\n",
+      "    columns: 0:3\n",
+      "  scale(x)|g  \n",
+      "    kind: numeric\n",
+      "    groups: ['A', 'B', 'C']\n",
+      "    columns: 3:6\n",
+      "\n",
+      "To access the actual design matrix do 'np.array(this_obj)'\n"
      ]
     }
    ],
@@ -2972,12 +2912,12 @@
    "id": "worst-pollution",
    "metadata": {},
    "source": [
-    "And now suppose we have new data for a set of new subjects. We can derive both common and group-specific design matrices for these new individuals without having to specify the model again. We can instead use the `._evaluate_new_data()` method. This method takes a data frame and returns either a new `CommonEffectsMatrix` or a new `GroupEffectsMatrix` depending on which object the method was called."
+    "And now suppose we have new data for a set of new subjects. We can derive both common and group-specific design matrices for these new individuals without having to specify the model again. We can instead use the `.evaluate_new_data()` method. This method takes a data frame and returns either a new `CommonEffectsMatrix` or a new `GroupEffectsMatrix` depending on which object the method was called."
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 43,
+   "execution_count": 44,
    "id": "transsexual-luxury",
    "metadata": {},
    "outputs": [],
@@ -2990,37 +2930,32 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 44,
+   "execution_count": 45,
    "id": "assumed-header",
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "CommonEffectsMatrix(  \n",
-       "  shape: (10, 2),\n",
-       "  terms: {  \n",
-       "    'Intercept': {  \n",
-       "      type: intercept,\n",
-       "      cols: slice(0, 1, None),\n",
-       "      full_names: ['Intercept']\n",
-       "    },\n",
-       "    'scale(x)': {  \n",
-       "      type: numeric,\n",
-       "      cols: slice(1, 2, None),\n",
-       "      full_names: ['scale(x)']\n",
-       "    }\n",
-       "  }\n",
-       ")"
+       "CommonEffectsMatrix with shape (10, 2)\n",
+       "Terms:  \n",
+       "  Intercept  \n",
+       "    kind: intercept\n",
+       "    column: 0\n",
+       "  scale(x)  \n",
+       "    kind: numeric\n",
+       "    column: 1\n",
+       "\n",
+       "To access the actual design matrix do 'np.array(this_obj)'"
       ]
      },
-     "execution_count": 44,
+     "execution_count": 45,
      "metadata": {},
      "output_type": "execute_result"
     }
    ],
    "source": [
-    "common_new = dm.common._evaluate_new_data(data2)\n",
+    "common_new = dm.common.evaluate_new_data(data2)\n",
     "common_new"
    ]
   },
@@ -3034,7 +2969,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 45,
+   "execution_count": 46,
    "id": "activated-danish",
    "metadata": {},
    "outputs": [
@@ -3132,7 +3067,7 @@
        "9        1.0 -0.351255"
       ]
      },
-     "execution_count": 45,
+     "execution_count": 46,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -3151,45 +3086,40 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 46,
+   "execution_count": 47,
    "id": "cloudy-extreme",
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "GroupEffectsMatrix(  \n",
-       "  shape: (10, 6),\n",
-       "  terms: {  \n",
-       "    '1|g': {  \n",
-       "      type: intercept,\n",
-       "      groups: ['A', 'B', 'C'],\n",
-       "      full_names: ['1|g[A]', '1|g[B]', '1|g[C]'],\n",
-       "      cols: slice(0, 3, None)\n",
-       "    },\n",
-       "    'scale(x)|g': {  \n",
-       "      type: numeric,\n",
-       "      groups: ['A', 'B', 'C'],\n",
-       "      full_names: ['scale(x)|g[A]', 'scale(x)|g[B]', 'scale(x)|g[C]'],\n",
-       "      cols: slice(3, 6, None)\n",
-       "    }\n",
-       "  }\n",
-       ")"
+       "GroupEffectsMatrix with shape (10, 6)\n",
+       "Terms:  \n",
+       "  1|g  \n",
+       "    kind: intercept\n",
+       "    groups: ['A', 'B', 'C']\n",
+       "    columns: 0:3\n",
+       "  scale(x)|g  \n",
+       "    kind: numeric\n",
+       "    groups: ['A', 'B', 'C']\n",
+       "    columns: 3:6\n",
+       "\n",
+       "To access the actual design matrix do 'np.array(this_obj)'"
       ]
      },
-     "execution_count": 46,
+     "execution_count": 47,
      "metadata": {},
      "output_type": "execute_result"
     }
    ],
    "source": [
-    "group_new = dm.group._evaluate_new_data(data2)\n",
+    "group_new = dm.group.evaluate_new_data(data2)\n",
     "group_new"
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 47,
+   "execution_count": 48,
    "id": "signal-seventh",
    "metadata": {},
    "outputs": [
@@ -3208,7 +3138,7 @@
        "       [-0.35125497, -0.        , -0.        ]])"
       ]
      },
-     "execution_count": 47,
+     "execution_count": 48,
      "metadata": {},
      "output_type": "execute_result"
     }

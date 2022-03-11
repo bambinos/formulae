@@ -6,28 +6,28 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Internals &#8212; Formulae 0.2.0 documentation</title>
+    <title>Internals &#8212; Formulae 0.3.0 documentation</title>
     
-  <link href="_static/css/theme.css" rel="stylesheet">
-  <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
-
+    <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
     
-  <link rel="stylesheet"
-    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-
+    <link rel="stylesheet"
+      href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
     
       
-
+  
     
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/css/blank.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/pydata-sphinx-theme.css" />
     
-  <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
-
+    <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
@@ -101,16 +101,12 @@
       <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
         <li class="nav-item">
-          <a class="nav-link" href="https://github.com/bambinos/formulae" rel="noopener" target="_blank" title="GitHub">
-            <span><i class="fab fa-github-square"></i></span>
-            <label class="sr-only">GitHub</label>
-          </a>
+          <a class="nav-link" href="https://github.com/bambinos/formulae" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label></a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="https://pypi.org/project/formulae/" rel="noopener" target="_blank" title="PyPi">
-            <span><i class="fas fa-box"></i></span>
-            <label class="sr-only">PyPi</label>
-          </a>
+          <a class="nav-link" href="https://pypi.org/project/formulae/" rel="noopener" target="_blank" title="PyPi"><span><i class="fas fa-box"></i></span>
+            <label class="sr-only">PyPi</label></a>
         </li>
       </ul>
       </div>
@@ -126,7 +122,8 @@
           
             
             <!-- Only show if we have sidebars configured, else just a small margin  -->
-            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
@@ -134,6 +131,9 @@
     
   </div>
 </nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
             </div>
             
           
@@ -255,40 +255,29 @@ a design matrix from an existing design but evaluated with new data.</p>
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="formulae.matrices.ResponseVector.baseline">
-<span class="sig-name descname"><span class="pre">baseline</span></span><a class="headerlink" href="#formulae.matrices.ResponseVector.baseline" title="Permalink to this definition">¶</a></dt>
-<dd><p>The name of the class taken as reference if <code class="docutils literal notranslate"><span class="pre">kind</span> <span class="pre">=</span> <span class="pre">&quot;categoric&quot;</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>string</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="formulae.matrices.ResponseVector._evaluate">
-<span class="sig-name descname"><span class="pre">_evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#ResponseVector._evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.ResponseVector._evaluate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluates <code class="docutils literal notranslate"><span class="pre">self.term</span></code> inside the data mask provided by <code class="docutils literal notranslate"><span class="pre">data</span></code> and
-updates <code class="docutils literal notranslate"><span class="pre">self.design_vector</span></code> and <code class="docutils literal notranslate"><span class="pre">self.name</span></code>.</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.matrices.ResponseVector.as_dataframe">
 <span class="sig-name descname"><span class="pre">as_dataframe</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#ResponseVector.as_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.ResponseVector.as_dataframe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns <code class="docutils literal notranslate"><span class="pre">self.design_vector</span></code> as a pandas.DataFrame.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="formulae.matrices.ResponseVector.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#ResponseVector.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.ResponseVector.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates <code class="docutils literal notranslate"><span class="pre">self.term</span></code> inside the data mask provided by <code class="docutils literal notranslate"><span class="pre">data</span></code> and
+updates <code class="docutils literal notranslate"><span class="pre">self.design_vector</span></code> and <code class="docutils literal notranslate"><span class="pre">self.name</span></code>.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.matrices.</span></span><span class="sig-name descname"><span class="pre">CommonEffectsMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.matrices.</span></span><span class="sig-name descname"><span class="pre">CommonEffectsMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">terms</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Representation of the design matrix for the common effects of a model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference internal" href="#formulae.terms.Model" title="formulae.terms.Model"><em>Model</em></a>) – A <code class="docutils literal notranslate"><span class="pre">Model</span></code> object containing only terms for the common effects of the model.</p></li>
+<li><p><strong>terms</strong> (<em>list</em>) – A …</p></li>
 <li><p><strong>data</strong> (<em>pandas.DataFrame</em>) – The data frame where variables are taken from.</p></li>
 <li><p><strong>env</strong> (<em>Environment</em>) – The environment where values and functions are taken from.</p></li>
 </ul>
@@ -309,7 +298,7 @@ updates <code class="docutils literal notranslate"><span class="pre">self.design
 <dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix.evaluated">
 <span class="sig-name descname"><span class="pre">evaluated</span></span><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.evaluated" title="Permalink to this definition">¶</a></dt>
 <dd><p>Indicates if the terms have been evaluated at least once. The terms must have been evaluated
-before calling <code class="docutils literal notranslate"><span class="pre">self._evaluate_new_data()</span></code> because we must know the kind of each term
+before calling <code class="docutils literal notranslate"><span class="pre">self.evaluate_new_data()</span></code> because we must know the kind of each term
 to correctly handle the new data passed and the terms here.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -322,7 +311,7 @@ to correctly handle the new data passed and the terms here.</p>
 <dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix.terms_info">
 <span class="sig-name descname"><span class="pre">terms_info</span></span><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.terms_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>A dictionary that holds information related to each of the common specific terms, such as
-<code class="docutils literal notranslate"><span class="pre">&quot;cols&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;full_names&quot;</span></code>. If <code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, it also
+<code class="docutils literal notranslate"><span class="pre">&quot;cols&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;labels&quot;</span></code>. If <code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, it also
 contains <code class="docutils literal notranslate"><span class="pre">&quot;groups&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;encoding&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;levels&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;reference&quot;</span></code>.
 The keys are given by the term names.</p>
 <dl class="field-list simple">
@@ -351,14 +340,19 @@ term passed.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix._evaluate">
-<span class="sig-name descname"><span class="pre">_evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix._evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix._evaluate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix.as_dataframe">
+<span class="sig-name descname"><span class="pre">as_dataframe</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix.as_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.as_dataframe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <cite>self.design_matrix</cite> as a pandas.DataFrame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Obtain design matrix for common effects.</p>
 <p>Evaluates <code class="docutils literal notranslate"><span class="pre">self.model</span></code> inside the data mask provided by <code class="docutils literal notranslate"><span class="pre">data</span></code> and updates
 <code class="docutils literal notranslate"><span class="pre">self.design_matrix</span></code>. This method also sets the values of <code class="docutils literal notranslate"><span class="pre">self.data</span></code> and
 <code class="docutils literal notranslate"><span class="pre">self.env</span></code>.</p>
-<p>It also populates the dictionary <code class="docutils literal notranslate"><span class="pre">self.terms_info</span></code> with information related to each term,
-such as the kind, the columns they occupy in the design matrix and the names of the columns.</p>
+<p>It also populates the dictionary <code class="docutils literal notranslate"><span class="pre">self.slices</span></code> …</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -370,8 +364,8 @@ such as the kind, the columns they occupy in the design matrix and the names of 
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix._evaluate_new_data">
-<span class="sig-name descname"><span class="pre">_evaluate_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix._evaluate_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix._evaluate_new_data" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix.evaluate_new_data">
+<span class="sig-name descname"><span class="pre">evaluate_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix.evaluate_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.evaluate_new_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates common terms with new data and return a new instance of
 <code class="docutils literal notranslate"><span class="pre">CommonEffectsMatrix</span></code>.</p>
 <p>This method is intended to be used to obtain design matrices for new data and obtain
@@ -392,12 +386,6 @@ values in the new data set.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix.as_dataframe">
-<span class="sig-name descname"><span class="pre">as_dataframe</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix.as_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.as_dataframe" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns <cite>self.design_matrix</cite> as a pandas.DataFrame.</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -410,7 +398,7 @@ values in the new data set.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>terms</strong> (<em>list</em>) – A list of <code class="docutils literal notranslate"><span class="pre">GroupSpecificTerm</span></code> objects.</p></li>
-<li><p><strong>data</strong> (<em>pandas.DataFrame</em>) – The data frame where variables are taken from</p></li>
+<li><p><strong>data</strong> (<em>pandas.DataFrame</em>) – The data frame where variables are taken from.</p></li>
 <li><p><strong>env</strong> (<em>Environment</em>) – The environment where values and functions are taken from.</p></li>
 </ul>
 </dd>
@@ -430,7 +418,7 @@ values in the new data set.</p>
 <dt class="sig sig-object py" id="formulae.matrices.GroupEffectsMatrix.evaluated">
 <span class="sig-name descname"><span class="pre">evaluated</span></span><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.evaluated" title="Permalink to this definition">¶</a></dt>
 <dd><p>Indicates if the terms have been evaluated at least once. The terms must have been evaluated
-before calling <code class="docutils literal notranslate"><span class="pre">self._evaluate_new_data()</span></code> because we must know the kind of each term
+before calling <code class="docutils literal notranslate"><span class="pre">self.evaluate_new_data()</span></code> because we must know the kind of each term
 to correctly handle the new data passed and the terms here.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -443,7 +431,7 @@ to correctly handle the new data passed and the terms here.</p>
 <dt class="sig sig-object py" id="formulae.matrices.GroupEffectsMatrix.terms_info">
 <span class="sig-name descname"><span class="pre">terms_info</span></span><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.terms_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>A dictionary that holds information related to each of the group specific terms, such as
-the matrices <code class="docutils literal notranslate"><span class="pre">&quot;Xi&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Ji&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cols&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;full_names&quot;</span></code>. If
+the matrices <code class="docutils literal notranslate"><span class="pre">&quot;Xi&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Ji&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cols&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;labels&quot;</span></code>. If
 <code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, it also contains <code class="docutils literal notranslate"><span class="pre">&quot;groups&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;encoding&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;levels&quot;</span></code>,
 and <code class="docutils literal notranslate"><span class="pre">&quot;reference&quot;</span></code>. The keys are given by the term names.</p>
 <dl class="field-list simple">
@@ -472,8 +460,8 @@ term passed.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="formulae.matrices.GroupEffectsMatrix._evaluate">
-<span class="sig-name descname"><span class="pre">_evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#GroupEffectsMatrix._evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix._evaluate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="formulae.matrices.GroupEffectsMatrix.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#GroupEffectsMatrix.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate group specific terms.</p>
 <p>This evaluates <code class="docutils literal notranslate"><span class="pre">self.terms</span></code> inside the data mask provided by <code class="docutils literal notranslate"><span class="pre">data</span></code> and the environment
 <code class="docutils literal notranslate"><span class="pre">env</span></code>. It updates <code class="docutils literal notranslate"><span class="pre">self.design_matrix</span></code> with the result from the evaluation of each
@@ -492,8 +480,8 @@ the columns and rows they occupy in the design matrix and the names of the colum
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="formulae.matrices.GroupEffectsMatrix._evaluate_new_data">
-<span class="sig-name descname"><span class="pre">_evaluate_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#GroupEffectsMatrix._evaluate_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix._evaluate_new_data" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="formulae.matrices.GroupEffectsMatrix.evaluate_new_data">
+<span class="sig-name descname"><span class="pre">evaluate_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#GroupEffectsMatrix.evaluate_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.evaluate_new_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates group specific terms with new data and return a new instance of
 <code class="docutils literal notranslate"><span class="pre">GroupEffectsMatrix</span></code>.</p>
 <p>This method is intended to be used to obtain design matrices for new data and obtain
@@ -540,8 +528,8 @@ response terms. Defaults to <code class="docutils literal notranslate"><span cla
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="formulae.terms.Variable._eval_categoric">
-<span class="sig-name descname"><span class="pre">_eval_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable._eval_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable._eval_categoric" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="formulae.terms.Variable.eval_categoric">
+<span class="sig-name descname"><span class="pre">eval_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spans_intercept</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.eval_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.eval_categoric" title="Permalink to this definition">¶</a></dt>
 <dd><p>Finishes evaluation of a categoric variable.</p>
 <p>Converts the intermediate values in <code class="docutils literal notranslate"><span class="pre">x</span></code> into a numpy array of shape <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>, where
 <code class="docutils literal notranslate"><span class="pre">n</span></code> is the number of observations and <code class="docutils literal notranslate"><span class="pre">p</span></code> the number of dummy variables used in the
@@ -550,24 +538,37 @@ numeric representation of the categorical variable.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x</strong> (<em>np.ndarray</em><em> or </em><em>pd.Series</em>) – The intermediate values of the variable.</p></li>
-<li><p><strong>encoding</strong> (<em>bool</em>) – Indicates if it uses full or reduced encoding.</p></li>
+<li><p><strong>spans_intercept</strong> (<em>bool</em>) – Indicates if the encoding of categorical variables spans the intercept or not.
+Omitted when the variable is numeric.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>result</strong> – A dictionary with keys <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;levels&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;reference&quot;</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">&quot;encoding&quot;</span></code>. They represent the result of the evaluation, the type, which is
-<code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, the levels observed in the variable, the level used as reference when
-using reduced encoding, and whether the encoding is <code class="docutils literal notranslate"><span class="pre">&quot;full&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;reduced&quot;</span></code>.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="formulae.terms.Variable._eval_new_data_categoric">
-<span class="sig-name descname"><span class="pre">_eval_new_data_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable._eval_new_data_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable._eval_new_data_categoric" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="formulae.terms.Variable.eval_new_data">
+<span class="sig-name descname"><span class="pre">eval_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.eval_new_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the variable with new data.</p>
+<p>This method evaluates the variable within a new data mask. If this object is categorical,
+original encoding is remembered (and checked) when carrying out the new evaluation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data_mask</strong> (<em>pd.DataFrame</em>) – The data frame where variables are taken from</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>result</strong> – The rules for the shape of this array are the rules for <code class="docutils literal notranslate"><span class="pre">self.eval_numeric()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">self.eval_categoric()</span></code>. The first applies for numeric variables, the second for
+categoric ones.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formulae.terms.Variable.eval_new_data_categoric">
+<span class="sig-name descname"><span class="pre">eval_new_data_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.eval_new_data_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.eval_new_data_categoric" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates the variable with new data when variable is categoric.</p>
 <p>This method also checks the levels observed in the new data frame are included within the
 set of the levels of the original data set. If not, an error is raised.</p>
@@ -588,56 +589,31 @@ variable.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="formulae.terms.Variable._eval_numeric">
-<span class="sig-name descname"><span class="pre">_eval_numeric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable._eval_numeric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable._eval_numeric" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="formulae.terms.Variable.eval_numeric">
+<span class="sig-name descname"><span class="pre">eval_numeric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.eval_numeric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.eval_numeric" title="Permalink to this definition">¶</a></dt>
 <dd><p>Finishes evaluation of a numeric variable.</p>
-<p>Converts the intermediate values in <code class="docutils literal notranslate"><span class="pre">x</span></code> into a numpy array of shape <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">1)</span></code>,
-where <code class="docutils literal notranslate"><span class="pre">n</span></code> is the number of observations. This method is used both in <code class="docutils literal notranslate"><span class="pre">self.set_data</span></code>
-and in <code class="docutils literal notranslate"><span class="pre">self.eval_new_data</span></code>.</p>
+<p>Converts the intermediate values in <code class="docutils literal notranslate"><span class="pre">x</span></code> into a 1d numpy array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>x</strong> (<em>np.ndarray</em><em> or </em><em>pd.Series</em>) – The intermediate values of the variable.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>result</strong> – A dictionary with keys <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code>. The first contains the result of the
-evaluation, and the latter is equal to <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code>.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="formulae.terms.Variable.eval_new_data">
-<span class="sig-name descname"><span class="pre">eval_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.eval_new_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluates the variable with new data.</p>
-<p>This method evaluates the variable within a new data mask. If this object is categorical,
-original encoding is remembered (and checked) when carrying out the new evaluation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_mask</strong> (<em>pd.DataFrame</em>) – The data frame where variables are taken from</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>result</strong> – The rules for the shape of this array are the rules for <code class="docutils literal notranslate"><span class="pre">self._eval_numeric()</span></code> and
-<code class="docutils literal notranslate"><span class="pre">self._eval_categoric()</span></code>. The first applies for numeric variables, the second for
-categoric ones.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>np.array</p>
-</dd>
-</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="formulae.terms.Variable.labels">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">labels</span></span><a class="headerlink" href="#formulae.terms.Variable.labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain labels of the columns in the design matrix associated with this Variable</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Variable.set_data">
-<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.set_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spans_intercept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.set_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Obtains and stores the final data object related to this variable.</p>
-<p>The result is stored in <code class="docutils literal notranslate"><span class="pre">self.data</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>encoding</strong> (<em>bool</em>) – Indicates if it uses full or reduced encoding when the type of the variable is
-categoric. Omitted when the variable is numeric.</p>
+<dd class="field-odd"><p><strong>spans_intercept</strong> (<em>bool</em>) – Indicates if the encoding of categorical variables spans the intercept or not.
+Omitted when the variable is numeric.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -648,8 +624,7 @@ categoric. Omitted when the variable is numeric.</p>
 <dd><p>Detemines the type of the variable.</p>
 <p>Looks for the name of the variable in <code class="docutils literal notranslate"><span class="pre">data_mask</span></code> and sets the <code class="docutils literal notranslate"><span class="pre">.kind</span></code> property to
 <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code> depending on the type of the variable.
-It also stores the result of the intermediate evaluation in <code class="docutils literal notranslate"><span class="pre">self._intermediate_data</span></code> to
-save computing time later.</p>
+It also stores the result of the intermediate evaluation in <code class="docutils literal notranslate"><span class="pre">self._intermediate_data</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>data_mask</strong> (<em>pd.DataFrame</em>) – The data frame where variables are taken from</p>
@@ -688,8 +663,15 @@ as <code class="docutils literal notranslate"><span class="pre">center(x)</span>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="formulae.terms.Call._eval_categoric">
-<span class="sig-name descname"><span class="pre">_eval_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call._eval_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call._eval_categoric" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="formulae.terms.Call.accept">
+<span class="sig-name descname"><span class="pre">accept</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">visitor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.accept"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.accept" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accept method called by a visitor.</p>
+<p>Visitors are those available in call_utils.py, and are used to work with call terms.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formulae.terms.Call.eval_categoric">
+<span class="sig-name descname"><span class="pre">eval_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spans_intercept</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.eval_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.eval_categoric" title="Permalink to this definition">¶</a></dt>
 <dd><p>Finishes evaluation of categoric call.</p>
 <p>First, it checks whether the intermediate evaluation returned is ordered. If not, it
 creates a category where the levels are the observed in the variable. They are sorted
@@ -702,24 +684,38 @@ to the levels and the encoding passed.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x</strong> (<em>np.ndarray</em><em> or </em><em>pd.Series</em>) – The intermediate values of the variable.</p></li>
-<li><p><strong>encoding</strong> (<em>bool</em>) – Indicates if it uses full or reduced encoding.</p></li>
+<li><p><strong>spans_intercept</strong> (<em>bool</em>) – Indicates if the encoding of categorical variables spans the intercept or not.
+Omitted when the variable is numeric.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>result</strong> – A dictionary with keys <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;levels&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;reference&quot;</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">&quot;encoding&quot;</span></code>. They represent the result of the evaluation, the type, which is
-<code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, the levels observed in the variable, the level used as reference when
-using reduced encoding, and whether the encoding is <code class="docutils literal notranslate"><span class="pre">&quot;full&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;reduced&quot;</span></code>.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="formulae.terms.Call._eval_new_data_categoric">
-<span class="sig-name descname"><span class="pre">_eval_new_data_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call._eval_new_data_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call._eval_new_data_categoric" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="formulae.terms.Call.eval_new_data">
+<span class="sig-name descname"><span class="pre">eval_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.eval_new_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the function call with new data.</p>
+<p>This method evaluates the function call within a new data mask. If the transformation
+applied is a stateful transformation, it uses the proper object that remembers all
+parameters or settings that may have been set in a first pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data_mask</strong> (<em>pd.DataFrame</em>) – The data frame where variables are taken from</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>result</strong> – The rules for the shape of this array are the rules for <code class="docutils literal notranslate"><span class="pre">self.eval_numeric()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">self.eval_categoric()</span></code>. The first applies for numeric calls, the second for
+categoric ones.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formulae.terms.Call.eval_new_data_categoric">
+<span class="sig-name descname"><span class="pre">eval_new_data_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.eval_new_data_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.eval_new_data_categoric" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates the call with new data when the result of the call is categoric.</p>
 <p>This method also checks the levels observed in the new data frame are included within the
 set of the levels of the result of the original call If not, an error is raised.</p>
@@ -740,8 +736,8 @@ variable.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="formulae.terms.Call._eval_numeric">
-<span class="sig-name descname"><span class="pre">_eval_numeric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call._eval_numeric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call._eval_numeric" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="formulae.terms.Call.eval_numeric">
+<span class="sig-name descname"><span class="pre">eval_numeric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.eval_numeric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.eval_numeric" title="Permalink to this definition">¶</a></dt>
 <dd><p>Finishes evaluation of a numeric call.</p>
 <p>Converts the intermediate values of the call into a numpy array of shape <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">1)</span></code>,
 where <code class="docutils literal notranslate"><span class="pre">n</span></code> is the number of observations. This method is used both in <code class="docutils literal notranslate"><span class="pre">self.set_data</span></code>
@@ -760,47 +756,25 @@ evaluation, and the latter is equal to <code class="docutils literal notranslate
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="formulae.terms.Call.accept">
-<span class="sig-name descname"><span class="pre">accept</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">visitor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.accept"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.accept" title="Permalink to this definition">¶</a></dt>
-<dd><p>Accept method called by a visitor.</p>
-<p>Visitors are those available in call_utils.py, and are used to work with call terms.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="formulae.terms.Call.eval_new_data">
-<span class="sig-name descname"><span class="pre">eval_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.eval_new_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluates the function call with new data.</p>
-<p>This method evaluates the function call within a new data mask. If the transformation
-applied is a stateful transformation, it uses the proper object that remembers all
-parameters or settings that may have been set in a first pass.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_mask</strong> (<em>pd.DataFrame</em>) – The data frame where variables are taken from</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>result</strong> – The rules for the shape of this array are the rules for <code class="docutils literal notranslate"><span class="pre">self._eval_numeric()</span></code> and
-<code class="docutils literal notranslate"><span class="pre">self._eval_categoric()</span></code>. The first applies for numeric calls, the second for
-categoric ones.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>np.array</p>
-</dd>
-</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="formulae.terms.Call.labels">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">labels</span></span><a class="headerlink" href="#formulae.terms.Call.labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain labels of the columns in the design matrix associated with this Call</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Call.set_data">
-<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.set_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spans_intercept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.set_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Finishes the evaluation of the call according to its type.</p>
-<p>Evaluates the call according to its type and stores the result in <code class="docutils literal notranslate"><span class="pre">.data</span></code>. It does not
-support multi-level categoric responses yet. If <code class="docutils literal notranslate"><span class="pre">self.is_response</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code> and the
-variable is of a categoric type, this method returns a 1d array of 0-1 instead of a matrix.</p>
-<p>In practice, it just completes the evaluation that started with <code class="docutils literal notranslate"><span class="pre">self.set_type()</span></code>.</p>
+<p>It does not support multi-level categoric responses yet.
+If <code class="docutils literal notranslate"><span class="pre">self.is_response</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code> and the variable is of a categoric type, this method
+returns a 1d array of 0-1 instead of a matrix.
+# XTODO: Fix previous point
+In practice, it just completes the evaluation that started with <code class="docutils literal notranslate"><span class="pre">self.set_type()</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>encoding</strong> (<em>bool</em>) – Indicates if it uses full or reduced encoding when the type of the call is
-categoric. Omitted when the result of the call is numeric.</p>
+<dd class="field-odd"><p><strong>spans_intercept</strong> (<em>bool</em>) – Indicates if the encoding of categorical variables spans the intercept or not.
+Omitted when the variable is numeric.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -864,20 +838,7 @@ number of components in the term.</p>
 <dd><p>The values associated with the term as they go into the design matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="formulae.terms.Term.metadata">
-<span class="sig-name descname"><span class="pre">metadata</span></span><a class="headerlink" href="#formulae.terms.Term.metadata" title="Permalink to this definition">¶</a></dt>
-<dd><p>Metadata associated with the term. If <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code> it holds additional
-information in the component <code class="docutils literal notranslate"><span class="pre">.data</span></code> attribute. If <code class="docutils literal notranslate"><span class="pre">&quot;interaction&quot;</span></code>, the keys are
-the name of the components and the values are dictionaries holding the metadata.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>dict</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -885,8 +846,8 @@ the name of the components and the values are dictionaries holding the metadata.
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formulae.terms.Term.kind">
 <span class="sig-name descname"><span class="pre">kind</span></span><a class="headerlink" href="#formulae.terms.Term.kind" title="Permalink to this definition">¶</a></dt>
-<dd><p>Indicates the type of the term. Can be one of <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, or
-<code class="docutils literal notranslate"><span class="pre">&quot;interaction&quot;</span></code>.</p>
+<dd><p>Indicates the type of the term.
+Can be one of <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;interaction&quot;</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>string</p>
@@ -925,8 +886,8 @@ is no <code class="docutils literal notranslate"><span class="pre">:</span></cod
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;x</span> <span class="pre">:</span> <span class="pre">x&quot;</span></code> equals to <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;x</span> <span class="pre">:</span> <span class="pre">y&quot;</span></code> is the interaction between <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;y&quot;</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">x:(y:z)&quot;</span></code> equals to just <code class="docutils literal notranslate"><span class="pre">&quot;x:y:z&quot;</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">(x:y):u&quot;</span></code> equals to just <code class="docutils literal notranslate"><span class="pre">&quot;x:y:u&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x:(y:z)&quot;</span></code> equals to <code class="docutils literal notranslate"><span class="pre">&quot;x:y:z&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(x:y):u&quot;</span></code> equals to <code class="docutils literal notranslate"><span class="pre">&quot;x:y:u&quot;</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;(x:y):(u</span> <span class="pre">+</span> <span class="pre">v)&quot;</span></code> equals to <code class="docutils literal notranslate"><span class="pre">&quot;x:y:u</span> <span class="pre">+</span> <span class="pre">x:y:v&quot;</span></code></p></li>
 </ul>
 </dd></dl>
@@ -949,7 +910,7 @@ interaction. It is a shortcut for <code class="docutils literal notranslate"><sp
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Term.__or__">
 <span class="sig-name descname"><span class="pre">__or__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.__or__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.__or__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Group-specific operator. Creates group-specific intercept.</p>
+<dd><p>Group-specific operator. Creates a group-specific term.</p>
 <p>Intercepts are implicitly added.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;x|g&quot;</span></code> equals to <code class="docutils literal notranslate"><span class="pre">&quot;(1|g)</span> <span class="pre">+</span> <span class="pre">(x|g)&quot;</span></code></p></li>
@@ -1028,15 +989,28 @@ appropiately.</p>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="formulae.terms.Term.labels">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">labels</span></span><a class="headerlink" href="#formulae.terms.Term.labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain labels of the columns in the design matrix associated with this Term</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="formulae.terms.Term.levels">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">levels</span></span><a class="headerlink" href="#formulae.terms.Term.levels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain levels of the columns in the design matrix associated with this Term</p>
+<p>It is like .labels, without the name of the terms</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Term.set_data">
-<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.set_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spans_intercept</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.set_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Obtains and stores the final data object related to this term.</p>
 <p>Calls <code class="docutils literal notranslate"><span class="pre">.set_data()</span></code> method on each component in the term. Then, it uses the <code class="docutils literal notranslate"><span class="pre">.data</span></code>
 attribute on each of them to build <code class="docutils literal notranslate"><span class="pre">self.data</span></code> and <code class="docutils literal notranslate"><span class="pre">self.metadata</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>encoding</strong> (<em>list</em><em> or </em><em>dict</em>) – Indicates if it uses full or reduced encoding when the type of the variable is
+<dd class="field-odd"><p><strong>encoding</strong> (<em>dict</em><em> or </em><em>bool</em>) – Indicates if it uses full or reduced encoding when the type of the variable is
 categoric.</p>
 </dd>
 </dl>
@@ -1057,6 +1031,13 @@ the evaluation environment.</p>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="formulae.terms.Term.spans_intercept">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spans_intercept</span></span><a class="headerlink" href="#formulae.terms.Term.spans_intercept" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does this term spans the intercept?</p>
+<p>True if all the components span the intercept</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1097,56 +1078,37 @@ effects for each level of the grouping factor”</p>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm.factor_type">
-<span class="sig-name descname"><span class="pre">factor_type</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.factor_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>The type assigned to the grouping factor <code class="docutils literal notranslate"><span class="pre">factor</span></code>. This is useful for when we need to
-create a design matrix for new a new data set.</p>
+<dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm.data">
+<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>The values associated with the term as they go into the design matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>pandas.core.dtypes.dtypes.CategoricalDtype</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm.eval">
-<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#GroupSpecificTerm.eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.eval" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluates term.</p>
-<p>First, it evaluates the variable in <code class="docutils literal notranslate"><span class="pre">self.factor</span></code>, creates an oredered categorical data
-type using its levels, and stores it in <code class="docutils literal notranslate"><span class="pre">self.factor_type</span></code>. Then, it obtains the
-design matrix for <code class="docutils literal notranslate"><span class="pre">self.expr</span></code> to finally produce the matrix for the group specific
-effect.</p>
-<p>The output contains the following information</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code>: The kind of the <code class="docutils literal notranslate"><span class="pre">expr</span></code> term.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;Xi&quot;</span></code>: The design matrix for the <code class="docutils literal notranslate"><span class="pre">expr</span></code> term.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;Ji&quot;</span></code>: The design matrix for the <code class="docutils literal notranslate"><span class="pre">factor</span></code> term.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;Zi&quot;</span></code>: The design matrix for the group specific term.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;groups&quot;</span></code>: The groups present in <code class="docutils literal notranslate"><span class="pre">factor</span></code>.</p></li>
-</ul>
-<p>If <code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, the output dictionary also contains</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;levels&quot;</span></code>: Levels of the term in <code class="docutils literal notranslate"><span class="pre">expr</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;reference&quot;</span></code>: The level taken as baseline.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;encoding&quot;</span></code>: The encoding of the term, either <code class="docutils literal notranslate"><span class="pre">&quot;full&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;reduced&quot;</span></code></p></li>
-</ul>
-<p>If <code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;interaction&quot;</span></code>, the output dictionary also contains</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;terms&quot;</span></code>: Metadata for each of the components in the interaction in <code class="docutils literal notranslate"><span class="pre">expr</span></code>.</p></li>
-</ul>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm.metadata">
+<span class="sig-name descname"><span class="pre">metadata</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Metadata associated with the term. If <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code> it holds additional
+information in the component <code class="docutils literal notranslate"><span class="pre">.data</span></code> attribute. If <code class="docutils literal notranslate"><span class="pre">&quot;interaction&quot;</span></code>, the keys are
+the name of the components and the values are dictionaries holding the metadata.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>pandas.DataFrame</em>) – The data frame where variables are taken from.</p></li>
-<li><p><strong>env</strong> (<em>Environment</em>) – The environment where values and functions are taken from.</p></li>
-<li><p><strong>encoding</strong> (<em>bool</em>) – Whether to use full or reduced rank encoding when <code class="docutils literal notranslate"><span class="pre">expr</span></code> is categoric.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>out</strong> – See above.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm.kind">
+<span class="sig-name descname"><span class="pre">kind</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.kind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates the type of the term. Can be one of <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">&quot;interaction&quot;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>string</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1164,17 +1126,17 @@ corresponding to the group specific effect.</p>
 <dd class="field-odd"><p><strong>data</strong> (<em>pd.DataFrame</em>) – The data frame where variables are taken from.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>out</strong> – Same rules as in <a class="reference internal" href="#formulae.terms.GroupSpecificTerm.eval" title="formulae.terms.GroupSpecificTerm.eval"><code class="xref py py-meth docutils literal notranslate"><span class="pre">eval</span></code></a>.</p>
+<dd class="field-even"><p><strong>Zi</strong></p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm.get_name">
-<span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#GroupSpecificTerm.get_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.get_name" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Obtain string representation of the name of the term.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1211,11 +1173,11 @@ corresponding to the group specific effect.</p>
 <dt class="sig sig-object py" id="formulae.terms.Intercept.__add__">
 <span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept.__add__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept.__add__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Addition operator.</p>
-<p>Generally this operator is used to explicitly add an intercept to a model. However, there
-may be cases where the result is not a <code class="docutils literal notranslate"><span class="pre">Model</span></code>, or does not contain an intercept.</p>
+<p>Generally this operator is used to explicitly add an intercept to a model. There may be
+cases where the result is not a <code class="docutils literal notranslate"><span class="pre">Model</span></code>, or does not contain an intercept.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;1</span> <span class="pre">+</span> <span class="pre">0&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;1</span> <span class="pre">+</span> <span class="pre">(-1)&quot;</span></code> return an empty model.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;1</span> <span class="pre">+</span> <span class="pre">1&quot;</span></code> returns an intercept.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;1</span> <span class="pre">+</span> <span class="pre">1&quot;</span></code> returns a single intercept.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;1</span> <span class="pre">+</span> <span class="pre">x&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;1</span> <span class="pre">+</span> <span class="pre">(x|g)&quot;</span></code> returns a model with both the term and the intercept.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;1</span> <span class="pre">+</span> <span class="pre">(x</span> <span class="pre">+</span> <span class="pre">y)&quot;</span></code> adds an intercept to the model given by <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p></li>
 </ul>
@@ -1224,9 +1186,10 @@ may be cases where the result is not a <code class="docutils literal notranslate
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Intercept.__or__">
 <span class="sig-name descname"><span class="pre">__or__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept.__or__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept.__or__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Group-specific operator. Creates group-specific intercept.</p>
+<dd><p>Group-specific interaction-like operator. Creates a group-specific intercept.</p>
 <p>This operation is usually surrounded by parenthesis. It is not actually required. They
-are always used because <code class="docutils literal notranslate"><span class="pre">|</span></code> has lower precedence that the other common operators.</p>
+are always used because <code class="docutils literal notranslate"><span class="pre">|</span></code> has lower precedence than any of the other operators except
+<code class="docutils literal notranslate"><span class="pre">~</span></code>.</p>
 <p>This operator is distributed over the right-hand side, which means <code class="docutils literal notranslate"><span class="pre">(1|g</span> <span class="pre">+</span> <span class="pre">h)</span></code> is
 equivalent to <code class="docutils literal notranslate"><span class="pre">(1|g)</span> <span class="pre">+</span> <span class="pre">(1|h)</span></code>.</p>
 </dd></dl>
@@ -1317,7 +1280,7 @@ with <code class="docutils literal notranslate"><span class="pre">+</span></code
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Response.set_data">
-<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Response.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Response.set_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Response.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Response.set_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set data of the response term.</p>
 </dd></dl>
 
@@ -1526,8 +1489,6 @@ group specific terms as appropriate.</p>
 <dt class="sig sig-object py" id="formulae.terms.Model.eval">
 <span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.eval" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates terms in the model.</p>
-<p>Only common effects are evaluated here. Group specific terms are evaluated individually
-in <a class="reference internal" href="#formulae.matrices.GroupEffectsMatrix" title="formulae.matrices.GroupEffectsMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupEffectsMatrix</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1535,20 +1496,13 @@ in <a class="reference internal" href="#formulae.matrices.GroupEffectsMatrix" ti
 <li><p><strong>env</strong> (<em>Environment</em>) – The environment where values and functions are taken from.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>result</strong> – A dictionary where keys are the name of the terms and the values are their <code class="docutils literal notranslate"><span class="pre">.data</span></code>
-attribute.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Model.set_types">
 <span class="sig-name descname"><span class="pre">set_types</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.set_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.set_types" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the type of the common terms in the model.</p>
+<dd><p>Set the type of the terms in the model.</p>
 <p>Calls <code class="docutils literal notranslate"><span class="pre">.set_type()</span></code> method on term in the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1748,7 +1702,7 @@ proceeds to evaluate the call it represents.</p>
               
               
               <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="api_reference.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -1764,19 +1718,19 @@ proceeds to evaluate the call it represents.</p>
       </div>
     </div>
   
-  <script src="_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
-<footer class="footer mt-5 mt-md-0">
+    <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2021, The developers of Bambi.<br>
+    &copy; Copyright 2022, The developers of Bambi.<br>
 </p>
     </div>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.1.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
 </p>
     </div>
     
