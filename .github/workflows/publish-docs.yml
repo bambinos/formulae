@@ -10,8 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
-      matrix:
-        fail-fast: false
+      fail-fast: false
     steps:
       - uses: r-lib/actions/setup-pandoc@v1
       - name: Checkout Source
