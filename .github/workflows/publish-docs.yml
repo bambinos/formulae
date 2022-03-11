@@ -11,8 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.10]
-      fail-fast: false
+        fail-fast: false
     steps:
       - uses: r-lib/actions/setup-pandoc@v1
       - name: Checkout Source
@@ -22,6 +21,8 @@ jobs:
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
 
       - name: Install Dependencies
         run: |
