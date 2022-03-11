@@ -8,6 +8,8 @@
 - Added two aliases `T` and `S` that are shorthands of `C(var, Treatment)` and `C(var, Sum)` respectively.
 - DesignVector, CommonEffectsMatrix and GroupEffectsMatrix now retrieve their values when passed to `np.array()` and `np.asarray()`.
 - Add `poly()` stateful transform.
+- `na_action` in `design_matrices()` can be `"pass"` which means not to drop or raise error about missing values. It just keeps them (#69)
+- `design_matrices()` gains a new argument `extra_namespace`. It allows us to pass a dictionary of transformations that are made available in the environment where the formula is evaluated (#70)
 
 ### Maintenance and fixes
 
