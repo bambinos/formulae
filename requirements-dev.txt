@@ -1,7 +1,10 @@
 black==22.1.0
-nbsphinx>=0.4.2
+docutils
+ipython
+jupyter-sphinx
+nbsphinx
 pydata-sphinx-theme>=0.6.3
 pylint==2.10.2
 pytest-cov>=2.6.1
 pytest==6.2.5
-sphinx>=4.1.1
+Sphinx>=1.8.3
