@@ -1,6 +1,16 @@
 # Change Log
 
-## v0.3.0 Unreleased
+### 0.X.X Unreleased
+
+### New features
+
+### Maintenance and fixes
+
+### Documentation
+
+### Deprecation
+
+## v0.3.0
 
 ### New features
 
