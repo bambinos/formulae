@@ -12,11 +12,6 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
-
-sys.path.insert(0, os.path.abspath("../"))
-
 from formulae import __version__
 
 
@@ -27,9 +22,9 @@ copyright = "2022, The developers of Bambi"
 author = "The developers of Bambi"
 
 # The short X.Y version
-version = __version__
+version = str(__version__)
 # The full version, including alpha/beta/rc tags
-release = __version__
+release = str(__version__)
 
 
 # -- General configuration ---------------------------------------------------
