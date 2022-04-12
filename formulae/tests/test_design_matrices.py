@@ -7,7 +7,7 @@ import pandas as pd
 
 from formulae.matrices import (
     design_matrices,
-    ResponseVector,
+    ResponseMatrix,
     CommonEffectsMatrix,
     GroupEffectsMatrix,
 )
@@ -494,26 +494,26 @@ def test_interactions_in_group_specific(pixel):
 def test_prop_response(beetle):
     response = design_matrices("prop(y, n) ~ x", beetle).response
     assert response.kind == "proportion"
-    assert response.design_vector.shape == (8, 2)
-    assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
+    assert response.design_matrix.shape == (8, 2)
+    assert (np.less_equal(response.design_matrix[:, 0], response.design_matrix[:, 1])).all()
 
     # Admit integer values for 'n'
     response = design_matrices("prop(y, 62) ~ x", beetle).response
     assert response.kind == "proportion"
-    assert response.design_vector.shape == (8, 2)
-    assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
+    assert response.design_matrix.shape == (8, 2)
+    assert (np.less_equal(response.design_matrix[:, 0], response.design_matrix[:, 1])).all()
 
     # Use aliases
     response = design_matrices("proportion(y, n) ~ x", beetle).response
     assert response.kind == "proportion"
-    assert response.design_vector.shape == (8, 2)
-    assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
+    assert response.design_matrix.shape == (8, 2)
+    assert (np.less_equal(response.design_matrix[:, 0], response.design_matrix[:, 1])).all()
 
     # Use aliases
     response = design_matrices("p(y, n) ~ x", beetle).response
     assert response.kind == "proportion"
-    assert response.design_vector.shape == (8, 2)
-    assert (np.less_equal(response.design_vector[:, 0], response.design_vector[:, 1])).all()
+    assert response.design_matrix.shape == (8, 2)
+    assert (np.less_equal(response.design_matrix[:, 0], response.design_matrix[:, 1])).all()
 
 
 def test_prop_response_fails():
@@ -549,46 +549,34 @@ def test_categoric_responses():
 
     # Multi-level response. Response is a design matrix of dummies that span the intercept.
     response = design_matrices("y1 ~ x", data).response
-    assert list(np.unique(response.design_vector)) == [0, 1]
+    assert list(np.unique(response.design_matrix)) == [0, 1]
     assert response.levels == ["A", "B", "C"]
-    assert response.binary is False
-    assert response.success is None
 
     # Multi-level response, explicitly converted to binary
     response = design_matrices("y1['A'] ~ x", data).response
-    assert list(np.unique(response.design_vector)) == [0, 1]
-    assert response.levels is None  # when binary, levels is None by design
-    assert response.binary is True
-    assert response.success == "A"
+    assert list(np.unique(response.design_matrix)) == [0, 1]
+    assert response.levels is None
 
     # Response has two levels but it is not flagged as binary because it was not converted to that
     # XTODO: Revisit if this logic is fine
     response = design_matrices("y2 ~ x", data).response
-    assert list(np.unique(response.design_vector)) == [0, 1]
+    assert list(np.unique(response.design_matrix)) == [0, 1]
     assert response.levels == ["A", "B"]
-    assert response.binary is False
-    assert response.success is None
 
     # Binary response with explicit level
     response = design_matrices("y2['B'] ~ x", data).response
-    assert list(np.unique(response.design_vector)) == [0, 1]
+    assert list(np.unique(response.design_matrix)) == [0, 1]
     assert response.levels is None
-    assert response.binary is True
-    assert response.success == "B"
 
     # Binary response with explicit level passed as identifier
     response = design_matrices("y2[B] ~ x", data).response
-    assert list(np.unique(response.design_vector)) == [0, 1]
+    assert list(np.unique(response.design_matrix)) == [0, 1]
     assert response.levels is None
-    assert response.binary is True
-    assert response.success == "B"
 
     # Binary response with explicit level with spaces
     response = design_matrices("y3['Bye bye'] ~ x", data).response
-    assert list(np.unique(response.design_vector)) == [0, 1]
+    assert list(np.unique(response.design_matrix)) == [0, 1]
     assert response.levels is None
-    assert response.binary is True
-    assert response.success == "Bye bye"
 
     # Users trying to use nested brackets (WHY?)
     with pytest.raises(ParseError, match=re.escape("Are you using nested brackets? Why?")):
@@ -913,7 +901,7 @@ def test_special_funciton_calls(data):
 def test_design_matrices_multiple_assignment(data):
     response, common, group = design_matrices("y ~ x1 + (x1|x3)", data)
 
-    assert isinstance(response, ResponseVector)
+    assert isinstance(response, ResponseMatrix)
     assert isinstance(common, CommonEffectsMatrix)
     assert isinstance(group, GroupEffectsMatrix)
 
@@ -959,50 +947,46 @@ def test_response_as_array(data):
 def test_response_repr_and_str(data):
     response, _, _ = design_matrices("y ~ x1", data)
     text = (
-        "ResponseVector  \n"
+        "ResponseMatrix  \n"
         "  name: y\n"
         "  kind: numeric\n"
-        "  length: 20\n\n"
-        "To access the actual design vector do 'np.array(this_obj)'"
+        "  shape: (20,)\n\n"
+        "To access the actual design matrix do 'np.array(this_obj)'"
     )
     assert str(response) == text
     assert repr(response) == text
 
     response, _, _ = design_matrices("g ~ x1", data)
     text = (
-        "ResponseVector  \n"
+        "ResponseMatrix  \n"
         "  name: g\n"
         "  kind: categoric\n"
-        "  length: 20\n"
-        "  binary: False\n"
+        "  shape: (20, 2)\n"
         "  levels: ['A', 'B']\n\n"
-        "To access the actual design vector do 'np.array(this_obj)'"
+        "To access the actual design matrix do 'np.array(this_obj)'"
     )
     assert str(response) == text
     assert repr(response) == text
 
     response, _, _ = design_matrices("g ~ x1", data)
     text = (
-        "ResponseVector  \n"
+        "ResponseMatrix  \n"
         "  name: g\n"
         "  kind: categoric\n"
-        "  length: 20\n"
-        "  binary: False\n"
+        "  shape: (20, 2)\n"
         "  levels: ['A', 'B']\n\n"
-        "To access the actual design vector do 'np.array(this_obj)'"
+        "To access the actual design matrix do 'np.array(this_obj)'"
     )
     assert str(response) == text
     assert repr(response) == text
 
     response, _, _ = design_matrices("g[A] ~ x1", data)
     text = (
-        "ResponseVector  \n"
+        "ResponseMatrix  \n"
         "  name: g\n"
         "  kind: categoric\n"
-        "  length: 20\n"
-        "  binary: True\n"
-        "  success: A\n\n"
-        "To access the actual design vector do 'np.array(this_obj)'"
+        "  length: shape: (20,)\n\n"
+        "To access the actual design matrix do 'np.array(this_obj)'"
     )
     str(response) == text
 

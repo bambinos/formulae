@@ -16,7 +16,7 @@ These objects are not intended to be used by end users. But developers working w
 need some familiarity with them, especially if you want to take advantage of features like obtaining
 a design matrix from an existing design but evaluated with new data.
 
-.. autoclass:: formulae.matrices.ResponseVector
+.. autoclass:: formulae.matrices.ResponseMatrix
   :members:
   :private-members:
   :special-members: __getitem__
