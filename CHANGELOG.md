@@ -10,6 +10,19 @@
 
 ### Deprecation
 
+### v0.3.1 Unreleased
+
+### Maintenance and fixes
+
+- Renamed `ResponseVector` to `ResponseMatrix` (#71)
+- Renamed `design_vector` to `design_matrix` in `ResponseMatrix`(#71)
+- Updated docstrings in `formulae/matrices.py` (#71)
+
+### Deprecation
+
+- Removed `binary` and `success` attributes from `ResponseMatrix` (#71)
+
+
 ## v0.3.0
 
 ### New features
