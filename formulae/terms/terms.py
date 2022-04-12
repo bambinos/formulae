@@ -548,7 +548,7 @@ class Term:
 
         It is like .labels, without the name of the terms
         """
-        if self.kind is None or self.kind == "numeric":
+        if self.kind is None or self.kind in ["numeric", "proportion"]:
             levels = None
         elif self.kind == "interaction":
             levels = []
@@ -559,7 +559,8 @@ class Term:
                 levels = [", ".join(str_tuple) for str_tuple in list(itertools.product(*levels))]
         else:
             component = self.components[0]
-            if component.is_response and component.reference is not None:
+            # Response created with `y[level]`
+            if hasattr(component, "reference") and component.reference is not None:
                 levels = None
             else:
                 levels = component.contrast_matrix.labels

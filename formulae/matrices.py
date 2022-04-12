@@ -27,8 +27,8 @@ class DesignMatrices:
 
     Attributes
     ----------
-    response: ResponseVector
-        The response in the model. Access its values with ``self.response.design_vector``. It is
+    response: ResponseMatrix
+        The response in the model. Access its values with ``self.response.design_matrix``. It is
         ``None`` if there is no response term in the model.
     common: CommonEffectsMatrix
         The common effects (a.k.a. fixed effects) in the model. The design matrix can be accessed
@@ -54,7 +54,7 @@ class DesignMatrices:
         self.model.eval(data, env)
 
         if self.model.response:
-            self.response = ResponseVector(self.model.response)
+            self.response = ResponseMatrix(self.model.response)
             self.response.evaluate(data, env)
 
         if self.model.common_terms:
@@ -74,7 +74,7 @@ class DesignMatrices:
     def __str__(self):
         entries = []
         if self.response:
-            entries += [glue_and_align("Response: ", self.response.design_vector.shape, 30)]
+            entries += [glue_and_align("Response: ", self.response.design_matrix.shape, 30)]
 
         if self.common:
             entries += [glue_and_align("Common: ", self.common.design_matrix.shape, 30)]
@@ -93,8 +93,8 @@ class DesignMatrices:
         return msg
 
 
-class ResponseVector:
-    """Representation of the respose vector of a model.
+class ResponseMatrix:
+    """Representation of the respose matrix of a model.
 
     Parameters
     ----------
@@ -108,8 +108,8 @@ class ResponseVector:
 
     Attributes
     ----------
-    design_vector: np.array
-        A 1-dimensional numpy array containing the values of the response.
+    design_matrix: np.array
+        A 2-dimensional numpy array containing the values of the response.
     name: string
         The name of the response term.
     kind: string
@@ -119,33 +119,23 @@ class ResponseVector:
     def __init__(self, term):
         self.term = term
         self.name = self.term.term.name
-        self.binary = None  # Not None for categorical variables (either True or False)
         self.data = None
-        self.design_vector = None
+        self.design_matrix = None
         self.env = None
         self.kind = None
         self.levels = None  # Not None for categorical variables
-        self.success = None  # Not None for binary categorical variables
 
     def evaluate(self, data, env):
         """Evaluates ``self.term`` inside the data mask provided by ``data`` and
-        updates ``self.design_vector`` and ``self.name``.
+        updates ``self.design_matrix`` and ``self.name``.
         """
         self.data = data
         self.env = env
         self.term.set_type(self.data, self.env)
         self.term.set_data()
         self.kind = self.term.term.kind
-        self.design_vector = self.term.term.data
-
-        if self.kind == "categoric":
-            # NOTE: Why we have self.design_vector.ndim == 1?
-            #       Terms are flagged as binary only when built through response[level].
-            #       Does it make sense???
-            self.binary = self.design_vector.ndim == 1 and len(np.unique(self.design_vector)) == 2
-            self.levels = self.term.term.levels
-            if self.binary:
-                self.success = self.term.term.components[0].reference
+        self.design_matrix = self.term.term.data
+        self.levels = self.term.term.levels
 
     def evaluate_new_data(self, data):
         if self.kind == "proportion":
@@ -153,12 +143,12 @@ class ResponseVector:
         raise ValueError("Can't evaluate response term with kind different to 'proportion'")
 
     def as_dataframe(self):
-        """Returns ``self.design_vector`` as a pandas.DataFrame."""
-        data = pd.DataFrame(self.design_vector, columns=self.term.term.labels)
+        """Returns ``self.design_matrix`` as a pandas.DataFrame."""
+        data = pd.DataFrame(self.design_matrix, columns=self.term.term.labels)
         return data
 
     def __array__(self):
-        return self.design_vector
+        return self.design_matrix
 
     def __repr__(self):
         return self.__str__()
@@ -167,17 +157,13 @@ class ResponseVector:
         entries = [
             f"name: {self.name}",
             f"kind: {self.kind}",
-            f"length: {len(self.design_vector)}",
+            f"shape: {self.design_matrix.shape}",
         ]
-        if self.kind == "categoric":
-            entries += [f"binary: {self.binary}"]
-            if self.binary:
-                entries += [f"success: {self.success}"]
-            else:
-                entries += [f"levels: {self.levels}"]
+        if self.levels is not None:
+            entries += [f"levels: {self.levels}"]
         msg = (
-            f"ResponseVector{wrapify(spacify(multilinify(entries, '')))}\n\n"
-            "To access the actual design vector do 'np.array(this_obj)'"
+            f"ResponseMatrix{wrapify(spacify(multilinify(entries, '')))}\n\n"
+            "To access the actual design matrix do 'np.array(this_obj)'"
         )
         return msg
 

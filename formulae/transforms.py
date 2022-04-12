@@ -79,8 +79,7 @@ def T(data, ref=None, levels=None):
 
     It is a shorthand for C(x, Treatment)
     """
-    contrast = Treatment(ref)
-    return CategoricalBox(data, contrast, levels)
+    return CategoricalBox(data, Treatment(ref), levels)
 
 
 def binary(x, success=None):
