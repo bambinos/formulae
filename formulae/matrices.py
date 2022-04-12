@@ -13,29 +13,29 @@ _log = logging.getLogger("formulae")
 
 
 class DesignMatrices:
-    """A wrapper of the response, the common and group specific effects.
+    """A wrapper of the response, the common, and group specific effects.
 
     Parameters
     ----------
 
     model : Model
         The model description, the result of calling ``model_description``.
-    data: pandas.DataFrame
+    data : pandas.DataFrame
         The data frame where variables are taken from.
-    env: Environment
+    env : Environment
         The environment where values and functions are taken from.
 
     Attributes
     ----------
-    response: ResponseMatrix
+    response : ResponseMatrix
         The response in the model. Access its values with ``self.response.design_matrix``. It is
         ``None`` if there is no response term in the model.
-    common: CommonEffectsMatrix
+    common : CommonEffectsMatrix
         The common effects (a.k.a. fixed effects) in the model. The design matrix can be accessed
         with ``self.common.design_matrix``. The submatrix for a term is accessed via
         ``self.common[term_name]``. It is ``None`` if there are no common terms in the
         model.
-    group: GroupEffectsMatrix
+    group : GroupEffectsMatrix
         The group specific effects (a.k.a. random effects) in the model. The design matrix can be
         accessed with ``self.group.design_matrix``. The submatrix for a term is accessed via
         ``self.group[term_name]``. It is ``None`` if there are no group specific terms in the
@@ -98,22 +98,17 @@ class ResponseMatrix:
 
     Parameters
     ----------
-
     term : Response
         The term that represents the response in the model.
-    data: pandas.DataFrame
-        The data frame where variables are taken from.
-    env: Environment
-        The environment where values and functions are taken from.
 
     Attributes
     ----------
-    design_matrix: np.array
+    design_matrix : np.array
         A 2-dimensional numpy array containing the values of the response.
-    name: string
+    name : string
         The name of the response term.
-    kind: string
-        Either ``"numeric"`` or ``"categoric"``.
+    kind : string
+        The kind of the response. Can be ``"numeric"``, ``"categoric"`` or ``"proportion"`.
     """
 
     def __init__(self, term):
@@ -128,6 +123,14 @@ class ResponseMatrix:
     def evaluate(self, data, env):
         """Evaluates ``self.term`` inside the data mask provided by ``data`` and
         updates ``self.design_matrix`` and ``self.name``.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            The data frame where variables are taken from.
+        env : Environment
+            The environment where values and functions are taken from.
+
         """
         self.data = data
         self.env = env
@@ -173,27 +176,21 @@ class CommonEffectsMatrix:
 
     Parameters
     ----------
-
     terms : list
-        A ...
-    data: pandas.DataFrame
-        The data frame where variables are taken from.
-    env: Environment
-        The environment where values and functions are taken from.
+        A list of ``Term`` objects.
+
 
     Attributes
     ----------
-    design_matrix: np.array
+    design_matrix : np.array
         A 2-dimensional numpy array containing the values of the design matrix.
-    evaluated: bool
+    evaluated : bool
         Indicates if the terms have been evaluated at least once. The terms must have been evaluated
         before calling ``self.evaluate_new_data()`` because we must know the kind of each term
         to correctly handle the new data passed and the terms here.
-    terms_info: dict
-        A dictionary that holds information related to each of the common specific terms, such as
-        ``"cols"``, ``"kind"``, and ``"labels"``. If ``"kind"`` is ``"categoric"``, it also
-        contains ``"groups"``, ``"encoding"``, ``"levels"``, and ``"reference"``.
-        The keys are given by the term names.
+    terms : dict
+        A dictionary that holds all the terms passed at instantiation. The keys are given by the
+        term names.
     """
 
     def __init__(self, terms):
@@ -215,9 +212,9 @@ class CommonEffectsMatrix:
 
         Parameters
         ----------
-        data: pandas.DataFrame
+        data : pandas.DataFrame
             The data frame where variables are taken from
-        env: Environment
+        env : Environment
             The environment where values and functions are taken from.
         """
         self.data = data
@@ -244,12 +241,12 @@ class CommonEffectsMatrix:
 
         Parameters
         ----------
-        data: pandas.DataFrame
+        data : pandas.DataFrame
             The data frame where variables are taken from
 
         Returns
-        ----------
-        new_instance: CommonEffectsMatrix
+        -------
+        new_instance : CommonEffectsMatrix
             A new instance of ``CommonEffectsMatrix`` whose design matrix is obtained with the
             values in the new data set.
         """
@@ -276,12 +273,12 @@ class CommonEffectsMatrix:
 
         Parameters
         ----------
-        term: string
+        term : string
             The name of the term.
 
         Returns
         ----------
-        matrix: np.array
+        matrix : np.array
             A 2-dimensional numpy array that represents the sub-matrix corresponding to the
             term passed.
         """
@@ -321,24 +318,17 @@ class GroupEffectsMatrix:
     ----------
     terms : list
         A list of ``GroupSpecificTerm`` objects.
-    data: pandas.DataFrame
-        The data frame where variables are taken from.
-    env: Environment
-        The environment where values and functions are taken from.
 
     Attributes
     ----------
-    design_matrix: np.array
+    design_matrix : np.array
         A 2 dimensional numpy array with the values of the design matrix.
-    evaluated: bool
+    evaluated : bool
         Indicates if the terms have been evaluated at least once. The terms must have been evaluated
         before calling ``self.evaluate_new_data()`` because we must know the kind of each term
         to correctly handle the new data passed and the terms here.
-    terms_info: dict
-        A dictionary that holds information related to each of the group specific terms, such as
-        the matrices ``"Xi"`` and ``"Ji"``, ``"cols"``, ``"kind"``, and ``"labels"``. If
-        ``"kind"`` is ``"categoric"``, it also contains ``"groups"``, ``"encoding"``, ``"levels"``,
-        and ``"reference"``. The keys are given by the term names.
+    terms : dict
+        A dictionary that holds all the group specific terms. The keys are given by the term names.
     """
 
     def __init__(self, terms):
@@ -362,9 +352,9 @@ class GroupEffectsMatrix:
 
         Parameters
         ----------
-        data: pandas.DataFrame
+        data : pandas.DataFrame
             The data frame where variables are taken from
-        env: Environment
+        env : Environment
             The environment where values and functions are taken from.
         """
         self.data = data
@@ -393,12 +383,12 @@ class GroupEffectsMatrix:
 
         Parameters
         ----------
-        data: pandas.DataFrame
+        data : pandas.DataFrame
             The data frame where variables are taken from
 
         Returns
-        ----------
-        new_instance: GroupEffectsMatrix
+        -------
+        new_instance : GroupEffectsMatrix
             A new instance of ``GroupEffectsMatrix`` whose design matrix is obtained with the values
             in the new data set.
         """
@@ -425,7 +415,7 @@ class GroupEffectsMatrix:
 
         Returns
         ----------
-        matrix: np.array
+        matrix : np.array
             A 2-dimensional numpy array that represents the sub-matrix corresponding to the
             term passed.
         """
@@ -463,23 +453,23 @@ def design_matrices(formula, data, na_action="drop", env=0, extra_namespace=None
     ----------
     formula : string
         A model formula.
-    data: pandas.DataFrame
+    data : pandas.DataFrame
         The data frame where variables in the formula are taken from.
-    na_action: string
+    na_action : string
         Describes what to do with missing values in ``data``. ``"drop"`` means to drop
         all rows with a missing value, ``"error"`` means to raise an error,
         ``"pass"`` means to to keep all. Defaults to ``"drop"``.
-    env: integer
+    env : integer
         The number of environments we walk up in the stack starting from the function's caller
         to capture the environment where formula is evaluated. Defaults to 0 which means
         the evaluation environment is the environment where ``design_matrices`` is called.
-    extra_namespace: dict
+    extra_namespace : dict
         Additional user supplied transformations to include in the environment where the formula
         is evaluated. Defaults to ``None``.
 
     Returns
-    ----------
-    design: DesignMatrices
+    -------
+    design : DesignMatrices
         An instance of DesignMatrices that contains the design matrice(s) described by
         ``formula``.
     """
@@ -572,6 +562,3 @@ def glue_and_align(key, value, width):
         return key + value.rjust(width - key_n)
     else:
         return key + value
-
-
-# Idea: Have a TermList class instead of having to use dictionaries?
