@@ -7,26 +7,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Index &#8212; Formulae 0.3.0 documentation</title>
     
-    <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
@@ -41,7 +38,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -252,7 +249,7 @@
       <li><a href="internals.html#formulae.matrices.CommonEffectsMatrix.as_dataframe">as_dataframe() (formulae.matrices.CommonEffectsMatrix method)</a>
 
       <ul>
-        <li><a href="internals.html#formulae.matrices.ResponseVector.as_dataframe">(formulae.matrices.ResponseVector method)</a>
+        <li><a href="internals.html#formulae.matrices.ResponseMatrix.as_dataframe">(formulae.matrices.ResponseMatrix method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -292,9 +289,9 @@
       <ul>
         <li><a href="internals.html#formulae.matrices.GroupEffectsMatrix.design_matrix">(formulae.matrices.GroupEffectsMatrix attribute)</a>
 </li>
-      </ul></li>
-      <li><a href="internals.html#formulae.matrices.ResponseVector.design_vector">design_vector (formulae.matrices.ResponseVector attribute)</a>
+        <li><a href="internals.html#formulae.matrices.ResponseMatrix.design_matrix">(formulae.matrices.ResponseMatrix attribute)</a>
 </li>
+      </ul></li>
       <li><a href="api_reference.html#formulae.matrices.DesignMatrices">DesignMatrices (class in formulae.matrices)</a>
 </li>
   </ul></td>
@@ -352,7 +349,7 @@
       <ul>
         <li><a href="internals.html#formulae.matrices.GroupEffectsMatrix.evaluate">(formulae.matrices.GroupEffectsMatrix method)</a>
 </li>
-        <li><a href="internals.html#formulae.matrices.ResponseVector.evaluate">(formulae.matrices.ResponseVector method)</a>
+        <li><a href="internals.html#formulae.matrices.ResponseMatrix.evaluate">(formulae.matrices.ResponseMatrix method)</a>
 </li>
       </ul></li>
       <li><a href="internals.html#formulae.matrices.CommonEffectsMatrix.evaluate_new_data">evaluate_new_data() (formulae.matrices.CommonEffectsMatrix method)</a>
@@ -419,7 +416,7 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#formulae.matrices.ResponseVector.kind">kind (formulae.matrices.ResponseVector attribute)</a>
+      <li><a href="internals.html#formulae.matrices.ResponseMatrix.kind">kind (formulae.matrices.ResponseMatrix attribute)</a>
 
       <ul>
         <li><a href="internals.html#formulae.terms.GroupSpecificTerm.kind">(formulae.terms.GroupSpecificTerm attribute)</a>
@@ -482,7 +479,7 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#formulae.matrices.ResponseVector.name">name (formulae.matrices.ResponseVector attribute)</a>
+      <li><a href="internals.html#formulae.matrices.ResponseMatrix.name">name (formulae.matrices.ResponseMatrix attribute)</a>
 
       <ul>
         <li><a href="internals.html#formulae.terms.GroupSpecificTerm.name">(formulae.terms.GroupSpecificTerm property)</a>
@@ -506,7 +503,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#formulae.matrices.DesignMatrices.response">response (formulae.matrices.DesignMatrices attribute)</a>
 </li>
-      <li><a href="internals.html#formulae.matrices.ResponseVector">ResponseVector (class in formulae.matrices)</a>
+      <li><a href="internals.html#formulae.matrices.ResponseMatrix">ResponseMatrix (class in formulae.matrices)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -552,14 +549,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="internals.html#formulae.terms.Term">Term (class in formulae.terms)</a>
 </li>
-      <li><a href="internals.html#formulae.terms.Model.terms">terms (formulae.terms.Model property)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="internals.html#formulae.matrices.CommonEffectsMatrix.terms_info">terms_info (formulae.matrices.CommonEffectsMatrix attribute)</a>
+      <li><a href="internals.html#formulae.matrices.CommonEffectsMatrix.terms">terms (formulae.matrices.CommonEffectsMatrix attribute)</a>
 
       <ul>
-        <li><a href="internals.html#formulae.matrices.GroupEffectsMatrix.terms_info">(formulae.matrices.GroupEffectsMatrix attribute)</a>
+        <li><a href="internals.html#formulae.matrices.GroupEffectsMatrix.terms">(formulae.matrices.GroupEffectsMatrix attribute)</a>
+</li>
+        <li><a href="internals.html#formulae.terms.Model.terms">(formulae.terms.Model property)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -606,8 +601,9 @@
       </div>
     </div>
   
-    <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -618,7 +614,7 @@
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

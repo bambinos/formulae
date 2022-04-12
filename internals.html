@@ -8,26 +8,23 @@
 
     <title>Internals &#8212; Formulae 0.3.0 documentation</title>
     
-    <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
@@ -43,7 +40,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -144,7 +141,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -199,33 +196,29 @@
               <div>
                 
   <section id="internals">
-<h1>Internals<a class="headerlink" href="#internals" title="Permalink to this headline">¶</a></h1>
+<h1>Internals<a class="headerlink" href="#internals" title="Permalink to this headline">#</a></h1>
 <p>This reference provides detailed documentation for modules and classes that are important to
 developers who want to include formulae in their library.</p>
 <div class="toctree-wrapper compound">
 </div>
 <section id="matrices">
-<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">matrices</span></code><a class="headerlink" href="#matrices" title="Permalink to this headline">¶</a></h2>
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">matrices</span></code><a class="headerlink" href="#matrices" title="Permalink to this headline">#</a></h2>
 <p>These objects are not intended to be used by end users. But developers working with formulae will
 need some familiarity with them, especially if you want to take advantage of features like obtaining
 a design matrix from an existing design but evaluated with new data.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="formulae.matrices.ResponseVector">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.matrices.</span></span><span class="sig-name descname"><span class="pre">ResponseVector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#ResponseVector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.ResponseVector" title="Permalink to this definition">¶</a></dt>
-<dd><p>Representation of the respose vector of a model.</p>
+<dt class="sig sig-object py" id="formulae.matrices.ResponseMatrix">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.matrices.</span></span><span class="sig-name descname"><span class="pre">ResponseMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#ResponseMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.ResponseMatrix" title="Permalink to this definition">#</a></dt>
+<dd><p>Representation of the respose matrix of a model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>term</strong> (<a class="reference internal" href="#formulae.terms.Response" title="formulae.terms.Response"><em>Response</em></a>) – The term that represents the response in the model.</p></li>
-<li><p><strong>data</strong> (<em>pandas.DataFrame</em>) – The data frame where variables are taken from.</p></li>
-<li><p><strong>env</strong> (<em>Environment</em>) – The environment where values and functions are taken from.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>term</strong> (<a class="reference internal" href="#formulae.terms.Response" title="formulae.terms.Response"><em>Response</em></a>) – The term that represents the response in the model.</p>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="formulae.matrices.ResponseVector.design_vector">
-<span class="sig-name descname"><span class="pre">design_vector</span></span><a class="headerlink" href="#formulae.matrices.ResponseVector.design_vector" title="Permalink to this definition">¶</a></dt>
-<dd><p>A 1-dimensional numpy array containing the values of the response.</p>
+<dt class="sig sig-object py" id="formulae.matrices.ResponseMatrix.design_matrix">
+<span class="sig-name descname"><span class="pre">design_matrix</span></span><a class="headerlink" href="#formulae.matrices.ResponseMatrix.design_matrix" title="Permalink to this definition">#</a></dt>
+<dd><p>A 2-dimensional numpy array containing the values of the response.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>np.array</p>
@@ -234,8 +227,8 @@ a design matrix from an existing design but evaluated with new data.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="formulae.matrices.ResponseVector.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#formulae.matrices.ResponseVector.name" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="formulae.matrices.ResponseMatrix.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#formulae.matrices.ResponseMatrix.name" title="Permalink to this definition">#</a></dt>
 <dd><p>The name of the response term.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -245,9 +238,9 @@ a design matrix from an existing design but evaluated with new data.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="formulae.matrices.ResponseVector.kind">
-<span class="sig-name descname"><span class="pre">kind</span></span><a class="headerlink" href="#formulae.matrices.ResponseVector.kind" title="Permalink to this definition">¶</a></dt>
-<dd><p>Either <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>.</p>
+<dt class="sig sig-object py" id="formulae.matrices.ResponseMatrix.kind">
+<span class="sig-name descname"><span class="pre">kind</span></span><a class="headerlink" href="#formulae.matrices.ResponseMatrix.kind" title="Permalink to this definition">#</a></dt>
+<dd><p>The kind of the response. Can be <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code> or <a href="#id1"><span class="problematic" id="id2">``</span></a>”proportion”<a href="#id3"><span class="problematic" id="id4">`</span></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>string</p>
@@ -256,36 +249,40 @@ a design matrix from an existing design but evaluated with new data.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="formulae.matrices.ResponseVector.as_dataframe">
-<span class="sig-name descname"><span class="pre">as_dataframe</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#ResponseVector.as_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.ResponseVector.as_dataframe" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns <code class="docutils literal notranslate"><span class="pre">self.design_vector</span></code> as a pandas.DataFrame.</p>
+<dt class="sig sig-object py" id="formulae.matrices.ResponseMatrix.as_dataframe">
+<span class="sig-name descname"><span class="pre">as_dataframe</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#ResponseMatrix.as_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.ResponseMatrix.as_dataframe" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns <code class="docutils literal notranslate"><span class="pre">self.design_matrix</span></code> as a pandas.DataFrame.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="formulae.matrices.ResponseVector.evaluate">
-<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#ResponseVector.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.ResponseVector.evaluate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="formulae.matrices.ResponseMatrix.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#ResponseMatrix.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.ResponseMatrix.evaluate" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluates <code class="docutils literal notranslate"><span class="pre">self.term</span></code> inside the data mask provided by <code class="docutils literal notranslate"><span class="pre">data</span></code> and
-updates <code class="docutils literal notranslate"><span class="pre">self.design_vector</span></code> and <code class="docutils literal notranslate"><span class="pre">self.name</span></code>.</p>
+updates <code class="docutils literal notranslate"><span class="pre">self.design_matrix</span></code> and <code class="docutils literal notranslate"><span class="pre">self.name</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>pandas.DataFrame</em>) – The data frame where variables are taken from.</p></li>
+<li><p><strong>env</strong> (<em>Environment</em>) – The environment where values and functions are taken from.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.matrices.</span></span><span class="sig-name descname"><span class="pre">CommonEffectsMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">terms</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.matrices.</span></span><span class="sig-name descname"><span class="pre">CommonEffectsMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">terms</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix" title="Permalink to this definition">#</a></dt>
 <dd><p>Representation of the design matrix for the common effects of a model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>terms</strong> (<em>list</em>) – A …</p></li>
-<li><p><strong>data</strong> (<em>pandas.DataFrame</em>) – The data frame where variables are taken from.</p></li>
-<li><p><strong>env</strong> (<em>Environment</em>) – The environment where values and functions are taken from.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>terms</strong> (<em>list</em>) – A list of <code class="docutils literal notranslate"><span class="pre">Term</span></code> objects.</p>
 </dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix.design_matrix">
-<span class="sig-name descname"><span class="pre">design_matrix</span></span><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.design_matrix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">design_matrix</span></span><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.design_matrix" title="Permalink to this definition">#</a></dt>
 <dd><p>A 2-dimensional numpy array containing the values of the design matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -296,7 +293,7 @@ updates <code class="docutils literal notranslate"><span class="pre">self.design
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix.evaluated">
-<span class="sig-name descname"><span class="pre">evaluated</span></span><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.evaluated" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">evaluated</span></span><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.evaluated" title="Permalink to this definition">#</a></dt>
 <dd><p>Indicates if the terms have been evaluated at least once. The terms must have been evaluated
 before calling <code class="docutils literal notranslate"><span class="pre">self.evaluate_new_data()</span></code> because we must know the kind of each term
 to correctly handle the new data passed and the terms here.</p>
@@ -308,12 +305,10 @@ to correctly handle the new data passed and the terms here.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix.terms_info">
-<span class="sig-name descname"><span class="pre">terms_info</span></span><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.terms_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>A dictionary that holds information related to each of the common specific terms, such as
-<code class="docutils literal notranslate"><span class="pre">&quot;cols&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;labels&quot;</span></code>. If <code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, it also
-contains <code class="docutils literal notranslate"><span class="pre">&quot;groups&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;encoding&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;levels&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;reference&quot;</span></code>.
-The keys are given by the term names.</p>
+<dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix.terms">
+<span class="sig-name descname"><span class="pre">terms</span></span><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.terms" title="Permalink to this definition">#</a></dt>
+<dd><p>A dictionary that holds all the terms passed at instantiation. The keys are given by the
+term names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -323,7 +318,7 @@ The keys are given by the term names.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix.__getitem__">
-<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.__getitem__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.__getitem__" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the sub-matrix that corresponds to a given term.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -341,13 +336,13 @@ term passed.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix.as_dataframe">
-<span class="sig-name descname"><span class="pre">as_dataframe</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix.as_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.as_dataframe" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">as_dataframe</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix.as_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.as_dataframe" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns <cite>self.design_matrix</cite> as a pandas.DataFrame.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix.evaluate">
-<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.evaluate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.evaluate" title="Permalink to this definition">#</a></dt>
 <dd><p>Obtain design matrix for common effects.</p>
 <p>Evaluates <code class="docutils literal notranslate"><span class="pre">self.model</span></code> inside the data mask provided by <code class="docutils literal notranslate"><span class="pre">data</span></code> and updates
 <code class="docutils literal notranslate"><span class="pre">self.design_matrix</span></code>. This method also sets the values of <code class="docutils literal notranslate"><span class="pre">self.data</span></code> and
@@ -365,7 +360,7 @@ term passed.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.matrices.CommonEffectsMatrix.evaluate_new_data">
-<span class="sig-name descname"><span class="pre">evaluate_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix.evaluate_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.evaluate_new_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">evaluate_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#CommonEffectsMatrix.evaluate_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.CommonEffectsMatrix.evaluate_new_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluates common terms with new data and return a new instance of
 <code class="docutils literal notranslate"><span class="pre">CommonEffectsMatrix</span></code>.</p>
 <p>This method is intended to be used to obtain design matrices for new data and obtain
@@ -390,22 +385,18 @@ values in the new data set.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.matrices.GroupEffectsMatrix">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.matrices.</span></span><span class="sig-name descname"><span class="pre">GroupEffectsMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">terms</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#GroupEffectsMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.matrices.</span></span><span class="sig-name descname"><span class="pre">GroupEffectsMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">terms</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#GroupEffectsMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix" title="Permalink to this definition">#</a></dt>
 <dd><p>Representation of the design matrix for the group specific effects of a model.</p>
 <p>The sub-matrix that corresponds to a specific group effect can be accessed by
 <code class="docutils literal notranslate"><span class="pre">self[term_name]</span></code>, for example <code class="docutils literal notranslate"><span class="pre">self[&quot;1|g&quot;]</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>terms</strong> (<em>list</em>) – A list of <code class="docutils literal notranslate"><span class="pre">GroupSpecificTerm</span></code> objects.</p></li>
-<li><p><strong>data</strong> (<em>pandas.DataFrame</em>) – The data frame where variables are taken from.</p></li>
-<li><p><strong>env</strong> (<em>Environment</em>) – The environment where values and functions are taken from.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>terms</strong> (<em>list</em>) – A list of <code class="docutils literal notranslate"><span class="pre">GroupSpecificTerm</span></code> objects.</p>
 </dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formulae.matrices.GroupEffectsMatrix.design_matrix">
-<span class="sig-name descname"><span class="pre">design_matrix</span></span><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.design_matrix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">design_matrix</span></span><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.design_matrix" title="Permalink to this definition">#</a></dt>
 <dd><p>A 2 dimensional numpy array with the values of the design matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -416,7 +407,7 @@ values in the new data set.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formulae.matrices.GroupEffectsMatrix.evaluated">
-<span class="sig-name descname"><span class="pre">evaluated</span></span><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.evaluated" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">evaluated</span></span><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.evaluated" title="Permalink to this definition">#</a></dt>
 <dd><p>Indicates if the terms have been evaluated at least once. The terms must have been evaluated
 before calling <code class="docutils literal notranslate"><span class="pre">self.evaluate_new_data()</span></code> because we must know the kind of each term
 to correctly handle the new data passed and the terms here.</p>
@@ -428,12 +419,9 @@ to correctly handle the new data passed and the terms here.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="formulae.matrices.GroupEffectsMatrix.terms_info">
-<span class="sig-name descname"><span class="pre">terms_info</span></span><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.terms_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>A dictionary that holds information related to each of the group specific terms, such as
-the matrices <code class="docutils literal notranslate"><span class="pre">&quot;Xi&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Ji&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cols&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;labels&quot;</span></code>. If
-<code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, it also contains <code class="docutils literal notranslate"><span class="pre">&quot;groups&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;encoding&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;levels&quot;</span></code>,
-and <code class="docutils literal notranslate"><span class="pre">&quot;reference&quot;</span></code>. The keys are given by the term names.</p>
+<dt class="sig sig-object py" id="formulae.matrices.GroupEffectsMatrix.terms">
+<span class="sig-name descname"><span class="pre">terms</span></span><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.terms" title="Permalink to this definition">#</a></dt>
+<dd><p>A dictionary that holds all the group specific terms. The keys are given by the term names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -443,7 +431,7 @@ and <code class="docutils literal notranslate"><span class="pre">&quot;reference
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.matrices.GroupEffectsMatrix.__getitem__">
-<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#GroupEffectsMatrix.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.__getitem__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#GroupEffectsMatrix.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.__getitem__" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the sub-matrix that corresponds to a given term.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -461,7 +449,7 @@ term passed.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.matrices.GroupEffectsMatrix.evaluate">
-<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#GroupEffectsMatrix.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.evaluate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#GroupEffectsMatrix.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.evaluate" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluate group specific terms.</p>
 <p>This evaluates <code class="docutils literal notranslate"><span class="pre">self.terms</span></code> inside the data mask provided by <code class="docutils literal notranslate"><span class="pre">data</span></code> and the environment
 <code class="docutils literal notranslate"><span class="pre">env</span></code>. It updates <code class="docutils literal notranslate"><span class="pre">self.design_matrix</span></code> with the result from the evaluation of each
@@ -481,7 +469,7 @@ the columns and rows they occupy in the design matrix and the names of the colum
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.matrices.GroupEffectsMatrix.evaluate_new_data">
-<span class="sig-name descname"><span class="pre">evaluate_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#GroupEffectsMatrix.evaluate_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.evaluate_new_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">evaluate_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/matrices.html#GroupEffectsMatrix.evaluate_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.evaluate_new_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluates group specific terms with new data and return a new instance of
 <code class="docutils literal notranslate"><span class="pre">GroupEffectsMatrix</span></code>.</p>
 <p>This method is intended to be used to obtain design matrices for new data and obtain
@@ -506,14 +494,14 @@ in the new data set.</p>
 
 </section>
 <section id="terms">
-<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">terms</span></code><a class="headerlink" href="#terms" title="Permalink to this headline">¶</a></h2>
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">terms</span></code><a class="headerlink" href="#terms" title="Permalink to this headline">#</a></h2>
 <p>These are internal components of the model that are not expected to be used by end users.
 Developers won’t (normally) need to access these objects either.
 But reading this documentation may help you understand how formulae works, with both its advantages
 and disadvantages.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.terms.Variable">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">Variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">Variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable" title="Permalink to this definition">#</a></dt>
 <dd><p>Representation of a variable in a model Term.</p>
 <p>This class and <code class="docutils literal notranslate"><span class="pre">Call</span></code> are the atomic components of a model term.</p>
 <dl class="field-list simple">
@@ -529,7 +517,7 @@ response terms. Defaults to <code class="docutils literal notranslate"><span cla
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Variable.eval_categoric">
-<span class="sig-name descname"><span class="pre">eval_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spans_intercept</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.eval_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.eval_categoric" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spans_intercept</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.eval_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.eval_categoric" title="Permalink to this definition">#</a></dt>
 <dd><p>Finishes evaluation of a categoric variable.</p>
 <p>Converts the intermediate values in <code class="docutils literal notranslate"><span class="pre">x</span></code> into a numpy array of shape <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>, where
 <code class="docutils literal notranslate"><span class="pre">n</span></code> is the number of observations and <code class="docutils literal notranslate"><span class="pre">p</span></code> the number of dummy variables used in the
@@ -547,7 +535,7 @@ Omitted when the variable is numeric.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Variable.eval_new_data">
-<span class="sig-name descname"><span class="pre">eval_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.eval_new_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.eval_new_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluates the variable with new data.</p>
 <p>This method evaluates the variable within a new data mask. If this object is categorical,
 original encoding is remembered (and checked) when carrying out the new evaluation.</p>
@@ -568,7 +556,7 @@ categoric ones.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Variable.eval_new_data_categoric">
-<span class="sig-name descname"><span class="pre">eval_new_data_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.eval_new_data_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.eval_new_data_categoric" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval_new_data_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.eval_new_data_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.eval_new_data_categoric" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluates the variable with new data when variable is categoric.</p>
 <p>This method also checks the levels observed in the new data frame are included within the
 set of the levels of the original data set. If not, an error is raised.</p>
@@ -590,7 +578,7 @@ variable.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Variable.eval_numeric">
-<span class="sig-name descname"><span class="pre">eval_numeric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.eval_numeric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.eval_numeric" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval_numeric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.eval_numeric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.eval_numeric" title="Permalink to this definition">#</a></dt>
 <dd><p>Finishes evaluation of a numeric variable.</p>
 <p>Converts the intermediate values in <code class="docutils literal notranslate"><span class="pre">x</span></code> into a 1d numpy array.</p>
 <dl class="field-list simple">
@@ -602,13 +590,13 @@ variable.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.Variable.labels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">labels</span></span><a class="headerlink" href="#formulae.terms.Variable.labels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">labels</span></span><a class="headerlink" href="#formulae.terms.Variable.labels" title="Permalink to this definition">#</a></dt>
 <dd><p>Obtain labels of the columns in the design matrix associated with this Variable</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Variable.set_data">
-<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spans_intercept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.set_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spans_intercept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.set_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Obtains and stores the final data object related to this variable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -620,7 +608,7 @@ Omitted when the variable is numeric.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Variable.set_type">
-<span class="sig-name descname"><span class="pre">set_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.set_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.set_type" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/variable.html#Variable.set_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Variable.set_type" title="Permalink to this definition">#</a></dt>
 <dd><p>Detemines the type of the variable.</p>
 <p>Looks for the name of the variable in <code class="docutils literal notranslate"><span class="pre">data_mask</span></code> and sets the <code class="docutils literal notranslate"><span class="pre">.kind</span></code> property to
 <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code> depending on the type of the variable.
@@ -634,7 +622,7 @@ It also stores the result of the intermediate evaluation in <code class="docutil
 
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.Variable.var_names">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var_names</span></span><a class="headerlink" href="#formulae.terms.Variable.var_names" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var_names</span></span><a class="headerlink" href="#formulae.terms.Variable.var_names" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the name of the variable as a set.</p>
 <p>This is used to determine which variables of the data set being used are actually used in
 the model. This allows us to subset the original data set and only raise errors regarding
@@ -645,7 +633,7 @@ missing values when the missingness happens in variables used in the model.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.terms.Call">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">Call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">call</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">Call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">call</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call" title="Permalink to this definition">#</a></dt>
 <dd><p>Representation of a call in a model Term.</p>
 <p>This class and <code class="docutils literal notranslate"><span class="pre">Variable</span></code> are the atomic components of a model term.</p>
 <p>This object supports stateful transformations defined in <code class="docutils literal notranslate"><span class="pre">formulae.transforms</span></code>.
@@ -664,14 +652,14 @@ as <code class="docutils literal notranslate"><span class="pre">center(x)</span>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Call.accept">
-<span class="sig-name descname"><span class="pre">accept</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">visitor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.accept"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.accept" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">accept</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">visitor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.accept"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.accept" title="Permalink to this definition">#</a></dt>
 <dd><p>Accept method called by a visitor.</p>
 <p>Visitors are those available in call_utils.py, and are used to work with call terms.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Call.eval_categoric">
-<span class="sig-name descname"><span class="pre">eval_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spans_intercept</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.eval_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.eval_categoric" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spans_intercept</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.eval_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.eval_categoric" title="Permalink to this definition">#</a></dt>
 <dd><p>Finishes evaluation of categoric call.</p>
 <p>First, it checks whether the intermediate evaluation returned is ordered. If not, it
 creates a category where the levels are the observed in the variable. They are sorted
@@ -693,7 +681,7 @@ Omitted when the variable is numeric.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Call.eval_new_data">
-<span class="sig-name descname"><span class="pre">eval_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.eval_new_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.eval_new_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluates the function call with new data.</p>
 <p>This method evaluates the function call within a new data mask. If the transformation
 applied is a stateful transformation, it uses the proper object that remembers all
@@ -715,7 +703,7 @@ categoric ones.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Call.eval_new_data_categoric">
-<span class="sig-name descname"><span class="pre">eval_new_data_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.eval_new_data_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.eval_new_data_categoric" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval_new_data_categoric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.eval_new_data_categoric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.eval_new_data_categoric" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluates the call with new data when the result of the call is categoric.</p>
 <p>This method also checks the levels observed in the new data frame are included within the
 set of the levels of the result of the original call If not, an error is raised.</p>
@@ -737,7 +725,7 @@ variable.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Call.eval_numeric">
-<span class="sig-name descname"><span class="pre">eval_numeric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.eval_numeric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.eval_numeric" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval_numeric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.eval_numeric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.eval_numeric" title="Permalink to this definition">#</a></dt>
 <dd><p>Finishes evaluation of a numeric call.</p>
 <p>Converts the intermediate values of the call into a numpy array of shape <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">1)</span></code>,
 where <code class="docutils literal notranslate"><span class="pre">n</span></code> is the number of observations. This method is used both in <code class="docutils literal notranslate"><span class="pre">self.set_data</span></code>
@@ -758,13 +746,13 @@ evaluation, and the latter is equal to <code class="docutils literal notranslate
 
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.Call.labels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">labels</span></span><a class="headerlink" href="#formulae.terms.Call.labels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">labels</span></span><a class="headerlink" href="#formulae.terms.Call.labels" title="Permalink to this definition">#</a></dt>
 <dd><p>Obtain labels of the columns in the design matrix associated with this Call</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Call.set_data">
-<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spans_intercept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.set_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spans_intercept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.set_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Finishes the evaluation of the call according to its type.</p>
 <p>It does not support multi-level categoric responses yet.
 If <code class="docutils literal notranslate"><span class="pre">self.is_response</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code> and the variable is of a categoric type, this method
@@ -781,7 +769,7 @@ Omitted when the variable is numeric.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Call.set_type">
-<span class="sig-name descname"><span class="pre">set_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.set_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.set_type" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call.html#Call.set_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Call.set_type" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluates function and determines the type of the result of the call.</p>
 <p>Evaluates the function call and sets the <code class="docutils literal notranslate"><span class="pre">.kind</span></code> property to <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code> or
 <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code> depending on the type of the result. It also stores the intermediate result
@@ -799,7 +787,7 @@ more than once.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.Call.var_names">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var_names</span></span><a class="headerlink" href="#formulae.terms.Call.var_names" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var_names</span></span><a class="headerlink" href="#formulae.terms.Call.var_names" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the names of the variables involved in the call, not including the callee.</p>
 <p>This is used to determine which variables of the data set being used are actually used in
 the model. This allows us to subset the original data set and only raise errors regarding
@@ -821,7 +809,7 @@ including the name of the callee.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.terms.Term">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">Term</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">components</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">Term</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">components</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term" title="Permalink to this definition">#</a></dt>
 <dd><p>Representation of a model term.</p>
 <p>Terms are made of one or more components. Components are instances of <a class="reference internal" href="#formulae.terms.Variable" title="formulae.terms.Variable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variable</span></code></a> or
 <a class="reference internal" href="#formulae.terms.Call" title="formulae.terms.Call"><code class="xref py py-class docutils literal notranslate"><span class="pre">Call</span></code></a>. Terms with only one component are known as main effects and terms with more than
@@ -834,7 +822,7 @@ number of components in the term.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formulae.terms.Term.data">
-<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#formulae.terms.Term.data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#formulae.terms.Term.data" title="Permalink to this definition">#</a></dt>
 <dd><p>The values associated with the term as they go into the design matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -845,7 +833,7 @@ number of components in the term.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formulae.terms.Term.kind">
-<span class="sig-name descname"><span class="pre">kind</span></span><a class="headerlink" href="#formulae.terms.Term.kind" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">kind</span></span><a class="headerlink" href="#formulae.terms.Term.kind" title="Permalink to this definition">#</a></dt>
 <dd><p>Indicates the type of the term.
 Can be one of <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;interaction&quot;</span></code>.</p>
 <dl class="field-list simple">
@@ -857,7 +845,7 @@ Can be one of <code class="docutils literal notranslate"><span class="pre">&quot
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formulae.terms.Term.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#formulae.terms.Term.name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#formulae.terms.Term.name" title="Permalink to this definition">#</a></dt>
 <dd><p>The name of the term as it was originally written in the model formula.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -868,7 +856,7 @@ Can be one of <code class="docutils literal notranslate"><span class="pre">&quot
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Term.__add__">
-<span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.__add__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.__add__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.__add__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.__add__" title="Permalink to this definition">#</a></dt>
 <dd><p>Addition operator. Analogous to set union.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;x</span> <span class="pre">+</span> <span class="pre">x&quot;</span></code> is equal to just <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code></p></li>
@@ -879,7 +867,7 @@ Can be one of <code class="docutils literal notranslate"><span class="pre">&quot
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Term.__matmul__">
-<span class="sig-name descname"><span class="pre">__matmul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.__matmul__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.__matmul__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__matmul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.__matmul__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.__matmul__" title="Permalink to this definition">#</a></dt>
 <dd><p>Simple interaction operator.</p>
 <p>This operator is actually invoked as <code class="docutils literal notranslate"><span class="pre">:</span></code> but internally passed as <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> because there
 is no <code class="docutils literal notranslate"><span class="pre">:</span></code> operator in Python.</p>
@@ -894,7 +882,7 @@ is no <code class="docutils literal notranslate"><span class="pre">:</span></cod
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Term.__mul__">
-<span class="sig-name descname"><span class="pre">__mul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.__mul__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.__mul__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__mul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.__mul__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.__mul__" title="Permalink to this definition">#</a></dt>
 <dd><p>Full interaction operator.</p>
 <p>This operator includes both the interaction as well as the main effects involved in the
 interaction. It is a shortcut for <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">y</span> <span class="pre">+</span> <span class="pre">x:y</span></code>.</p>
@@ -909,7 +897,7 @@ interaction. It is a shortcut for <code class="docutils literal notranslate"><sp
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Term.__or__">
-<span class="sig-name descname"><span class="pre">__or__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.__or__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.__or__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__or__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.__or__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.__or__" title="Permalink to this definition">#</a></dt>
 <dd><p>Group-specific operator. Creates a group-specific term.</p>
 <p>Intercepts are implicitly added.</p>
 <ul class="simple">
@@ -923,14 +911,14 @@ interaction. It is a shortcut for <code class="docutils literal notranslate"><sp
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Term.__pow__">
-<span class="sig-name descname"><span class="pre">__pow__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.__pow__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.__pow__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__pow__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.__pow__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.__pow__" title="Permalink to this definition">#</a></dt>
 <dd><p>Power operator.</p>
 <p>It leaves the term as it is. For a power in the math sense do <code class="docutils literal notranslate"><span class="pre">I(x</span> <span class="pre">**</span> <span class="pre">n)</span></code> or <code class="docutils literal notranslate"><span class="pre">{x</span> <span class="pre">**</span> <span class="pre">n}</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Term.__sub__">
-<span class="sig-name descname"><span class="pre">__sub__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.__sub__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.__sub__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__sub__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.__sub__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.__sub__" title="Permalink to this definition">#</a></dt>
 <dd><p>Subtraction operator. Analogous to set difference.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;x</span> <span class="pre">-</span> <span class="pre">x&quot;</span></code> returns empty model.</p></li>
@@ -941,7 +929,7 @@ interaction. It is a shortcut for <code class="docutils literal notranslate"><sp
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Term.__truediv__">
-<span class="sig-name descname"><span class="pre">__truediv__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.__truediv__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.__truediv__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__truediv__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.__truediv__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.__truediv__" title="Permalink to this definition">#</a></dt>
 <dd><p>Division interaction operator.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;x</span> <span class="pre">/</span> <span class="pre">x&quot;</span></code> equals to just <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code></p></li>
@@ -955,7 +943,7 @@ interaction. It is a shortcut for <code class="docutils literal notranslate"><sp
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Term.eval_new_data">
-<span class="sig-name descname"><span class="pre">eval_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.eval_new_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.eval_new_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluates the term with new data.</p>
 <p>Calls <code class="docutils literal notranslate"><span class="pre">.eval_new_data()</span></code> method on each component in the term and combines the results
 appropiately.</p>
@@ -974,7 +962,7 @@ appropiately.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Term.get_component">
-<span class="sig-name descname"><span class="pre">get_component</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.get_component"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.get_component" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_component</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.get_component"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.get_component" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns a component by name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -991,20 +979,20 @@ appropiately.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.Term.labels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">labels</span></span><a class="headerlink" href="#formulae.terms.Term.labels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">labels</span></span><a class="headerlink" href="#formulae.terms.Term.labels" title="Permalink to this definition">#</a></dt>
 <dd><p>Obtain labels of the columns in the design matrix associated with this Term</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.Term.levels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">levels</span></span><a class="headerlink" href="#formulae.terms.Term.levels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">levels</span></span><a class="headerlink" href="#formulae.terms.Term.levels" title="Permalink to this definition">#</a></dt>
 <dd><p>Obtain levels of the columns in the design matrix associated with this Term</p>
 <p>It is like .labels, without the name of the terms</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Term.set_data">
-<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spans_intercept</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.set_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spans_intercept</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.set_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Obtains and stores the final data object related to this term.</p>
 <p>Calls <code class="docutils literal notranslate"><span class="pre">.set_data()</span></code> method on each component in the term. Then, it uses the <code class="docutils literal notranslate"><span class="pre">.data</span></code>
 attribute on each of them to build <code class="docutils literal notranslate"><span class="pre">self.data</span></code> and <code class="docutils literal notranslate"><span class="pre">self.metadata</span></code>.</p>
@@ -1018,7 +1006,7 @@ categoric.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Term.set_type">
-<span class="sig-name descname"><span class="pre">set_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.set_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.set_type" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.set_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.set_type" title="Permalink to this definition">#</a></dt>
 <dd><p>Set type of the components in the term.</p>
 <p>Calls <code class="docutils literal notranslate"><span class="pre">.set_type()</span></code> method on each component in the term. For those components of class
 <code class="xref py py-class docutils literal notranslate"><span class="pre">Variable`</span></code> it only passes the data mask. For <cite>:class:</cite>.Call` objects it also passes
@@ -1035,14 +1023,14 @@ the evaluation environment.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.Term.spans_intercept">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spans_intercept</span></span><a class="headerlink" href="#formulae.terms.Term.spans_intercept" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spans_intercept</span></span><a class="headerlink" href="#formulae.terms.Term.spans_intercept" title="Permalink to this definition">#</a></dt>
 <dd><p>Does this term spans the intercept?</p>
 <p>True if all the components span the intercept</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.Term.var_names">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var_names</span></span><a class="headerlink" href="#formulae.terms.Term.var_names" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var_names</span></span><a class="headerlink" href="#formulae.terms.Term.var_names" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the name of the variables in the term as a set.</p>
 <p>Loops through each component and updates the set with the <code class="docutils literal notranslate"><span class="pre">.var_names</span></code> of each component.</p>
 <dl class="field-list simple">
@@ -1059,7 +1047,7 @@ the evaluation environment.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">GroupSpecificTerm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#GroupSpecificTerm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.GroupSpecificTerm" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">GroupSpecificTerm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#GroupSpecificTerm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.GroupSpecificTerm" title="Permalink to this definition">#</a></dt>
 <dd><p>Representation of a group specific term.</p>
 <p>Group specific terms are of the form <code class="docutils literal notranslate"><span class="pre">(expr</span> <span class="pre">|</span> <span class="pre">factor)</span></code>. The expression <code class="docutils literal notranslate"><span class="pre">expr</span></code> is evaluated
 as a model formula with only common effects and produces a model matrix following the rules
@@ -1079,7 +1067,7 @@ effects for each level of the grouping factor”</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm.data">
-<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.data" title="Permalink to this definition">#</a></dt>
 <dd><p>The values associated with the term as they go into the design matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1090,7 +1078,7 @@ effects for each level of the grouping factor”</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm.metadata">
-<span class="sig-name descname"><span class="pre">metadata</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.metadata" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">metadata</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.metadata" title="Permalink to this definition">#</a></dt>
 <dd><p>Metadata associated with the term. If <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code> it holds additional
 information in the component <code class="docutils literal notranslate"><span class="pre">.data</span></code> attribute. If <code class="docutils literal notranslate"><span class="pre">&quot;interaction&quot;</span></code>, the keys are
 the name of the components and the values are dictionaries holding the metadata.</p>
@@ -1103,7 +1091,7 @@ the name of the components and the values are dictionaries holding the metadata.
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm.kind">
-<span class="sig-name descname"><span class="pre">kind</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.kind" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">kind</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.kind" title="Permalink to this definition">#</a></dt>
 <dd><p>Indicates the type of the term. Can be one of <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, or
 <code class="docutils literal notranslate"><span class="pre">&quot;interaction&quot;</span></code>.</p>
 <dl class="field-list simple">
@@ -1115,7 +1103,7 @@ the name of the components and the values are dictionaries holding the metadata.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm.eval_new_data">
-<span class="sig-name descname"><span class="pre">eval_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#GroupSpecificTerm.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.eval_new_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#GroupSpecificTerm.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.eval_new_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluates the term with new data.</p>
 <p>Converts the variable in <code class="docutils literal notranslate"><span class="pre">factor</span></code> to the type remembered from the first evaluation and
 produces the design matrix for this grouping, calls <code class="docutils literal notranslate"><span class="pre">.eval_new_data()</span></code> on <code class="docutils literal notranslate"><span class="pre">self.expr</span></code>
@@ -1136,7 +1124,7 @@ corresponding to the group specific effect.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.name" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.name" title="Permalink to this definition">#</a></dt>
 <dd><p>Obtain string representation of the name of the term.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1150,7 +1138,7 @@ corresponding to the group specific effect.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm.var_names">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var_names</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.var_names" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var_names</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.var_names" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the name of the variables in the term as a set.</p>
 <p>Obtains both the variables in the <code class="docutils literal notranslate"><span class="pre">expr</span></code> as well as the variables in <code class="docutils literal notranslate"><span class="pre">factor</span></code>.</p>
 <dl class="field-list simple">
@@ -1167,11 +1155,11 @@ corresponding to the group specific effect.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.terms.Intercept">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">Intercept</span></span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">Intercept</span></span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept" title="Permalink to this definition">#</a></dt>
 <dd><p>Internal representation of a model intercept.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Intercept.__add__">
-<span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept.__add__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept.__add__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept.__add__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept.__add__" title="Permalink to this definition">#</a></dt>
 <dd><p>Addition operator.</p>
 <p>Generally this operator is used to explicitly add an intercept to a model. There may be
 cases where the result is not a <code class="docutils literal notranslate"><span class="pre">Model</span></code>, or does not contain an intercept.</p>
@@ -1185,7 +1173,7 @@ cases where the result is not a <code class="docutils literal notranslate"><span
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Intercept.__or__">
-<span class="sig-name descname"><span class="pre">__or__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept.__or__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept.__or__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__or__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept.__or__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept.__or__" title="Permalink to this definition">#</a></dt>
 <dd><p>Group-specific interaction-like operator. Creates a group-specific intercept.</p>
 <p>This operation is usually surrounded by parenthesis. It is not actually required. They
 are always used because <code class="docutils literal notranslate"><span class="pre">|</span></code> has lower precedence than any of the other operators except
@@ -1196,7 +1184,7 @@ equivalent to <code class="docutils literal notranslate"><span class="pre">(1|g)
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Intercept.__sub__">
-<span class="sig-name descname"><span class="pre">__sub__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept.__sub__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept.__sub__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__sub__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept.__sub__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept.__sub__" title="Permalink to this definition">#</a></dt>
 <dd><p>Subtraction operator.</p>
 <p>This operator removes an intercept from a model if the given model has an intercept.</p>
 <ul class="simple">
@@ -1209,27 +1197,27 @@ equivalent to <code class="docutils literal notranslate"><span class="pre">(1|g)
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Intercept.eval_new_data">
-<span class="sig-name descname"><span class="pre">eval_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept.eval_new_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval_new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept.eval_new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept.eval_new_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns data for a new intercept.</p>
 <p>The length of the new intercept is given by the number of rows in <code class="docutils literal notranslate"><span class="pre">data</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Intercept.set_data">
-<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept.set_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept.set_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Creates data for the intercept.</p>
 <p>It sets <code class="docutils literal notranslate"><span class="pre">self.data</span></code> equal to a numpy array of ones of length <code class="docutils literal notranslate"><span class="pre">(self.len,</span> <span class="pre">1)</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Intercept.set_type">
-<span class="sig-name descname"><span class="pre">set_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept.set_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept.set_type" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Intercept.set_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Intercept.set_type" title="Permalink to this definition">#</a></dt>
 <dd><p>Sets length of the intercept.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.Intercept.var_names">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var_names</span></span><a class="headerlink" href="#formulae.terms.Intercept.var_names" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var_names</span></span><a class="headerlink" href="#formulae.terms.Intercept.var_names" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns empty set, no variables are used in the intercept.</p>
 </dd></dl>
 
@@ -1237,14 +1225,14 @@ equivalent to <code class="docutils literal notranslate"><span class="pre">(1|g)
 
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.terms.NegatedIntercept">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">NegatedIntercept</span></span><a class="reference internal" href="_modules/formulae/terms/terms.html#NegatedIntercept"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.NegatedIntercept" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">NegatedIntercept</span></span><a class="reference internal" href="_modules/formulae/terms/terms.html#NegatedIntercept"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.NegatedIntercept" title="Permalink to this definition">#</a></dt>
 <dd><p>Internal representation of the opposite of a model intercept.</p>
 <p>This object is created whenever we use <code class="docutils literal notranslate"><span class="pre">&quot;0&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;-1&quot;</span></code> in a model formula. It is not
 expected to appear in a final model. It’s here to help us make operations using the
 <code class="docutils literal notranslate"><span class="pre">Intercept</span></code> and deciding when to keep it and when to drop it.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.NegatedIntercept.__add__">
-<span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#NegatedIntercept.__add__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.NegatedIntercept.__add__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#NegatedIntercept.__add__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.NegatedIntercept.__add__" title="Permalink to this definition">#</a></dt>
 <dd><p>Addition operator.</p>
 <p>Generally this operator is used to explicitly remove an from a model.</p>
 <ul class="simple">
@@ -1262,7 +1250,7 @@ thay may have been left. They just don’t make sense in a model.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.terms.Response">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">Response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Response" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">Response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Response" title="Permalink to this definition">#</a></dt>
 <dd><p>Representation of a response term.</p>
 <p>It is mostly a wrapper around <a class="reference internal" href="#formulae.terms.Term" title="formulae.terms.Term"><code class="xref py py-class docutils literal notranslate"><span class="pre">Term</span></code></a>.</p>
 <dl class="field-list simple">
@@ -1272,7 +1260,7 @@ thay may have been left. They just don’t make sense in a model.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Response.__add__">
-<span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Response.__add__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Response.__add__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Response.__add__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Response.__add__" title="Permalink to this definition">#</a></dt>
 <dd><p>Modelled as operator.</p>
 <p>The operator is <code class="docutils literal notranslate"><span class="pre">~</span></code>, but since it is not an operator in Python, we internally replace it
 with <code class="docutils literal notranslate"><span class="pre">+</span></code>. It means the LHS is taken as the response, and the RHS as the predictor.</p>
@@ -1280,19 +1268,19 @@ with <code class="docutils literal notranslate"><span class="pre">+</span></code
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Response.set_data">
-<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Response.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Response.set_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Response.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Response.set_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Set data of the response term.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Response.set_type">
-<span class="sig-name descname"><span class="pre">set_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Response.set_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Response.set_type" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Response.set_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Response.set_type" title="Permalink to this definition">#</a></dt>
 <dd><p>Set type of the response term.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.Response.var_names">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var_names</span></span><a class="headerlink" href="#formulae.terms.Response.var_names" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var_names</span></span><a class="headerlink" href="#formulae.terms.Response.var_names" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the name of the variables in the response as a set.</p>
 </dd></dl>
 
@@ -1300,7 +1288,7 @@ with <code class="docutils literal notranslate"><span class="pre">+</span></code
 
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.terms.Model">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">terms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">terms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model" title="Permalink to this definition">#</a></dt>
 <dd><p>Representation of a model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1312,7 +1300,7 @@ with <code class="docutils literal notranslate"><span class="pre">+</span></code
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Model.__add__">
-<span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.__add__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.__add__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.__add__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.__add__" title="Permalink to this definition">#</a></dt>
 <dd><p>Addition operator. Analogous to set union.</p>
 <p>Adds terms to the model and returns the model.</p>
 <dl class="field-list simple">
@@ -1327,7 +1315,7 @@ with <code class="docutils literal notranslate"><span class="pre">+</span></code
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Model.__matmul__">
-<span class="sig-name descname"><span class="pre">__matmul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.__matmul__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.__matmul__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__matmul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.__matmul__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.__matmul__" title="Permalink to this definition">#</a></dt>
 <dd><p>Simple interaction operator.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;(x</span> <span class="pre">+</span> <span class="pre">y)</span> <span class="pre">:</span> <span class="pre">(u</span> <span class="pre">+</span> <span class="pre">v)&quot;</span></code> equals to <code class="docutils literal notranslate"><span class="pre">&quot;x:u</span> <span class="pre">+</span> <span class="pre">x:v</span> <span class="pre">+</span> <span class="pre">y:u</span> <span class="pre">+</span> <span class="pre">y:v&quot;</span></code>.</p></li>
@@ -1346,7 +1334,7 @@ with <code class="docutils literal notranslate"><span class="pre">+</span></code
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Model.__mul__">
-<span class="sig-name descname"><span class="pre">__mul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.__mul__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.__mul__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__mul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.__mul__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.__mul__" title="Permalink to this definition">#</a></dt>
 <dd><p>Full interaction operator.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;(x</span> <span class="pre">+</span> <span class="pre">y)</span> <span class="pre">*</span> <span class="pre">(u</span> <span class="pre">+</span> <span class="pre">v)&quot;</span></code> equals to <code class="docutils literal notranslate"><span class="pre">&quot;x</span> <span class="pre">+</span> <span class="pre">y</span> <span class="pre">+</span> <span class="pre">u</span> <span class="pre">+</span> <span class="pre">v</span> <span class="pre">+</span> <span class="pre">x:u</span> <span class="pre">+</span> <span class="pre">x:v</span> <span class="pre">+</span> <span class="pre">y:u</span> <span class="pre">+</span> <span class="pre">y:v&quot;</span></code>.</p></li>
@@ -1364,7 +1352,7 @@ with <code class="docutils literal notranslate"><span class="pre">+</span></code
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Model.__or__">
-<span class="sig-name descname"><span class="pre">__or__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.__or__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.__or__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__or__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.__or__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.__or__" title="Permalink to this definition">#</a></dt>
 <dd><p>Group specific term operator.</p>
 <p>Only _models_ <code class="docutils literal notranslate"><span class="pre">&quot;0</span> <span class="pre">+</span> <span class="pre">x&quot;</span></code> arrive here.</p>
 <ul class="simple">
@@ -1384,7 +1372,7 @@ with <code class="docutils literal notranslate"><span class="pre">+</span></code
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Model.__pow__">
-<span class="sig-name descname"><span class="pre">__pow__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.__pow__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.__pow__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__pow__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.__pow__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.__pow__" title="Permalink to this definition">#</a></dt>
 <dd><p>Power of a set made of <a class="reference internal" href="#formulae.terms.Term" title="formulae.terms.Term"><code class="xref py py-class docutils literal notranslate"><span class="pre">Term</span></code></a></p>
 <p>Computes all interactions up to order <code class="docutils literal notranslate"><span class="pre">n</span></code> between the terms in the set.</p>
 <ul class="simple">
@@ -1402,7 +1390,7 @@ with <code class="docutils literal notranslate"><span class="pre">+</span></code
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Model.__sub__">
-<span class="sig-name descname"><span class="pre">__sub__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.__sub__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.__sub__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__sub__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.__sub__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.__sub__" title="Permalink to this definition">#</a></dt>
 <dd><p>Subtraction operator. Analogous to set difference.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;(x</span> <span class="pre">+</span> <span class="pre">y)</span> <span class="pre">-</span> <span class="pre">(x</span> <span class="pre">+</span> <span class="pre">u)&quot;</span></code> equals to <code class="docutils literal notranslate"><span class="pre">&quot;y</span> <span class="pre">+</span> <span class="pre">u&quot;</span></code>..</p></li>
@@ -1421,7 +1409,7 @@ with <code class="docutils literal notranslate"><span class="pre">+</span></code
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Model.__truediv__">
-<span class="sig-name descname"><span class="pre">__truediv__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.__truediv__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.__truediv__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__truediv__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.__truediv__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.__truediv__" title="Permalink to this definition">#</a></dt>
 <dd><p>Division interaction operator.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;(x</span> <span class="pre">+</span> <span class="pre">y)</span> <span class="pre">/</span> <span class="pre">z&quot;</span></code> equals to <code class="docutils literal notranslate"><span class="pre">&quot;x</span> <span class="pre">+</span> <span class="pre">y</span> <span class="pre">+</span> <span class="pre">x:y:z&quot;</span></code>.</p></li>
@@ -1439,7 +1427,7 @@ with <code class="docutils literal notranslate"><span class="pre">+</span></code
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Model.add_response">
-<span class="sig-name descname"><span class="pre">add_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.add_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.add_response" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.add_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.add_response" title="Permalink to this definition">#</a></dt>
 <dd><p>Add response term to model description.</p>
 <p>This method is called when something like <code class="docutils literal notranslate"><span class="pre">&quot;y</span> <span class="pre">~</span> <span class="pre">x</span> <span class="pre">+</span> <span class="pre">z&quot;</span></code> appears in a model formula.</p>
 <p>This method is called via special methods such as <a class="reference internal" href="#formulae.terms.Response.__add__" title="formulae.terms.Response.__add__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Response.__add__()</span></code></a>.</p>
@@ -1455,7 +1443,7 @@ with <code class="docutils literal notranslate"><span class="pre">+</span></code
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Model.add_term">
-<span class="sig-name descname"><span class="pre">add_term</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.add_term"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.add_term" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_term</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.add_term"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.add_term" title="Permalink to this definition">#</a></dt>
 <dd><p>Add term to model description.</p>
 <p>The term added can be of class <a class="reference internal" href="#formulae.terms.Intercept" title="formulae.terms.Intercept"><code class="xref py py-class docutils literal notranslate"><span class="pre">Intercept</span></code></a> <a class="reference internal" href="#formulae.terms.Term" title="formulae.terms.Term"><code class="xref py py-class docutils literal notranslate"><span class="pre">Term</span></code></a>, or
 <a class="reference internal" href="#formulae.terms.GroupSpecificTerm" title="formulae.terms.GroupSpecificTerm"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupSpecificTerm</span></code></a>. It appends the new term object to the list of common terms or
@@ -1473,7 +1461,7 @@ group specific terms as appropriate.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.Model.common_components">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">common_components</span></span><a class="headerlink" href="#formulae.terms.Model.common_components" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">common_components</span></span><a class="headerlink" href="#formulae.terms.Model.common_components" title="Permalink to this definition">#</a></dt>
 <dd><p>Components in common terms in the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1487,7 +1475,7 @@ group specific terms as appropriate.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Model.eval">
-<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.eval" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.eval" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluates terms in the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1501,7 +1489,7 @@ group specific terms as appropriate.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.Model.set_types">
-<span class="sig-name descname"><span class="pre">set_types</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.set_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.set_types" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_types</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Model.set_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Model.set_types" title="Permalink to this definition">#</a></dt>
 <dd><p>Set the type of the terms in the model.</p>
 <p>Calls <code class="docutils literal notranslate"><span class="pre">.set_type()</span></code> method on term in the model.</p>
 <dl class="field-list simple">
@@ -1516,7 +1504,7 @@ group specific terms as appropriate.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.Model.terms">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">terms</span></span><a class="headerlink" href="#formulae.terms.Model.terms" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">terms</span></span><a class="headerlink" href="#formulae.terms.Model.terms" title="Permalink to this definition">#</a></dt>
 <dd><p>Terms in the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1530,7 +1518,7 @@ group specific terms as appropriate.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.Model.var_names">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var_names</span></span><a class="headerlink" href="#formulae.terms.Model.var_names" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var_names</span></span><a class="headerlink" href="#formulae.terms.Model.var_names" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the name of the variables in the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1546,10 +1534,10 @@ group specific terms as appropriate.</p>
 
 </section>
 <section id="call-resolver">
-<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">call_resolver</span></code><a class="headerlink" href="#call-resolver" title="Permalink to this headline">¶</a></h2>
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">call_resolver</span></code><a class="headerlink" href="#call-resolver" title="Permalink to this headline">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.terms.call_resolver.LazyValue">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.call_resolver.</span></span><span class="sig-name descname"><span class="pre">LazyValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyValue" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.call_resolver.</span></span><span class="sig-name descname"><span class="pre">LazyValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyValue" title="Permalink to this definition">#</a></dt>
 <dd><p>Lazy representation of a value in Python.</p>
 <p>This object holds a value (a string or a number).
 It returns its value only when it is evaluated via <code class="docutils literal notranslate"><span class="pre">.eval()</span></code>.</p>
@@ -1560,7 +1548,7 @@ It returns its value only when it is evaluated via <code class="docutils literal
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.call_resolver.LazyValue.eval">
-<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyValue.eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyValue.eval" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyValue.eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyValue.eval" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluates the value.</p>
 <p>Simply returns the value. Other arguments are ignored but required for consistency
 among all the lazy objects.</p>
@@ -1578,7 +1566,7 @@ among all the lazy objects.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.terms.call_resolver.LazyVariable">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.call_resolver.</span></span><span class="sig-name descname"><span class="pre">LazyVariable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyVariable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyVariable" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.call_resolver.</span></span><span class="sig-name descname"><span class="pre">LazyVariable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyVariable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyVariable" title="Permalink to this definition">#</a></dt>
 <dd><p>Lazy variable name.</p>
 <p>The variable represented in this object does not hold any value until it is explicitly evaluated
 within a data mask and an evaluation environment.</p>
@@ -1589,7 +1577,7 @@ within a data mask and an evaluation environment.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.call_resolver.LazyVariable.eval">
-<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyVariable.eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyVariable.eval" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyVariable.eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyVariable.eval" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluates variable.</p>
 <p>First it looks for the variable in <code class="docutils literal notranslate"><span class="pre">data_mask</span></code>. If not found there, it looks in
 <code class="docutils literal notranslate"><span class="pre">env</span></code>. Then it just returns the value the variable represents in either the
@@ -1614,7 +1602,7 @@ data mask or the evaluation environment.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.terms.call_resolver.LazyOperator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.call_resolver.</span></span><span class="sig-name descname"><span class="pre">LazyOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyOperator" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.call_resolver.</span></span><span class="sig-name descname"><span class="pre">LazyOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyOperator" title="Permalink to this definition">#</a></dt>
 <dd><p>Unary and Binary lazy operators.</p>
 <p>Functions calls like <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">+</span> <span class="pre">b</span></code> are converted into a LazyOperator that is resolved when you
 explicitly evaluates it.</p>
@@ -1629,7 +1617,7 @@ explicitly evaluates it.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.call_resolver.LazyOperator.eval">
-<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyOperator.eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyOperator.eval" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyOperator.eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyOperator.eval" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluates the operation.</p>
 <p>Evaluates the arguments involved in the operation, calls the Python operator, and returns
 the result.</p>
@@ -1653,7 +1641,7 @@ the result.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.terms.call_resolver.LazyCall">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.call_resolver.</span></span><span class="sig-name descname"><span class="pre">LazyCall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callee</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyCall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyCall" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.call_resolver.</span></span><span class="sig-name descname"><span class="pre">LazyCall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callee</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyCall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyCall" title="Permalink to this definition">#</a></dt>
 <dd><p>Lazy representation of a function call.</p>
 <p>This class represents a function that can be a stateful transform (a function with memory)
 whose arguments can also be stateful transforms.</p>
@@ -1672,7 +1660,7 @@ represents.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="formulae.terms.call_resolver.LazyCall.eval">
-<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyCall.eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyCall.eval" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyCall.eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyCall.eval" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluate the call.</p>
 <p>This method first evaluates all its arguments, which are themselves lazy objects, and then
 proceeds to evaluate the call it represents.</p>
@@ -1718,8 +1706,9 @@ proceeds to evaluate the call it represents.</p>
       </div>
     </div>
   
-    <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -1730,7 +1719,7 @@ proceeds to evaluate the call it represents.</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     
