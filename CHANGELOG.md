@@ -10,7 +10,7 @@
 
 ### Deprecation
 
-### v0.3.1 Unreleased
+### v0.3.1
 
 ### Maintenance and fixes
 
