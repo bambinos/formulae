@@ -1131,3 +1131,9 @@ def test_extra_namespace(data):
     )
     df = dm.common.as_dataframe()
     assert df["myfunc(x3)"].equals(np.log(df["x3"]))
+
+
+def test_categorical_series():
+    data = pd.DataFrame({"x": list("abc") * 10})
+    data["x"] = pd.Categorical(data["x"], list("abc"), ordered=True)
+    design_matrices("S(x)", data)
