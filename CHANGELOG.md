@@ -10,6 +10,12 @@
 
 ### Deprecation
 
+### v0.3.2
+
+### Maintenance and fixes
+
+- Fixed a bug in `CategoricalBox` because it failed to convert categorical series to numpy arrays. Now it works. (#72)
+
 ### v0.3.1
 
 ### Maintenance and fixes

@@ -87,7 +87,7 @@ class CategoricalBox:
     @data.setter
     def data(self, value):
         if isinstance(value, pd.Series):
-            value = value.values
+            value = np.asarray(value)
         if not (isinstance(value, np.ndarray) and value.ndim == 1):  # pragma: no cover
             raise ValueError("The data argument must be one dimensional array-like")
         self._data = value
