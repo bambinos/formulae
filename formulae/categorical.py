@@ -76,6 +76,9 @@ class CategoricalBox:
     """
 
     def __init__(self, data, contrast, levels):
+        # If 'data' is ordered and no explicit levels have been passed, use order in 'data'.
+        if hasattr(data.dtype, "ordered") and data.dtype.ordered and levels is None:
+            levels = data.dtype.categories.tolist()
         self.data = data
         self.contrast = contrast
         self.levels = levels
@@ -198,7 +201,7 @@ class Sum(Encoding):
     def _omit_index(self, levels):
         """Returns a number between 0 and len(levels) - 1"""
         if self.omit is None:
-            # By default, omit the lats level.
+            # By default, omit the last level.
             return len(levels) - 1
         else:
             return levels.index(self.omit)
