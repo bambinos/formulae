@@ -1133,7 +1133,18 @@ def test_extra_namespace(data):
     assert df["myfunc(x3)"].equals(np.log(df["x3"]))
 
 
-def test_categorical_series():
-    data = pd.DataFrame({"x": list("abc") * 10})
-    data["x"] = pd.Categorical(data["x"], list("abc"), ordered=True)
+def test_categorical_ordered_series():
+    # Test it works
+    data = pd.DataFrame({"x": list("abcd") * 10})
+    data["x"] = pd.Categorical(data["x"], list("bcda"), ordered=True)
     design_matrices("S(x)", data)
+
+    # Test it works and it respects original order
+    levels = design_matrices("x", data).common.terms["x"].levels
+    assert levels == list("cda")
+
+    levels = design_matrices("T(x)", data).common.terms["T(x)"].levels
+    assert levels == list("cda")
+
+    levels = design_matrices("S(x)", data).common.terms["S(x)"].levels
+    assert levels == list("bcd")
