@@ -10,6 +10,12 @@
 
 ### Deprecation
 
+### v0.3.3
+
+### Maintenance and fixes
+
+- Fixed a bug in `CategoricalBox`. Now it considers the order of the categories if `data` is ordered and `levels` is `None` (#73)
+
 ### v0.3.2
 
 ### Maintenance and fixes
