@@ -555,6 +555,8 @@ class Term:
             for component in self.components:
                 if component.contrast_matrix is not None:
                     levels.append(component.contrast_matrix.labels)
+                elif component.value.ndim == 2 and component.value.shape[1] > 1:
+                    levels.append([str(i) for i in range(component.value.shape[1])])
             if levels:
                 levels = [", ".join(str_tuple) for str_tuple in list(itertools.product(*levels))]
         else:

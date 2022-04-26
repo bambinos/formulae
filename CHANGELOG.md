@@ -6,6 +6,8 @@
 
 ### Maintenance and fixes
 
+- Fixed a bug in the levels of interaction terms involving numeric terms with multiple columns (#74)
+
 ### Documentation
 
 ### Deprecation
