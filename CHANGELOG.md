@@ -1,30 +1,34 @@
 # Change Log
 
-### 0.X.X Unreleased
+## v0.X.X Unreleased
 
 ### New features
 
 ### Maintenance and fixes
 
-- Fixed a bug in the levels of interaction terms involving numeric terms with multiple columns (b4a1f73)
-
 ### Documentation
 
 ### Deprecation
 
-### v0.3.3
+## v0.3.4
+
+### Maintenance and fixes
+
+- Fixed a bug in the levels of interaction terms involving numeric terms with multiple columns (b4a1f73)
+
+## v0.3.3
 
 ### Maintenance and fixes
 
 - Fixed a bug in `CategoricalBox`. Now it considers the order of the categories if `data` is ordered and `levels` is `None` (#73)
 
-### v0.3.2
+## v0.3.2
 
 ### Maintenance and fixes
 
 - Fixed a bug in `CategoricalBox` because it failed to convert categorical series to numpy arrays. Now it works. (#72)
 
-### v0.3.1
+## v0.3.1
 
 ### Maintenance and fixes
 
@@ -35,7 +39,6 @@
 ### Deprecation
 
 - Removed `binary` and `success` attributes from `ResponseMatrix` (#71)
-
 
 ## v0.3.0
 
