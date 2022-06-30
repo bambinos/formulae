@@ -396,6 +396,16 @@ class Polynomial:
         P /= np.array([np.sqrt(get_norm(k)) for k in range(0, self.degree + 1)])
         return P[:, 1:]
 
+class Surv:
+    def __init__(self, time, censor):
+        self.time = time
+        self.censor = censor
+
+    # def __call__(self, time, censor):
+    #     return [time, censor]
+
+    def eval(self):
+        return self.time # np.stack((self.time, self.censor)).T
 
 TRANSFORMS = {
     "B": binary,
@@ -408,6 +418,7 @@ TRANSFORMS = {
     "proportion": proportion,
     "S": S,
     "T": T,
+    "Surv": Surv,
 }
 
 STATEFUL_TRANSFORMS = {

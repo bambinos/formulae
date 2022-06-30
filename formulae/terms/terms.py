@@ -548,7 +548,7 @@ class Term:
 
         It is like .labels, without the name of the terms
         """
-        if self.kind is None or self.kind in ["numeric", "proportion"]:
+        if self.kind is None or self.kind in ["numeric", "proportion", "surv"]:
             levels = None
         elif self.kind == "interaction":
             levels = []
@@ -771,6 +771,9 @@ class Response:
         if isinstance(term, Term):
             n = len(term.components)
             if n == 1:
+                self.term = term
+                self.term.components[0].is_response = True
+            elif n == 2:
                 self.term = term
                 self.term.components[0].is_response = True
             else:

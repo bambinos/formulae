@@ -6,7 +6,7 @@ import pandas as pd
 from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
 
 from formulae.categorical import ENCODINGS, CategoricalBox, Treatment
-from formulae.transforms import TRANSFORMS, Proportion, Offset
+from formulae.transforms import TRANSFORMS, Proportion, Offset, Surv
 from formulae.terms.call_utils import CallVarsExtractor
 
 
@@ -110,6 +110,8 @@ class Call:
             x.set_size(len(data_mask.index))
         elif isinstance(x, Proportion):
             self.kind = "proportion"
+        elif isinstance(x, Surv):
+            self.kind = "surv"
         else:
             raise ValueError(f"Call result is of an unrecognized type ({type(x)}).")
         self._intermediate_data = x
@@ -143,6 +145,8 @@ class Call:
                 self.eval_offset(self._intermediate_data)
             elif self.kind == "proportion":
                 self.eval_proportion(self._intermediate_data)
+            elif self.kind == "surv":
+                self.eval_surv(self._intermediate_data)
             else:
                 raise ValueError(f"Call result is of an unrecognized type ({self.kind}).")
         except:
@@ -243,6 +247,11 @@ class Call:
         if not self.is_response:
             raise ValueError("'proportion()' can only be used as a response term.")
         self.value = proportion.eval()
+
+    def eval_surv(self, surv):
+        if not self.is_response:
+            raise ValueError("'surv()' can only be used as a response term.")
+        self.value = surv.eval()
 
     def eval_offset(self, offset):
         if self.is_response:
