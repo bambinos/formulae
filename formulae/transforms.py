@@ -396,16 +396,26 @@ class Polynomial:
         P /= np.array([np.sqrt(get_norm(k)) for k in range(0, self.degree + 1)])
         return P[:, 1:]
 
+
 class Surv:
+    """Transformation for survival functions
+
+        This transformation returns a 2xn array with the time-to-event and censor status
+
+        Parameters
+        ----------
+        time: 1d array-like
+            Time-to-event
+        censor: 1d array-like
+            Censoring status
+            (0=uncensored, 1=right censored)
+        """
     def __init__(self, time, censor):
         self.time = time
         self.censor = censor
 
-    # def __call__(self, time, censor):
-    #     return [time, censor]
-
     def eval(self):
-        return self.time # np.stack((self.time, self.censor)).T
+        return np.stack((self.time, self.censor)).T
 
 TRANSFORMS = {
     "B": binary,
