@@ -400,22 +400,22 @@ class Polynomial:
 class Surv:
     """Transformation for survival functions
 
-        This transformation returns a 2xn array with the time-to-event and censor status
+        This transformation returns a 2xn array with the time-to-event and event status
 
         Parameters
         ----------
         time: 1d array-like
             Time-to-event
-        censor: 1d array-like
-            Censoring status
-            (0=uncensored, 1=right censored)
+        event: 1d array-like
+            Event status
+            (0=right censored, 1=event)
         """
-    def __init__(self, time, censor):
+    def __init__(self, time, event):
         self.time = time
-        self.censor = censor
+        self.event = event
 
     def eval(self):
-        return np.stack((self.time, self.censor)).T
+        return np.stack((self.time, self.event)).T
 
 TRANSFORMS = {
     "B": binary,
