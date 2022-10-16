@@ -822,7 +822,7 @@ def test_offset():
     term = dm.common.terms["offset(x)"]
     assert term.kind == "offset"
     assert term.labels == ["offset(x)"]
-    assert (dm.common["offset(x)"].flatten() == data["x"].values).all()
+    assert np.allclose(dm.common["offset(x)"].flatten(), data["x"])
 
     with pytest.raises(
         ValueError, match=re.escape("offset() can only be used with numeric variables")
@@ -831,6 +831,17 @@ def test_offset():
 
     with pytest.raises(ValueError, match=re.escape("offset() cannot be used as a response term.")):
         design_matrices("offset(y) ~ x", data)
+
+    # Creation of new design matrices using calls as arguments work
+    dm = design_matrices("y ~ offset(np.log(x))", data)
+    term = dm.common.terms["offset(np.log(x))"]
+    assert term.kind == "offset"
+    assert term.labels == ["offset(np.log(x))"]
+    assert np.allclose(dm.common["offset(np.log(x))"].flatten(), np.log(data["x"]))
+
+    new_data = pd.DataFrame({"x": [3, 4, 5]})
+    new_common = dm.common.evaluate_new_data(new_data)
+    assert np.allclose(new_common["offset(np.log(x))"].flatten(), np.log(new_data["x"]))
 
 
 def test_predict_prop(beetle):
