@@ -325,7 +325,7 @@ class Call:
             result = np.ones(len(data_mask.index)) * self.call.args[0].value
         else:
             # This works both for LazyVariable (offset(x)) and LazyCall (offset(np.log(x)))
-            offset = self.call.eval(data_mask, self.env) # returns instance of Offset
+            offset = self.call.eval(data_mask, self.env)  # returns instance of Offset
             values = offset.eval()
             if isinstance(values, pd.Series):
                 values = values.to_numpy()
