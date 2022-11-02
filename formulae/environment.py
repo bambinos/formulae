@@ -74,6 +74,9 @@ class Environment:
             return cls([frame.f_locals, frame.f_globals])
         finally:
             del frame
+            
+    def __deepcopy__(self, memo):
+        pass
 
     def _namespace_ids(self):
         return [id(n) for n in self._namespaces]
