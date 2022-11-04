@@ -24,7 +24,7 @@ def get_requirements():
 
 def get_version():
     with open(VERSION_FILE, encoding="utf-8") as buff:
-        exec(buff.read()) # pylint: disable=exec-used
+        exec(buff.read())  # pylint: disable=exec-used
     return vars()["__version__"]
 
 

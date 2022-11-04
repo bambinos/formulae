@@ -4,6 +4,7 @@ import inspect
 import numbers
 import dill
 
+
 class VarLookupDict:
     def __init__(self, dicts):
         self._dicts = [{}] + list(dicts)
@@ -74,7 +75,7 @@ class Environment:
             return cls([frame.f_locals, frame.f_globals])
         finally:
             del frame
-            
+
     def __deepcopy__(self, memo):
         return dill.copy(self)
 

@@ -2,6 +2,7 @@ import pytest
 from formulae.environment import VarLookupDict, Environment
 from copy import deepcopy
 
+
 def test_varlookup_get():
     lookup = VarLookupDict([{"a": 1, "b": 2}, {"a": 2, "c": 3}])
     assert lookup["a"] == 1
@@ -85,7 +86,8 @@ def test_evalenv_equality():
 
     env_outer = Environment.capture(1)
     assert env != env_outer
-    
+
+
 def test_evalenv_deepcopy():
     a = 1
     env = Environment.capture()
