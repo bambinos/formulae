@@ -90,4 +90,4 @@ def test_evalenv_deepcopy():
     a = 1
     env = Environment.capture()
     clone_env = deepcopy(env)
-    assert isinstance(clone_env, Environment)
+    assert clone_env.namespace["a"] == a
