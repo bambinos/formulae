@@ -1,3 +1,5 @@
+import inspect
+
 import numpy as np
 import pandas as pd
 
@@ -417,3 +419,15 @@ STATEFUL_TRANSFORMS = {
     "scale": Scale,
     "standardize": Scale,
 }
+
+
+def is_class_callable(cls):
+    members = (member[0] for member in inspect.getmembers(cls))
+    return "__call__" in members
+
+
+def register_stateful_transform(cls):
+    assert isinstance(cls, type), "Can only decorate classes"
+    assert is_class_callable(cls), "The class must implement a __call__ method"
+    key = cls.__transform_name__ if hasattr(cls, "__transform_name__") else cls.__name__
+    STATEFUL_TRANSFORMS[key] = cls
