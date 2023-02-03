@@ -431,3 +431,4 @@ def register_stateful_transform(cls):
     assert is_class_callable(cls), "The class must implement a __call__ method"
     key = cls.__transform_name__ if hasattr(cls, "__transform_name__") else cls.__name__
     STATEFUL_TRANSFORMS[key] = cls
+    return cls
