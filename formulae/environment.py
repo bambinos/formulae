@@ -2,6 +2,7 @@
 # For more info see: https://github.com/pydata/patsy/blob/master/patsy/eval.py
 import inspect
 import numbers
+import dill
 
 
 class VarLookupDict:
@@ -74,6 +75,9 @@ class Environment:
             return cls([frame.f_locals, frame.f_globals])
         finally:
             del frame
+
+    def __deepcopy__(self, memo):
+        return dill.copy(self)
 
     def _namespace_ids(self):
         return [id(n) for n in self._namespaces]

@@ -1,5 +1,6 @@
 import pytest
 from formulae.environment import VarLookupDict, Environment
+from copy import deepcopy
 
 
 def test_varlookup_get():
@@ -85,3 +86,10 @@ def test_evalenv_equality():
 
     env_outer = Environment.capture(1)
     assert env != env_outer
+
+
+def test_evalenv_deepcopy():
+    a = 1
+    env = Environment.capture()
+    clone_env = deepcopy(env)
+    assert clone_env.namespace["a"] == a
