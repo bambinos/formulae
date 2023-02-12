@@ -6,6 +6,8 @@
 
 ### Maintenance and fixes
 
+- Multiple calls with unnamed attributes resulted in errors due to trying to hash unhashable types (#88)
+
 ### Documentation
 
 ### Deprecation

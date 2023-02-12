@@ -1193,3 +1193,13 @@ def test_bs_categorical_interaction():
         "2, positive",
         "2, stressed",
     ]
+
+
+def test_calls_with_lazy_values():
+    # https://github.com/bambinos/formulae/issues/87
+    value = np.arange(5)
+    df = pd.DataFrame({"x": value})
+    dm = design_matrices("1 + x + np.power(x, 2) + np.power(x, 3) ", df)
+
+    assert (dm.common["np.power(x, 2)"].flatten() == value**2).all()
+    assert (dm.common["np.power(x, 3)"].flatten() == value**3).all()
