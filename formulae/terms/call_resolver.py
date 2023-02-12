@@ -56,7 +56,7 @@ class LazyOperator:
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return self.symbol == other.symbol and set(self.args) == set(other.args)
+        return self.symbol == other.symbol and self.args == other.args
 
     def accept(self, visitor):
         return visitor.visitLazyOperator(self)
@@ -161,6 +161,9 @@ class LazyValue:
     def __str__(self):
         return str(self.value)
 
+    def __hash__(self):
+        return hash(self.value)
+
     def __eq__(self, other):
         return isinstance(other, type(self)) and self.value == other.value
 
@@ -221,9 +224,7 @@ class LazyCall:
 
     def __eq__(self, other):
         return (
-            self.callee == other.callee
-            and set(self.args) == set(other.args)
-            and set(self.kwargs) == set(other.kwargs)
+            self.callee == other.callee and self.args == other.args and self.kwargs == other.kwargs
         )
 
     def accept(self, visitor):
