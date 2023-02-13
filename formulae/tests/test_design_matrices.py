@@ -1202,7 +1202,7 @@ def test_calls_with_lazy_values():
 
 
 def test_call_names_respect_string_lexeme():
-    # If a call has an argument which is a string literal, it's important to 
+    # If a call has an argument which is a string literal, it's important to
     # respect the original lexeme used to represent the string.
     # If it was written with double-quotes, we use double-quotes in the term nmae
     # Analougs if it was written with single-quotes
