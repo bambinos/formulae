@@ -165,19 +165,23 @@ class QuotedName:
 
 
 class Literal:
-    def __init__(self, value):
+    def __init__(self, value, lexeme=None):
         self.value = value
+        self.lexeme = lexeme
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return self.value == other.value
+        return self.value == other.value and self.lexeme == other.lexeme
 
     def __repr__(self):  # pragma: no cover
         return self.__str__()
 
     def __str__(self):  # pragma: no cover
-        return "Literal(" + str(self.value) + ")"
+        kwargs = {"value": self.value, "lexeme": self.lexeme}
+        body_list = [f"{k}={v}" for k, v in kwargs.items() if v is not None]
+        body = ", ".join(body_list)
+        return f"Literal({body})"
 
     def accept(self, visitor):
         return visitor.visitLiteralExpr(self)

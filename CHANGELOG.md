@@ -7,6 +7,7 @@
 ### Maintenance and fixes
 
 - Multiple calls with unnamed attributes resulted in errors due to trying to hash unhashable types (#88)
+- Term names with call components now use the proper lexeme when one argument is a string (#89)
 
 ### Documentation
 

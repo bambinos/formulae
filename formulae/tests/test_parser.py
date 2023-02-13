@@ -16,7 +16,7 @@ def parse(x, add_intercept=True):
 
 def test_parse_literal():
     p = parse("'A'")
-    assert p == Binary(Literal(1), Token("PLUS", "+"), Literal("A"))
+    assert p == Binary(Literal(1), Token("PLUS", "+"), Literal("A", "'A'"))
 
     p = parse("1")
     assert p == Binary(Literal(1), Token("PLUS", "+"), Literal(1))

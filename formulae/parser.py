@@ -191,7 +191,8 @@ class Parser:  # pylint: disable=too-many-public-methods
         elif self.match("NUMBER"):
             return Literal(self.previous().literal)
         elif self.match("STRING"):
-            return Literal(self.previous().literal)
+            token = self.previous()
+            return Literal(token.literal, lexeme=token.lexeme)
         elif self.match("BQNAME"):
             return QuotedName(self.previous())
         elif self.match("LEFT_PAREN"):
