@@ -8,13 +8,31 @@ from scipy.interpolate import splev
 
 from formulae.categorical import CategoricalBox, Sum, Treatment
 
+TRANSFORMS = {}
+
+
+def is_class_callable(cls):
+    members = (member[0] for member in inspect.getmembers(cls))
+    return "__call__" in members
+
+
 # Stateful transformations.
 # These transformations have memory about the state of parameters that are
 # required to compute the transformation and are obtained as a subproduct of the
 # data that is used to compute the transform.
+def register_stateful_transform(cls):
+    assert isinstance(cls, type), "Can only decorate classes"
+    assert is_class_callable(cls), "The class must implement a __call__ method"
+    key = cls.__transform_name__ if hasattr(cls, "__transform_name__") else cls.__name__
+    cls.__stateful_transform__ = True
+    TRANSFORMS[key] = cls
+    return cls
 
 
+@register_stateful_transform
 class Center:
+    __transform_name__ = "center"
+
     def __init__(self):
         self.params_set = False
         self.mean = None
@@ -26,7 +44,10 @@ class Center:
         return x - self.mean
 
 
+@register_stateful_transform
 class Scale:
+    __transform_name__ = "scale"
+
     def __init__(self):
         self.params_set = False
         self.mean = None
@@ -204,6 +225,7 @@ def offset(x):
     return Offset(x)
 
 
+@register_stateful_transform
 class BSpline:
     """B-Spline representation
 
@@ -233,6 +255,8 @@ class BSpline:
     upper_bound:
         The upper exterior knot location.
     """
+
+    __transform_name__ = "bs"
 
     def __init__(self):
         self.params_set = False
@@ -337,6 +361,7 @@ class BSpline:
         return basis
 
 
+@register_stateful_transform
 class Polynomial:
     """Polynomial transformation
 
@@ -356,6 +381,8 @@ class Polynomial:
     raw: bool
         Whether to use raw polynomials or orthonormal ones. Defaults to False.
     """
+
+    __transform_name__ = "poly"
 
     def __init__(self):
         self.params_set = False
@@ -399,36 +426,18 @@ class Polynomial:
         return P[:, 1:]
 
 
-TRANSFORMS = {
-    "B": binary,
-    "binary": binary,
-    "C": C,
-    "I": I,
-    "offset": offset,
-    "p": proportion,
-    "prop": proportion,
-    "proportion": proportion,
-    "S": S,
-    "T": T,
-}
-
-STATEFUL_TRANSFORMS = {
-    "bs": BSpline,
-    "center": Center,
-    "poly": Polynomial,
-    "scale": Scale,
-    "standardize": Scale,
-}
-
-
-def is_class_callable(cls):
-    members = (member[0] for member in inspect.getmembers(cls))
-    return "__call__" in members
-
-
-def register_stateful_transform(cls):
-    assert isinstance(cls, type), "Can only decorate classes"
-    assert is_class_callable(cls), "The class must implement a __call__ method"
-    key = cls.__transform_name__ if hasattr(cls, "__transform_name__") else cls.__name__
-    STATEFUL_TRANSFORMS[key] = cls
-    return cls
+TRANSFORMS.update(
+    {
+        "B": binary,
+        "binary": binary,
+        "C": C,
+        "I": I,
+        "offset": offset,
+        "p": proportion,
+        "prop": proportion,
+        "proportion": proportion,
+        "S": S,
+        "standardize": Scale,
+        "T": T,
+    }
+)

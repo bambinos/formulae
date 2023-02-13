@@ -1,7 +1,6 @@
 import operator
 
 from formulae.expr import Assign
-from formulae.transforms import STATEFUL_TRANSFORMS
 
 
 class CallResolverError(Exception):
@@ -220,9 +219,6 @@ class LazyCall:
         self.kwargs = kwargs
         self.stateful_transform = None
 
-        if self.callee in STATEFUL_TRANSFORMS:
-            self.stateful_transform = STATEFUL_TRANSFORMS[self.callee]()
-
     def __str__(self):
         args = [str(arg) for arg in self.args]
         kwargs = [f"{name}={str(arg)}" for name, arg in self.kwargs.items()]
@@ -257,10 +253,18 @@ class LazyCall:
         result:
             The result of the call evaluation.
         """
+        callee = get_function_from_module(self.callee, env)
+
+        # Store stateful transformation
+        if (
+            hasattr(callee, "__stateful_transform__")
+            and callee.__stateful_transform__
+            and self.stateful_transform is None
+        ):
+            self.stateful_transform = callee()
+
         if self.stateful_transform:
             callee = self.stateful_transform
-        else:
-            callee = get_function_from_module(self.callee, env)
 
         args = [arg.eval(data_mask, env) for arg in self.args]
         kwargs = {name: arg.eval(data_mask, env) for name, arg in self.kwargs.items()}
