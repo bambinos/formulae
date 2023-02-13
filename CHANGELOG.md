@@ -9,6 +9,7 @@
 - Multiple calls with unnamed attributes resulted in errors due to trying to hash unhashable types (#88)
 - Term names with call components now use the proper lexeme when one argument is a string (#89)
 - Detect stateful transformations by attribute instead of name (#90)
+- Moved tests out of the `formulae` directory (#91)
 
 ### Documentation
 
