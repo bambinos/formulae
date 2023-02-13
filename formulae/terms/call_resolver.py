@@ -153,19 +153,28 @@ class LazyValue:
     ----------
     value: string or numeric
         The value it holds.
+    lexeme: string
+        The string that generated the value it holds
     """
 
-    def __init__(self, value):
+    def __init__(self, value, lexeme):
         self.value = value
+        self.lexeme = lexeme
 
     def __str__(self):
+        if self.lexeme is not None:
+            return self.lexeme
         return str(self.value)
 
     def __hash__(self):
-        return hash(self.value)
+        return hash(self.value, self.lexeme)
 
     def __eq__(self, other):
-        return isinstance(other, type(self)) and self.value == other.value
+        return (
+            isinstance(other, type(self))
+            and self.value == other.value
+            and self.lexeme == other.lexeme
+        )
 
     def accept(self, visitor):
         return visitor.visitLazyValue(self)
@@ -216,7 +225,7 @@ class LazyCall:
 
     def __str__(self):
         args = [str(arg) for arg in self.args]
-        kwargs = [f"{name} = {str(arg)}" for name, arg in self.kwargs.items()]
+        kwargs = [f"{name}={str(arg)}" for name, arg in self.kwargs.items()]
         return f"{self.callee}({', '.join(args + kwargs)})"
 
     def __hash__(self):
@@ -315,7 +324,7 @@ class CallResolver:
         return LazyVariable(expr.name.lexeme)
 
     def visitLiteralExpr(self, expr):
-        return LazyValue(expr.value)
+        return LazyValue(expr.value, expr.lexeme)
 
     def visitQuotedNameExpr(self, expr):
         return LazyVariable(expr.expression.lexeme[1:-1])

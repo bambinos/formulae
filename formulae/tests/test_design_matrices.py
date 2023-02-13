@@ -373,8 +373,8 @@ def test_built_in_transforms(data):
     # Specify levels, different to observed
     lvls = [3, 2, 4, 1]  # noqa
     dm = design_matrices("y ~ C(x3, levels=lvls)", data)
-    assert dm.common.terms["C(x3, levels = lvls)"].kind == "categoric"
-    assert dm.common.terms["C(x3, levels = lvls)"].levels == ["2", "4", "1"]
+    assert dm.common.terms["C(x3, levels=lvls)"].kind == "categoric"
+    assert dm.common.terms["C(x3, levels=lvls)"].levels == ["2", "4", "1"]
 
     # Pass a reference not in the data
     with pytest.raises(ValueError):
@@ -600,7 +600,7 @@ def test_binary_function():
     )
 
     # String value
-    term = design_matrices("y ~ binary(g, 'c')", data).common["binary(g, c)"].squeeze()
+    term = design_matrices("y ~ binary(g, 'c')", data).common["binary(g, 'c')"].squeeze()
     assert np.array_equal(np.where(term == 1), np.where(data["g"] == "c"))
 
     # Numeric value
@@ -641,7 +641,7 @@ def test_B_function():
     )
 
     # String value
-    term = design_matrices("y ~ B(g, 'c')", data).common["B(g, c)"].squeeze()
+    term = design_matrices("y ~ B(g, 'c')", data).common["B(g, 'c')"].squeeze()
     assert np.array_equal(np.where(term == 1), np.where(data["g"] == "c"))
 
     # Numeric value
@@ -687,13 +687,13 @@ def test_C_function():
     assert term.data.shape == (100, 4)
 
     levels = [6, 8, 5, 7, 9]
-    term = design_matrices("C(x, levels=levels)", data).common.terms["C(x, levels = levels)"]
+    term = design_matrices("C(x, levels=levels)", data).common.terms["C(x, levels=levels)"]
     assert term.kind == "categoric"
     assert term.levels == [str(level) for level in levels[1:]]
     assert term.data.shape == (100, 4)
 
     levels = ["b", "c", "a"]
-    term = design_matrices("C(g, levels=levels)", data).common.terms["C(g, levels = levels)"]
+    term = design_matrices("C(g, levels=levels)", data).common.terms["C(g, levels=levels)"]
     assert term.kind == "categoric"
     assert term.levels == levels[1:]
     assert term.data.shape == (100, 2)
@@ -710,7 +710,7 @@ def test_C_function():
 
     t1 = design_matrices("C(g, Treatment)", data).common.terms["C(g, Treatment)"]
     t2 = design_matrices("C(g, Treatment())", data).common.terms["C(g, Treatment())"]
-    t3 = design_matrices("C(g, Treatment('a'))", data).common.terms["C(g, Treatment(a))"]
+    t3 = design_matrices("C(g, Treatment('a'))", data).common.terms["C(g, Treatment('a'))"]
     t4 = design_matrices("C(g)", data).common.terms["C(g)"]
 
     assert np.array_equal(t1.data, t2.data)
@@ -727,14 +727,10 @@ def test_C_function():
 
     t1 = design_matrices("C(g, Sum)", data).common.terms["C(g, Sum)"]
     t2 = design_matrices("C(g, Sum())", data).common.terms["C(g, Sum())"]
-    t3 = design_matrices("C(g, Sum('c'))", data).common.terms["C(g, Sum(c))"]
+    t3 = design_matrices("C(g, Sum('c'))", data).common.terms["C(g, Sum('c'))"]
 
     assert np.array_equal(t1.data, t2.data)
     assert np.array_equal(t1.data, t3.data)
-
-
-# NOTE: B(g, 'c') is then looked up ad B(g, c).
-# From the second it is impossible to tell if c is a literal or variable
 
 
 def test_C_aliases():
@@ -776,8 +772,8 @@ def test_S_function():
 
     # It still drops last level, no matter we changed the order
     levels = [9, 8, 7, 6, 5]
-    term = design_matrices("S(x, levels = levels)", data).common.terms["S(x, levels = levels)"]
-    assert term.labels == [f"S(x, levels = levels)[{l}]" for l in levels[:-1]]
+    term = design_matrices("S(x, levels=levels)", data).common.terms["S(x, levels=levels)"]
+    assert term.labels == [f"S(x, levels=levels)[{l}]" for l in levels[:-1]]
 
     term = design_matrices("S(x, 6, levels)", data).common.terms["S(x, 6, levels)"]
     assert term.labels == [f"S(x, 6, levels)[{l}]" for l in [9, 8, 7, 5]]
@@ -800,8 +796,8 @@ def test_T_function():
 
     # It still drops first level, no matter we changed the order
     levels = [9, 8, 7, 6, 5]
-    term = design_matrices("T(x, levels = levels)", data).common.terms["T(x, levels = levels)"]
-    assert term.labels == [f"T(x, levels = levels)[{l}]" for l in levels[1:]]
+    term = design_matrices("T(x, levels = levels)", data).common.terms["T(x, levels=levels)"]
+    assert term.labels == [f"T(x, levels=levels)[{l}]" for l in levels[1:]]
 
     term = design_matrices("T(x, 6, levels)", data).common.terms["T(x, 6, levels)"]
     assert term.labels == [f"T(x, 6, levels)[{l}]" for l in [9, 8, 7, 5]]
@@ -1173,7 +1169,7 @@ def test_bs_categorical_interaction():
 
     formula = "0 + bs(time, degree=2, df=3) : state"
     dm = design_matrices(formula, data)
-    assert dm.common.terms["bs(time, degree = 2, df = 3):state"].levels == [
+    assert dm.common.terms["bs(time, degree=2, df=3):state"].levels == [
         "0, depressed",
         "0, hopeful",
         "0, isolated",
@@ -1203,3 +1199,21 @@ def test_calls_with_lazy_values():
 
     assert (dm.common["np.power(x, 2)"].flatten() == value**2).all()
     assert (dm.common["np.power(x, 3)"].flatten() == value**3).all()
+
+
+def test_call_names_respect_string_lexeme():
+    # If a call has an argument which is a string literal, it's important to 
+    # respect the original lexeme used to represent the string.
+    # If it was written with double-quotes, we use double-quotes in the term nmae
+    # Analougs if it was written with single-quotes
+    def f(*args, **kwargs):
+        return np.arange(5)
+
+    value = np.arange(5)
+    df = pd.DataFrame({"x": value})
+
+    dm = design_matrices("f(x, y='abcd')", df)
+    assert "f(x, y='abcd')" in dm.common.terms
+
+    dm = design_matrices('f(x, y="abcd")', df)
+    assert 'f(x, y="abcd")' in dm.common.terms
