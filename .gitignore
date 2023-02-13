@@ -9,5 +9,5 @@ docs/_build
 
 *.cache
 *.egg-info/
-*.ipynb
 *.pyc
+/*.ipynb
