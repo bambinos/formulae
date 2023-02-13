@@ -31,9 +31,8 @@ jobs:
         shell: bash -l {0}
         run: |
           conda install pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
           pip install .
+          pip install .[dev]
           python --version
           conda list
           pip freeze
@@ -41,15 +40,15 @@ jobs:
       - name: Run linters
         shell: bash -l {0}
         run: |
-          python -m black -l 100 formulae --check
-          echo "Success!"
+          echo "Running black..."
+          black formulae --check
+
           echo "Checking code style with pylint..."
-          python -m pylint formulae/
+          pylint formulae
 
       - name: Run tests
         shell: bash -l {0}
-        run: |
-          python -m pytest -vv --cov=formulae --cov-report=term --cov-report=xml tests/
+        run: python -m pytest -vv --cov=formulae --cov-report=term --cov-report=xml tests
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
 
