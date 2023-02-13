@@ -1,8 +1,6 @@
 import logging
 
-from .matrices import (
-    design_matrices,
-)
+from .matrices import design_matrices
 from .model_description import model_description
 from .version import __version__
 

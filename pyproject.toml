@@ -1,2 +1,48 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=61.0"]
+
+[project]
+name = "formulae"
+description = "Formulas for mixed-effects models in Python"
+requires-python = ">=3.7"
+readme = {file = "README.md", content-type = "text/markdown"}
+license = {file = "LICENSE"}
+dynamic = ["version"]
+maintainers = [{ name = "Tomás Capretto", email = "tomicapretto@gmail.com" }]
+
+dependencies = [
+    "numpy>=1.16",
+    "pandas>=1.0.0",
+    "scipy>=1.5.4"
+]
+
+[project.optional-dependencies]
+dev = [
+    "black==22.3.0",
+    "docutils<0.18",
+    "ipython",
+    "jupyter-sphinx",
+    "nbsphinx",
+    "pydata-sphinx-theme>=0.6.3",
+    "pylint==2.10.2",
+    "pytest-cov>=2.6.1",
+    "pytest==6.2.5",
+    "Sphinx>=1.8.3"
+]
+
+[project.urls]
+homepage = "https://bambinos.github.io/formulae"
+documentation = "https://bambinos.github.io/formulae" 
+repository = "https://github.com/bambinos/formulae"
+changelog = "https://github.com/bambinos/formulae/blob/main/docs/CHANGELOG.md"
+
+[tool.setuptools]
+packages = ["formulae", "formulae.terms"]
+
+[tool.setuptools.dynamic]
+version = {file = "formulae/version.txt"}
+
 [tool.black]
 line-length = 100
+target-version = ["py37", "py38", "py39"]
