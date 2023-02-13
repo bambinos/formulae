@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Internals &#8212; Formulae 0.3.4 documentation</title>
+    <title>Internals &#8212; Formulae 0.4.0.dev0 documentation</title>
   
   
   
@@ -1665,13 +1665,16 @@ group specific terms as appropriate.</p>
 <h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">call_resolver</span></code><a class="headerlink" href="#call-resolver" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="formulae.terms.call_resolver.LazyValue">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.call_resolver.</span></span><span class="sig-name descname"><span class="pre">LazyValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyValue" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formulae.terms.call_resolver.</span></span><span class="sig-name descname"><span class="pre">LazyValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lexeme</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/call_resolver.html#LazyValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.call_resolver.LazyValue" title="Permalink to this definition">#</a></dt>
 <dd><p>Lazy representation of a value in Python.</p>
 <p>This object holds a value (a string or a number).
 It returns its value only when it is evaluated via <code class="docutils literal notranslate"><span class="pre">.eval()</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>value</strong> (<em>string</em><em> or </em><em>numeric</em>) – The value it holds.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>string</em><em> or </em><em>numeric</em>) – The value it holds.</p></li>
+<li><p><strong>lexeme</strong> (<em>string</em>) – The string that generated the value it holds</p></li>
+</ul>
 </dd>
 </dl>
 <dl class="py method">
