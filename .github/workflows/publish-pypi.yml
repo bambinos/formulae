@@ -83,5 +83,5 @@ jobs:
       - name: Publish library
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN_FORMULAE }}
         run: python3 -m twine upload dist/*
