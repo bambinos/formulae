@@ -6,10 +6,24 @@
 
 ### Maintenance and fixes
 
+### Documentation
+
+### Deprecation
+
+## v0.4.0
+
+### New features
+
+- Implement a @register_stateful_transform decorator to register new stateful transformations (#85)
+
+### Maintenance and fixes
+
+- Fix evaluation of new offset terms with call arguments (#81)
 - Multiple calls with unnamed attributes resulted in errors due to trying to hash unhashable types (#88)
 - Term names with call components now use the proper lexeme when one argument is a string (#89)
 - Detect stateful transformations by attribute instead of name (#90)
 - Moved tests out of the `formulae` directory (#91)
+- Use pyproject and improve deployment workflow (#92)
 
 ### Documentation
 
