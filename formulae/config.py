@@ -25,7 +25,7 @@ class Config:
     def __getitem__(self, key):
         return getattr(self, key)
 
-    def __str__(self): # pragma: no cover
+    def __str__(self):  # pragma: no cover
         lines = []
         for field, choices in Config.FIELDS.items():
             lines.append(f"{field}: {self[field]} (available: {choices})")
@@ -33,5 +33,5 @@ class Config:
         header.append("-" * len(header[0]))
         return "\n".join(header + lines)
 
-    def __repr__(self): # pragma: no cover
+    def __repr__(self):  # pragma: no cover
         return str(self)
