@@ -1,10 +1,12 @@
 import sys
+import warnings
 
 import numpy as np
 import pandas as pd
 
 from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
 
+from formulae.config import config
 from formulae.categorical import Treatment
 
 
@@ -218,12 +220,32 @@ class Variable:
         if not difference:
             idxs = pd.Categorical(x, categories=self.levels).codes
             return self.contrast_matrix.matrix[idxs]
-        else:
+
+        if config["EVAL_UNSEEN_CATEGORIES"] == "error":
             difference = [str(x) for x in difference]
             raise ValueError(
-                f"The levels {', '.join(difference)} in '{self.name}' are not present in "
-                "the original data set."
+                f"The levels ({', '.join(difference)}) in '{self.name}' are not present in the "
+                "original data set."
             )
+        # When there's an unseen category it will first use it as if it was the first category
+        # so we can still index 'contrast_matrix.matrix' but then it will replace all the values
+        # in there with all zeros.
+
+        # pandas uses '-1' for unseen levels
+        idxs_original = pd.Categorical(x, categories=self.levels).codes
+        idxs_modified = np.copy(idxs_original)
+        idxs_modified[idxs_original == -1] = 0
+        contribution = self.contrast_matrix.matrix[idxs_modified]
+        contribution[idxs_original == -1] = 0
+
+        if config["EVAL_UNSEEN_CATEGORIES"] == "warning":
+            difference = [str(x) for x in difference]
+            warnings.warn(
+                f"The levels ({', '.join(difference)}) in '{self.name}' are not present in the "
+                "original data set. It's impossible to select appropriate contrasts for them. "
+                "Setting all the indicator variables to zero."
+            )
+        return contribution
 
     @property
     def labels(self):

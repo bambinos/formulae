@@ -1,5 +1,5 @@
 class Config:
-    FIELDS = {"EVAL_NEW_CATEGORIES": ("error", "warning", "silent")}
+    FIELDS = {"EVAL_UNSEEN_CATEGORIES": ("error", "warning", "silent")}
 
     def __init__(self, config_dict: dict = None):
         config_dict = {} if config_dict is None else config_dict
@@ -35,3 +35,6 @@ class Config:
 
     def __repr__(self):  # pragma: no cover
         return str(self)
+
+
+config = Config()

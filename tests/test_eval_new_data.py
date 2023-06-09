@@ -5,6 +5,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
+from formulae.config import config
 from formulae.environment import Environment
 from formulae.parser import Parser
 from formulae.scanner import Scanner
@@ -72,7 +73,8 @@ def test_term_new_data_categoric():
     # It remembers it saw "A", "B", and "C", but not "D".
     # So when you pass a new level, it raises a ValueError.
     with pytest.raises(
-        ValueError, match="The levels D in 'x' are not present in the original data set."
+        ValueError, 
+        match=re.escape("The levels (D) in 'x' are not present in the original data set.")
     ):
         data = pd.DataFrame({"x": ["B", "C", "D"]})
         var_term.eval_new_data(data)
@@ -91,7 +93,8 @@ def test_term_new_data_categoric():
     # It remembers it saw "A", "B", and "C", but not "D".
     # So when you pass a new level, it raises a ValueError.
     with pytest.raises(
-        ValueError, match="The levels D in 'x' are not present in the original data set."
+        ValueError, 
+        match=re.escape("The levels (D) in 'x' are not present in the original data set.")
     ):
         data = pd.DataFrame({"x": ["B", "C", "D"]})
         var_term.eval_new_data(data)
@@ -112,7 +115,7 @@ def test_call_new_data_categoric_stateful_transform():
 
     with pytest.raises(
         ValueError,
-        match=re.escape("The levels 4 in 'C(x)' are not present in the original data set"),
+        match=re.escape("The levels (4) in 'C(x)' are not present in the original data set"),
     ):
         data = pd.DataFrame({"x": [2, 3, 4]})
         call_term.eval_new_data(data)
@@ -131,7 +134,7 @@ def test_call_new_data_categoric_stateful_transform():
     # So when you pass a new level, it raises a ValueError.
     with pytest.raises(
         ValueError,
-        match=re.escape("The levels 4 in 'C(x)' are not present in the original data set"),
+        match=re.escape("The levels (4) in 'C(x)' are not present in the original data set"),
     ):
         data = pd.DataFrame({"x": [2, 3, 4]})
         call_term.eval_new_data(data)
@@ -307,3 +310,35 @@ def test_eval_new_data_when_evaluated_false(data, data2):
         common.evaluate_new_data(data2)
     with pytest.raises(ValueError):
         group.evaluate_new_data(data2)
+
+
+def test_eval_unseen_categories():
+    df = pd.DataFrame({"x": np.arange(10), "g": list("abcde") * 2})
+    df2 = pd.DataFrame({"g": list("abxz")})
+    dm = design_matrices("x ~ 0 + g", df)
+
+    with pytest.raises(ValueError, match="not present in the original data set"):
+        dm.common.evaluate_new_data(df2)
+    
+    config.EVAL_UNSEEN_CATEGORIES = "warning"
+    with pytest.warns(UserWarning, match="It's impossible to select appropriate contrasts"):
+        common2 = dm.common.evaluate_new_data(df2)    
+        common2.design_matrix == np.array(
+            [
+                [1, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0]
+            ]
+       )
+        
+    config.EVAL_UNSEEN_CATEGORIES = "silent"
+    common2 = dm.common.evaluate_new_data(df2)    
+    common2.design_matrix == np.array(
+        [
+            [1, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+        ]
+    )

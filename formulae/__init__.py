@@ -1,11 +1,9 @@
 import logging
 
-from .config import Config
+from .config import config
 from .matrices import design_matrices
 from .model_description import model_description
 from .version import __version__
-
-config = Config()
 
 __all__ = [
     "config",
