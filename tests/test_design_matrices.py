@@ -922,7 +922,7 @@ def test_design_matrices_repr_and_str(data):
         "Response:                (20,)\n"
         "Common:                (20, 2)\n"
         "Group-specific:        (20, 8)\n\n"
-        "Use .reponse, .common, or .group to access the different members."
+        "Use .response, .common, or .group to access the different members."
     )
 
     assert repr(dm) == text
