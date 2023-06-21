@@ -88,7 +88,7 @@ class DesignMatrices:
             + "\n"
             + "\n".join(entries)
             + "\n\n"
-            + "Use .reponse, .common, or .group to access the different members."
+            + "Use .response, .common, or .group to access the different members."
         )
         return msg
 
