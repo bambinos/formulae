@@ -1066,7 +1066,7 @@ class Model:
         Returns
         -------
         self: :class:`.Model`
-            The same model object but now with a reponse term.
+            The same model object but now with a response term.
         """
         if isinstance(term, Response):
             self.response = term
