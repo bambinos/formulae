@@ -401,6 +401,7 @@ class GroupEffectsMatrix:
         new_instance.design_matrix = np.column_stack(
             [t.eval_new_data(data) for t in self.terms.values()]
         )
+        # TODO: Update slices if we have new groups
         new_instance.slices = self.slices
         new_instance.evaluated = True
         return new_instance

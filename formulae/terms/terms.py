@@ -693,11 +693,18 @@ class GroupSpecificTerm:
             The data frame where variables are taken from.
 
         Returns
-        ----------
+        -------
         Zi: np.ndarray
         """
         Xi = self.expr.eval_new_data(data)
         Ji = self.factor.eval_new_data(data)
+
+        # If a row contains ALL zeroes, then it indicates that is a new, unseen, group.
+        all_zeros = ~Ji.any(axis=1)
+        if all_zeros.any():
+            Ji = np.column_stack([Ji, np.zeros((Ji.shape[0], 1), dtype="int")])
+            Ji[all_zeros, -1] = 1
+
         if Xi.ndim == 1:
             Xi = Xi[:, np.newaxis]
         if Ji.ndim == 1:
