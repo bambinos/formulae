@@ -338,6 +338,7 @@ class GroupEffectsMatrix:
         self.design_matrix = np.zeros((0, 0))
         self.slices = {}
         self.evaluated = False
+        self.factors_with_new_levels = tuple()
 
     def evaluate(self, data, env):
         """Evaluate group specific terms.
@@ -363,10 +364,7 @@ class GroupEffectsMatrix:
         start = 0
         for term in self.terms.values():
             # NOTE: I think everything we pass here has two columns...
-            if term.data.ndim == 2:
-                delta = term.data.shape[1]
-            else:
-                delta = 1
+            delta = term.data.shape[1] if term.data.ndim == 2 else 1
             self.slices[term.name] = slice(start, start + delta)
             start += delta
         self.evaluated = True
@@ -398,11 +396,35 @@ class GroupEffectsMatrix:
         new_instance = self.__class__(self.terms.values())
         new_instance.data = data
         new_instance.env = self.env
-        new_instance.design_matrix = np.column_stack(
-            [t.eval_new_data(data) for t in self.terms.values()]
-        )
-        # TODO: Update slices if we have new groups
-        new_instance.slices = self.slices
+
+        start = 0
+        matrices_to_stack = []
+        factors_with_new_levels = set()
+
+        for term in self.terms.values():
+            term_matrix = term.eval_new_data(data)
+            delta = term_matrix.shape[1] if term_matrix.ndim == 2 else 1
+            matrices_to_stack.append(term_matrix)
+
+            slice_original = self.slices[term.name]
+            slice_new = slice(start, start + delta)
+
+            slice_w_original = get_slice_width(slice_original)
+            slice_w_new = get_slice_width(slice_new)
+
+            # If the width of the slices differ, there's a new column, thus a new group.
+            if slice_w_original != slice_w_new:
+                factors_with_new_levels.add(term.factor.name)
+
+            # Always store the new slice.
+            # It may be affected even when there are no new groups for this group-specific term
+            # because there are other group-specific terms with a new column
+            new_instance.slices[term.name] = slice_new
+
+            start += delta
+
+        new_instance.factors_with_new_levels = tuple(factors_with_new_levels)
+        new_instance.design_matrix = np.column_stack(matrices_to_stack)
         new_instance.evaluated = True
         return new_instance
 
@@ -433,10 +455,16 @@ class GroupEffectsMatrix:
     def __str__(self):
         entries = []
         for name, term in self.terms.items():
-            content = [f"kind: {term.kind}", f"groups: {term.groups}"]
+            term_slice = self.slices[name]
+            term_slice_width = get_slice_width(term_slice)
+            groups = term.groups
+            if term_slice_width != len(groups):
+                assert term_slice_width == len(groups) + 1, "It should only have one extra group"
+                groups = groups + ["__NEW_FACTOR_GROUP__"]
+            content = [f"kind: {term.kind}", f"groups: {groups}"]
             if hasattr(term.expr, "levels") and term.expr.levels is not None:
                 content += [f"levels: {term.expr.levels}"]
-            content += [slice_to_column(self.slices[name])]
+            content += [slice_to_column(term_slice)]
             entries += [f"{name}{wrapify(spacify(multilinify(content, '')))}"]
         msg = (
             f"GroupEffectsMatrix with shape {self.design_matrix.shape}\n"
@@ -526,16 +554,16 @@ def design_matrices(formula, data, na_action="drop", env=0, extra_namespace=None
 
 
 # Utils
-def spacify(string):
+def spacify(string: str):
     return "  " + "  ".join(string.splitlines(True))
 
 
-def multilinify(l, sep=","):
+def multilinify(l, sep: str = ","):
     sep += "\n"
     return "\n" + sep.join(l)
 
 
-def wrapify(string, width=100):
+def wrapify(string: str, width: int = 100):
     l = string.splitlines(True)
     wrapper = textwrap.TextWrapper(width=width)
     for idx, line in enumerate(l):
@@ -547,14 +575,18 @@ def wrapify(string, width=100):
     return "".join(l)
 
 
-def slice_to_column(s):
+def slice_to_column(s: slice):
     if s.stop - s.start > 1:
         return f"columns: {s.start}:{s.stop}"
     else:
         return f"column: {s.start}"
 
 
-def glue_and_align(key, value, width):
+def get_slice_width(s: slice):
+    return s.stop - s.start
+
+
+def glue_and_align(key, value, width: int):
     key = str(key)
     value = str(value)
     key_n = len(key)
