@@ -399,7 +399,7 @@ class GroupEffectsMatrix:
 
         start = 0
         matrices_to_stack = []
-        factors_with_new_levels = set()
+        factors_with_new_levels = []
 
         for term in self.terms.values():
             term_matrix = term.eval_new_data(data)
@@ -413,8 +413,8 @@ class GroupEffectsMatrix:
             slice_w_new = get_slice_width(slice_new)
 
             # If the width of the slices differ, there's a new column, thus a new group.
-            if slice_w_original != slice_w_new:
-                factors_with_new_levels.add(term.factor.name)
+            if slice_w_original != slice_w_new and term.factor.name not in factors_with_new_levels:
+                factors_with_new_levels.append(term.factor.name)
 
             # Always store the new slice.
             # It may be affected even when there are no new groups for this group-specific term
@@ -460,7 +460,7 @@ class GroupEffectsMatrix:
             term_slice = self.slices[name]
             term_slice_width = get_slice_width(term_slice)
             levels_n = len(term.expr.levels) if has_levels else 1
-            if term_slice_width != len(groups) * levels_n: # Has extra groups
+            if term_slice_width != len(groups) * levels_n:  # Has extra groups
                 assert (
                     term_slice_width == len(groups) + levels_n
                 ), "It should only have one extra group"
