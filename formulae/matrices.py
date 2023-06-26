@@ -455,14 +455,18 @@ class GroupEffectsMatrix:
     def __str__(self):
         entries = []
         for name, term in self.terms.items():
+            has_levels = hasattr(term.expr, "levels") and term.expr.levels is not None
+            groups = term.groups
             term_slice = self.slices[name]
             term_slice_width = get_slice_width(term_slice)
-            groups = term.groups
-            if term_slice_width != len(groups):
-                assert term_slice_width == len(groups) + 1, "It should only have one extra group"
+            levels_n = len(term.expr.levels) if has_levels else 1
+            if term_slice_width != len(groups) * levels_n: # Has extra groups
+                assert (
+                    term_slice_width == len(groups) + levels_n
+                ), "It should only have one extra group"
                 groups = groups + ["__NEW_FACTOR_GROUP__"]
             content = [f"kind: {term.kind}", f"groups: {groups}"]
-            if hasattr(term.expr, "levels") and term.expr.levels is not None:
+            if has_levels:
                 content += [f"levels: {term.expr.levels}"]
             content += [slice_to_column(term_slice)]
             entries += [f"{name}{wrapify(spacify(multilinify(content, '')))}"]
