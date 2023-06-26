@@ -28,7 +28,7 @@ class Config:
     def __str__(self):  # pragma: no cover
         lines = []
         for field, choices in Config.FIELDS.items():
-            lines.append(f"{field}: {self[field]} (available: {choices})")
+            lines.append(f"{field}: {self[field]} (available: {list(choices)})")
         header = ["Formulae configuration"]
         header.append("-" * len(header[0]))
         return "\n".join(header + lines)

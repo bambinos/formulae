@@ -4,7 +4,13 @@
 
 ### New features
 
+- The library now supports configuration variables (#95)
+- Allow evaluations on new data with new categories (#96)
+- Return ready to be used group-specific effects design matrix when there are new groups (#100)
+
 ### Maintenance and fixes
+
+- Fix typo in __str__ (#99)
 
 ### Documentation
 

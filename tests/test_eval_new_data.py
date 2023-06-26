@@ -73,8 +73,8 @@ def test_term_new_data_categoric():
     # It remembers it saw "A", "B", and "C", but not "D".
     # So when you pass a new level, it raises a ValueError.
     with pytest.raises(
-        ValueError, 
-        match=re.escape("The levels (D) in 'x' are not present in the original data set.")
+        ValueError,
+        match=re.escape("The levels (D) in 'x' are not present in the original data set."),
     ):
         data = pd.DataFrame({"x": ["B", "C", "D"]})
         var_term.eval_new_data(data)
@@ -93,8 +93,8 @@ def test_term_new_data_categoric():
     # It remembers it saw "A", "B", and "C", but not "D".
     # So when you pass a new level, it raises a ValueError.
     with pytest.raises(
-        ValueError, 
-        match=re.escape("The levels (D) in 'x' are not present in the original data set.")
+        ValueError,
+        match=re.escape("The levels (D) in 'x' are not present in the original data set."),
     ):
         data = pd.DataFrame({"x": ["B", "C", "D"]})
         var_term.eval_new_data(data)
@@ -319,26 +319,84 @@ def test_eval_unseen_categories():
 
     with pytest.raises(ValueError, match="not present in the original data set"):
         dm.common.evaluate_new_data(df2)
-    
+
     config.EVAL_UNSEEN_CATEGORIES = "warning"
     with pytest.warns(UserWarning, match="It's impossible to select appropriate contrasts"):
-        common2 = dm.common.evaluate_new_data(df2)    
-        common2.design_matrix == np.array(
-            [
-                [1, 0, 0, 0, 0],
-                [0, 1, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0]
-            ]
-       )
-        
+        common2 = dm.common.evaluate_new_data(df2)
+        assert np.array_equal(
+            common2.design_matrix,
+            np.array([[1, 0, 0, 0, 0], [0, 1, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]),
+        )
+
     config.EVAL_UNSEEN_CATEGORIES = "silent"
-    common2 = dm.common.evaluate_new_data(df2)    
-    common2.design_matrix == np.array(
-        [
-            [1, 0, 0, 0, 0],
-            [0, 1, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
-        ]
+    common2 = dm.common.evaluate_new_data(df2)
+    assert np.array_equal(
+        common2.design_matrix,
+        np.array([[1, 0, 0, 0, 0], [0, 1, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]),
     )
+
+    # Reset config
+    config.EVAL_UNSEEN_CATEGORIES = "error"
+
+
+def test_new_group_specific_groups():
+    config.EVAL_UNSEEN_CATEGORIES = "silent"
+    df = pd.DataFrame(
+        {"x": [1, 2, 3, 4], "g1": ["G1", "G1", "G2", "G2"], "g2": ["G3", "G4", "G3", "G4"]}
+    )
+
+    df_2 = pd.DataFrame({"x": [5, 6], "g1": ["NEW_1", "NEW_2"], "g2": ["G3", "NEW_4"]})
+    df_3 = pd.DataFrame({"x": [7, 8], "g1": ["G1", "G2"], "g2": ["NEW_3", "NEW_4"]})
+
+    # Simple group, intercept, and numeric predictor
+    group = design_matrices("1 + (1 + x | g1)", df).group
+    group_new = group.evaluate_new_data(df_2)
+    assert group_new.factors_with_new_levels == ("g1",)
+    assert np.array_equal(np.array(group_new), np.array([[0, 0, 1, 0, 0, 5], [0, 0, 1, 0, 0, 6]]))
+
+    # Simple group, intecept, and numeric predictor. Two groups.
+    group = design_matrices("1 + (1 + x | g1) + (1 + x | g2)", df).group
+
+    group_new = group.evaluate_new_data(df_2)
+    assert group_new.factors_with_new_levels == ("g1", "g2")
+    assert np.array_equal(
+        np.array(group_new),
+        np.array([[0, 0, 1, 0, 0, 5, 1, 0, 0, 5, 0, 0], [0, 0, 1, 0, 0, 6, 0, 0, 1, 0, 0, 6]]),
+    )
+
+    group_new = group.evaluate_new_data(df_3)
+    assert group_new.factors_with_new_levels == ("g2",)
+    assert np.array_equal(
+        np.array(group_new),
+        np.array([[1, 0, 7, 0, 0, 0, 1, 0, 0, 7], [0, 1, 0, 8, 0, 0, 1, 0, 0, 8]]),
+    )
+
+    # Simple group, categoric predictor
+    group = design_matrices("1 + (0 + g1 | g2)", df).group
+    group_new = group.evaluate_new_data(df_3)
+
+    assert group_new.factors_with_new_levels == ("g2",)
+    assert np.array_equal(
+        np.array(group_new),
+        np.array([[0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1]]),
+    )
+
+    # Composite group, numeric predictor
+    group = design_matrices("1 + (1 + x | g1:g2)", df).group
+    group_new = group.evaluate_new_data(df_2)
+
+    assert group_new.factors_with_new_levels == ("g1:g2", )
+    assert np.array_equal(
+        np.array(group_new),
+        np.array([[0, 0, 0, 0, 1, 0, 0, 0, 0, 5], [0, 0, 0, 0, 1, 0, 0, 0, 0, 6]]),
+    )
+
+    group_new = group.evaluate_new_data(df_3)
+    assert group_new.factors_with_new_levels == ("g1:g2",)
+    assert np.array_equal(
+        np.array(group_new),
+        np.array([[0, 0, 0, 0, 1, 0, 0, 0, 0, 7], [0, 0, 0, 0, 1, 0, 0, 0, 0, 8]]),
+    )
+
+    # Reset config
+    config.EVAL_UNSEEN_CATEGORIES = "error"
