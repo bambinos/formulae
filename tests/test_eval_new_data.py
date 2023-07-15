@@ -385,7 +385,7 @@ def test_new_group_specific_groups():
     group = design_matrices("1 + (1 + x | g1:g2)", df).group
     group_new = group.evaluate_new_data(df_2)
 
-    assert group_new.factors_with_new_levels == ("g1:g2", )
+    assert group_new.factors_with_new_levels == ("g1:g2",)
     assert np.array_equal(
         np.array(group_new),
         np.array([[0, 0, 0, 0, 1, 0, 0, 0, 0, 5], [0, 0, 0, 0, 1, 0, 0, 0, 0, 6]]),

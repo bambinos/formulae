@@ -1217,3 +1217,24 @@ def test_call_names_respect_string_lexeme():
 
     dm = design_matrices('f(x, y="abcd")', df)
     assert 'f(x, y="abcd")' in dm.common.terms
+
+
+def test_add_and_remove_intercept_works():
+    df = pd.DataFrame({"g": ["a", "a", "a", "b", "b"]})
+    dm = design_matrices("0 + g + 1", df)
+    assert np.allclose(
+        np.asarray(dm.common),
+        np.array([[0.0, 1.0], [0.0, 1.0], [0.0, 1.0], [1.0, 1.0], [1.0, 1.0]]),
+    )
+
+    dm = design_matrices("-1 + g + 1", df)
+    assert np.allclose(
+        np.asarray(dm.common),
+        np.array([[0.0, 1.0], [0.0, 1.0], [0.0, 1.0], [1.0, 1.0], [1.0, 1.0]]),
+    )
+
+    dm = design_matrices("0 + g + 0 + 1", df)
+    assert np.allclose(
+        np.asarray(dm.common),
+        np.array([[0.0, 1.0], [0.0, 1.0], [0.0, 1.0], [1.0, 1.0], [1.0, 1.0]]),
+    )
