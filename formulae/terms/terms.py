@@ -1162,7 +1162,18 @@ class Model:
 
     def _get_encoding_groups(self):
         components = {}
-        for term in self.common_terms:
+        # This is not the best fix, but we need the intercept to be in the first position
+        common_terms = self.common_terms.copy()
+        intercept_idx = -1
+        for i, term in enumerate(common_terms):
+            if isinstance(term, Intercept):
+                intercept_idx = i
+                break
+
+        if intercept_idx != -1:
+            common_terms.insert(0, common_terms.pop(intercept_idx))
+
+        for term in common_terms:
             if term.kind == "interaction":
                 components[term.name] = {c.name: c.kind for c in term.components}
             else:
