@@ -6,11 +6,15 @@
 
 ### Maintenance and fixes
 
-- Fix bug when intercept is inserted after categorical variable (#102)
-
 ### Documentation
 
 ### Deprecation
+
+## v0.5.1 Unreleased
+
+### Maintenance and fixes
+
+- Fix bug when intercept is inserted after categorical variable (#102)
 
 ## v0.5.0
 
