@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 import numpy as np
+import pandas as pd
 
 
 def listify(obj):
@@ -38,3 +39,16 @@ def get_interaction_matrix(x, y):
         for j2 in range(y.shape[1]):
             l.append(x[:, j1] * y[:, j2])
     return np.column_stack(l)
+
+
+def is_categorical_dtype(arr_or_dtype):
+    """Check whether an array-like or dtype is of the pandas Categorical dtype."""
+    # https://pandas.pydata.org/docs/whatsnew/v2.1.0.html#other-deprecations
+    if pd.__version__ < "2.1.0":
+        return pd.api.types.is_categorical_dtype(arr_or_dtype)
+    else:
+        if hasattr(arr_or_dtype, "dtype"):  # it's an array
+            dtype = getattr(arr_or_dtype, "dtype")
+        else:
+            dtype = arr_or_dtype
+        return isinstance(dtype, pd.CategoricalDtype)

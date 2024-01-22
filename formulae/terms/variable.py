@@ -4,10 +4,11 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
+from pandas.api.types import is_numeric_dtype, is_string_dtype
 
 from formulae.config import config
 from formulae.categorical import Treatment
+from formulae.utils import is_categorical_dtype
 
 
 class Variable:

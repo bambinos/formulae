@@ -4,12 +4,13 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from pandas.api.types import is_categorical_dtype, is_numeric_dtype, is_string_dtype
+from pandas.api.types import is_numeric_dtype, is_string_dtype
 
 from formulae.categorical import ENCODINGS, CategoricalBox, Treatment
 from formulae.config import config
 from formulae.transforms import TRANSFORMS, Proportion, Offset
 from formulae.terms.call_utils import CallVarsExtractor
+from formulae.utils import is_categorical_dtype
 
 
 class Call:
