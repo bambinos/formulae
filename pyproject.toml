@@ -1,6 +1,8 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "setuptools_scm>=8"]
+
+[tool.setuptools_scm]
 
 [project]
 name = "formulae"
@@ -39,9 +41,6 @@ changelog = "https://github.com/bambinos/formulae/blob/main/docs/CHANGELOG.md"
 
 [tool.setuptools]
 packages = ["formulae", "formulae.terms"]
-
-[tool.setuptools.dynamic]
-version = {file = "formulae/version.txt"}
 
 [tool.black]
 line-length = 100
