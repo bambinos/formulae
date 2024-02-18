@@ -19,7 +19,7 @@ class Assign:
 
     def __str__(self):  # pragma: no cover
         right = "  ".join(str(self.value).splitlines(True))
-        return f"Assign(name={self.name}, value={right}\n)"
+        return f"Assign(name={self.name}, value={right})"
 
     def accept(self, visitor):
         return visitor.visitAssignExpr(self)

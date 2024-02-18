@@ -93,8 +93,6 @@ class LazyVariable:
         The name of the variable it represents.
     """
 
-    BUILTINS = {"True": True, "False": False, "None": None}
-
     def __init__(self, name):
         self.name = name
 
@@ -129,16 +127,13 @@ class LazyVariable:
         result:
             The value represented by this name in either the data mask or the environment.
         """
-        if self.name in self.BUILTINS:
-            result = self.BUILTINS[self.name]
-        else:
+        try:
+            result = data_mask[self.name]
+        except KeyError:
             try:
-                result = data_mask[self.name]
-            except KeyError:
-                try:
-                    result = env.namespace[self.name]
-                except KeyError as e:
-                    raise e
+                result = env.namespace[self.name]
+            except KeyError as e:
+                raise e
         return result
 
 
