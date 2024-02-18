@@ -1,4 +1,4 @@
-# Change Log
+# Changelog
 
 ## v0.X.X Unreleased
 
@@ -10,7 +10,15 @@
 
 ### Deprecation
 
-## v0.5.1 Unreleased
+## v0.5.2
+
+### Maintenance and fixes
+
+- Update is_categorical_dtype for pandas >= 2.10 (#105)
+- Add automatic versioning to the library (#106)
+- Interpret True, False, and None as Python literals (#107)
+
+## v0.5.1
 
 ### Maintenance and fixes
 
