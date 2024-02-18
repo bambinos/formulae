@@ -195,6 +195,8 @@ class Parser:  # pylint: disable=too-many-public-methods
             return Literal(token.literal, lexeme=token.lexeme)
         elif self.match("BQNAME"):
             return QuotedName(self.previous())
+        elif self.match("PYTHON_LITERAL"):
+            return Literal(self.previous().literal)
         elif self.match("LEFT_PAREN"):
             expr = self.expression()
             self.consume("RIGHT_PAREN", "Expect ')' after expression.")

@@ -188,11 +188,17 @@ class Scanner:
 
         self.add_token("NUMBER", token)
 
+    # pylint: disable=eval-used
     def identifier(self):
         # 'mod.function' is also an identifier
         while self.peek().isalnum() or self.peek() in [".", "_"]:
             self.advance()
-        self.add_token("IDENTIFIER")
+
+        token = self.code[self.start : self.current]
+        if token in ("True", "False", "None"):  # These are actually literals, not variable names
+            self.add_token("PYTHON_LITERAL", eval(token))  # Pass literals, not strings
+        else:
+            self.add_token("IDENTIFIER")
 
     def char(self):
         while self.peek() not in ["'", '"'] and not self.at_end():

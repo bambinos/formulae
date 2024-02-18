@@ -264,3 +264,20 @@ def test_unclosed_function_call():
     data = pd.DataFrame({"y": [1, 2], "x": [1, 2]})
     with pytest.raises(ParseError, match="after arguments"):
         design_matrices("y ~ f(x", data)
+
+
+def test_parse_python_literals():
+    result = Parser(Scanner("f(x, True, y=False, z=None)").scan(False)).parse()
+
+    assert isinstance(result.args[0], Variable)
+
+    assert isinstance(result.args[1], Literal)
+    assert result.args[1].value is True
+
+    assert isinstance(result.args[2], Assign)
+    assert isinstance(result.args[2].value, Literal)
+    assert result.args[2].value.value is False
+
+    assert isinstance(result.args[3], Assign)
+    assert isinstance(result.args[3].value, Literal)
+    assert result.args[3].value.value is None
