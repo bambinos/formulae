@@ -10,6 +10,12 @@
 
 ### Deprecation
 
+## v0.5.3
+
+### Maintenance and fixes
+
+- Make formulae reach transformations before outer names (#109)
+
 ## v0.5.2
 
 ### Maintenance and fixes
