@@ -8,6 +8,7 @@ from pandas.api.types import is_numeric_dtype, is_string_dtype
 
 from formulae.categorical import ENCODINGS, CategoricalBox, Treatment
 from formulae.config import config
+from formulae.environment import Environment
 from formulae.transforms import TRANSFORMS, Proportion, Offset
 from formulae.terms.call_utils import CallVarsExtractor
 from formulae.utils import is_categorical_dtype
@@ -100,8 +101,11 @@ class Call:
         env: Environment
             The environment where values and functions are taken from.
         """
-
-        self.env = env.with_outer_namespace({**TRANSFORMS, **ENCODINGS})
+        # We initialize an environment where transformations and encodings are available first
+        # This makes sure formulae uses the internal objects instead of objects that may be
+        # available in the namespace where 'design_matrices' is called.
+        transforms_env = Environment([{**TRANSFORMS, **ENCODINGS}])
+        self.env = transforms_env.with_outer_namespace(env.namespace)
         x = self.call.eval(data_mask, self.env)
 
         if is_numeric_dtype(x):
