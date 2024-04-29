@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 import numpy as np
+from packaging.version import Version
 import pandas as pd
 
 
@@ -44,7 +45,7 @@ def get_interaction_matrix(x, y):
 def is_categorical_dtype(arr_or_dtype):
     """Check whether an array-like or dtype is of the pandas Categorical dtype."""
     # https://pandas.pydata.org/docs/whatsnew/v2.1.0.html#other-deprecations
-    if pd.__version__ < "2.1.0":
+    if Version(pd.__version__) < Version("2.1.0"):
         return pd.api.types.is_categorical_dtype(arr_or_dtype)
     else:
         if hasattr(arr_or_dtype, "dtype"):  # it's an array

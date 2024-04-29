@@ -7,7 +7,7 @@ requires = ["setuptools>=61.0", "setuptools_scm>=8"]
 [project]
 name = "formulae"
 description = "Formulas for mixed-effects models in Python"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 readme = {file = "README.md", content-type = "text/markdown"}
 license = {file = "LICENSE"}
 dynamic = ["version"]
@@ -15,6 +15,7 @@ maintainers = [{ name = "Tomás Capretto", email = "tomicapretto@gmail.com" }]
 
 dependencies = [
     "numpy>=1.16",
+    "packaging",
     "pandas>=1.0.0",
     "scipy>=1.5.4"
 ]
