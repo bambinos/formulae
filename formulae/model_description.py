@@ -1,6 +1,8 @@
-from .scanner import Scanner
-from .parser import Parser
-from .resolver import Resolver
+from formulae.terms.terms import Model
+
+from formulae.scanner import Scanner
+from formulae.parser import Parser
+from formulae.resolver import Resolver
 
 
 def model_description(formula):
@@ -19,4 +21,10 @@ def model_description(formula):
     ----------
     An object of class ModelTerms with an internal description of the model.
     """
-    return Resolver(Parser(Scanner(formula).scan()).parse()).resolve()
+
+    description = Resolver(Parser(Scanner(formula).scan()).parse()).resolve()
+
+    if isinstance(description, Model):
+        return description
+
+    return Model(description)
