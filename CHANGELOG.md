@@ -10,6 +10,12 @@
 
 ### Deprecation
 
+## v0.5.4
+
+### Maintenance and fixes
+
+- Make sure model_description always returns a Model instance (#112)
+
 ## v0.5.3
 
 ### Maintenance and fixes
