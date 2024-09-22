@@ -1,8 +1,9 @@
 from copy import deepcopy
 
 import numpy as np
-from packaging.version import Version
 import pandas as pd
+
+from packaging.version import Version
 
 
 def listify(obj):
