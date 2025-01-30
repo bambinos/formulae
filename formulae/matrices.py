@@ -428,6 +428,13 @@ class GroupEffectsMatrix:
         new_instance.evaluated = True
         return new_instance
 
+    def as_dataframe(self):
+        """Returns `self.design_matrix` as a pandas.DataFrame."""
+        columns = []
+        for term in self.terms.values():
+            columns.extend(term.labels)
+        return pd.DataFrame(self.design_matrix, columns=columns)
+
     def __getitem__(self, term):
         """Get the sub-matrix that corresponds to a given term.
 
