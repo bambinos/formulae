@@ -1052,6 +1052,22 @@ def test_group_specific_as_array(data):
     assert np.asarray(group).shape == (20, 4)
 
 
+def test_group_specific_as_data_frame(data):
+    _, _, group = design_matrices("y ~ 1 + (x1|g) + (x1:x2|g) + (h|g)", data)
+    group_specific_dataframe = group.as_dataframe()
+    assert group_specific_dataframe.shape == (20, 8)
+    assert group_specific_dataframe.columns.tolist() == [
+        "1|g[A]",
+        "1|g[B]",
+        "x1|g[A]",
+        "x1|g[B]",
+        "x1:x2|g[A]",
+        "x1:x2|g[B]",
+        "h[B]|g[A]",
+        "h[B]|g[B]",
+    ]
+
+
 def test_group_specific_repr_and_str(data):
     _, _, group = design_matrices("y ~ 1 + (x1|g) + (h|g)", data)
     text = (

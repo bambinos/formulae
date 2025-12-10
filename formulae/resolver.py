@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 from formulae.terms import Variable, Call, Term, Intercept, NegatedIntercept, Response
 from formulae.terms.call_resolver import CallResolver
 

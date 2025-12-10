@@ -268,7 +268,6 @@ def test_nested_transform(data, data2):
 
 
 def test_components_arent_shared():
-
     """
     Components used in full interaction operator used to be shared between terms, which may save
     space and time, but result in unexpected behavior if components have different encodings

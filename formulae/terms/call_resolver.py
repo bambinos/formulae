@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 import operator
 
 from formulae.expr import Assign
