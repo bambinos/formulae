@@ -17,6 +17,7 @@ from formulae.terms.variable import Variable
 
 _log = logging.getLogger("formulae")
 
+
 # XTODO: Components have 'value' and terms have 'data'... which one should be kept?
 class Intercept:
     """Internal representation of a model intercept."""

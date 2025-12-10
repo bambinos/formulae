@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 from formulae.utils import flatten_list
 
 

@@ -3,6 +3,7 @@ These tests are borrowed from the tests in the original implementation of the Po
 transformation by Matthew Wardrop in Formulaic.
 Original source: https://github.com/matthewwardrop/formulaic/blob/main/tests/transforms/test_poly.py
 """
+
 import pytest
 
 import numpy as np
@@ -48,11 +49,11 @@ def test_basic(data):
         3.603750e-01,
     ]
 
+    assert poly.alpha[0] == pytest.approx(0.5)
+    assert poly.norms2[0] == pytest.approx(21.0)
+    assert poly.norms2[1] == pytest.approx(1.925)
+
     assert np.allclose(value[:, 0], r_reference)
-
-    assert pytest.approx(poly.alpha, {0: 0.5})
-    assert pytest.approx(poly.norms2, {0: 21.0, 2: 1.925})
-
     assert np.allclose(poly(data)[:, 0], r_reference)
 
 
@@ -93,8 +94,16 @@ def test_degree(data):
 
     assert np.allclose(value, r_reference)
 
-    assert pytest.approx(poly.alpha, {0: 0.5, 1: 0.5, 2: 0.5})
-    assert pytest.approx(poly.norms2, {1: 0.09166666666666667, 2: 0.07283333333333333})
+    assert len(poly.alpha) == 3
+    assert len(poly.norms2) == 4
+    assert poly.alpha[0] == pytest.approx(0.5)
+    assert poly.alpha[1] == pytest.approx(0.5)
+    assert poly.alpha[2] == pytest.approx(0.5)
+
+    assert poly.norms2[0] == pytest.approx(21.0)
+    assert poly.norms2[1] == pytest.approx(1.925)
+    assert poly.norms2[2] == pytest.approx(0.140204167)
+    assert poly.norms2[3] == pytest.approx(0.009734175)
 
     assert np.allclose(poly(data, degree=3), r_reference)
 
