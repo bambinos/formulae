@@ -4,6 +4,7 @@ import textwrap
 
 import numpy as np
 import pandas as pd
+from scipy import sparse
 
 from .environment import Environment
 from .model_description import model_description
@@ -17,7 +18,6 @@ class DesignMatrices:
 
     Parameters
     ----------
-
     model : Model
         The model description, the result of calling ``model_description``.
     data : pandas.DataFrame
@@ -348,7 +348,7 @@ class GroupEffectsMatrix:
         term.
 
         This method also sets the values of ``self.data`` and ``self.env``. It also populates
-        the dictionary ``self.terms_info`` with information related to each term,such as the kind,
+        the dictionary ``self.terms_info`` with information related to each term ,such as the kind,
         the columns and rows they occupy in the design matrix and the names of the columns.
 
         Parameters
@@ -360,11 +360,13 @@ class GroupEffectsMatrix:
         """
         self.data = data
         self.env = env
-        self.design_matrix = np.column_stack([term.data for term in self.terms.values()])
+        # NOTE: sparse
+        # self.design_matrix = np.column_stack([term.data for term in self.terms.values()])
+        self.design_matrix = sparse.hstack([term.data for term in self.terms.values()])
         start = 0
         for term in self.terms.values():
-            # NOTE: I think everything we pass here has two columns...
-            delta = term.data.shape[1] if term.data.ndim == 2 else 1
+            # All terms have two columns
+            delta = term.data.shape[1]
             self.slices[term.name] = slice(start, start + delta)
             start += delta
         self.evaluated = True

@@ -45,6 +45,7 @@ preview = ["pixi-build"]
 formulae = { path = ".", editable = true }
 
 [tool.pixi.dependencies]
+sparse = ">=0.17.0,<0.18"
 # NOTE: We get all dependencies we need through installation of Formulae itself
 
 ## Dependencies from conda channels
@@ -123,7 +124,7 @@ max-line-length = 100
 dummy-variables-rgx = "_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|^ignored_|^unused_"
 ignored-argument-names = "_.*|^ignored_|^unused_"
 
-good-names = ["Xi", "Ji", "Zi", "NA_handler"]
+good-names = ["Xi", "Ji", "Zi", "Xi_sparse", "Ji_sparse", "Zi_sparse"]
 
 bad-names = ["foo", "bar", "baz", "toto", "tutu", "tata"]
 
