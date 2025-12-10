@@ -287,6 +287,8 @@ class Call:
             result = self.eval_new_data_offset(data_mask)
         elif self.kind == "proportion":
             result = self.eval_new_data_proportion(data_mask)
+        else:
+            raise ValueError(f"Call result is of an unrecognized type ({self.kind}).")
 
         return result
 

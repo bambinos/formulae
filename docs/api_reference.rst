@@ -20,4 +20,3 @@ methods in the current release of formulae.
 
 .. automodule:: formulae.matrices
   :members: DesignMatrices
-

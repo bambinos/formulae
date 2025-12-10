@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 import inspect
 
 import numpy as np
@@ -324,7 +325,8 @@ class BSpline:
         if lower_bound > upper_bound:
             raise ValueError(f"'lower_bound' > 'upper_bound' ({lower_bound} > {upper_bound})")
 
-        inner_knots = np.asarray(inner_knots)
+        # NOTE: We need to clean the logic that creates 'inner_knots'.
+        inner_knots = np.asarray(inner_knots)  # pylint: disable=used-before-assignment
         if inner_knots.ndim > 1:
             raise ValueError("'knots' must be 1 dimensional")
 

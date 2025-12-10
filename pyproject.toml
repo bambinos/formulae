@@ -1,3 +1,6 @@
+# ------------------------------------------------------------------------------------------------ #
+#                                            Packaging                                             #
+# ------------------------------------------------------------------------------------------------ #
 [build-system]
 build-backend = "setuptools.build_meta"
 requires = ["setuptools>=61.0", "setuptools_scm>=8"]
@@ -8,7 +11,7 @@ requires = ["setuptools>=61.0", "setuptools_scm>=8"]
 name = "formulae"
 description = "Formulas for mixed-effects models in Python"
 requires-python = ">=3.8"
-readme = {file = "README.md", content-type = "text/markdown"}
+readme = "README.md"
 license = {file = "LICENSE"}
 dynamic = ["version"]
 maintainers = [{ name = "Tomás Capretto", email = "tomicapretto@gmail.com" }]
@@ -20,29 +23,126 @@ dependencies = [
     "scipy>=1.5.4"
 ]
 
-[project.optional-dependencies]
-dev = [
-    "black==22.3.0",
-    "docutils<0.18",
-    "ipython",
-    "jupyter-sphinx",
-    "nbsphinx",
-    "pydata-sphinx-theme>=0.6.3",
-    "pylint==2.17.5",
-    "pytest-cov>=2.6.1",
-    "pytest==6.2.5",
-    "Sphinx>=1.8.3"
-]
-
 [project.urls]
 homepage = "https://bambinos.github.io/formulae"
-documentation = "https://bambinos.github.io/formulae" 
+documentation = "https://bambinos.github.io/formulae"
 repository = "https://github.com/bambinos/formulae"
 changelog = "https://github.com/bambinos/formulae/blob/main/docs/CHANGELOG.md"
 
 [tool.setuptools]
 packages = ["formulae", "formulae.terms"]
 
+# ------------------------------------------------------------------------------------------------ #
+#                                               Pixi                                               #
+# ------------------------------------------------------------------------------------------------ #
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+preview = ["pixi-build"]
+
+# NOTE: Installs Formulae in editable mode
+[tool.pixi.pypi-dependencies]
+formulae = { path = ".", editable = true }
+
+[tool.pixi.dependencies]
+# NOTE: We get all dependencies we need through installation of Formulae itself
+
+## Dependencies from conda channels
+[tool.pixi.feature.dev.dependencies]
+black = "25.*"
+pre-commit = "4.*"
+pylint = "3.3.*"
+
+[tool.pixi.feature.test.dependencies]
+pytest = ">=8,<9"
+pytest-cov = ">=7,<8"
+
+[tool.pixi.feature.docs.dependencies]
+ipykernel = ">=6.30,<7"
+notebook = ">=7,<9"
+ipywidgets = ">=8.1.7,<9"
+watermark = ">=2.5.0,<3"
+nbsphinx = "*"
+pydata-sphinx-theme = "0.16.*"
+Sphinx = "9.0.*"
+
+[tool.pixi.feature.py311.dependencies]
+python = "~=3.11.0"
+
+[tool.pixi.feature.py312.dependencies]
+python = "~=3.12.0"
+
+[tool.pixi.feature.py313.dependencies]
+python = "~=3.13.0"
+
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+dev = { features = ["dev", "test", "docs", "py313"], solve-group = "default" }
+docs = { features = ["docs", "py313"], solve-group = "default" }
+# Only used for testing purposes
+py311 = {features = ["dev", "test", "docs", "py311"]}
+py312 = {features = ["dev", "test", "docs", "py312"]}
+py313 = {features = ["dev", "test", "docs", "py313"]}
+
+[tool.pixi.feature.dev.tasks]
+pre-commit-setup = "pre-commit install"
+
+# ------------------------------------------------------------------------------------------------ #
+#                                          Other tooling                                           #
+# ------------------------------------------------------------------------------------------------ #
 [tool.black]
 line-length = 100
-target-version = ["py39", "py310"]
+target-version = ["py313"]
+
+[tool.pytest.ini_options]
+addopts = "-p no:warnings"
+
+[tool.pylint.main]
+jobs = 0
+ignore = ["tests"]
+unsafe-load-any-extension = false
+
+[tool.pylint.messages_control]
+disable = [
+  "cyclic-import",
+  "missing-docstring",
+  "no-else-return",
+  "too-few-public-methods",
+  "too-many-arguments",
+  "too-many-branches",
+  "too-many-locals",
+  "too-many-statements",
+  "use-implicit-booleaness-not-len",
+]
+
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.pylint.variables]
+dummy-variables-rgx = "_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|^ignored_|^unused_"
+ignored-argument-names = "_.*|^ignored_|^unused_"
+
+good-names = ["Xi", "Ji", "Zi", "NA_handler"]
+
+bad-names = ["foo", "bar", "baz", "toto", "tutu", "tata"]
+
+[tool.pylint.similarities]
+min-similarity-lines = 50
+
+[tool.pylint.miscellaneous]
+notes = ["FIXME", "XXX"]
+
+[tool.pylint.exceptions]
+overgeneral-exceptions = ["builtins.Exception"]
+
+[tool.pylint.design]
+max-args = 10
+max-positional-arguments = 20
+max-attributes = 10
+max-bool-expr = 5
+max-branches = 12
+max-locals = 15
+max-parents = 7
+max-public-methods = 20
+max-returns = 6
