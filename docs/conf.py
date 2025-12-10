@@ -94,7 +94,7 @@ html_theme_options = {
             "icon": "fab fa-github-square",
         },
         {
-            "name": "PyPi",
+            "name": "PyPI",
             "url": "https://pypi.org/project/formulae/",
             "icon": "fas fa-box",
         },
