@@ -35,7 +35,7 @@ jobs:
           path: docs/_build
 
       - name: Build documentation
-        run: sphinx-build docs docs/_build
+        run: pixi run -e dev python -m sphinx-build docs docs/_build
 
       - name: Publish documentation to gh-pages
         if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
