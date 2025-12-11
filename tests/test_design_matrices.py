@@ -1,9 +1,11 @@
-from multiprocessing.sharedctypes import Value
+import pathlib
 import pytest
 import re
 
 import numpy as np
 import pandas as pd
+
+from scipy.sparse import isspmatrix_csr
 
 from formulae.matrices import (
     design_matrices,
@@ -116,6 +118,8 @@ def test_group_specific_intercept_only(data):
     assert dm.group.terms["1|g"].kind == "intercept"
     assert dm.group.terms["1|g"].groups == ["A", "B"]
     assert dm.group.terms["1|g"].labels == ["1|g[A]", "1|g[B]"]
+    assert isspmatrix_csr(dm.group.design_matrix)
+    assert isinstance(np.array(dm.group.design_matrix), np.ndarray)
     assert dm.common == None
 
 
@@ -437,6 +441,7 @@ def test_categoric_group_specific():
         }
     )
     dm = design_matrices("BP ~ 0 + (C(age_grp)|BMI)", data)
+    assert isspmatrix_csr(dm.group.design_matrix)
     list(dm.group.terms.keys()) == ["1|BMI", "C(age_grp)[1]|BMI", "C(age_grp)[2]|BMI"]
 
     dm = design_matrices("BP ~ 0 + (0 + C(age_grp)|BMI)", data)
@@ -451,15 +456,15 @@ def test_interactions_in_group_specific(pixel):
     # The desing matrices used for the comparison are loaded from text files.
     # The encoding is implicitly checked when comparing names.
 
-    from os.path import dirname, join
-
-    data_dir = join(dirname(__file__), "data/group_specific")
-    slope_by_dog_original = np.loadtxt(join(data_dir, "slope_by_dog.txt"))
-    intercept_by_side_original = np.loadtxt(join(data_dir, "intercept_by_side.txt"))
-    intercept_by_side_dog_original = np.loadtxt(join(data_dir, "intercept_by_side_dog.txt"))
-    dog_and_side_by_day_original = np.loadtxt(join(data_dir, "dog_and_side_by_day.txt"))
+    data_dir = pathlib.Path(__file__).resolve().parent / "data" / "group_specific"
+    slope_by_dog_original = np.loadtxt(data_dir / "slope_by_dog.txt")
+    intercept_by_side_original = np.loadtxt(data_dir / "intercept_by_side.txt")
+    intercept_by_side_dog_original = np.loadtxt(data_dir / "intercept_by_side_dog.txt")
+    dog_and_side_by_day_original = np.loadtxt(data_dir / "dog_and_side_by_day.txt")
 
     dm = design_matrices("pixel ~ day +  (0 + day | Dog) + (1 | Side/Dog)", pixel)
+    assert isspmatrix_csr(dm.group.design_matrix)
+
     slope_by_dog = dm.group["day|Dog"]
     intercept_by_side = dm.group["1|Side"]
     intercept_by_side_dog = dm.group["1|Side:Dog"]
@@ -479,6 +484,7 @@ def test_interactions_in_group_specific(pixel):
 
     # Another design matrix
     dm = design_matrices("(0 + Dog:Side | day)", pixel)
+    assert isspmatrix_csr(dm.group.design_matrix)
     dog_and_side_by_day = dm.group["Dog:Side|day"]
 
     # Assert values in the design matrix

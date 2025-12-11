@@ -7,9 +7,8 @@ from functools import reduce
 from itertools import combinations, product
 
 import numpy as np
-from scipy import sparse
 
-from formulae.utils import get_interaction_matrix
+from formulae.utils import get_interaction_matrix, row_khatri_rao_sparse
 from formulae.contrasts import pick_contrasts
 
 from formulae.terms.call import Call
@@ -1297,52 +1296,3 @@ def create_extra_term(term, encoding, data, env):
     extra_term = Term(*deepcopy(components))
     extra_term.set_type(data, env)
     return extra_term
-
-
-def row_khatri_rao_sparse(X, groups):
-    """Efficiently computes the 'row-wise Khatri-Rao' product for design matrices.
-
-
-    Parameters
-    ----------
-    X : np.ndarray
-        The model matrix for the random effects (e.g., intercepts and slopes) of shape (n * k)
-
-    groups : np.ndarray
-        The integer group indices for each observation (0 to K-1).
-
-    Returns
-    -------
-    Z : scipy.sparse.csr_matrix
-        The sparse design matrix of shape (n, p * k)
-    """
-    assert X.ndim == 2
-    assert groups.ndim == 1
-    assert len(groups) == X.shape[0]
-
-    n, p = X.shape
-
-    # Determine number of groups
-    k = groups.max() + 1
-
-    # Construct the CSR internals directly
-    # data: flattened X (row-wise, numpy's default)
-    data = X.flatten()
-
-    # indptr: Row offsets
-    # Every row contains exactly p non-zero elements,
-    # thus it goes from 0 to (n * p) in steps of size p
-    # [0, p, 2 * p, ..., (n - 1) * p, n * p]
-    indptr = np.arange(0, (n + 1) * p, p)
-
-    # indices: Column indices for every value in 'data'
-    # For each row there are 'p' consecutive values,
-    # starting at a position that is a multiple of 'p'
-    # For row i, group g, the columns are: [g * p, g * p + 1, ..., g * p + (p - 1)]
-    # We use broadcasting to create this block for all rows at once
-    # shape (n, p) -> flatten to (n * p,)
-    indices_starts = groups * p
-    indices = (indices_starts[:, np.newaxis] + np.arange(p)).flatten()
-
-    # Create output patrix (CSR format)
-    return sparse.csr_matrix((data, indices, indptr), shape=(n, k * p))

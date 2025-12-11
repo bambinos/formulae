@@ -380,7 +380,6 @@ class GroupEffectsMatrix:
         of the group specific terms, which means parameters involved in the transformation are not
         overwritten with the new data.
 
-
         Parameters
         ----------
         data : pandas.DataFrame
@@ -405,7 +404,7 @@ class GroupEffectsMatrix:
 
         for term in self.terms.values():
             term_matrix = term.eval_new_data(data)
-            delta = term_matrix.shape[1] if term_matrix.ndim == 2 else 1
+            delta = term_matrix.shape[1]
             matrices_to_stack.append(term_matrix)
 
             slice_original = self.slices[term.name]
@@ -426,7 +425,7 @@ class GroupEffectsMatrix:
             start += delta
 
         new_instance.factors_with_new_levels = tuple(factors_with_new_levels)
-        new_instance.design_matrix = np.column_stack(matrices_to_stack)
+        new_instance.design_matrix = sparse.hstack(matrices_to_stack)
         new_instance.evaluated = True
         return new_instance
 
@@ -435,7 +434,7 @@ class GroupEffectsMatrix:
         columns = []
         for term in self.terms.values():
             columns.extend(term.labels)
-        return pd.DataFrame(self.design_matrix, columns=columns)
+        return pd.DataFrame(np.asarray(self), columns=columns)
 
     def __getitem__(self, term):
         """Get the sub-matrix that corresponds to a given term.
@@ -456,7 +455,7 @@ class GroupEffectsMatrix:
         return self.design_matrix[:, self.slices[term]]
 
     def __array__(self):
-        return self.design_matrix
+        return self.design_matrix.todense()
 
     def __repr__(self):
         return self.__str__()
