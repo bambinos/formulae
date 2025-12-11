@@ -14,7 +14,7 @@ class Scanner:
 
         Parameters
         ----------
-        code : string
+        code : str
             The code to be scanned.
         """
         self.code = code
