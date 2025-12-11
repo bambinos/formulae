@@ -146,9 +146,9 @@ class LazyValue:
 
     Parameters
     ----------
-    value: string or numeric
+    value: str or numeric
         The value it holds.
-    lexeme: string
+    lexeme: str
         The string that generated the value it holds
     """
 
@@ -200,11 +200,11 @@ class LazyCall:
 
     Parameters
     ----------
-    callee: string
+    callee : str
         The name of the function
-    args: list
+    args : list
         A list of lazy objects that are evaluated when calling the function this object represents.
-    kwargs: dict
+    kwargs : dict
         A dictionary of named arguments that are evaluated when calling the function this object
         represents.
     """

@@ -105,9 +105,9 @@ class ResponseMatrix:
     ----------
     design_matrix : np.array
         A 2-dimensional numpy array containing the values of the response.
-    name : string
+    name : str
         The name of the response term.
-    kind : string
+    kind : str
         The kind of the response. Can be ``"numeric"``, ``"categoric"`` or ``"proportion"`.
     """
 
@@ -273,7 +273,7 @@ class CommonEffectsMatrix:
 
         Parameters
         ----------
-        term : string
+        term : str
             The name of the term.
 
         Returns
@@ -321,8 +321,8 @@ class GroupEffectsMatrix:
 
     Attributes
     ----------
-    design_matrix : np.array
-        A 2 dimensional numpy array with the values of the design matrix.
+    design_matrix : csr_matrix
+        The design matrix in CSR format.
     evaluated : bool
         Indicates if the terms have been evaluated at least once. The terms must have been evaluated
         before calling ``self.evaluate_new_data()`` because we must know the kind of each term
@@ -335,7 +335,7 @@ class GroupEffectsMatrix:
         self.terms = {term.name: term for term in terms}
         self.data = None
         self.env = None
-        self.design_matrix = np.zeros((0, 0))
+        self.design_matrix = None
         self.slices = {}
         self.evaluated = False
         self.factors_with_new_levels = tuple()
@@ -360,8 +360,6 @@ class GroupEffectsMatrix:
         """
         self.data = data
         self.env = env
-        # NOTE: sparse
-        # self.design_matrix = np.column_stack([term.data for term in self.terms.values()])
         self.design_matrix = sparse.hstack([term.data for term in self.terms.values()])
         start = 0
         for term in self.terms.values():
@@ -441,14 +439,13 @@ class GroupEffectsMatrix:
 
         Parameters
         ----------
-        term: string
+        term : str
             The name of a group specific term.
 
         Returns
-        ----------
-        matrix : np.array
-            A 2-dimensional numpy array that represents the sub-matrix corresponding to the
-            term passed.
+        -------
+        matrix : csr_matrix
+            The sub-matrix corresponding to the term passed.
         """
         if term not in self.slices:
             raise ValueError(f"'{term}' is not a valid term name")
@@ -492,11 +489,11 @@ def design_matrices(formula, data, na_action="drop", env=0, extra_namespace=None
 
     Parameters
     ----------
-    formula : string
+    formula : str
         A model formula.
     data : pandas.DataFrame
         The data frame where variables in the formula are taken from.
-    na_action : string
+    na_action : str
         Describes what to do with missing values in ``data``. ``"drop"`` means to drop
         all rows with a missing value, ``"error"`` means to raise an error,
         ``"pass"`` means to to keep all. Defaults to ``"drop"``.

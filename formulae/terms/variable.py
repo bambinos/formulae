@@ -18,9 +18,9 @@ class Variable:
 
     Parameters
     ----------
-    name: string
+    name : str
         The identifier of the variable.
-    level: string
+    level : str
         The level to use as reference. Allows to use the notation ``variable["level"]`` to indicate
         which event should be model as success in binary response models. Can only be used with
         response terms. Defaults to ``None``.

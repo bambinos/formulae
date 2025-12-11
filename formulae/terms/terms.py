@@ -209,12 +209,12 @@ class Term:
 
     Attributes
     ----------
-    data: np.ndarray
+    data : np.ndarray
         The values associated with the term as they go into the design matrix.
-    kind: string
+    kind : str
         Indicates the type of the term.
         Can be one of ``"numeric"``, ``"categoric"``, or ``"interaction"``.
-    name: string
+    name : str
         The name of the term as it was originally written in the model formula.
     """
 
@@ -501,12 +501,12 @@ class Term:
 
         Parameters
         ----------
-        name: string
+        name : str
             The name of the component to return.
 
         Returns
         -------
-        component: `:class:`.Variable` or `:class:`.Call`
+        component : `:class:`.Variable` or `:class:`.Call`
             The component with name ``name``.
         """
 
