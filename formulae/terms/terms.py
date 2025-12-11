@@ -664,6 +664,7 @@ class GroupSpecificTerm:
     def set_data(self, spans_intercept):
         self.expr.set_data(spans_intercept)
         self.factor.set_data(True)  # Factor is a categorical term that always spans the intercept
+        self.kind = self.expr.kind
 
         # Obtain group names. These are obtained from the labels of the contrast matrices
         groups = []
@@ -674,15 +675,11 @@ class GroupSpecificTerm:
         Xi, Ji = self.expr.data, self.factor.data
         if Xi.ndim == 1:
             Xi = Xi[:, np.newaxis]
+
         if Ji.ndim == 1:
             Ji = Ji[:, np.newaxis]
 
-        Xi_sparse = sparse.csc_matrix(Xi)
-        Ji_sparse = sparse.csc_matrix(Ji)
-        self.data = sparse_khatri_rao(Ji_sparse.T, Xi_sparse.T).T  # Zi
-        self.kind = self.expr.kind
-
-        # self.data = linalg.khatri_rao(Ji.T, Xi.T).T  # Zi
+        self.data = row_khatri_rao_sparse(Xi, Ji.argmax(1))
 
     def eval_new_data(self, data):
         """Evaluates the term with new data.
@@ -715,9 +712,7 @@ class GroupSpecificTerm:
         if Ji.ndim == 1:
             Ji = Ji[:, np.newaxis]
 
-        Xi_sparse = sparse.csc_matrix(Xi)
-        Ji_sparse = sparse.csc_matrix(Ji)
-        return sparse_khatri_rao(Ji_sparse.T, Xi_sparse.T).T
+        return row_khatri_rao_sparse(Xi, Ji.argmax(1))
 
     @property
     def var_names(self):
@@ -1304,26 +1299,50 @@ def create_extra_term(term, encoding, data, env):
     return extra_term
 
 
-def sparse_khatri_rao(a, b):
-    """Sparse Khatri-Rao product.
+def row_khatri_rao_sparse(X, groups):
+    """Efficiently computes the 'row-wise Khatri-Rao' product for design matrices.
+
 
     Parameters
     ----------
-    a : sparse matrix
-        A sparse matrix of shape (n, k)
-    b : sparse matrix
-        A sparse matrix of shape (m, k)
+    X : np.ndarray
+        The model matrix for the random effects (e.g., intercepts and slopes) of shape (n * k)
+
+    groups : np.ndarray
+        The integer group indices for each observation (0 to K-1).
 
     Returns
     -------
-    sparse matrix
-        A sparse matrix of shape (n * m, k)
+    Z : scipy.sparse.csr_matrix
+        The sparse design matrix of shape (n, p * k)
     """
-    assert len(a.shape) == 2
-    assert len(b.shape) == 2
-    assert a.shape[1] == b.shape[1]
+    assert X.ndim == 2
+    assert groups.ndim == 1
+    assert len(groups) == X.shape[0]
 
-    columns = []
-    for k in range(b.shape[1]):
-        columns.append(sparse.kron(a[:, k], b[:, k]))
-    return sparse.hstack(columns)
+    n, p = X.shape
+
+    # Determine number of groups
+    k = groups.max() + 1
+
+    # Construct the CSR internals directly
+    # data: flattened X (row-wise, numpy's default)
+    data = X.flatten()
+
+    # indptr: Row offsets
+    # Every row contains exactly p non-zero elements,
+    # thus it goes from 0 to (n * p) in steps of size p
+    # [0, p, 2 * p, ..., (n - 1) * p, n * p]
+    indptr = np.arange(0, (n + 1) * p, p)
+
+    # indices: Column indices for every value in 'data'
+    # For each row there are 'p' consecutive values,
+    # starting at a position that is a multiple of 'p'
+    # For row i, group g, the columns are: [g * p, g * p + 1, ..., g * p + (p - 1)]
+    # We use broadcasting to create this block for all rows at once
+    # shape (n, p) -> flatten to (n * p,)
+    indices_starts = groups * p
+    indices = (indices_starts[:, np.newaxis] + np.arange(p)).flatten()
+
+    # Create output patrix (CSR format)
+    return sparse.csr_matrix((data, indices, indptr), shape=(n, k * p))
