@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Internals &#8212; Formulae 0.5.5.dev5+g98cc041ba documentation</title>
+    <title>Internals &#8212; Formulae 0.5.5.dev6+g8935ec7d2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=0fc7347b"></script>
+    <script src="_static/documentation_options.js?v=378dd928"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -48,7 +48,7 @@
     <link rel="prev" title="API Reference" href="api_reference.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.5.5.dev5+g98cc041ba" />
+  <meta name="docsearch:version" content="0.5.5.dev6+g8935ec7d2" />
   </head>
   
   
@@ -114,8 +114,8 @@
       
     
     
-    <img src="_static/formulae_small.png" class="logo__image only-light" alt="Formulae 0.5.5.dev5+g98cc041ba documentation - Home"/>
-    <img src="_static/formulae_small.png" class="logo__image only-dark pst-js-only" alt="Formulae 0.5.5.dev5+g98cc041ba documentation - Home"/>
+    <img src="_static/formulae_small.png" class="logo__image only-light" alt="Formulae 0.5.5.dev6+g8935ec7d2 documentation - Home"/>
+    <img src="_static/formulae_small.png" class="logo__image only-dark pst-js-only" alt="Formulae 0.5.5.dev6+g8935ec7d2 documentation - Home"/>
   
   
 </a></div>
@@ -419,7 +419,7 @@ a design matrix from an existing design but evaluated with new data.</p>
 <dd><p>The name of the response term.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>string</p>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -430,7 +430,7 @@ a design matrix from an existing design but evaluated with new data.</p>
 <dd><p>The kind of the response. Can be <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code> or <a href="#id1"><span class="problematic" id="id2">``</span></a>”proportion”<a href="#id3"><span class="problematic" id="id4">`</span></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>string</p>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -509,7 +509,7 @@ term names.</p>
 <dd><p>Get the sub-matrix that corresponds to a given term.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>term</strong> (<em>string</em>) – The name of the term.</p>
+<dd class="field-odd"><p><strong>term</strong> (<em>str</em>) – The name of the term.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>matrix</strong> – A 2-dimensional numpy array that represents the sub-matrix corresponding to the
@@ -584,10 +584,10 @@ values in the new data set.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formulae.matrices.GroupEffectsMatrix.design_matrix">
 <span class="sig-name descname"><span class="pre">design_matrix</span></span><a class="headerlink" href="#formulae.matrices.GroupEffectsMatrix.design_matrix" title="Link to this definition">#</a></dt>
-<dd><p>A 2 dimensional numpy array with the values of the design matrix.</p>
+<dd><p>The design matrix in CSR format.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.array</p>
+<dd class="field-odd"><p>csr_matrix</p>
 </dd>
 </dl>
 </dd></dl>
@@ -622,14 +622,13 @@ to correctly handle the new data passed and the terms here.</p>
 <dd><p>Get the sub-matrix that corresponds to a given term.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>term</strong> (<em>string</em>) – The name of a group specific term.</p>
+<dd class="field-odd"><p><strong>term</strong> (<em>str</em>) – The name of a group specific term.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>matrix</strong> – A 2-dimensional numpy array that represents the sub-matrix corresponding to the
-term passed.</p>
+<dd class="field-even"><p><strong>matrix</strong> – The sub-matrix corresponding to the term passed.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.array</p>
+<dd class="field-odd"><p>csr_matrix</p>
 </dd>
 </dl>
 </dd></dl>
@@ -700,8 +699,8 @@ and disadvantages.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>string</em>) – The identifier of the variable.</p></li>
-<li><p><strong>level</strong> (<em>string</em>) – The level to use as reference. Allows to use the notation <code class="docutils literal notranslate"><span class="pre">variable[&quot;level&quot;]</span></code> to indicate
+<li><p><strong>name</strong> (<em>str</em>) – The identifier of the variable.</p></li>
+<li><p><strong>level</strong> (<em>str</em>) – The level to use as reference. Allows to use the notation <code class="docutils literal notranslate"><span class="pre">variable[&quot;level&quot;]</span></code> to indicate
 which event should be model as success in binary response models. Can only be used with
 response terms. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>is_response</strong> (<em>bool</em>) – Indicates whether this variable represents a response. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
@@ -1031,7 +1030,7 @@ number of components in the term.</p>
 Can be one of <code class="docutils literal notranslate"><span class="pre">&quot;numeric&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;categoric&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;interaction&quot;</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>string</p>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1042,7 +1041,7 @@ Can be one of <code class="docutils literal notranslate"><span class="pre">&quot
 <dd><p>The name of the term as it was originally written in the model formula.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>string</p>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1159,7 +1158,7 @@ appropiately.</p>
 <dd><p>Returns a component by name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>string</em>) – The name of the component to return.</p>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The name of the component to return.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>component</strong> – The component with name <code class="docutils literal notranslate"><span class="pre">name</span></code>.</p>
@@ -1737,8 +1736,8 @@ It returns its value only when it is evaluated via <code class="docutils literal
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>value</strong> (<em>string</em><em> or </em><em>numeric</em>) – The value it holds.</p></li>
-<li><p><strong>lexeme</strong> (<em>string</em>) – The string that generated the value it holds</p></li>
+<li><p><strong>value</strong> (<em>str</em><em> or </em><em>numeric</em>) – The value it holds.</p></li>
+<li><p><strong>lexeme</strong> (<em>str</em>) – The string that generated the value it holds</p></li>
 </ul>
 </dd>
 </dl>
@@ -1847,7 +1846,7 @@ stateful transformations are handled correctly.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>callee</strong> (<em>string</em>) – The name of the function</p></li>
+<li><p><strong>callee</strong> (<em>str</em>) – The name of the function</p></li>
 <li><p><strong>args</strong> (<em>list</em>) – A list of lazy objects that are evaluated when calling the function this object represents.</p></li>
 <li><p><strong>kwargs</strong> (<em>dict</em>) – A dictionary of named arguments that are evaluated when calling the function this object
 represents.</p></li>
