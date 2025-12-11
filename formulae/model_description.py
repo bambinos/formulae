@@ -14,7 +14,7 @@ def model_description(formula):
 
     Parameters
     ----------
-    formula: string
+    formula : str
         A string with a model description in formula language.
 
     Returns
