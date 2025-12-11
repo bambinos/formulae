@@ -678,7 +678,7 @@ class GroupSpecificTerm:
         if Ji.ndim == 1:
             Ji = Ji[:, np.newaxis]
 
-        self.data = row_khatri_rao_sparse(Xi, Ji.argmax(1))
+        self.data = row_khatri_rao_sparse(Xi, Ji.argmax(1), Ji.shape[1])
 
     def eval_new_data(self, data):
         """Evaluates the term with new data.
@@ -711,7 +711,7 @@ class GroupSpecificTerm:
         if Ji.ndim == 1:
             Ji = Ji[:, np.newaxis]
 
-        return row_khatri_rao_sparse(Xi, Ji.argmax(1))
+        return row_khatri_rao_sparse(Xi, Ji.argmax(1), k=Ji.shape[1])
 
     @property
     def var_names(self):
