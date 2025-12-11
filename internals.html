@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Internals &#8212; Formulae 0.5.5.dev4+g3522703ce documentation</title>
+    <title>Internals &#8212; Formulae 0.5.5.dev5+g98cc041ba documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=562b7f17"></script>
+    <script src="_static/documentation_options.js?v=0fc7347b"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -48,7 +48,7 @@
     <link rel="prev" title="API Reference" href="api_reference.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.5.5.dev4+g3522703ce" />
+  <meta name="docsearch:version" content="0.5.5.dev5+g98cc041ba" />
   </head>
   
   
@@ -114,8 +114,8 @@
       
     
     
-    <img src="_static/formulae_small.png" class="logo__image only-light" alt="Formulae 0.5.5.dev4+g3522703ce documentation - Home"/>
-    <img src="_static/formulae_small.png" class="logo__image only-dark pst-js-only" alt="Formulae 0.5.5.dev4+g3522703ce documentation - Home"/>
+    <img src="_static/formulae_small.png" class="logo__image only-light" alt="Formulae 0.5.5.dev5+g98cc041ba documentation - Home"/>
+    <img src="_static/formulae_small.png" class="logo__image only-dark pst-js-only" alt="Formulae 0.5.5.dev5+g98cc041ba documentation - Home"/>
   
   
 </a></div>
@@ -648,7 +648,7 @@ term passed.</p>
 <code class="docutils literal notranslate"><span class="pre">env</span></code>. It updates <code class="docutils literal notranslate"><span class="pre">self.design_matrix</span></code> with the result from the evaluation of each
 term.</p>
 <p>This method also sets the values of <code class="docutils literal notranslate"><span class="pre">self.data</span></code> and <code class="docutils literal notranslate"><span class="pre">self.env</span></code>. It also populates
-the dictionary <code class="docutils literal notranslate"><span class="pre">self.terms_info</span></code> with information related to each term,such as the kind,
+the dictionary <code class="docutils literal notranslate"><span class="pre">self.terms_info</span></code> with information related to each term ,such as the kind,
 the columns and rows they occupy in the design matrix and the names of the columns.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1245,9 +1245,9 @@ the evaluation environment.</p>
 <p>Group specific terms are of the form <code class="docutils literal notranslate"><span class="pre">(expr</span> <span class="pre">|</span> <span class="pre">factor)</span></code>. The expression <code class="docutils literal notranslate"><span class="pre">expr</span></code> is evaluated
 as a model formula with only common effects and produces a model matrix following the rules
 for common terms. <code class="docutils literal notranslate"><span class="pre">factor</span></code> is inspired on factors in R, but here it is evaluated as an ordered
-pandas.CategoricalDtype object.</p>
-<p>The operator <code class="docutils literal notranslate"><span class="pre">|</span></code> works as in R package lme4. As its authors say: “One way to think about the
-vertical bar operator is as a special kind of interaction between the model matrix and the
+<code class="docutils literal notranslate"><span class="pre">pandas.CategoricalDtype</span></code> object.</p>
+<p>The pipe operator <code class="docutils literal notranslate"><span class="pre">|</span></code> works as in R package lme4. As its authors say: “One way to think about
+the vertical bar operator is as a special kind of interaction between the model matrix and the
 grouping factor. This interaction ensures that the columns of the model matrix have different
 effects for each level of the grouping factor”</p>
 <dl class="field-list simple">
@@ -1289,7 +1289,7 @@ the name of the components and the values are dictionaries holding the metadata.
 <code class="docutils literal notranslate"><span class="pre">&quot;interaction&quot;</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>string</p>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1310,7 +1310,7 @@ corresponding to the group specific effect.</p>
 <dd class="field-even"><p><strong>Zi</strong></p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.ndarray</p>
+<dd class="field-odd"><p>np.ndarray FIXME</p>
 </dd>
 </dl>
 </dd></dl>
