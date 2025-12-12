@@ -7,9 +7,8 @@ from functools import reduce
 from itertools import combinations, product
 
 import numpy as np
-from scipy import linalg
 
-from formulae.utils import get_interaction_matrix
+from formulae.utils import get_interaction_matrix, row_khatri_rao_sparse
 from formulae.contrasts import pick_contrasts
 
 from formulae.terms.call import Call
@@ -210,12 +209,12 @@ class Term:
 
     Attributes
     ----------
-    data: np.ndarray
+    data : np.ndarray
         The values associated with the term as they go into the design matrix.
-    kind: string
+    kind : str
         Indicates the type of the term.
         Can be one of ``"numeric"``, ``"categoric"``, or ``"interaction"``.
-    name: string
+    name : str
         The name of the term as it was originally written in the model formula.
     """
 
@@ -502,12 +501,12 @@ class Term:
 
         Parameters
         ----------
-        name: string
+        name : str
             The name of the component to return.
 
         Returns
         -------
-        component: `:class:`.Variable` or `:class:`.Call`
+        component : `:class:`.Variable` or `:class:`.Call`
             The component with name ``name``.
         """
 
@@ -584,29 +583,29 @@ class GroupSpecificTerm:
     Group specific terms are of the form ``(expr | factor)``. The expression ``expr`` is evaluated
     as a model formula with only common effects and produces a model matrix following the rules
     for common terms. ``factor`` is inspired on factors in R, but here it is evaluated as an ordered
-    pandas.CategoricalDtype object.
+    ``pandas.CategoricalDtype`` object.
 
-    The operator ``|`` works as in R package lme4. As its authors say: "One way to think about the
-    vertical bar operator is as a special kind of interaction between the model matrix and the
+    The pipe operator ``|`` works as in R package lme4. As its authors say: "One way to think about
+    the vertical bar operator is as a special kind of interaction between the model matrix and the
     grouping factor. This interaction ensures that the columns of the model matrix have different
     effects for each level of the grouping factor"
 
     Parameters
     ----------
-    expr: :class:`.Intercept` or :class:`.Term`
+    expr : :class:`Intercept` or :class:`Term`
         The term for which we want to have a group specific term.
-    factor: :class:`.Term`
+    factor : :class:`Term`
         The factor that determines the groups in the group specific term.
 
     Attributes
     ----------
-    data: np.ndarray
+    data : np.ndarray
         The values associated with the term as they go into the design matrix.
-    metadata: dict
+    metadata : dict
         Metadata associated with the term. If ``"numeric"`` or ``"categoric"`` it holds additional
         information in the component ``.data`` attribute. If ``"interaction"``, the keys are
         the name of the components and the values are dictionaries holding the metadata.
-    kind: string
+    kind : str
         Indicates the type of the term. Can be one of ``"numeric"``, ``"categoric"``, or
         ``"interaction"``.
     """
@@ -664,6 +663,7 @@ class GroupSpecificTerm:
     def set_data(self, spans_intercept):
         self.expr.set_data(spans_intercept)
         self.factor.set_data(True)  # Factor is a categorical term that always spans the intercept
+        self.kind = self.expr.kind
 
         # Obtain group names. These are obtained from the labels of the contrast matrices
         groups = []
@@ -674,11 +674,11 @@ class GroupSpecificTerm:
         Xi, Ji = self.expr.data, self.factor.data
         if Xi.ndim == 1:
             Xi = Xi[:, np.newaxis]
+
         if Ji.ndim == 1:
             Ji = Ji[:, np.newaxis]
 
-        self.data = linalg.khatri_rao(Ji.T, Xi.T).T  # Zi
-        self.kind = self.expr.kind
+        self.data = row_khatri_rao_sparse(Xi, Ji.argmax(1))
 
     def eval_new_data(self, data):
         """Evaluates the term with new data.
@@ -690,12 +690,12 @@ class GroupSpecificTerm:
 
         Parameters
         ----------
-        data: pd.DataFrame
+        data : pd.DataFrame
             The data frame where variables are taken from.
 
         Returns
         -------
-        Zi: np.ndarray
+        Zi : np.ndarray FIXME
         """
         Xi = self.expr.eval_new_data(data)
         Ji = self.factor.eval_new_data(data)
@@ -710,8 +710,8 @@ class GroupSpecificTerm:
             Xi = Xi[:, np.newaxis]
         if Ji.ndim == 1:
             Ji = Ji[:, np.newaxis]
-        Zi = linalg.khatri_rao(Ji.T, Xi.T).T
-        return Zi
+
+        return row_khatri_rao_sparse(Xi, Ji.argmax(1))
 
     @property
     def var_names(self):
@@ -766,11 +766,11 @@ class GroupSpecificTerm:
 class Response:
     """Representation of a response term.
 
-    It is mostly a wrapper around :class:`.Term`.
+    It is mostly a wrapper around :class:`Term`.
 
     Parameters
     ----------
-    term: :class:`.Term`
+    term: :class:`Term`
         The term we want to take as response in the model. Must contain only one component.
 
     """
@@ -833,9 +833,9 @@ class Model:
 
     Parameters
     ----------
-    terms: :class:`.Term`
+    terms : :class:`Term`
         This object can be instantiated with one or many terms.
-    response::class:`.Response`
+    response : :class:`Response`
         The response term. Defaults to ``None`` which means there is no response.
     """
 
@@ -844,11 +844,12 @@ class Model:
             self.response = response
         else:
             raise ValueError("Response must be of class Response.")
-        if all(isinstance(term, ACCEPTED_TERMS) for term in terms):
-            self.common_terms = [term for term in terms if not isinstance(term, GroupSpecificTerm)]
-            self.group_terms = [term for term in terms if isinstance(term, GroupSpecificTerm)]
-        else:
-            raise ValueError("There is a least one term of an unexpected class.")
+
+        if any(not isinstance(term, ACCEPTED_TERMS) for term in terms):
+            raise ValueError("There is a least one term of an unexpected class")
+
+        self.common_terms = [term for term in terms if not isinstance(term, GroupSpecificTerm)]
+        self.group_terms = [term for term in terms if isinstance(term, GroupSpecificTerm)]
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -1073,7 +1074,7 @@ class Model:
 
         Returns
         -------
-        self: :class:`.Model`
+        self: :class:`Model`
             The same model object but now with a response term.
         """
         if isinstance(term, Response):
@@ -1093,7 +1094,7 @@ class Model:
 
         Returns
         -------
-        self: :class:`.Model`
+        self: :class:`Model`
             The same model object but now containing the new term.
         """
         if isinstance(term, GroupSpecificTerm):
@@ -1246,9 +1247,9 @@ class Model:
 
         Parameters
         ----------
-        data: pd.DataFrame
+        data : pd.DataFrame
             The data frame where variables are taken from
-        env: Environment
+        env : Environment
             The environment where values and functions are taken from.
         """
         # Set types on all terms

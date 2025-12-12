@@ -4,6 +4,7 @@ import textwrap
 
 import numpy as np
 import pandas as pd
+from scipy import sparse
 
 from .environment import Environment
 from .model_description import model_description
@@ -17,7 +18,6 @@ class DesignMatrices:
 
     Parameters
     ----------
-
     model : Model
         The model description, the result of calling ``model_description``.
     data : pandas.DataFrame
@@ -105,9 +105,9 @@ class ResponseMatrix:
     ----------
     design_matrix : np.array
         A 2-dimensional numpy array containing the values of the response.
-    name : string
+    name : str
         The name of the response term.
-    kind : string
+    kind : str
         The kind of the response. Can be ``"numeric"``, ``"categoric"`` or ``"proportion"`.
     """
 
@@ -273,7 +273,7 @@ class CommonEffectsMatrix:
 
         Parameters
         ----------
-        term : string
+        term : str
             The name of the term.
 
         Returns
@@ -321,8 +321,8 @@ class GroupEffectsMatrix:
 
     Attributes
     ----------
-    design_matrix : np.array
-        A 2 dimensional numpy array with the values of the design matrix.
+    design_matrix : csr_matrix
+        The design matrix in CSR format.
     evaluated : bool
         Indicates if the terms have been evaluated at least once. The terms must have been evaluated
         before calling ``self.evaluate_new_data()`` because we must know the kind of each term
@@ -335,7 +335,7 @@ class GroupEffectsMatrix:
         self.terms = {term.name: term for term in terms}
         self.data = None
         self.env = None
-        self.design_matrix = np.zeros((0, 0))
+        self.design_matrix = None
         self.slices = {}
         self.evaluated = False
         self.factors_with_new_levels = tuple()
@@ -348,7 +348,7 @@ class GroupEffectsMatrix:
         term.
 
         This method also sets the values of ``self.data`` and ``self.env``. It also populates
-        the dictionary ``self.terms_info`` with information related to each term,such as the kind,
+        the dictionary ``self.terms_info`` with information related to each term ,such as the kind,
         the columns and rows they occupy in the design matrix and the names of the columns.
 
         Parameters
@@ -360,11 +360,11 @@ class GroupEffectsMatrix:
         """
         self.data = data
         self.env = env
-        self.design_matrix = np.column_stack([term.data for term in self.terms.values()])
+        self.design_matrix = sparse.hstack([term.data for term in self.terms.values()])
         start = 0
         for term in self.terms.values():
-            # NOTE: I think everything we pass here has two columns...
-            delta = term.data.shape[1] if term.data.ndim == 2 else 1
+            # All terms have two columns
+            delta = term.data.shape[1]
             self.slices[term.name] = slice(start, start + delta)
             start += delta
         self.evaluated = True
@@ -377,7 +377,6 @@ class GroupEffectsMatrix:
         out of sample predictions. Stateful transformations are properly handled if present in any
         of the group specific terms, which means parameters involved in the transformation are not
         overwritten with the new data.
-
 
         Parameters
         ----------
@@ -403,7 +402,7 @@ class GroupEffectsMatrix:
 
         for term in self.terms.values():
             term_matrix = term.eval_new_data(data)
-            delta = term_matrix.shape[1] if term_matrix.ndim == 2 else 1
+            delta = term_matrix.shape[1]
             matrices_to_stack.append(term_matrix)
 
             slice_original = self.slices[term.name]
@@ -424,7 +423,7 @@ class GroupEffectsMatrix:
             start += delta
 
         new_instance.factors_with_new_levels = tuple(factors_with_new_levels)
-        new_instance.design_matrix = np.column_stack(matrices_to_stack)
+        new_instance.design_matrix = sparse.hstack(matrices_to_stack)
         new_instance.evaluated = True
         return new_instance
 
@@ -433,28 +432,27 @@ class GroupEffectsMatrix:
         columns = []
         for term in self.terms.values():
             columns.extend(term.labels)
-        return pd.DataFrame(self.design_matrix, columns=columns)
+        return pd.DataFrame(np.asarray(self), columns=columns)
 
     def __getitem__(self, term):
         """Get the sub-matrix that corresponds to a given term.
 
         Parameters
         ----------
-        term: string
+        term : str
             The name of a group specific term.
 
         Returns
-        ----------
-        matrix : np.array
-            A 2-dimensional numpy array that represents the sub-matrix corresponding to the
-            term passed.
+        -------
+        matrix : csr_matrix
+            The sub-matrix corresponding to the term passed.
         """
         if term not in self.slices:
             raise ValueError(f"'{term}' is not a valid term name")
         return self.design_matrix[:, self.slices[term]]
 
     def __array__(self):
-        return self.design_matrix
+        return self.design_matrix.todense()
 
     def __repr__(self):
         return self.__str__()
@@ -491,11 +489,11 @@ def design_matrices(formula, data, na_action="drop", env=0, extra_namespace=None
 
     Parameters
     ----------
-    formula : string
+    formula : str
         A model formula.
     data : pandas.DataFrame
         The data frame where variables in the formula are taken from.
-    na_action : string
+    na_action : str
         Describes what to do with missing values in ``data``. ``"drop"`` means to drop
         all rows with a missing value, ``"error"`` means to raise an error,
         ``"pass"`` means to to keep all. Defaults to ``"drop"``.
