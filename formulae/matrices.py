@@ -321,7 +321,7 @@ class GroupEffectsMatrix:
 
     Attributes
     ----------
-    design_matrix : csr_matrix
+    design_matrix : scipy.sparse.csr_matrix
         The design matrix in CSR format.
     evaluated : bool
         Indicates if the terms have been evaluated at least once. The terms must have been evaluated
@@ -444,7 +444,7 @@ class GroupEffectsMatrix:
 
         Returns
         -------
-        matrix : csr_matrix
+        matrix : scipy.sparse.csr_matrix
             The sub-matrix corresponding to the term passed.
         """
         if term not in self.slices:

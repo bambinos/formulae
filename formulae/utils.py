@@ -57,9 +57,8 @@ def is_categorical_dtype(arr_or_dtype):
         return isinstance(dtype, pd.CategoricalDtype)
 
 
-def row_khatri_rao_sparse(X, groups):
+def row_khatri_rao_sparse(X, groups, k):
     """Efficiently computes the 'row-wise Khatri-Rao' product for design matrices.
-
 
     Parameters
     ----------
@@ -67,7 +66,12 @@ def row_khatri_rao_sparse(X, groups):
         The model matrix for the random effects (e.g., intercepts and slopes) of shape (n * k)
 
     groups : np.ndarray
-        The integer group indices for each observation (0 to K-1).
+        The integer group indices for each observation (0 to k- 1).
+
+    k : int
+        Number of groups in ``groups``.
+        This parameter is needed to correctly determine the shape of the result when ``groups``
+        does not contain indexes representing all possible groups.
 
     Returns
     -------
@@ -79,9 +83,6 @@ def row_khatri_rao_sparse(X, groups):
     assert len(groups) == X.shape[0]
 
     n, p = X.shape
-
-    # Determine number of groups
-    k = groups.max() + 1
 
     # Construct the CSR internals directly
     # data: flattened X (row-wise, numpy's default)

@@ -197,14 +197,14 @@ class NegatedIntercept:
 class Term:
     """Representation of a model term.
 
-    Terms are made of one or more components. Components are instances of :class:`.Variable` or
-    :class:`.Call`. Terms with only one component are known as main effects and terms with more than
+    Terms are made of one or more components. Components are instances of :class:`Variable` or
+    :class:`Call`. Terms with only one component are known as main effects and terms with more than
     one component are known as interaction effects. The order of the interaction is given by the
     number of components in the term.
 
     Parameters
     ----------
-    components: :class:`.Variable` or :class:`.Call`
+    components: :class:`Variable` or :class:`Call`
         Atomic components of a term.
 
     Attributes
@@ -415,7 +415,7 @@ class Term:
         """Set type of the components in the term.
 
         Calls ``.set_type()`` method on each component in the term. For those components of class
-        :class:`.Variable`` it only passes the data mask. For `:class:`.Call` objects it also passes
+        :class:`Variable`` it only passes the data mask. For `:class:`Call` objects it also passes
         the evaluation environment.
 
         Parameters
@@ -506,7 +506,7 @@ class Term:
 
         Returns
         -------
-        component : `:class:`.Variable` or `:class:`.Call`
+        component : `:class:`Variable` or `:class:`Call`
             The component with name ``name``.
         """
 
@@ -678,7 +678,7 @@ class GroupSpecificTerm:
         if Ji.ndim == 1:
             Ji = Ji[:, np.newaxis]
 
-        self.data = row_khatri_rao_sparse(Xi, Ji.argmax(1))
+        self.data = row_khatri_rao_sparse(Xi, Ji.argmax(1), Ji.shape[1])
 
     def eval_new_data(self, data):
         """Evaluates the term with new data.
@@ -695,7 +695,7 @@ class GroupSpecificTerm:
 
         Returns
         -------
-        Zi : np.ndarray FIXME
+        Zi : scipy.sparse.csr_matrix
         """
         Xi = self.expr.eval_new_data(data)
         Ji = self.factor.eval_new_data(data)
@@ -711,7 +711,7 @@ class GroupSpecificTerm:
         if Ji.ndim == 1:
             Ji = Ji[:, np.newaxis]
 
-        return row_khatri_rao_sparse(Xi, Ji.argmax(1))
+        return row_khatri_rao_sparse(Xi, Ji.argmax(1), k=Ji.shape[1])
 
     @property
     def var_names(self):
@@ -720,8 +720,8 @@ class GroupSpecificTerm:
         Obtains both the variables in the ``expr`` as well as the variables in ``factor``.
 
         Returns
-        ----------
-        var_names: set
+        -------
+        var_names : set
             The names of the variables involved in the term.
         """
         expr_names = self.expr.var_names.copy()
@@ -733,8 +733,8 @@ class GroupSpecificTerm:
         """Obtain string representation of the name of the term.
 
         Returns
-        ----------
-        name: str
+        -------
+        name : str
             The name of the term, such as ``1|g`` or ``var|g``.
         """
         name = ""
@@ -770,7 +770,7 @@ class Response:
 
     Parameters
     ----------
-    term: :class:`Term`
+    term : :class:`Term`
         The term we want to take as response in the model. Must contain only one component.
 
     """
@@ -865,7 +865,7 @@ class Model:
 
         Returns
         -------
-        self: :class:`.Model`
+        self : :class:`Model`
             The same model object with the added term(s).
         """
         if isinstance(other, NegatedIntercept):
@@ -888,7 +888,7 @@ class Model:
 
         Returns
         -------
-        self: :class:`.Model`
+        self : :class:`Model`
             The same model object with the removed term(s).
         """
         if isinstance(other, type(self)):
@@ -918,7 +918,7 @@ class Model:
 
         Returns
         -------
-        model: :class:`.Model`
+        model : :class:`Model`
             A new instance of the model with all the interaction terms computed.
         """
         if isinstance(other, type(self)):
@@ -940,7 +940,7 @@ class Model:
 
         Returns
         -------
-        model: :class:`.Model`
+        model : :class:`Model`
             A new instance of the model with all the interaction terms computed.
         """
         if self == other:
@@ -965,7 +965,7 @@ class Model:
             return NotImplemented
 
     def __pow__(self, other):
-        """Power of a set made of :class:`.Term`
+        """Power of a set made of :class:`Term`
 
         Computes all interactions up to order ``n`` between the terms in the set.
 
@@ -973,7 +973,7 @@ class Model:
 
         Returns
         -------
-        model: :class:`.Model`
+        model : :class:`Model`
             A new instance of the model with all the terms computed.
         """
         if isinstance(other, Term) and len(other.components) == 1:
@@ -995,7 +995,7 @@ class Model:
 
         Returns
         -------
-        model: :class:`.Model`
+        model : :class:`Model`
             A new instance of the model with all the terms computed.
         """
         if isinstance(other, Term):
@@ -1018,7 +1018,7 @@ class Model:
 
         Returns
         -------
-        model: :class:`.Model`
+        model : :class:`Model`
             A new instance of the model with all the terms computed.
         """
 
@@ -1074,7 +1074,7 @@ class Model:
 
         Returns
         -------
-        self: :class:`Model`
+        self : :class:`Model`
             The same model object but now with a response term.
         """
         if isinstance(term, Response):
@@ -1086,15 +1086,15 @@ class Model:
     def add_term(self, term):
         """Add term to model description.
 
-        The term added can be of class :class:`.Intercept` :class:`.Term`, or
-        :class:`.GroupSpecificTerm`. It appends the new term object to the list of common terms or
+        The term added can be of class :class:`Intercept` :class:`Term`, or
+        :class:`GroupSpecificTerm`. It appends the new term object to the list of common terms or
         group specific terms as appropriate.
 
         This method is called via special methods such as :meth:`__add__`.
 
         Returns
         -------
-        self: :class:`Model`
+        self : :class:`Model`
             The same model object but now containing the new term.
         """
         if isinstance(term, GroupSpecificTerm):
