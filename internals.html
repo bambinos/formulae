@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Internals &#8212; Formulae 0.5.5.dev6+g8935ec7d2 documentation</title>
+    <title>Internals &#8212; Formulae 0.5.5.dev7+g20f109850 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=378dd928"></script>
+    <script src="_static/documentation_options.js?v=fdd2a3b5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -48,7 +48,7 @@
     <link rel="prev" title="API Reference" href="api_reference.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.5.5.dev6+g8935ec7d2" />
+  <meta name="docsearch:version" content="0.5.5.dev7+g20f109850" />
   </head>
   
   
@@ -114,8 +114,8 @@
       
     
     
-    <img src="_static/formulae_small.png" class="logo__image only-light" alt="Formulae 0.5.5.dev6+g8935ec7d2 documentation - Home"/>
-    <img src="_static/formulae_small.png" class="logo__image only-dark pst-js-only" alt="Formulae 0.5.5.dev6+g8935ec7d2 documentation - Home"/>
+    <img src="_static/formulae_small.png" class="logo__image only-light" alt="Formulae 0.5.5.dev7+g20f109850 documentation - Home"/>
+    <img src="_static/formulae_small.png" class="logo__image only-dark pst-js-only" alt="Formulae 0.5.5.dev7+g20f109850 documentation - Home"/>
   
   
 </a></div>
@@ -587,7 +587,7 @@ values in the new data set.</p>
 <dd><p>The design matrix in CSR format.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>csr_matrix</p>
+<dd class="field-odd"><p>scipy.sparse.csr_matrix</p>
 </dd>
 </dl>
 </dd></dl>
@@ -628,7 +628,7 @@ to correctly handle the new data passed and the terms here.</p>
 <dd class="field-even"><p><strong>matrix</strong> – The sub-matrix corresponding to the term passed.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>csr_matrix</p>
+<dd class="field-odd"><p>scipy.sparse.csr_matrix</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1164,7 +1164,7 @@ appropiately.</p>
 <dd class="field-even"><p><strong>component</strong> – The component with name <code class="docutils literal notranslate"><span class="pre">name</span></code>.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><cite>:class:</cite>.Variable` or <cite>:class:</cite>.Call`</p>
+<dd class="field-odd"><p><cite>:class:`Variable</cite> or <cite>:class:`Call</cite></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1201,7 +1201,7 @@ categoric.</p>
 <span class="sig-name descname"><span class="pre">set_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#Term.set_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.Term.set_type" title="Link to this definition">#</a></dt>
 <dd><p>Set type of the components in the term.</p>
 <p>Calls <code class="docutils literal notranslate"><span class="pre">.set_type()</span></code> method on each component in the term. For those components of class
-<code class="xref py py-class docutils literal notranslate"><span class="pre">Variable`</span></code> it only passes the data mask. For <cite>:class:</cite>.Call` objects it also passes
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Variable`</span></code> it only passes the data mask. For <cite>:class:`Call</cite> objects it also passes
 the evaluation environment.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1309,7 +1309,7 @@ corresponding to the group specific effect.</p>
 <dd class="field-even"><p><strong>Zi</strong></p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.ndarray FIXME</p>
+<dd class="field-odd"><p>scipy.sparse.csr_matrix</p>
 </dd>
 </dl>
 </dd></dl>
