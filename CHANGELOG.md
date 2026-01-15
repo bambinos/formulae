@@ -10,6 +10,23 @@
 
 ### Deprecation
 
+## v0.6.0
+
+### New features
+
+- Add `as_dataframe()` method to `GroupEffectsMatrix` (#115)
+- Use sparse matrices for group-specific design matrices (#117, #118, #119)
+
+### Maintenance and fixes
+
+- Fix pandas version check (#110)
+- Test on Python 3.10, 3.11, and 3.12 (#113)
+- Migrate development tooling and workflow to pixi (#116)
+
+### Deprecation
+
+- Drop support for Python 3.7; Python ≥ 3.8 is now required (#110)
+
 ## v0.5.4
 
 ### Maintenance and fixes
