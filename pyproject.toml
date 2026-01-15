@@ -19,7 +19,7 @@ maintainers = [{ name = "Tomás Capretto", email = "tomicapretto@gmail.com" }]
 dependencies = [
     "numpy>=1.16",
     "packaging",
-    "pandas>=1.0.0",
+    "pandas>=1.0.0,<3.0.0",
     "scipy>=1.5.4"
 ]
 
@@ -45,7 +45,6 @@ preview = ["pixi-build"]
 formulae = { path = ".", editable = true }
 
 [tool.pixi.dependencies]
-sparse = ">=0.17.0,<0.18"
 # NOTE: We get all dependencies we need through installation of Formulae itself
 
 ## Dependencies from conda channels
