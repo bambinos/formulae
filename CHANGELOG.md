@@ -10,6 +10,16 @@
 
 ### Deprecation
 
+## v0.X.X Unreleased
+
+### Maintenance and fixes
+
+- Remove `sparse` dependency (#121)
+
+### Documentation
+
+- Update README to mention formulae supports Python>=3.8 (#121)
+
 ## v0.6.0
 
 ### New features
