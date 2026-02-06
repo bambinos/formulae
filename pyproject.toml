@@ -19,7 +19,7 @@ maintainers = [{ name = "Tomás Capretto", email = "tomicapretto@gmail.com" }]
 dependencies = [
     "numpy>=1.16",
     "packaging",
-    "pandas>=1.0.0,<3.0.0",
+    "pandas>=1.0.0",
     "scipy>=1.5.4"
 ]
 
