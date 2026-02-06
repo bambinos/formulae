@@ -46,9 +46,12 @@ class Variable:
         if not isinstance(other, type(self)):
             return False
         return (
-            self.kind == other.kind
-            and self.name == other.name
+            self.name == other.name
+            and self.kind == other.kind
             and self.reference == other.reference
+            and self.spans_intercept == other.spans_intercept
+            and self.levels == other.levels
+            and self.contrast_matrix == other.contrast_matrix
         )
 
     def __repr__(self):
