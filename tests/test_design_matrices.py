@@ -17,7 +17,7 @@ from formulae.parser import ParseError
 from formulae.resolver import ResolverError
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def data():
     rng = np.random.default_rng(1234)
     size = 20
@@ -38,7 +38,7 @@ def data():
     return data
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def pixel():
     """
     X-ray pixel intensities over time dataset from R nlme package.
@@ -58,7 +58,7 @@ def pixel():
     return data
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def beetle():
     data = pd.DataFrame(
         {

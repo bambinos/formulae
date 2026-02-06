@@ -15,7 +15,7 @@ from formulae.matrices import design_matrices
 from formulae.terms.call_resolver import LazyCall, LazyVariable
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def data():
     from os.path import dirname, join
 
@@ -24,7 +24,7 @@ def data():
     return data
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def data2():
     from os.path import dirname, join
 
