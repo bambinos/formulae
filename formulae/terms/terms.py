@@ -559,6 +559,8 @@ class Term:
                     levels.append([str(i) for i in range(component.value.shape[1])])
             if levels:
                 levels = [", ".join(str_tuple) for str_tuple in list(itertools.product(*levels))]
+            else:
+                levels = None
         else:
             component = self.components[0]
             # Response created with `y[level]`
@@ -1273,10 +1275,10 @@ class Model:
         # Evaluate group-specific terms
         for term in self.group_terms:
             encoding = True
-            # If both (1|g) and (x|g) are in the model, then the encoding for x is False.
+            # If both (1|g) and (x|g) are in the model, 'encoding' for 'x' has to be False.
             if not isinstance(term.expr, Intercept):
                 for t in self.group_terms:
-                    if t.factor == term.factor and isinstance(t.expr, Intercept):
+                    if isinstance(t.expr, Intercept) and t.factor.name == term.factor.name:
                         encoding = False
             term.set_data(encoding)
 
