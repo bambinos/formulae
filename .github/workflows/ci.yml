@@ -23,13 +23,13 @@ jobs:
     name: CI on ${{ matrix.pixi-env }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - uses: prefix-dev/setup-pixi@v0.8.10
+      - uses: prefix-dev/setup-pixi@v0.9.4
         with:
-          pixi-version: v0.48.0
+          pixi-version: v0.63.2
           environments: ${{ matrix.pixi-env }}
 
       - name: Run pre-commit checks
@@ -45,7 +45,7 @@ jobs:
         run: pixi run -e ${{ matrix.pixi-env }} coverage report -m
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v5
         with:
           env_vars: OS,PYTHON
           name: codecov-umbrella
