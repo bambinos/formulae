@@ -11,7 +11,7 @@ import numpy as np
 from formulae.transforms import Polynomial
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def data():
     return np.linspace(0, 1, 21)
 

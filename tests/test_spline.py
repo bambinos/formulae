@@ -8,7 +8,7 @@ from formulae.matrices import design_matrices
 from formulae.transforms import BSpline
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def data():
     rng = np.random.default_rng(1234)
     size = 21
@@ -18,7 +18,7 @@ def data():
     return data
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def sequence():
     return np.linspace(0, 1, 21)
 
