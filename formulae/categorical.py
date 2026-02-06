@@ -24,6 +24,9 @@ class ContrastMatrix:
                 "The number of columns in the contrast matrix is not equal to the number of labels"
             )
 
+    def __eq__(self, other):
+        return np.array_equal(self.matrix, other.matrix) and self.labels == other.labels
+
     @property
     def matrix(self):
         return self._matrix
