@@ -68,7 +68,7 @@ def I(x):
     """Identity function. Returns its argument as it is.
 
     This allows to call Python code within the formula interface.
-    This is an allias for ``{x}``, which does exactly the same, but in a more concise manner.
+    This is an alias for ``{x}``, which does exactly the same, but in a more concise manner.
 
     Examples
     ----------
