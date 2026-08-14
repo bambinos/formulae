@@ -18,7 +18,7 @@ def model_description(formula):
         A string with a model description in formula language.
 
     Returns
-    ----------
+    -------
     An object of class ModelTerms with an internal description of the model.
     """
 

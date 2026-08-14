@@ -48,8 +48,8 @@ quartodoc:
     - title: API Reference
       desc: Public functions and classes.
       contents:
-        - design_matrices
         - model_description
+        - design_matrices
         - matrices.DesignMatrices
     - title: Internals
       desc: Objects useful to downstream library developers.

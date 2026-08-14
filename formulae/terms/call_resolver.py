@@ -9,17 +9,17 @@ class CallResolverError(Exception):
 
 
 class LazyOperator:
-    """Unary and Binary lazy operators.
+    """Deferred unary or binary operation.
 
-    Functions calls like ``a + b`` are converted into a LazyOperator that is resolved when you
+    Functions calls like `a + b` are converted into a LazyOperator that is resolved when you
     explicitly evaluates it.
 
     Parameters
     ----------
-    op: builtin_function_or_method
-        An operator in the ``operator`` built-in module. It can be one of ``add``, ``pos``, ``sub``,
-        ``neg``, ``pow``, ``mul``, and ``truediv``.
-    args:
+    op : builtin_function_or_method
+        An operator in the `operator` built-in module. It can be one of `add`, `pos`, `sub`,
+        `neg`, `pow`, `mul`, and `truediv`.
+    args :
         One or two lazy instances.
     """
 
@@ -69,28 +69,28 @@ class LazyOperator:
 
         Parameters
         ----------
-        data_mask: pd.DataFrame
+        data_mask : pd.DataFrame
             The data frame where variables are taken from
-        env: Environment
+        env : Environment
             The environment where values and functions are taken from.
 
         Returns
         -------
-        result:
+        result :
             The value obtained from the operator call.
         """
         return self.op(*[arg.eval(data_mask, env) for arg in self.args])
 
 
 class LazyVariable:
-    """Lazy variable name.
+    """Deferred variable reference.
 
     The variable represented in this object does not hold any value until it is explicitly evaluated
     within a data mask and an evaluation environment.
 
     Parameters
     ----------
-    name: str
+    name : str
         The name of the variable it represents.
     """
 
@@ -112,20 +112,20 @@ class LazyVariable:
     def eval(self, data_mask, env):
         """Evaluates variable.
 
-        First it looks for the variable in ``data_mask``. If not found there, it looks in
-        ``env``. Then it just returns the value the variable represents in either the
+        First it looks for the variable in `data_mask`. If not found there, it looks in
+        `env`. Then it just returns the value the variable represents in either the
         data mask or the evaluation environment.
 
         Parameters
         ----------
-        data_mask: pd.DataFrame
+        data_mask : pd.DataFrame
             The data frame where variables are taken from
-        env: Environment
+        env : Environment
             The environment where values and functions are taken from.
 
         Returns
         -------
-        result:
+        result :
             The value represented by this name in either the data mask or the environment.
         """
         try:
@@ -139,16 +139,16 @@ class LazyVariable:
 
 
 class LazyValue:
-    """Lazy representation of a value in Python.
+    """Deferred Python value.
 
     This object holds a value (a string or a number).
-    It returns its value only when it is evaluated via ``.eval()``.
+    It returns its value only when it is evaluated via `.eval()`.
 
     Parameters
     ----------
-    value: str or numeric
+    value : str or numeric
         The value it holds.
-    lexeme: str
+    lexeme : str
         The string that generated the value it holds
     """
 
@@ -182,19 +182,19 @@ class LazyValue:
 
         Returns
         -------
-        value:
+        value :
             The value this obejct represents.
         """
         return self.value
 
 
 class LazyCall:
-    """Lazy representation of a function call.
+    """Deferred function call.
 
     This class represents a function that can be a stateful transform (a function with memory)
     whose arguments can also be stateful transforms.
 
-    To evaluate these functions we don't create a string representing Python code and let ``eval()``
+    To evaluate these functions we don't create a string representing Python code and let `eval()`
     run it. We take care of all the steps of the evaluation to make sure all the possibly nested
     stateful transformations are handled correctly.
 
@@ -239,14 +239,14 @@ class LazyCall:
 
         Parameters
         ----------
-        data_mask: pd.DataFrame
+        data_mask : pd.DataFrame
             The data frame where variables are taken from
-        env: Environment
+        env : Environment
             The environment where values and functions are taken from.
 
         Returns
         -------
-        result:
+        result :
             The result of the call evaluation.
         """
         callee = get_function_from_module(self.callee, env)

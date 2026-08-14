@@ -15,23 +15,23 @@ from formulae.utils import is_categorical_dtype
 
 
 class Call:
-    """Representation of a call in a model Term.
+    """Call in a model term.
 
-    This class and ``Variable`` are the atomic components of a model term.
+    This class and `Variable` are the atomic components of a model term.
 
-    This object supports stateful transformations defined in ``formulae.transforms``.
+    This object supports stateful transformations defined in `formulae.transforms`.
     A transformation of this type defines its parameters the first time it is called,
     and then can be used to recompute the transformation with memorized parameter values.
     This behavior is useful when implementing a predict method and using transformations such
-    as ``center(x)`` or ``scale(x)``. ``center(x)`` memorizes the value of the mean, and
-    ``scale(x)`` memorizes both the mean and the standard deviation.
+    as `center(x)` or `scale(x)`. `center(x)` memorizes the value of the mean, and
+    `scale(x)` memorizes both the mean and the standard deviation.
 
     Parameters
     ----------
-    call: formulae.terms.call_resolver.LazyCall
+    call : formulae.terms.call_resolver.LazyCall
         The call expression returned by the parser.
-    is_response: bool
-        Indicates whether this call represents a response. Defaults to ``False``.
+    is_response : bool
+        Indicates whether this call represents a response. Defaults to `False`.
     """
 
     def __init__(self, call, is_response=False):
@@ -75,12 +75,12 @@ class Call:
         the model. This allows us to subset the original data set and only raise errors regarding
         missing values when the missingness happens in variables used in the model.
 
-        Uses a visitor of class ``CallVarsExtractor`` that walks through the components of the call
+        Uses a visitor of class `CallVarsExtractor` that walks through the components of the call
         and returns a list with the name of the variables in the call.
 
         Returns
         ----------
-        result: list
+        result : list
             A list of strings with the names of the names of the variables in the call, not
             including the name of the callee.
         """
@@ -89,16 +89,16 @@ class Call:
     def set_type(self, data_mask, env):
         """Evaluates function and determines the type of the result of the call.
 
-        Evaluates the function call and sets the ``.kind`` property to ``"numeric"`` or
-        ``"categoric"`` depending on the type of the result. It also stores the intermediate result
-        of the evaluation in ``._intermediate_data`` to prevent us from computing the same thing
+        Evaluates the function call and sets the `.kind` property to `"numeric"` or
+        `"categoric"` depending on the type of the result. It also stores the intermediate result
+        of the evaluation in `._intermediate_data` to prevent us from computing the same thing
         more than once.
 
         Parameters
         ----------
-        data_mask: pd.DataFrame
+        data_mask : pd.DataFrame
             The data frame where variables are taken from
-        env: Environment
+        env : Environment
             The environment where values and functions are taken from.
         """
         # We initialize an environment where transformations and encodings are available first
@@ -125,14 +125,14 @@ class Call:
         """Finishes the evaluation of the call according to its type.
 
         It does not support multi-level categoric responses yet.
-        If ``self.is_response`` is ``True`` and the variable is of a categoric type, this method
+        If `self.is_response` is `True` and the variable is of a categoric type, this method
         returns a 1d array of 0-1 instead of a matrix.
         # XTODO: Fix previous point
-        In practice, it just completes the evaluation that started with ``self.set_type()``.
+        In practice, it just completes the evaluation that started with `self.set_type()`.
 
         Parameters
         ----------
-        spans_intercept: bool
+        spans_intercept : bool
             Indicates if the encoding of categorical variables spans the intercept or not.
             Omitted when the variable is numeric.
         """
@@ -159,20 +159,20 @@ class Call:
     def eval_numeric(self, x):
         """Finishes evaluation of a numeric call.
 
-        Converts the intermediate values of the call into a numpy array of shape ``(n, 1)``,
-        where ``n`` is the number of observations. This method is used both in ``self.set_data``
-        and in ``self.eval_new_data``.
+        Converts the intermediate values of the call into a numpy array of shape `(n, 1)`,
+        where `n` is the number of observations. This method is used both in `self.set_data`
+        and in `self.eval_new_data`.
 
         Parameters
         ----------
-        x: np.ndarray or pd.Series
+        x : np.ndarray or pd.Series
             The intermediate values resulting from the call.
 
         Returns
         ----------
-        result: dict
-            A dictionary with keys ``"value"`` and ``"kind"``. The first contains the result of the
-            evaluation, and the latter is equal to ``"numeric"``.
+        result : dict
+            A dictionary with keys `"value"` and `"kind"`. The first contains the result of the
+            evaluation, and the latter is equal to `"numeric"`.
         """
         if isinstance(x, np.ndarray):
             self.value = x
@@ -186,7 +186,7 @@ class Call:
 
         First, it checks whether the intermediate evaluation returned is ordered. If not, it
         creates a category where the levels are the observed in the variable. They are sorted
-        according to ``sorted()`` rules.
+        according to `sorted()` rules.
 
         Then, it determines the reference level as well as all the other levels. If the variable
         is a response, the value returned is a dummy with 1s for the reference level and 0s
@@ -195,9 +195,9 @@ class Call:
 
         Parameters
         ----------
-        x: np.ndarray or pd.Series
+        x : np.ndarray or pd.Series
             The intermediate values of the variable.
-        spans_intercept: bool
+        spans_intercept : bool
             Indicates if the encoding of categorical variables spans the intercept or not.
             Omitted when the variable is numeric.
         """
@@ -265,14 +265,14 @@ class Call:
 
         Parameters
         ----------
-        data_mask: pd.DataFrame
+        data_mask : pd.DataFrame
             The data frame where variables are taken from
 
         Returns
         ----------
-        result: np.array
-            The rules for the shape of this array are the rules for ``self.eval_numeric()`` and
-            ``self.eval_categoric()``. The first applies for numeric calls, the second for
+        result : np.array
+            The rules for the shape of this array are the rules for `self.eval_numeric()` and
+            `self.eval_categoric()`. The first applies for numeric calls, the second for
             categoric ones.
         """
         if self.kind in ["numeric", "categoric"]:
@@ -301,13 +301,13 @@ class Call:
         This method also checks the levels observed in the new data frame are included within the
         set of the levels of the result of the original call If not, an error is raised.
 
-        x: np.ndarray or pd.Series
+        x : np.ndarray or pd.Series
             The intermediate values of the variable.
 
         Returns
         ----------
-        result: np.array
-            Numeric numpy array ``(n, p)``, where ``n`` is the number of observations and ``p`` the
+        result : np.array
+            Numeric numpy array `(n, p)`, where `n` is the number of observations and `p` the
             number of dummy variables used in the numeric representation of the categorical
             variable.
         """

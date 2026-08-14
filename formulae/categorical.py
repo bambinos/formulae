@@ -9,9 +9,9 @@ class ContrastMatrix:
 
     Parameters
     ----------
-    contrast: 2-dimensional np.array
+    contrast : 2-dimensional np.array
         The contrast matrix as a numpy array.
-    labels: list or tuple
+    labels : list or tuple
         The labels for the columns of the contrast matrix. Its length must match the number of
         columns in the contrast matrix.
     """
@@ -70,12 +70,12 @@ class CategoricalBox:
 
     Parameters
     ----------
-    data: 1d array-like
+    data : 1d array-like
         The data converted to categorical.
-    contrast: Encoding
+    contrast : Encoding
         An instance that represents the contrast matrix used to encode the categorical variable.
-    levels: list or tuple
-        The levels in ``data`` in the desired order.
+    levels : list or tuple
+        The levels in `data` in the desired order.
     """
 
     def __init__(self, data, contrast, levels):
@@ -152,7 +152,7 @@ class Treatment(Encoding):
 
         Parameters
         ----------
-        reference: str
+        reference : str
             The level to take as reference
         """
         self.reference = reference
@@ -196,7 +196,7 @@ class Sum(Encoding):
 
         Parameters
         ----------
-        omit: str
+        omit : str
             The level to omit.
         """
         self.omit = omit
