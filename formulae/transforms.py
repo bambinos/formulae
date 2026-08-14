@@ -91,7 +91,7 @@ def C(data, contrast=None, levels=None):
 
 
 def S(data, omit=None, levels=None):
-    """Convert to categorical using Treatment encoding
+    """Convert to categorical using Sum encoding
 
     It is a shorthand for C(x, Sum)
     """
@@ -379,7 +379,7 @@ class Polynomial:
         The data.
     degree : int
         The degree of the polynomial terms to compute. If degree is k, with k > 1, this
-        transformation computes the polinomials x^1, x^2, ...x^k.
+        transformation computes the polynomials x^1, x^2, ...x^k.
     raw : bool
         Whether to use raw polynomials or orthonormal ones. Defaults to False.
     """

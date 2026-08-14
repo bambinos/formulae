@@ -177,7 +177,7 @@ class CommonEffectsMatrix:
     Parameters
     ----------
     terms : list
-        A list of `Term` objects.
+        A list of [Term](`formulae.terms.Term`) objects.
 
 
     Attributes
@@ -204,7 +204,7 @@ class CommonEffectsMatrix:
     def evaluate(self, data, env):
         """Obtain design matrix for common effects.
 
-        Evaluates `self.model` inside the data mask provided by `data` and updates
+        Uses `self.terms` inside the data mask provided by `data` and updates
         `self.design_matrix`. This method also sets the values of `self.data` and
         `self.env`.
 
@@ -277,7 +277,7 @@ class CommonEffectsMatrix:
             The name of the term.
 
         Returns
-        ----------
+        -------
         matrix : np.array
             A 2-dimensional numpy array that represents the sub-matrix corresponding to the
             term passed.
@@ -317,7 +317,7 @@ class GroupEffectsMatrix:
     Parameters
     ----------
     terms : list
-        A list of `GroupSpecificTerm` objects.
+        A list of [GroupSpecificTerm](`formulae.terms.GroupSpecificTerm`) objects.
 
     Attributes
     ----------
@@ -348,8 +348,7 @@ class GroupEffectsMatrix:
         term.
 
         This method also sets the values of `self.data` and `self.env`. It also populates
-        the dictionary `self.terms_info` with information related to each term ,such as the kind,
-        the columns and rows they occupy in the design matrix and the names of the columns.
+        the dictionary `self.slices` with the columns each term occupies in the design matrix.
 
         Parameters
         ----------
@@ -498,7 +497,7 @@ def design_matrices(formula, data, na_action="drop", env=0, extra_namespace=None
     na_action : str
         Describes what to do with missing values in `data`. `"drop"` means to drop
         all rows with a missing value, `"error"` means to raise an error,
-        `"pass"` means to to keep all. Defaults to `"drop"`.
+        `"pass"` means to keep all. Defaults to `"drop"`.
     env : integer
         The number of environments we walk up in the stack starting from the function's caller
         to capture the environment where formula is evaluated. Defaults to 0 which means
@@ -510,7 +509,7 @@ def design_matrices(formula, data, na_action="drop", env=0, extra_namespace=None
     Returns
     -------
     design : DesignMatrices
-        An instance of DesignMatrices that contains the design matrice(s) described by
+        An instance of `DesignMatrices` that contains the design matrix or matrices described by
         `formula`.
     """
 

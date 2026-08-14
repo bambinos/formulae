@@ -17,7 +17,7 @@ from formulae.utils import is_categorical_dtype
 class Call:
     """Call in a model term.
 
-    This class and `Variable` are the atomic components of a model term.
+    This class and [Variable](`formulae.terms.Variable`) are the atomic components of a model term.
 
     This object supports stateful transformations defined in `formulae.transforms`.
     A transformation of this type defines its parameters the first time it is called,
@@ -79,7 +79,7 @@ class Call:
         and returns a list with the name of the variables in the call.
 
         Returns
-        ----------
+        -------
         result : list
             A list of strings with the names of the names of the variables in the call, not
             including the name of the callee.
@@ -169,7 +169,7 @@ class Call:
             The intermediate values resulting from the call.
 
         Returns
-        ----------
+        -------
         result : dict
             A dictionary with keys `"value"` and `"kind"`. The first contains the result of the
             evaluation, and the latter is equal to `"numeric"`.
@@ -269,7 +269,7 @@ class Call:
             The data frame where variables are taken from
 
         Returns
-        ----------
+        -------
         result : np.array
             The rules for the shape of this array are the rules for `self.eval_numeric()` and
             `self.eval_categoric()`. The first applies for numeric calls, the second for
@@ -305,7 +305,7 @@ class Call:
             The intermediate values of the variable.
 
         Returns
-        ----------
+        -------
         result : np.array
             Numeric numpy array `(n, p)`, where `n` is the number of observations and `p` the
             number of dummy variables used in the numeric representation of the categorical

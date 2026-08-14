@@ -6,8 +6,6 @@ from .config import config
 from .matrices import design_matrices
 from .model_description import model_description
 
-# from .version import __version__
-
 __version__ = version("formulae")
 
 __all__ = [

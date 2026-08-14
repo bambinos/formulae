@@ -148,16 +148,16 @@ class NegatedIntercept:
     def __add__(self, other):
         """Addition operator.
 
-        Generally this operator is used to explicitly remove an from a model.
+        Generally this operator is used to explicitly remove an intercept from a model.
 
         * `"0 + 1"` returns an empty model.
         * `"0 + 0"` returns a negated intercept
         * `"0 + x"` returns a model that includes the negated intercept.
-        * `"0 + (x + y)"` adds an the negated intercept to the model given by `x` and `y`.
+        * `"0 + (x + y)"` adds the negated intercept to the model given by `x` and `y`.
 
         No matter the final result contains the negated intercept, for example if we do something
         like `"y ~ 0 + x + y + 0"`, the `Model` that is obtained removes any negated intercepts
-        thay may have been left. They just don't make sense in a model.
+        that may have been left. They just don't make sense in a model.
         """
         if isinstance(other, type(self)):
             return self
@@ -294,7 +294,7 @@ class Term:
         interaction. It is a shortcut for `x + y + x:y`.
 
         * `"x * x"` equals to `"x"`
-        * `"x * y"` equals to`"x + y + x:y"`
+        * `"x * y"` equals to `"x + y + x:y"`
         * `"x:y * u"` equals to `"x:y + u + x:y:u"`
         * `"x:y * u:v"` equals to `"x:y + u:v + x:y:u:v"`
         * `"x:y * (u + v)"` equals to `"x:y + u + v + x:y:u + x:y:v"`
@@ -450,7 +450,7 @@ class Term:
         """Obtains and stores the final data object related to this term.
 
         Calls `.set_data()` method on each component in the term. Then, it uses the `.data`
-        attribute on each of them to build `self.data` and `self.metadata`.
+        attribute on each of them to build `self.data`.
 
         Parameters
         ----------
@@ -480,7 +480,7 @@ class Term:
         """Evaluates the term with new data.
 
         Calls `.eval_new_data()` method on each component in the term and combines the results
-        appropiately.
+        appropriately.
 
         Parameters
         ----------
@@ -525,7 +525,7 @@ class Term:
         Loops through each component and updates the set with the `.var_names` of each component.
 
         Returns
-        ----------
+        -------
         var_names : set
             The names of the variables involved in the term.
         """
@@ -576,7 +576,7 @@ class Term:
 
     @property
     def spans_intercept(self):
-        """Does this term spans the intercept?
+        """Does this term span the intercept?
 
         True if all the components span the intercept
         """
@@ -605,12 +605,8 @@ class GroupSpecificTerm:
 
     Attributes
     ----------
-    data : np.ndarray
+    data : scipy.sparse.csr_matrix
         The values associated with the term as they go into the design matrix.
-    metadata : dict
-        Metadata associated with the term. If `"numeric"` or `"categoric"` it holds additional
-        information in the component `.data` attribute. If `"interaction"`, the keys are
-        the name of the components and the values are dictionaries holding the metadata.
     kind : str
         Indicates the type of the term. Can be one of `"numeric"`, `"categoric"`, or
         `"interaction"`.
@@ -1296,7 +1292,7 @@ class Model:
 
         This method returns dictionaries with `True`/`False` values.
         `True` means the categorical variable spans the intercept.
-        `False` means the categorial variable does not span the intercept.
+        `False` means the categorical variable does not span the intercept.
         """
         groups = self._get_encoding_groups()
         l = [pick_contrasts(group) for group in groups]

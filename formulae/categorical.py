@@ -185,7 +185,7 @@ class Sum(Encoding):
     def __init__(self, omit=None):
         """Sum-to-zero encoding
 
-        This is also known as deviation encoding. It compares the the mean of each level to the
+        This is also known as deviation encoding. It compares the mean of each level to the
         grand mean (aka mean-of-means).
 
         For full-rank coding, an intercept term is added. This intercept represents the mean

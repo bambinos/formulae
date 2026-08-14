@@ -118,7 +118,7 @@ class ExpandedTerm:
         self.subterms = []
 
     def pick_contrast(self, used_subterms):
-        """Obtain constrasts for a given term
+        """Obtain contrasts for a given term
 
         Parameters
         ----------

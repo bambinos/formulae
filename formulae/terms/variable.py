@@ -74,7 +74,7 @@ class Variable:
         return {self.name}
 
     def set_type(self, data_mask):
-        """Detemines the type of the variable.
+        """Determines the type of the variable.
 
         Looks for the name of the variable in `data_mask` and sets the `.kind` property to
         `"numeric"` or `"categoric"` depending on the type of the variable.
@@ -186,7 +186,7 @@ class Variable:
             The data frame where variables are taken from
 
         Returns
-        ----------
+        -------
         result : np.array
             The rules for the shape of this array are the rules for `self.eval_numeric()` and
             `self.eval_categoric()`. The first applies for numeric variables, the second for
@@ -211,7 +211,7 @@ class Variable:
             The intermediate values of the variable.
 
         Returns
-        ----------
+        -------
         result : np.array
             Numeric numpy array `(n, p)`, where `n` is the number of observations and `p` the
             number of dummy variables used in the numeric representation of the categorical

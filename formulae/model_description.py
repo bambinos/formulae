@@ -9,7 +9,7 @@ def model_description(formula):
     """Interpret model formula and obtain a model description.
 
     This function receives a string with a formula describing a statistical
-    model and returns an object of class ModelTerms that describes the
+    model and returns an object of class `Model` that describes the
     model interpreted from the formula.
 
     Parameters
@@ -19,7 +19,7 @@ def model_description(formula):
 
     Returns
     -------
-    An object of class ModelTerms with an internal description of the model.
+    An object of class `Model` with an internal description of the model.
     """
 
     description = Resolver(Parser(Scanner(formula).scan()).parse()).resolve()
