@@ -399,3 +399,44 @@ def test_new_group_specific_groups():
 
     # Reset config
     config.EVAL_UNSEEN_CATEGORIES = "error"
+
+
+def test_group_factor_evaluates_new_data_indices():
+    train = pd.DataFrame({"y": [0, 1, 2, 3], "g": ["a", "a", "b", "b"]})
+    term = design_matrices("y ~ (1 | g)", train).group.terms["1|g"]
+    new_data = pd.DataFrame({"g": ["b", None, "new-1", "new-2", "new-1", "a", np.nan]})
+
+    index, new_groups = term.eval_new_data_group_index(new_data)
+
+    assert index.dtype == np.int64
+    assert np.array_equal(index, np.array([1, -1, 2, 3, 2, 0, -1], dtype=np.int64))
+    assert new_groups == ("new-1", "new-2")
+
+
+def test_group_interaction_evaluates_new_data_indices_in_factor_column_order():
+    # The fitted data only contains the diagonal combinations.
+    # Formulae nevertheless creates a full Cartesian product of factor columns.
+    train = pd.DataFrame({"y": [0, 1], "left": ["a", "b"], "right": ["x", "y"]})
+    term = design_matrices("y ~ (1 | left:right)", train).group.terms["1|left:right"]
+    new_data = pd.DataFrame(
+        {
+            "left": ["a", "b", "new", "new", "new", "a", None],
+            "right": ["y", "x", "x", "x", "y", None, "new"],
+        }
+    )
+
+    index, new_groups = term.eval_new_data_group_index(new_data)
+
+    assert term.factor.data.shape[1] == 4
+    assert np.array_equal(index, np.array([1, 2, 4, 4, 5, -1, -1], dtype=np.int64))
+    assert new_groups == (("new", "x"), ("new", "y"))
+
+
+def test_group_factor_call_evaluates_new_data_indices():
+    train = pd.DataFrame({"y": [0, 1], "g": ["a", "b"]})
+    term = design_matrices("y ~ (1 | C(g))", train).group.terms["1|C(g)"]
+
+    index, new_groups = term.eval_new_data_group_index(pd.DataFrame({"g": ["b", "new", None]}))
+
+    assert np.array_equal(index, np.array([1, 2, -1], dtype=np.int64))
+    assert new_groups == ("new",)
