@@ -12,20 +12,20 @@ from formulae.utils import is_categorical_dtype
 
 
 class Variable:
-    """Representation of a variable in a model Term.
+    """Variable in a model term.
 
-    This class and ``Call`` are the atomic components of a model term.
+    This class and `Call` are the atomic components of a model term.
 
     Parameters
     ----------
     name : str
         The identifier of the variable.
     level : str
-        The level to use as reference. Allows to use the notation ``variable["level"]`` to indicate
+        The level to use as reference. Allows to use the notation `variable["level"]` to indicate
         which event should be model as success in binary response models. Can only be used with
-        response terms. Defaults to ``None``.
-    is_response: bool
-        Indicates whether this variable represents a response. Defaults to ``False``.
+        response terms. Defaults to `None`.
+    is_response : bool
+        Indicates whether this variable represents a response. Defaults to `False`.
     """
 
     def __init__(self, name, level=None, is_response=False):
@@ -74,15 +74,15 @@ class Variable:
         return {self.name}
 
     def set_type(self, data_mask):
-        """Detemines the type of the variable.
+        """Determines the type of the variable.
 
-        Looks for the name of the variable in ``data_mask`` and sets the ``.kind`` property to
-        ``"numeric"`` or ``"categoric"`` depending on the type of the variable.
-        It also stores the result of the intermediate evaluation in ``self._intermediate_data``.
+        Looks for the name of the variable in `data_mask` and sets the `.kind` property to
+        `"numeric"` or `"categoric"` depending on the type of the variable.
+        It also stores the result of the intermediate evaluation in `self._intermediate_data`.
 
         Parameters
         ----------
-        data_mask: pd.DataFrame
+        data_mask : pd.DataFrame
             The data frame where variables are taken from
         """
         x = data_mask[self.name]
@@ -99,7 +99,7 @@ class Variable:
 
         Parameters
         ----------
-        spans_intercept: bool
+        spans_intercept : bool
             Indicates if the encoding of categorical variables spans the intercept or not.
             Omitted when the variable is numeric.
         """
@@ -120,11 +120,11 @@ class Variable:
     def eval_numeric(self, x):
         """Finishes evaluation of a numeric variable.
 
-        Converts the intermediate values in ``x`` into a 1d numpy array.
+        Converts the intermediate values in `x` into a 1d numpy array.
 
         Parameters
         ----------
-        x: np.ndarray or pd.Series
+        x : np.ndarray or pd.Series
             The intermediate values of the variable.
         """
         if isinstance(x, np.ndarray):
@@ -137,15 +137,15 @@ class Variable:
     def eval_categoric(self, x, spans_intercept):
         """Finishes evaluation of a categoric variable.
 
-        Converts the intermediate values in ``x`` into a numpy array of shape ``(n, p)``, where
-        ``n`` is the number of observations and ``p`` the number of dummy variables used in the
+        Converts the intermediate values in `x` into a numpy array of shape `(n, p)`, where
+        `n` is the number of observations and `p` the number of dummy variables used in the
         numeric representation of the categorical variable.
 
         Parameters
         ----------
-        x: np.ndarray or pd.Series
+        x : np.ndarray or pd.Series
             The intermediate values of the variable.
-        spans_intercept: bool
+        spans_intercept : bool
             Indicates if the encoding of categorical variables spans the intercept or not.
             Omitted when the variable is numeric.
         """
@@ -182,14 +182,14 @@ class Variable:
 
         Parameters
         ----------
-        data_mask: pd.DataFrame
+        data_mask : pd.DataFrame
             The data frame where variables are taken from
 
         Returns
-        ----------
-        result: np.array
-            The rules for the shape of this array are the rules for ``self.eval_numeric()`` and
-            ``self.eval_categoric()``. The first applies for numeric variables, the second for
+        -------
+        result : np.array
+            The rules for the shape of this array are the rules for `self.eval_numeric()` and
+            `self.eval_categoric()`. The first applies for numeric variables, the second for
             categoric ones.
         """
         x = data_mask[self.name]
@@ -207,13 +207,13 @@ class Variable:
         This method also checks the levels observed in the new data frame are included within the
         set of the levels of the original data set. If not, an error is raised.
 
-        x: np.ndarray or pd.Series
+        x : np.ndarray or pd.Series
             The intermediate values of the variable.
 
         Returns
-        ----------
-        result: np.array
-            Numeric numpy array ``(n, p)``, where ``n`` is the number of observations and ``p`` the
+        -------
+        result : np.array
+            Numeric numpy array `(n, p)`, where `n` is the number of observations and `p` the
             number of dummy variables used in the numeric representation of the categorical
             variable.
         """

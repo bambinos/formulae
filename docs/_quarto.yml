@@ -1,0 +1,95 @@
+project:
+  type: website
+  output-dir: _site
+  resources:
+    - api/**
+  render:
+    - "*.qmd"
+    - "notebooks/*.ipynb"
+
+website:
+  title: "Formulae"
+  description: "Formulas for mixed-effects models in Python"
+  repo-url: https://github.com/bambinos/formulae
+  page-navigation: true
+  navbar:
+    title: false
+    background: light
+    search: true
+    pinned: true
+    logo: "logo/formulae_small.png"
+    logo-alt: "Formulae home"
+    right:
+      - text: Getting Started
+        href: notebooks/getting_started.ipynb
+      - text: API Reference
+        href: api/index.html
+      - text: Changelog
+        href: changelog.qmd
+    tools:
+      - icon: github
+        href: https://github.com/bambinos/formulae
+  sidebar:
+    - id: reference
+      contents: _sidebar.yml
+
+quartodoc:
+  parser: numpy
+  style: pkgdown
+  dir: api
+  render_interlinks: true
+  title: "Formulae"
+  renderer:
+    style: markdown
+    table_style: description-list
+  package: formulae
+  sidebar: api/_sidebar.yml
+  sections:
+    - title: API Reference
+      desc: Public functions and classes.
+      contents:
+        - model_description
+        - design_matrices
+        - matrices.DesignMatrices
+    - title: Internals
+      desc: Objects useful to downstream library developers.
+      contents:
+        - matrices.ResponseMatrix
+        - matrices.CommonEffectsMatrix
+        - matrices.GroupEffectsMatrix
+        - terms.Variable
+        - terms.Call
+        - terms.Term
+        - terms.GroupSpecificTerm
+        - terms.Intercept
+        - terms.NegatedIntercept
+        - terms.Response
+        - terms.Model
+        - terms.call_resolver.LazyValue
+        - terms.call_resolver.LazyVariable
+        - terms.call_resolver.LazyOperator
+        - terms.call_resolver.LazyCall
+
+metadata-files:
+  - api/_sidebar.yml
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+
+filters:
+  - interlinks
+
+interlinks:
+  fast: true
+  sources:
+    python:
+      url: https://docs.python.org/3/
+    numpy:
+      url: https://numpy.org/doc/stable/
+    pandas:
+      url: https://pandas.pydata.org/docs/
+    scipy:
+      url: https://docs.scipy.org/doc/scipy/

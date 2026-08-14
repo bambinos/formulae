@@ -57,7 +57,7 @@ class Subterm:
 
     Parameters
     ----------
-    efactors: set-like
+    efactors : set-like
         A set of one or more ExpandedFactor involved in the Subterm
     """
 
@@ -118,11 +118,11 @@ class ExpandedTerm:
         self.subterms = []
 
     def pick_contrast(self, used_subterms):
-        """Obtain constrasts for a given term
+        """Obtain contrasts for a given term
 
         Parameters
         ----------
-        used_subterms: set
+        used_subterms : set
             A set of Subterms that have already been used so they are discarded here.
             This object is modified in-place!
         """
@@ -167,7 +167,7 @@ def pick_contrasts(group):
 
     Parameters
     ----------
-    terms: ModelTerms
+    terms : ModelTerms
         A set of one or more ExpandedFactor involved in the Subterm
     """
 

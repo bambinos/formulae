@@ -1,0 +1,6 @@
+/.quarto/
+**/*.quarto_ipynb
+/_site/
+/api/
+/_inv/
+/objects.*

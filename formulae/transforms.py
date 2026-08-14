@@ -68,7 +68,7 @@ def I(x):
     """Identity function. Returns its argument as it is.
 
     This allows to call Python code within the formula interface.
-    This is an alias for ``{x}``, which does exactly the same, but in a more concise manner.
+    This is an alias for `{x}`, which does exactly the same, but in a more concise manner.
 
     Examples
     ----------
@@ -91,7 +91,7 @@ def C(data, contrast=None, levels=None):
 
 
 def S(data, omit=None, levels=None):
-    """Convert to categorical using Treatment encoding
+    """Convert to categorical using Sum encoding
 
     It is a shorthand for C(x, Sum)
     """
@@ -111,17 +111,17 @@ def binary(x, success=None):
 
     Parameters
     ----------
-    x: pd.Series
+    x : pd.Series
         The object containing the variable to be converted to binary.
-    success: str, numeric or None
+    success : str, numeric or None
         The success level. When the variable is equal to this level, the binary variable is 1.
-        All the rest are 0. Defaults to ``None`` which means formulae is going to sort all the
+        All the rest are 0. Defaults to `None` which means formulae is going to sort all the
         values in the variable and pick the first one as success.
 
     Returns
     -------
-    x: np.array
-        A 0-1 numpy array with shape ``(n, 1)`` where ``n`` is the number of observations.
+    x : np.array
+        A 0-1 numpy array with shape `(n, 1)` where `n` is the number of observations.
     """
     if success is None:
         categories = sorted(x.unique().tolist())
@@ -137,14 +137,14 @@ class Proportion:
 
     Parameters
     ----------
-    successes: ndarray
-        1D array containing data with ``int`` dtype.
-    trials: ndarray
-        1D array containing data with ``int`` dtype. Its values must be equal or larger than the
-        values in ``successes``
-    trials_type: str
-        Indicates whether ``trials`` is a constant value or not. It can be either ``"constant"``
-        or ``"variable"``.
+    successes : ndarray
+        1D array containing data with `int` dtype.
+    trials : ndarray
+        1D array containing data with `int` dtype. Its values must be equal or larger than the
+        values in `successes`
+    trials_type : str
+        Indicates whether `trials` is a constant value or not. It can be either `"constant"`
+        or `"variable"`.
     """
 
     def __init__(self, successes, trials, trials_type):
@@ -166,17 +166,17 @@ class Proportion:
 
 
 def proportion(successes, trials):
-    """Create a term that represents the proportion ``successes/trials``.
+    """Create a term that represents the proportion `successes/trials`.
 
-    This function is actually a wrapper of class ``Proportion`` that checks its arguments.
+    This function is actually a wrapper of class `Proportion` that checks its arguments.
 
     Parameters
     ----------
-    successes: pd.Series
+    successes : pd.Series
         The number of successes for each observation unit.
-    trials: pd.Series or int
-        The number of trials for each observation unit. If ``int``, this function internally
-        generates an array of the same length than ``successes``.
+    trials : pd.Series or int
+        The number of trials for each observation unit. If `int`, this function internally
+        generates an array of the same length than `successes`.
     """
     # If this function does not receive a pd.Series, it means the user didn't pass a name in the
     # formula interface
@@ -230,30 +230,30 @@ def offset(x):
 class BSpline:
     """B-Spline representation
 
-    Generates a B-spline basis for ``x``, allowing non-linear fits. The usual
+    Generates a B-spline basis for `x`, allowing non-linear fits. The usual
     usage is something like::
 
         y ~ 1 + bs(x, 4)
 
-    to fit ``y`` as a smooth function of ``x``, with 4 degrees of freedom
+    to fit `y` as a smooth function of `x`, with 4 degrees of freedom
     given to the smooth.
 
     Parameters
     ----------
-    x: 1D array-like
+    x : 1D array-like
         The data.
-    df: The number of degrees of freedom to use for this spline. The return value will have this
-        many columns. You must specify at least one of ``df`` and ``knots``.
-    knots: 1D array-like or None
+    df : The number of degrees of freedom to use for this spline. The return value will have this
+        many columns. You must specify at least one of `df` and `knots`.
+    knots : 1D array-like or None
         The interior knots to use for the spline. If unspecified, then equally spaced quantiles of
-        the input data are used. You must specify at least one of ``df`` and ``knots`
-    degree: int
+        the input data are used. You must specify at least one of `df` and `knots`
+    degree : int
         Degree of the piecewise polynomial. Default is 3 for cubic splines.
-    intercept: bool
-        If ``True``, an intercept is included in the basis. Default is ``False``.
-    lower_bound:
+    intercept : bool
+        If `True`, an intercept is included in the basis. Default is `False`.
+    lower_bound :
         The lower exterior knot location.
-    upper_bound:
+    upper_bound :
         The upper exterior knot location.
     """
 
@@ -375,12 +375,12 @@ class Polynomial:
 
     Parameters
     ----------
-    x: 1d array-like
+    x : 1d array-like
         The data.
-    degree: int
+    degree : int
         The degree of the polynomial terms to compute. If degree is k, with k > 1, this
-        transformation computes the polinomials x^1, x^2, ...x^k.
-    raw: bool
+        transformation computes the polynomials x^1, x^2, ...x^k.
+    raw : bool
         Whether to use raw polynomials or orthonormal ones. Defaults to False.
     """
 

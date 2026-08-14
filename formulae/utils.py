@@ -69,8 +69,8 @@ def row_khatri_rao_sparse(X, groups, k):
         The integer group indices for each observation (0 to k- 1).
 
     k : int
-        Number of groups in ``groups``.
-        This parameter is needed to correctly determine the shape of the result when ``groups``
+        Number of groups in `groups`.
+        This parameter is needed to correctly determine the shape of the result when `groups`
         does not contain indexes representing all possible groups.
 
     Returns

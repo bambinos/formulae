@@ -27,7 +27,7 @@ dependencies = [
 homepage = "https://bambinos.github.io/formulae"
 documentation = "https://bambinos.github.io/formulae"
 repository = "https://github.com/bambinos/formulae"
-changelog = "https://github.com/bambinos/formulae/blob/main/docs/CHANGELOG.md"
+changelog = "https://github.com/bambinos/formulae/blob/master/CHANGELOG.md"
 
 [tool.setuptools]
 packages = ["formulae", "formulae.terms"]
@@ -62,9 +62,11 @@ ipykernel = ">=6.30,<7"
 notebook = ">=7,<9"
 ipywidgets = ">=8.1.7,<9"
 watermark = ">=2.5.0,<3"
-nbsphinx = "*"
-pydata-sphinx-theme = "0.16.*"
-Sphinx = "9.0.*"
+griffe = ">=1,<2"
+
+[tool.pixi.feature.docs.pypi-dependencies]
+# Use the same Quartodoc revision as Bambi until its next release.
+quartodoc = { git = "https://github.com/machow/quartodoc.git", rev = "fc9f3cca3c2f930e53c6c7079e41333a13ed0461" }
 
 [tool.pixi.feature.py311.dependencies]
 python = "~=3.11.0"

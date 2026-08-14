@@ -1,6 +1,5 @@
 build/
 dist/
-docs/_build
 
 .coverage
 .ipynb_checkpoints/
