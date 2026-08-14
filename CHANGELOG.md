@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.X.X Unreleased
+## 0.X.X Unreleased
 
 ### New features
 
@@ -10,7 +10,27 @@
 
 ### Deprecation
 
-## v0.X.X Unreleased
+## 0.7.0
+
+### New features
+
+- Add `GroupSpecificTerm.eval_new_data_group_index()` to distinguish fitted,
+  missing, and new grouping levels when evaluating new data.
+
+### Maintenance and fixes
+
+### Documentation
+
+### Deprecation
+
+## 0.6.2
+
+### Maintenance and fixes
+
+- Update versions (#122)
+- Extend equality methods (#123)
+
+## 0.6.1
 
 ### Maintenance and fixes
 
@@ -20,7 +40,7 @@
 
 - Update README to mention formulae supports Python>=3.8 (#121)
 
-## v0.6.0
+## 0.6.0
 
 ### New features
 
@@ -37,19 +57,19 @@
 
 - Drop support for Python 3.7; Python ≥ 3.8 is now required (#110)
 
-## v0.5.4
+## 0.5.4
 
 ### Maintenance and fixes
 
 - Make sure model_description always returns a Model instance (#112)
 
-## v0.5.3
+## 0.5.3
 
 ### Maintenance and fixes
 
 - Make formulae reach transformations before outer names (#109)
 
-## v0.5.2
+## 0.5.2
 
 ### Maintenance and fixes
 
@@ -57,13 +77,13 @@
 - Add automatic versioning to the library (#106)
 - Interpret True, False, and None as Python literals (#107)
 
-## v0.5.1
+## 0.5.1
 
 ### Maintenance and fixes
 
 - Fix bug when intercept is inserted after categorical variable (#102)
 
-## v0.5.0
+## 0.5.0
 
 ### New features
 
@@ -79,7 +99,7 @@
 
 ### Deprecation
 
-## v0.4.0
+## 0.4.0
 
 ### New features
 
