@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Internals &#8212; Formulae 0.6.3.dev1+ga4eb15d34 documentation</title>
+    <title>Internals &#8212; Formulae 0.6.3.dev3+g31bd41372 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=36aa562b"></script>
+    <script src="_static/documentation_options.js?v=a91d9a9a"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -48,7 +48,7 @@
     <link rel="prev" title="API Reference" href="api_reference.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.6.3.dev1+ga4eb15d34" />
+  <meta name="docsearch:version" content="0.6.3.dev3+g31bd41372" />
   </head>
   
   
@@ -114,8 +114,8 @@
       
     
     
-    <img src="_static/formulae_small.png" class="logo__image only-light" alt="Formulae 0.6.3.dev1+ga4eb15d34 documentation - Home"/>
-    <img src="_static/formulae_small.png" class="logo__image only-dark pst-js-only" alt="Formulae 0.6.3.dev1+ga4eb15d34 documentation - Home"/>
+    <img src="_static/formulae_small.png" class="logo__image only-light" alt="Formulae 0.6.3.dev3+g31bd41372 documentation - Home"/>
+    <img src="_static/formulae_small.png" class="logo__image only-dark pst-js-only" alt="Formulae 0.6.3.dev3+g31bd41372 documentation - Home"/>
   
   
 </a></div>
@@ -1314,6 +1314,30 @@ corresponding to the group specific effect.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm.eval_new_data_group_index">
+<span class="sig-name descname"><span class="pre">eval_new_data_group_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/formulae/terms/terms.html#GroupSpecificTerm.eval_new_data_group_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.eval_new_data_group_index" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the grouping factor as indices for new data.</p>
+<p>Unlike <a class="reference internal" href="#formulae.terms.GroupSpecificTerm.eval_new_data" title="formulae.terms.GroupSpecificTerm.eval_new_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">eval_new_data()</span></code></a>, this method preserves the distinction between
+missing values and unseen, non-missing levels. Existing factor columns are
+represented by their fitted index, missing values by <code class="docutils literal notranslate"><span class="pre">-1</span></code>, and unseen
+levels by consecutive indices after the fitted columns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>pandas.DataFrame</em>) – The data frame where factor values are taken from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>index</strong> (<em>numpy.ndarray</em>) – One-dimensional <code class="docutils literal notranslate"><span class="pre">int64</span></code> array. Existing groups use indices in
+<code class="docutils literal notranslate"><span class="pre">0..G-1</span></code>, missing groups use <code class="docutils literal notranslate"><span class="pre">-1</span></code>, and new groups use <code class="docutils literal notranslate"><span class="pre">G..</span></code>.</p></li>
+<li><p><strong>new_groups</strong> (<em>tuple</em>) – New, non-missing levels in first-occurrence order.
+Interaction levels are represented as tuples of their component values.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="formulae.terms.GroupSpecificTerm.name">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#formulae.terms.GroupSpecificTerm.name" title="Link to this definition">#</a></dt>
@@ -1999,6 +2023,7 @@ proceeds to evaluate the call it represents.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#formulae.terms.GroupSpecificTerm.metadata"><code class="docutils literal notranslate"><span class="pre">GroupSpecificTerm.metadata</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#formulae.terms.GroupSpecificTerm.kind"><code class="docutils literal notranslate"><span class="pre">GroupSpecificTerm.kind</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#formulae.terms.GroupSpecificTerm.eval_new_data"><code class="docutils literal notranslate"><span class="pre">GroupSpecificTerm.eval_new_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#formulae.terms.GroupSpecificTerm.eval_new_data_group_index"><code class="docutils literal notranslate"><span class="pre">GroupSpecificTerm.eval_new_data_group_index()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#formulae.terms.GroupSpecificTerm.name"><code class="docutils literal notranslate"><span class="pre">GroupSpecificTerm.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#formulae.terms.GroupSpecificTerm.var_names"><code class="docutils literal notranslate"><span class="pre">GroupSpecificTerm.var_names</span></code></a></li>
 </ul>
