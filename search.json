@@ -1,0 +1,1041 @@
+[
+  {
+    "objectID": "notebooks/getting_started.html",
+    "href": "notebooks/getting_started.html",
+    "title": "Getting started",
+    "section": "",
+    "text": "formulae requires a working Python interpreter (3.8+) and the libraries NumPy, SciPy, and Pandas with versions specified in the pyproject.toml file.\nAssuming a standard Python environment is installed on your machine (including pip), the latest release of formulae can be installed in one line using pip:\npip install formulae\nAlternatively, if you want the development version of the package you can install from GitHub:\npip install git+https://github.com/bambinos/formulae.git"
+  },
+  {
+    "objectID": "notebooks/getting_started.html#user-guide",
+    "href": "notebooks/getting_started.html#user-guide",
+    "title": "Getting started",
+    "section": "User guide",
+    "text": "User guide\nThe main function is design_matrices(). It takes a model formula and a pandas DataFrame and returns an object of class DesignMatrices that contains information about the response, the common effects, and the group specific effects that can be accessed with the attributes .response, .common, and .group respectively.\nModel formulas are much like the very famous model formulas in the R programming language. The extension to group-specific effects is similar to the extension provided by the lme4 package, also in R."
+  },
+  {
+    "objectID": "notebooks/getting_started.html#setup",
+    "href": "notebooks/getting_started.html#setup",
+    "title": "Getting started",
+    "section": "Setup",
+    "text": "Setup\n\nimport numpy as np\nimport pandas as pd\n\nfrom formulae import design_matrices\n\nLet’s simulate some data to use throughout examples here. The number of observations isn’t too important. We keep it low to understand what is going on more easily. However, we do include both numeric and categoric variables to see how formulae handles these types in different scenarios.\n\nrng = np.random.default_rng(7355608)\nSIZE = 10\ndata = pd.DataFrame(\n    {\n        \"y1\": rng.normal(size=SIZE),\n        \"y2\": rng.choice([\"A\", \"B\", \"C\"], size=SIZE),\n        \"x\": rng.normal(size=SIZE),\n        \"z\": rng.choice([1, 2, 3], size=SIZE),\n        \"g\": rng.choice([\"Group 1\", \"Group 2\", \"Group 3\"], size=SIZE),\n    }\n)\ndata\n\n\n\n\n\n\n\n\ny1\ny2\nx\nz\ng\n\n\n\n\n0\n0.200521\nC\n-0.351447\n3\nGroup 2\n\n\n1\n-0.421306\nB\n-0.431129\n3\nGroup 1\n\n\n2\n-0.490128\nB\n-0.412738\n2\nGroup 2\n\n\n3\n-0.929507\nB\n0.574337\n3\nGroup 2\n\n\n4\n1.515838\nA\n1.561390\n3\nGroup 1\n\n\n5\n-1.180238\nA\n-0.357137\n1\nGroup 2\n\n\n6\n-1.839936\nC\n-0.453278\n3\nGroup 3\n\n\n7\n-0.330336\nB\n-0.039111\n3\nGroup 2\n\n\n8\n-0.797019\nA\n1.882748\n2\nGroup 2\n\n\n9\n-0.030036\nA\n0.549615\n3\nGroup 3"
+  },
+  {
+    "objectID": "notebooks/getting_started.html#creating-and-accessing-design-matrices",
+    "href": "notebooks/getting_started.html#creating-and-accessing-design-matrices",
+    "title": "Getting started",
+    "section": "Creating and accessing design matrices",
+    "text": "Creating and accessing design matrices\nLet’s create a DesignMatrices object with a numeric response and a numeric predictor. The first argument we pass is the model formula, and the second is the data frame where we take variables from.\n\ndm = design_matrices(\"y1 ~ x\", data)\n\nUnder dm.common we find an object of class CommonEffectsMatrix which stores the design matrix for the common part of the model, as well as other information about the terms in the matrix.\n\ndm.common\n\nCommonEffectsMatrix with shape (10, 2)\nTerms:  \n  Intercept  \n    kind: intercept\n    column: 0\n  x  \n    kind: numeric\n    column: 1\n\nTo access the actual design matrix do 'np.array(this_obj)'\n\n\nUse .design_matrix to obtain the design matrix for the common part of the model.\n\ndm.common.design_matrix\n\narray([[ 1.        , -0.351447  ],\n       [ 1.        , -0.43112895],\n       [ 1.        , -0.41273793],\n       [ 1.        ,  0.57433652],\n       [ 1.        ,  1.56139001],\n       [ 1.        , -0.35713698],\n       [ 1.        , -0.45327849],\n       [ 1.        , -0.03911089],\n       [ 1.        ,  1.88274763],\n       [ 1.        ,  0.54961543]])\n\n\nOr np.array(dm.common)\n\nnp.array(dm.common)\n\narray([[ 1.        , -0.351447  ],\n       [ 1.        , -0.43112895],\n       [ 1.        , -0.41273793],\n       [ 1.        ,  0.57433652],\n       [ 1.        ,  1.56139001],\n       [ 1.        , -0.35713698],\n       [ 1.        , -0.45327849],\n       [ 1.        , -0.03911089],\n       [ 1.        ,  1.88274763],\n       [ 1.        ,  0.54961543]])\n\n\nOr call the .as_dataframe() method to return a data frame.\n\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nIntercept\nx\n\n\n\n\n0\n1.0\n-0.351447\n\n\n1\n1.0\n-0.431129\n\n\n2\n1.0\n-0.412738\n\n\n3\n1.0\n0.574337\n\n\n4\n1.0\n1.561390\n\n\n\n\n\n\n\nNote the response term can be omitted and we still obtain the design matrix for the common predictors\n\ndm = design_matrices(\"x\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nIntercept\nx\n\n\n\n\n0\n1.0\n-0.351447\n\n\n1\n1.0\n-0.431129\n\n\n2\n1.0\n-0.412738\n\n\n3\n1.0\n0.574337\n\n\n4\n1.0\n1.561390"
+  },
+  {
+    "objectID": "notebooks/getting_started.html#categorical-predictors",
+    "href": "notebooks/getting_started.html#categorical-predictors",
+    "title": "Getting started",
+    "section": "Categorical predictors",
+    "text": "Categorical predictors\nVariables with categorical type in the data frame are recognized and handled as such. If there’s a numerical variable that should be interpreted as categorical and you don’t want to manipulate your data manually, you can wrap the name of the variable with C(), like C(variable), and formulae will convert it to the categorical type.\nCategorical predictors are encoded using reference level encoding (i.e. the first level is taken as baseline). This way, the resulting design matrix is of full-rank.\n\ndm = design_matrices(\"g\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nIntercept\ng[Group 2]\ng[Group 3]\n\n\n\n\n0\n1.0\n1.0\n0.0\n\n\n1\n1.0\n0.0\n0.0\n\n\n2\n1.0\n1.0\n0.0\n\n\n3\n1.0\n1.0\n0.0\n\n\n4\n1.0\n0.0\n0.0\n\n\n\n\n\n\n\nBut if we don’t have an intercept term, there’s no need to use reference encoding for the categorical variables to avoid linear dependencies between the columns and formulae uses cell-means encoding.\n\ndm = design_matrices(\"0 + g\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\ng[Group 1]\ng[Group 2]\ng[Group 3]\n\n\n\n\n0\n0\n1\n0\n\n\n1\n1\n0\n0\n\n\n2\n0\n1\n0\n\n\n3\n0\n1\n0\n\n\n4\n1\n0\n0\n\n\n\n\n\n\n\nSuppose that z actually represents a certain categorization represented by numbers. We can use \"y1 ~ C(z)\" and z will be internally interpreted as categorical instead of numeric.\n\ndm = design_matrices(\"C(z)\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nIntercept\nC(z)[2]\nC(z)[3]\n\n\n\n\n0\n1.0\n0.0\n1.0\n\n\n1\n1.0\n0.0\n1.0\n\n\n2\n1.0\n1.0\n0.0\n\n\n3\n1.0\n0.0\n1.0\n\n\n4\n1.0\n0.0\n1.0\n\n\n\n\n\n\n\nBy default, the C() wrapper takes the first level as the reference level (after being sorted with sorted()), but we can override this by passing a list with a custom ordering.\n\n# 2 is taken as baseline, and then it comes 3 and 1.\nlvl = [2, 3, 1]\ndm = design_matrices(\"C(z, levels=lvl)\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nIntercept\nC(z, levels = lvl)[3]\nC(z, levels = lvl)[1]\n\n\n\n\n0\n1.0\n1.0\n0.0\n\n\n1\n1.0\n1.0\n0.0\n\n\n2\n1.0\n0.0\n0.0\n\n\n3\n1.0\n1.0\n0.0\n\n\n4\n1.0\n1.0\n0.0\n\n\n\n\n\n\n\nFinally, if we want to convert one variable into a binary variable, we can use the internal binary() function:\n\ndm = design_matrices(\"binary(z, 2)\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nIntercept\nbinary(z, 2)\n\n\n\n\n0\n1\n0\n\n\n1\n1\n0\n\n\n2\n1\n1\n\n\n3\n1\n0\n\n\n4\n1\n0\n\n\n\n\n\n\n\nwhich also works for categorical variables\n\ndm = design_matrices(\"binary(g, 'Group 1')\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nIntercept\nbinary(g, Group 1)\n\n\n\n\n0\n1\n0\n\n\n1\n1\n1\n\n\n2\n1\n0\n\n\n3\n1\n0\n\n\n4\n1\n1"
+  },
+  {
+    "objectID": "notebooks/getting_started.html#adding-interactions",
+    "href": "notebooks/getting_started.html#adding-interactions",
+    "title": "Getting started",
+    "section": "Adding interactions",
+    "text": "Adding interactions\nThe interaction operator is :.\n\ndm = design_matrices(\"x:z\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nIntercept\nx:z\n\n\n\n\n0\n1.0\n-1.054341\n\n\n1\n1.0\n-1.293387\n\n\n2\n1.0\n-0.825476\n\n\n3\n1.0\n1.723010\n\n\n4\n1.0\n4.684170\n\n\n\n\n\n\n\nThe * operator is known as the full interaction operator because x*z is equivalent to x + z + x:z\n\ndm = design_matrices(\"x*z\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nIntercept\nx\nz\nx:z\n\n\n\n\n0\n1.0\n-0.351447\n3.0\n-1.054341\n\n\n1\n1.0\n-0.431129\n3.0\n-1.293387\n\n\n2\n1.0\n-0.412738\n2.0\n-0.825476\n\n\n3\n1.0\n0.574337\n3.0\n1.723010\n\n\n4\n1.0\n1.561390\n3.0\n4.684170\n\n\n\n\n\n\n\nAnd both interaction operators can be used with mixtures of numerical and categorical variables.\n\ndm = design_matrices(\"0 + x*g\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nx\ng[Group 1]\ng[Group 2]\ng[Group 3]\nx:g[Group 2]\nx:g[Group 3]\n\n\n\n\n0\n-0.351447\n0.0\n1.0\n0.0\n-0.351447\n-0.0\n\n\n1\n-0.431129\n1.0\n0.0\n0.0\n-0.000000\n-0.0\n\n\n2\n-0.412738\n0.0\n1.0\n0.0\n-0.412738\n-0.0\n\n\n3\n0.574337\n0.0\n1.0\n0.0\n0.574337\n0.0\n\n\n4\n1.561390\n1.0\n0.0\n0.0\n0.000000\n0.0"
+  },
+  {
+    "objectID": "notebooks/getting_started.html#function-calls",
+    "href": "notebooks/getting_started.html#function-calls",
+    "title": "Getting started",
+    "section": "Function calls",
+    "text": "Function calls\nA term does not need to be just a variable in a data frame. It can also be the result of a function call. Formulae allows you to built-in functions as well as functions available from the top-level environment where design_matrices is being called.\nSince we’ve loaded the NumPy library as np, we can access its namespace as we would do in regular Python code.\n\ndm = design_matrices(\"np.exp(x)\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nIntercept\nnp.exp(x)\n\n\n\n\n0\n1.0\n0.703669\n\n\n1\n1.0\n0.649775\n\n\n2\n1.0\n0.661836\n\n\n3\n1.0\n1.775952\n\n\n4\n1.0\n4.765441\n\n\n\n\n\n\n\nWe can also use our own custom functions\n\ndef add(x, how_much):\n    return x + how_much\n\ndm = design_matrices(\"add(x, 10)\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nIntercept\nadd(x, 10)\n\n\n\n\n0\n1.0\n9.648553\n\n\n1\n1.0\n9.568871\n\n\n2\n1.0\n9.587262\n\n\n3\n1.0\n10.574337\n\n\n4\n1.0\n11.561390\n\n\n\n\n\n\n\nOr even nested function calls!\n\ndm = design_matrices(\"add(np.exp(x), 5)\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nIntercept\nadd(np.exp(x), 5)\n\n\n\n\n0\n1.0\n5.703669\n\n\n1\n1.0\n5.649775\n\n\n2\n1.0\n5.661836\n\n\n3\n1.0\n6.775952\n\n\n4\n1.0\n9.765441"
+  },
+  {
+    "objectID": "notebooks/getting_started.html#built-in-transformations",
+    "href": "notebooks/getting_started.html#built-in-transformations",
+    "title": "Getting started",
+    "section": "Built-in transformations",
+    "text": "Built-in transformations\nFormulae comes with some built-in transformations that come very handy when doing statistical modeling. These functions are\n\ncenter(): Centers the variable around its mean.\nscale(): Centers the variable around its mean and divides it by its standard deviation.\nstandardize(): An alias for scale().\nbs(): Create a Basis Spline, a.k.a. B-Spline.\n\n\ndm = design_matrices(\"scale(x)\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nIntercept\nscale(x)\n\n\n\n\n0\n1.0\n-0.732600\n\n\n1\n1.0\n-0.829284\n\n\n2\n1.0\n-0.806969\n\n\n3\n1.0\n0.390720\n\n\n4\n1.0\n1.588384\n\n\n\n\n\n\n\n\n# check mean is 0 and std is 1\nprint(np.std(dm.common.as_dataframe()[\"scale(x)\"]))\nprint(np.mean(dm.common.as_dataframe()[\"scale(x)\"]))\n\n1.0\n-2.2204460492503132e-17\n\n\n\ndm = design_matrices(\"bs(x, df=6)\", data)\ndm.common.as_dataframe()\n\n\n\n\n\n\n\n\nIntercept\nbs(x, df = 6)[0]\nbs(x, df = 6)[1]\nbs(x, df = 6)[2]\nbs(x, df = 6)[3]\nbs(x, df = 6)[4]\nbs(x, df = 6)[5]\n\n\n\n\n0\n1.0\n0.281092\n0.655237\n0.063433\n0.000237\n0.000000\n0.000000e+00\n\n\n1\n1.0\n0.703742\n0.086820\n0.000757\n0.000000\n0.000000\n0.000000e+00\n\n\n2\n1.0\n0.737838\n0.240873\n0.004644\n0.000000\n0.000000\n0.000000e+00\n\n\n3\n1.0\n0.000000\n0.000000\n0.359380\n0.502344\n0.138276\n1.039084e-07\n\n\n4\n1.0\n0.000000\n0.000000\n0.005325\n0.092999\n0.470374\n4.313026e-01\n\n\n5\n1.0\n0.312950\n0.631876\n0.055013\n0.000161\n0.000000\n0.000000e+00\n\n\n6\n1.0\n0.000000\n0.000000\n0.000000\n0.000000\n0.000000\n0.000000e+00\n\n\n7\n1.0\n0.000000\n0.296984\n0.611161\n0.090700\n0.001155\n0.000000e+00\n\n\n8\n1.0\n0.000000\n0.000000\n0.000000\n0.000000\n0.000000\n1.000000e+00\n\n\n9\n1.0\n0.000000\n0.000008\n0.380123\n0.494494\n0.125375\n0.000000e+00\n\n\n\n\n\n\n\nThese transformations are known as stateful transformations because they remember the original values of parameters involved in the transformation (the mean and the standard deviation). This feature is critical when one wants to derive a design matrix based on new data, as required when evaluating the fit of a model on a new dataset.\n\nSuppresing the default intercept\nBy default, formulae includes an intercept in the resulting desing matrix. But this can be ommited. Just add a 0 to the model formula as in the following example.\n\ndm = design_matrices(\"0 + x\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nx\n\n\n\n\n0\n-0.351447\n\n\n1\n-0.431129\n\n\n2\n-0.412738\n\n\n3\n0.574337\n\n\n4\n1.561390\n\n\n\n\n\n\n\n\"y1 ~ -1 + x\" and \"y1 ~ x - 1\" are equivalent alternatives."
+  },
+  {
+    "objectID": "notebooks/getting_started.html#operations-between-terms",
+    "href": "notebooks/getting_started.html#operations-between-terms",
+    "title": "Getting started",
+    "section": "Operations between terms",
+    "text": "Operations between terms\nIt is possible someone wants to use a term that is the result of adding two other terms, such as x + z. However, if we do \"y ~ x + z\", formulae will understand we want a model with two predictor terms, x, and z. Fortunately, there are two (equivalent) ways of telling formulae that we want a term that is the result of performing operations between other terms. This can be achieved either by using the I() wrapper or its shorthand {}.\n\ndm = design_matrices(\"I(x + z)\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nIntercept\nI(x + z)\n\n\n\n\n0\n1.0\n2.648553\n\n\n1\n1.0\n2.568871\n\n\n2\n1.0\n1.587262\n\n\n3\n1.0\n3.574337\n\n\n4\n1.0\n4.561390\n\n\n\n\n\n\n\n\ndm = design_matrices(\"{x / z}\", data)\ndm.common.as_dataframe().head()\n\n\n\n\n\n\n\n\nIntercept\nI(x / z)\n\n\n\n\n0\n1.0\n-0.117149\n\n\n1\n1.0\n-0.143710\n\n\n2\n1.0\n-0.206369\n\n\n3\n1.0\n0.191446\n\n\n4\n1.0\n0.520463\n\n\n\n\n\n\n\nAs you may have noticed, the output shows I() instead of {}. That’s because {} is translated into I() internally."
+  },
+  {
+    "objectID": "notebooks/getting_started.html#categorical-responses",
+    "href": "notebooks/getting_started.html#categorical-responses",
+    "title": "Getting started",
+    "section": "Categorical responses",
+    "text": "Categorical responses\nFormulae can work with categorical responses with 2 or more levels. When the variable contains only two levels, formulae flags it as binary.\nRecall y2 is a categorical variable with levels A, B and C. In this case, formulae set the binary flag to False since this variable contains more than two categories.\n\ndm = design_matrices(\"y2 ~ x\", data)\ndm.response\n\nResponseVector  \n  name: y2\n  kind: categoric\n  length: 10\n  binary: False\n  levels: ['A', 'B', 'C']\n\nTo access the actual design vector do 'np.array(this_obj)'\n\n\nThe .design_vector array is a dummy based design matrix where each column represents a level of the response\n\ndm.response.design_vector\n\narray([[0, 0, 1],\n       [0, 1, 0],\n       [0, 1, 0],\n       [0, 1, 0],\n       [1, 0, 0],\n       [1, 0, 0],\n       [0, 0, 1],\n       [0, 1, 0],\n       [1, 0, 0],\n       [1, 0, 0]])\n\n\n\nnp.array(dm.response)\n\narray([[0, 0, 1],\n       [0, 1, 0],\n       [0, 1, 0],\n       [0, 1, 0],\n       [1, 0, 0],\n       [1, 0, 0],\n       [0, 0, 1],\n       [0, 1, 0],\n       [1, 0, 0],\n       [1, 0, 0]])\n\n\nIt is also possible to override the default behavior and indicate the reference level with some syntax sugar. If you say response[level], formulae will interpret response as a binary variable and set the 'level' category as reference. For example\n\ndm = design_matrices(\"y2[B] ~ x\", data)\ndm.response\n\nResponseVector  \n  name: y2\n  kind: categoric\n  length: 10\n  binary: True\n  success: B\n\nTo access the actual design vector do 'np.array(this_obj)'\n\n\n\n# 'y2' is equal to B in four cases\nnp.array(dm.response)\n\narray([0, 1, 1, 1, 0, 0, 0, 1, 0, 0])\n\n\nIf it is the case that the reference level contains spaces, we can wrap the response within quotes:\n\ndm = design_matrices(\"g['Group 3'] ~ x\", data)\ndm.response\n\nResponseVector  \n  name: g\n  kind: categoric\n  length: 10\n  binary: True\n  success: Group 3\n\nTo access the actual design vector do 'np.array(this_obj)'\n\n\nAs with the predictors, the binary() function can be used on the LHS as well\n\ndm = design_matrices(\"binary(g, 'Group 3') ~ x\", data)\ndm.response\n\nResponseVector  \n  name: binary(g, Group 3)\n  kind: numeric\n  length: 10\n\nTo access the actual design vector do 'np.array(this_obj)'\n\n\nNote binary() outputs a numeric variable, so the response is recognized as numeric instead of categoric."
+  },
+  {
+    "objectID": "notebooks/getting_started.html#group-specific-effects",
+    "href": "notebooks/getting_started.html#group-specific-effects",
+    "title": "Getting started",
+    "section": "Group-specific effects",
+    "text": "Group-specific effects\nformulae also handles group-specific effects. They are specified using the pipe operator |, similar to the lme4 R package. These terms are of the form (expr|factor) where the expr represents the effect and factor the group. This vignette from lme4 provides much better information on how this notation works. In a nutshell, group-specific intercepts are specified via (1|group) and group-specific slopes are specified via (variable|group). The latter also adds a group-specific intercept by default. This can be overriden doing (0 + variable|group).\nFirst, let’s see a formula specifying a common predictor, x, and a group-specific intercept for each level of g.\n\ndm = design_matrices(\"y1 ~ x + (1|g)\", data)\ndm.group\n\nGroupEffectsMatrix with shape (10, 3)\nTerms:  \n  1|g  \n    kind: intercept\n    groups: ['Group 1', 'Group 2', 'Group 3']\n    columns: 0:3\n\nTo access the actual design matrix do 'np.array(this_obj)'\n\n\n\ndm.common.as_dataframe()\n\n\n\n\n\n\n\n\nIntercept\nx\n\n\n\n\n0\n1.0\n-0.351447\n\n\n1\n1.0\n-0.431129\n\n\n2\n1.0\n-0.412738\n\n\n3\n1.0\n0.574337\n\n\n4\n1.0\n1.561390\n\n\n5\n1.0\n-0.357137\n\n\n6\n1.0\n-0.453278\n\n\n7\n1.0\n-0.039111\n\n\n8\n1.0\n1.882748\n\n\n9\n1.0\n0.549615\n\n\n\n\n\n\n\n\nnp.array(dm.group)\n\narray([[0, 1, 0],\n       [1, 0, 0],\n       [0, 1, 0],\n       [0, 1, 0],\n       [1, 0, 0],\n       [0, 1, 0],\n       [0, 0, 1],\n       [0, 1, 0],\n       [0, 1, 0],\n       [0, 0, 1]])\n\n\nIf we now use (x|g) we get both the group-specific slope, as well as the intercept, because it is included by default.\n\ndm = design_matrices(\"y1 ~ x + (x|g)\", data)\ndm.group\n\nGroupEffectsMatrix with shape (10, 6)\nTerms:  \n  1|g  \n    kind: intercept\n    groups: ['Group 1', 'Group 2', 'Group 3']\n    columns: 0:3\n  x|g  \n    kind: numeric\n    groups: ['Group 1', 'Group 2', 'Group 3']\n    columns: 3:6\n\nTo access the actual design matrix do 'np.array(this_obj)'\n\n\nWe can access the different sub-matrices corresponding to each term as follows\n\ndm.group[\"1|g\"] # same as before\n\narray([[0., 1., 0.],\n       [1., 0., 0.],\n       [0., 1., 0.],\n       [0., 1., 0.],\n       [1., 0., 0.],\n       [0., 1., 0.],\n       [0., 0., 1.],\n       [0., 1., 0.],\n       [0., 1., 0.],\n       [0., 0., 1.]])\n\n\n\ndm.group[\"x|g\"]\n\narray([[-0.        , -0.351447  , -0.        ],\n       [-0.43112895, -0.        , -0.        ],\n       [-0.        , -0.41273793, -0.        ],\n       [ 0.        ,  0.57433652,  0.        ],\n       [ 1.56139001,  0.        ,  0.        ],\n       [-0.        , -0.35713698, -0.        ],\n       [-0.        , -0.        , -0.45327849],\n       [-0.        , -0.03911089, -0.        ],\n       [ 0.        ,  1.88274763,  0.        ],\n       [ 0.        ,  0.        ,  0.54961543]])\n\n\nBut as with the common part, this default intercept can be removed\n\ndm = design_matrices(\"y1 ~ x + (0 + x|g)\", data)\ndm.group # note there is no 1|x in the terms\n\nGroupEffectsMatrix with shape (10, 3)\nTerms:  \n  x|g  \n    kind: numeric\n    groups: ['Group 1', 'Group 2', 'Group 3']\n    columns: 0:3\n\nTo access the actual design matrix do 'np.array(this_obj)'\n\n\nAs a final remark, we note that the expr part of a group-specific can also be a categorical variable or an interaction. Similar rules apply for the factor part."
+  },
+  {
+    "objectID": "notebooks/getting_started.html#evaluating-new-data",
+    "href": "notebooks/getting_started.html#evaluating-new-data",
+    "title": "Getting started",
+    "section": "Evaluating new data",
+    "text": "Evaluating new data\nBoth CommonEffectsMatrix and GroupEffectsMatrix are provided with a method that receives a data frame, with the same structure as the original data frame, and returns a new design matrix.\nSuppose we have measured three variables, y, x and g on some subjects. y and x are numerics, while g is a categorical variable that represents some grouping. We also have a model with a common slope, and both varying intercepts and slopes, where we want to standardize the numeric predictor before entering the model. The formula would be y ~ scale(x) + (scale(x)|g).\n\ndata = pd.DataFrame({\n    \"y\": rng.normal(size=50),\n    \"x\": rng.normal(loc=200, scale=20, size=50),\n    \"g\": rng.choice([\"A\", \"B\", \"C\"], size=50)\n})\n\n\ndm = design_matrices(\"y ~ scale(x) + (scale(x)|g)\", data)\nprint(dm.common)\n\nCommonEffectsMatrix with shape (50, 2)\nTerms:  \n  Intercept  \n    kind: intercept\n    column: 0\n  scale(x)  \n    kind: numeric\n    column: 1\n\nTo access the actual design matrix do 'np.array(this_obj)'\n\n\n\nprint(dm.group)\n\nGroupEffectsMatrix with shape (50, 6)\nTerms:  \n  1|g  \n    kind: intercept\n    groups: ['A', 'B', 'C']\n    columns: 0:3\n  scale(x)|g  \n    kind: numeric\n    groups: ['A', 'B', 'C']\n    columns: 3:6\n\nTo access the actual design matrix do 'np.array(this_obj)'\n\n\nAnd now suppose we have new data for a set of new subjects. We can derive both common and group-specific design matrices for these new individuals without having to specify the model again. We can instead use the .evaluate_new_data() method. This method takes a data frame and returns either a new CommonEffectsMatrix or a new GroupEffectsMatrix depending on which object the method was called.\n\ndata2 = pd.DataFrame({\n    \"x\": rng.normal(loc=180, scale=20,size=10),\n    \"g\": rng.choice([\"A\", \"B\", \"C\"], size=10)\n})\n\n\ncommon_new = dm.common.evaluate_new_data(data2)\ncommon_new\n\nCommonEffectsMatrix with shape (10, 2)\nTerms:  \n  Intercept  \n    kind: intercept\n    column: 0\n  scale(x)  \n    kind: numeric\n    column: 1\n\nTo access the actual design matrix do 'np.array(this_obj)'\n\n\nAnd if we explore the design matrix for the common terms we notice the scaling of the new data used the mean and standard deviation x in the first dataset.\n\ncommon_new.as_dataframe()\n\n\n\n\n\n\n\n\nIntercept\nscale(x)\n\n\n\n\n0\n1.0\n-1.111751\n\n\n1\n1.0\n-1.113193\n\n\n2\n1.0\n-0.820436\n\n\n3\n1.0\n-2.196410\n\n\n4\n1.0\n-2.131558\n\n\n5\n1.0\n-1.244299\n\n\n6\n1.0\n-1.076445\n\n\n7\n1.0\n-0.859853\n\n\n8\n1.0\n-0.012279\n\n\n9\n1.0\n-0.351255\n\n\n\n\n\n\n\nSomething similar can be done with the group-specific part.\n\ngroup_new = dm.group.evaluate_new_data(data2)\ngroup_new\n\nGroupEffectsMatrix with shape (10, 6)\nTerms:  \n  1|g  \n    kind: intercept\n    groups: ['A', 'B', 'C']\n    columns: 0:3\n  scale(x)|g  \n    kind: numeric\n    groups: ['A', 'B', 'C']\n    columns: 3:6\n\nTo access the actual design matrix do 'np.array(this_obj)'\n\n\n\ngroup_new[\"scale(x)|g\"]\n\narray([[-0.        , -1.11175056, -0.        ],\n       [-0.        , -1.11319326, -0.        ],\n       [-0.        , -0.        , -0.82043629],\n       [-2.19640995, -0.        , -0.        ],\n       [-0.        , -2.13155813, -0.        ],\n       [-1.24429866, -0.        , -0.        ],\n       [-1.07644467, -0.        , -0.        ],\n       [-0.        , -0.85985319, -0.        ],\n       [-0.01227858, -0.        , -0.        ],\n       [-0.35125497, -0.        , -0.        ]])"
+  },
+  {
+    "objectID": "changelog.html",
+    "href": "changelog.html",
+    "title": "Changelog",
+    "section": "",
+    "text": "Add GroupSpecificTerm.eval_new_data_group_index() to distinguish fitted, missing, and new grouping levels when evaluating new data.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nUpdate versions (#122)\nExtend equality methods (#123)\n\n\n\n\n\n\n\n\nRemove sparse dependency (#121)\n\n\n\n\n\nUpdate README to mention formulae supports Python&gt;=3.8 (#121)\n\n\n\n\n\n\n\n\nAdd as_dataframe() method to GroupEffectsMatrix (#115)\nUse sparse matrices for group-specific design matrices (#117, #118, #119)\n\n\n\n\n\nFix pandas version check (#110)\nTest on Python 3.10, 3.11, and 3.12 (#113)\nMigrate development tooling and workflow to pixi (#116)\n\n\n\n\n\nDrop support for Python 3.7; Python ≥ 3.8 is now required (#110)\n\n\n\n\n\n\n\n\nMake sure model_description always returns a Model instance (#112)\n\n\n\n\n\n\n\n\nMake formulae reach transformations before outer names (#109)\n\n\n\n\n\n\n\n\nUpdate is_categorical_dtype for pandas &gt;= 2.10 (#105)\nAdd automatic versioning to the library (#106)\nInterpret True, False, and None as Python literals (#107)\n\n\n\n\n\n\n\n\nFix bug when intercept is inserted after categorical variable (#102)\n\n\n\n\n\n\n\n\nThe library now supports configuration variables (#95)\nAllow evaluations on new data with new categories (#96)\nReturn ready to be used group-specific effects design matrix when there are new groups (#100)\n\n\n\n\n\nFix typo in str (#99)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nImplement a @register_stateful_transform decorator to register new stateful transformations (#85)\n\n\n\n\n\nFix evaluation of new offset terms with call arguments (#81)\nMultiple calls with unnamed attributes resulted in errors due to trying to hash unhashable types (#88)\nTerm names with call components now use the proper lexeme when one argument is a string (#89)\nDetect stateful transformations by attribute instead of name (#90)\nMoved tests out of the formulae directory (#91)\nUse pyproject and improve deployment workflow (#92)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nFixed a bug in the levels of interaction terms involving numeric terms with multiple columns (b4a1f73)\n\n\n\n\n\n\n\n\nFixed a bug in CategoricalBox. Now it considers the order of the categories if data is ordered and levels is None (#73)\n\n\n\n\n\n\n\n\nFixed a bug in CategoricalBox because it failed to convert categorical series to numpy arrays. Now it works. (#72)\n\n\n\n\n\n\n\n\nRenamed ResponseVector to ResponseMatrix (#71)\nRenamed design_vector to design_matrix in ResponseMatrix(#71)\nUpdated docstrings in formulae/matrices.py (#71)\n\n\n\n\n\nRemoved binary and success attributes from ResponseMatrix (#71)\n\n\n\n\n\n\n\n\nWe can create our own encodings such as Treatment or Sum encoding. These are subclasses of Encoding.\nAdded two aliases T and S that are shorthands of C(var, Treatment) and C(var, Sum) respectively.\nDesignVector, CommonEffectsMatrix and GroupEffectsMatrix now retrieve their values when passed to np.array() and np.asarray().\nAdd poly() stateful transform.\nna_action in design_matrices() can be \"pass\" which means not to drop or raise error about missing values. It just keeps them (#69)\ndesign_matrices() gains a new argument extra_namespace. It allows us to pass a dictionary of transformations that are made available in the environment where the formula is evaluated (#70)\n\n\n\n\n\nFixed a bug in the addition of lower order terms when the original higher order term wasn’t full-rank.\nColumns for categorical terms are integer by default. They are casted to float only if there are other float-valued columns in the design matrix.\nUpdated str and repr methods of ResponseVector, CommonEffectsMatrix, and GroupEffectsMatrix.\nAdded str and repr methods for DesignMatrices.\nAdded get_item method for DesignMatrices.\nAdded support for comparison operators within function calls.\n\n\n\n\n\n\nAdded bs(), a stateful transformation for basis splines (#52)\nSubset notation in response terms can now be an identifier. It is interpreted as a string (#52)\nTrue, False and None are correctly evaluated in function calls arguments now (#53)\nThe .set_type() on each term used to be called twice. Now we call it once (#53)\nAdded the function get_function_from_module(). Now we don’t use Python’s eval() anymore (#53)\n\n\n\n\n\nRevert changes back to v0.1.2\n\n\n\n\n\nRevert changes back to v0.1.1\n\n\n\n\n\nAdded prop() function to handle response terms that a proportion computed from two variables (#40)\nCategorical responses can contain more than one level (#40)\nAdded binary() function to convert numeric/categorical variables into 0-1 variables (#41)\nModified C() to make it simpler to obtain categorical variables and manipulate their levels (#41)\nAdded offset() (#42)\n\n\n\n\n\n\n\nFix group-specific effects matrix shape (#35)\n\n\n\n\n\nAdd a Getting started section to webpage and remove that content from README.md (#36)\n\n\n\n\n\n\n\n\nFactor of group specific effect can be an interaction now (#31)\n\n\n\n\n\nFull interaction does not result in shared components anymore (#30)\nAdd information about levels to interaction terms (#33)\n\n\n\n\n\n\n\n\nAdded Internals section to documentation (#28)\n\n\n\n\n\n\n\n\n\n\n\nNested stateful transofrmations now work as expected (#19)\n\n\n\n\n\n\n\n\nAdded a changelog file to track changes (#20)\nFormulae now has a github pages website (#21)"
+  },
+  {
+    "objectID": "changelog.html#section",
+    "href": "changelog.html#section",
+    "title": "Changelog",
+    "section": "",
+    "text": "Add GroupSpecificTerm.eval_new_data_group_index() to distinguish fitted, missing, and new grouping levels when evaluating new data."
+  },
+  {
+    "objectID": "changelog.html#section-1",
+    "href": "changelog.html#section-1",
+    "title": "Changelog",
+    "section": "",
+    "text": "Update versions (#122)\nExtend equality methods (#123)"
+  },
+  {
+    "objectID": "changelog.html#section-2",
+    "href": "changelog.html#section-2",
+    "title": "Changelog",
+    "section": "",
+    "text": "Remove sparse dependency (#121)\n\n\n\n\n\nUpdate README to mention formulae supports Python&gt;=3.8 (#121)"
+  },
+  {
+    "objectID": "changelog.html#section-3",
+    "href": "changelog.html#section-3",
+    "title": "Changelog",
+    "section": "",
+    "text": "Add as_dataframe() method to GroupEffectsMatrix (#115)\nUse sparse matrices for group-specific design matrices (#117, #118, #119)\n\n\n\n\n\nFix pandas version check (#110)\nTest on Python 3.10, 3.11, and 3.12 (#113)\nMigrate development tooling and workflow to pixi (#116)\n\n\n\n\n\nDrop support for Python 3.7; Python ≥ 3.8 is now required (#110)"
+  },
+  {
+    "objectID": "changelog.html#section-4",
+    "href": "changelog.html#section-4",
+    "title": "Changelog",
+    "section": "",
+    "text": "Make sure model_description always returns a Model instance (#112)"
+  },
+  {
+    "objectID": "changelog.html#section-5",
+    "href": "changelog.html#section-5",
+    "title": "Changelog",
+    "section": "",
+    "text": "Make formulae reach transformations before outer names (#109)"
+  },
+  {
+    "objectID": "changelog.html#section-6",
+    "href": "changelog.html#section-6",
+    "title": "Changelog",
+    "section": "",
+    "text": "Update is_categorical_dtype for pandas &gt;= 2.10 (#105)\nAdd automatic versioning to the library (#106)\nInterpret True, False, and None as Python literals (#107)"
+  },
+  {
+    "objectID": "changelog.html#section-7",
+    "href": "changelog.html#section-7",
+    "title": "Changelog",
+    "section": "",
+    "text": "Fix bug when intercept is inserted after categorical variable (#102)"
+  },
+  {
+    "objectID": "changelog.html#section-8",
+    "href": "changelog.html#section-8",
+    "title": "Changelog",
+    "section": "",
+    "text": "The library now supports configuration variables (#95)\nAllow evaluations on new data with new categories (#96)\nReturn ready to be used group-specific effects design matrix when there are new groups (#100)\n\n\n\n\n\nFix typo in str (#99)"
+  },
+  {
+    "objectID": "changelog.html#section-9",
+    "href": "changelog.html#section-9",
+    "title": "Changelog",
+    "section": "",
+    "text": "Implement a @register_stateful_transform decorator to register new stateful transformations (#85)\n\n\n\n\n\nFix evaluation of new offset terms with call arguments (#81)\nMultiple calls with unnamed attributes resulted in errors due to trying to hash unhashable types (#88)\nTerm names with call components now use the proper lexeme when one argument is a string (#89)\nDetect stateful transformations by attribute instead of name (#90)\nMoved tests out of the formulae directory (#91)\nUse pyproject and improve deployment workflow (#92)"
+  },
+  {
+    "objectID": "changelog.html#v0.3.4",
+    "href": "changelog.html#v0.3.4",
+    "title": "Changelog",
+    "section": "",
+    "text": "Fixed a bug in the levels of interaction terms involving numeric terms with multiple columns (b4a1f73)"
+  },
+  {
+    "objectID": "changelog.html#v0.3.3",
+    "href": "changelog.html#v0.3.3",
+    "title": "Changelog",
+    "section": "",
+    "text": "Fixed a bug in CategoricalBox. Now it considers the order of the categories if data is ordered and levels is None (#73)"
+  },
+  {
+    "objectID": "changelog.html#v0.3.2",
+    "href": "changelog.html#v0.3.2",
+    "title": "Changelog",
+    "section": "",
+    "text": "Fixed a bug in CategoricalBox because it failed to convert categorical series to numpy arrays. Now it works. (#72)"
+  },
+  {
+    "objectID": "changelog.html#v0.3.1",
+    "href": "changelog.html#v0.3.1",
+    "title": "Changelog",
+    "section": "",
+    "text": "Renamed ResponseVector to ResponseMatrix (#71)\nRenamed design_vector to design_matrix in ResponseMatrix(#71)\nUpdated docstrings in formulae/matrices.py (#71)\n\n\n\n\n\nRemoved binary and success attributes from ResponseMatrix (#71)"
+  },
+  {
+    "objectID": "changelog.html#v0.3.0",
+    "href": "changelog.html#v0.3.0",
+    "title": "Changelog",
+    "section": "",
+    "text": "We can create our own encodings such as Treatment or Sum encoding. These are subclasses of Encoding.\nAdded two aliases T and S that are shorthands of C(var, Treatment) and C(var, Sum) respectively.\nDesignVector, CommonEffectsMatrix and GroupEffectsMatrix now retrieve their values when passed to np.array() and np.asarray().\nAdd poly() stateful transform.\nna_action in design_matrices() can be \"pass\" which means not to drop or raise error about missing values. It just keeps them (#69)\ndesign_matrices() gains a new argument extra_namespace. It allows us to pass a dictionary of transformations that are made available in the environment where the formula is evaluated (#70)\n\n\n\n\n\nFixed a bug in the addition of lower order terms when the original higher order term wasn’t full-rank.\nColumns for categorical terms are integer by default. They are casted to float only if there are other float-valued columns in the design matrix.\nUpdated str and repr methods of ResponseVector, CommonEffectsMatrix, and GroupEffectsMatrix.\nAdded str and repr methods for DesignMatrices.\nAdded get_item method for DesignMatrices.\nAdded support for comparison operators within function calls."
+  },
+  {
+    "objectID": "changelog.html#v0.2.0",
+    "href": "changelog.html#v0.2.0",
+    "title": "Changelog",
+    "section": "",
+    "text": "Added bs(), a stateful transformation for basis splines (#52)\nSubset notation in response terms can now be an identifier. It is interpreted as a string (#52)\nTrue, False and None are correctly evaluated in function calls arguments now (#53)\nThe .set_type() on each term used to be called twice. Now we call it once (#53)\nAdded the function get_function_from_module(). Now we don’t use Python’s eval() anymore (#53)"
+  },
+  {
+    "objectID": "changelog.html#v0.1.4",
+    "href": "changelog.html#v0.1.4",
+    "title": "Changelog",
+    "section": "",
+    "text": "Revert changes back to v0.1.2"
+  },
+  {
+    "objectID": "changelog.html#v0.1.3",
+    "href": "changelog.html#v0.1.3",
+    "title": "Changelog",
+    "section": "",
+    "text": "Revert changes back to v0.1.1"
+  },
+  {
+    "objectID": "changelog.html#v0.1.2",
+    "href": "changelog.html#v0.1.2",
+    "title": "Changelog",
+    "section": "",
+    "text": "Added prop() function to handle response terms that a proportion computed from two variables (#40)\nCategorical responses can contain more than one level (#40)\nAdded binary() function to convert numeric/categorical variables into 0-1 variables (#41)\nModified C() to make it simpler to obtain categorical variables and manipulate their levels (#41)\nAdded offset() (#42)"
+  },
+  {
+    "objectID": "changelog.html#v0.1.1",
+    "href": "changelog.html#v0.1.1",
+    "title": "Changelog",
+    "section": "",
+    "text": "Fix group-specific effects matrix shape (#35)\n\n\n\n\n\nAdd a Getting started section to webpage and remove that content from README.md (#36)"
+  },
+  {
+    "objectID": "changelog.html#v0.1.0",
+    "href": "changelog.html#v0.1.0",
+    "title": "Changelog",
+    "section": "",
+    "text": "Factor of group specific effect can be an interaction now (#31)\n\n\n\n\n\nFull interaction does not result in shared components anymore (#30)\nAdd information about levels to interaction terms (#33)\n\n\n\n\n\n\n\n\nAdded Internals section to documentation (#28)"
+  },
+  {
+    "objectID": "changelog.html#v0.0.10",
+    "href": "changelog.html#v0.0.10",
+    "title": "Changelog",
+    "section": "",
+    "text": "Nested stateful transofrmations now work as expected (#19)\n\n\n\n\n\n\n\n\nAdded a changelog file to track changes (#20)\nFormulae now has a github pages website (#21)"
+  },
+  {
+    "objectID": "api/terms.call_resolver.LazyValue.html",
+    "href": "api/terms.call_resolver.LazyValue.html",
+    "title": "terms.call_resolver.LazyValue",
+    "section": "",
+    "text": "terms.call_resolver.LazyValue(value, lexeme)\nDeferred Python value.\nThis object holds a value (a string or a number). It returns its value only when it is evaluated via .eval().\n\n\n\nvalue : str or numeric\n\nThe value it holds.\n\nlexeme : str\n\nThe string that generated the value it holds\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\neval\nEvaluates the value.\n\n\n\n\n\nterms.call_resolver.LazyValue.eval(*args, **kwargs)\nEvaluates the value.\nSimply returns the value. Other arguments are ignored but required for consistency among all the lazy objects.\n\n\n\nvalue : \n\nThe value this obejct represents.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.call_resolver.LazyValue"
+    ]
+  },
+  {
+    "objectID": "api/terms.call_resolver.LazyValue.html#parameters",
+    "href": "api/terms.call_resolver.LazyValue.html#parameters",
+    "title": "terms.call_resolver.LazyValue",
+    "section": "",
+    "text": "value : str or numeric\n\nThe value it holds.\n\nlexeme : str\n\nThe string that generated the value it holds",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.call_resolver.LazyValue"
+    ]
+  },
+  {
+    "objectID": "api/terms.call_resolver.LazyValue.html#methods",
+    "href": "api/terms.call_resolver.LazyValue.html#methods",
+    "title": "terms.call_resolver.LazyValue",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\neval\nEvaluates the value.\n\n\n\n\n\nterms.call_resolver.LazyValue.eval(*args, **kwargs)\nEvaluates the value.\nSimply returns the value. Other arguments are ignored but required for consistency among all the lazy objects.\n\n\n\nvalue : \n\nThe value this obejct represents.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.call_resolver.LazyValue"
+    ]
+  },
+  {
+    "objectID": "api/terms.call_resolver.LazyCall.html",
+    "href": "api/terms.call_resolver.LazyCall.html",
+    "title": "terms.call_resolver.LazyCall",
+    "section": "",
+    "text": "terms.call_resolver.LazyCall(callee, args, kwargs)\nDeferred function call.\nThis class represents a function that can be a stateful transform (a function with memory) whose arguments can also be stateful transforms.\nTo evaluate these functions we don’t create a string representing Python code and let eval() run it. We take care of all the steps of the evaluation to make sure all the possibly nested stateful transformations are handled correctly.\n\n\n\ncallee : str\n\nThe name of the function\n\nargs : list\n\nA list of lazy objects that are evaluated when calling the function this object represents.\n\nkwargs : dict\n\nA dictionary of named arguments that are evaluated when calling the function this object represents.\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\neval\nEvaluate the call.\n\n\n\n\n\nterms.call_resolver.LazyCall.eval(data_mask, env)\nEvaluate the call.\nThis method first evaluates all its arguments, which are themselves lazy objects, and then proceeds to evaluate the call it represents.\n\n\n\ndata_mask : pd.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.\n\n\n\n\n\n\nresult : \n\nThe result of the call evaluation.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.call_resolver.LazyCall"
+    ]
+  },
+  {
+    "objectID": "api/terms.call_resolver.LazyCall.html#parameters",
+    "href": "api/terms.call_resolver.LazyCall.html#parameters",
+    "title": "terms.call_resolver.LazyCall",
+    "section": "",
+    "text": "callee : str\n\nThe name of the function\n\nargs : list\n\nA list of lazy objects that are evaluated when calling the function this object represents.\n\nkwargs : dict\n\nA dictionary of named arguments that are evaluated when calling the function this object represents.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.call_resolver.LazyCall"
+    ]
+  },
+  {
+    "objectID": "api/terms.call_resolver.LazyCall.html#methods",
+    "href": "api/terms.call_resolver.LazyCall.html#methods",
+    "title": "terms.call_resolver.LazyCall",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\neval\nEvaluate the call.\n\n\n\n\n\nterms.call_resolver.LazyCall.eval(data_mask, env)\nEvaluate the call.\nThis method first evaluates all its arguments, which are themselves lazy objects, and then proceeds to evaluate the call it represents.\n\n\n\ndata_mask : pd.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.\n\n\n\n\n\n\nresult : \n\nThe result of the call evaluation.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.call_resolver.LazyCall"
+    ]
+  },
+  {
+    "objectID": "api/terms.Term.html",
+    "href": "api/terms.Term.html",
+    "title": "terms.Term",
+    "section": "",
+    "text": "terms.Term(*components)\nModel term.\nTerms are made of one or more components. Components are instances of Variable or Call. Terms with only one component are known as main effects and terms with more than one component are known as interaction effects. The order of the interaction is given by the number of components in the term.\n\n\n\ncomponents : Variable or Call = ()\n\nAtomic components of a term.\n\n\n\n\n\n\ndata : np.ndarray\n\nThe values associated with the term as they go into the design matrix.\n\nkind : str\n\nIndicates the type of the term. Can be one of \"numeric\", \"categoric\", or \"interaction\".\n\nname : str\n\nThe name of the term as it was originally written in the model formula.\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\neval_new_data\nEvaluates the term with new data.\n\n\nget_component\nReturns a component by name.\n\n\nset_data\nObtains and stores the final data object related to this term.\n\n\nset_type\nSet type of the components in the term.\n\n\n\n\n\nterms.Term.eval_new_data(data)\nEvaluates the term with new data.\nCalls .eval_new_data() method on each component in the term and combines the results appropriately.\n\n\n\ndata : pd.DataFrame\n\nThe data frame where variables are taken from\n\n\n\n\n\n\nresult : np.array\n\nThe values resulting from evaluating this term using the new data.\n\n\n\n\n\n\nterms.Term.get_component(name)\nReturns a component by name.\n\n\n\nname : str\n\nThe name of the component to return.\n\n\n\n\n\n\ncomponent : Variable or Call\n\nThe component with name name.\n\n\n\n\n\n\nterms.Term.set_data(spans_intercept)\nObtains and stores the final data object related to this term.\nCalls .set_data() method on each component in the term. Then, it uses the .data attribute on each of them to build self.data.\n\n\n\nspans_intercept : dict or bool\n\nIndicates whether categorical components span the intercept. When it is a dictionary, keys are component names and values indicate whether each component spans the intercept. When it is a boolean, the same value is used for all components.\n\n\n\n\n\n\nterms.Term.set_type(data, env)\nSet type of the components in the term.\nCalls .set_type() method on each component in the term. For those components of class Variable it only passes the data mask. For Call objects it also passes the evaluation environment.\n\n\n\ndata : pd.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Term"
+    ]
+  },
+  {
+    "objectID": "api/terms.Term.html#parameters",
+    "href": "api/terms.Term.html#parameters",
+    "title": "terms.Term",
+    "section": "",
+    "text": "components : Variable or Call = ()\n\nAtomic components of a term.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Term"
+    ]
+  },
+  {
+    "objectID": "api/terms.Term.html#attributes",
+    "href": "api/terms.Term.html#attributes",
+    "title": "terms.Term",
+    "section": "",
+    "text": "data : np.ndarray\n\nThe values associated with the term as they go into the design matrix.\n\nkind : str\n\nIndicates the type of the term. Can be one of \"numeric\", \"categoric\", or \"interaction\".\n\nname : str\n\nThe name of the term as it was originally written in the model formula.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Term"
+    ]
+  },
+  {
+    "objectID": "api/terms.Term.html#methods",
+    "href": "api/terms.Term.html#methods",
+    "title": "terms.Term",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\neval_new_data\nEvaluates the term with new data.\n\n\nget_component\nReturns a component by name.\n\n\nset_data\nObtains and stores the final data object related to this term.\n\n\nset_type\nSet type of the components in the term.\n\n\n\n\n\nterms.Term.eval_new_data(data)\nEvaluates the term with new data.\nCalls .eval_new_data() method on each component in the term and combines the results appropriately.\n\n\n\ndata : pd.DataFrame\n\nThe data frame where variables are taken from\n\n\n\n\n\n\nresult : np.array\n\nThe values resulting from evaluating this term using the new data.\n\n\n\n\n\n\nterms.Term.get_component(name)\nReturns a component by name.\n\n\n\nname : str\n\nThe name of the component to return.\n\n\n\n\n\n\ncomponent : Variable or Call\n\nThe component with name name.\n\n\n\n\n\n\nterms.Term.set_data(spans_intercept)\nObtains and stores the final data object related to this term.\nCalls .set_data() method on each component in the term. Then, it uses the .data attribute on each of them to build self.data.\n\n\n\nspans_intercept : dict or bool\n\nIndicates whether categorical components span the intercept. When it is a dictionary, keys are component names and values indicate whether each component spans the intercept. When it is a boolean, the same value is used for all components.\n\n\n\n\n\n\nterms.Term.set_type(data, env)\nSet type of the components in the term.\nCalls .set_type() method on each component in the term. For those components of class Variable it only passes the data mask. For Call objects it also passes the evaluation environment.\n\n\n\ndata : pd.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Term"
+    ]
+  },
+  {
+    "objectID": "api/terms.NegatedIntercept.html",
+    "href": "api/terms.NegatedIntercept.html",
+    "title": "terms.NegatedIntercept",
+    "section": "",
+    "text": "terms.NegatedIntercept\nterms.NegatedIntercept()\nNegated model intercept.\nThis object is created whenever we use \"0\" or \"-1\" in a model formula. It is not expected to appear in a final model. It’s here to help us make operations using the Intercept and deciding when to keep it and when to drop it.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.NegatedIntercept"
+    ]
+  },
+  {
+    "objectID": "api/terms.Intercept.html",
+    "href": "api/terms.Intercept.html",
+    "title": "terms.Intercept",
+    "section": "",
+    "text": "terms.Intercept()\nModel intercept.\n\n\n\n\n\nName\nDescription\n\n\n\n\nvar_names\nReturns empty set, no variables are used in the intercept.\n\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\neval_new_data\nReturns data for a new intercept.\n\n\nset_data\nCreates data for the intercept.\n\n\nset_type\nSets length of the intercept.\n\n\n\n\n\nterms.Intercept.eval_new_data(data)\nReturns data for a new intercept.\nThe length of the new intercept is given by the number of rows in data.\n\n\n\nterms.Intercept.set_data(encoding)\nCreates data for the intercept.\nIt sets self.data equal to a numpy array of ones of length (self.len, 1).\n\n\n\nterms.Intercept.set_type(data, env)\nSets length of the intercept.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Intercept"
+    ]
+  },
+  {
+    "objectID": "api/terms.Intercept.html#attributes",
+    "href": "api/terms.Intercept.html#attributes",
+    "title": "terms.Intercept",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\nvar_names\nReturns empty set, no variables are used in the intercept.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Intercept"
+    ]
+  },
+  {
+    "objectID": "api/terms.Intercept.html#methods",
+    "href": "api/terms.Intercept.html#methods",
+    "title": "terms.Intercept",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\neval_new_data\nReturns data for a new intercept.\n\n\nset_data\nCreates data for the intercept.\n\n\nset_type\nSets length of the intercept.\n\n\n\n\n\nterms.Intercept.eval_new_data(data)\nReturns data for a new intercept.\nThe length of the new intercept is given by the number of rows in data.\n\n\n\nterms.Intercept.set_data(encoding)\nCreates data for the intercept.\nIt sets self.data equal to a numpy array of ones of length (self.len, 1).\n\n\n\nterms.Intercept.set_type(data, env)\nSets length of the intercept.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Intercept"
+    ]
+  },
+  {
+    "objectID": "api/terms.Call.html",
+    "href": "api/terms.Call.html",
+    "title": "terms.Call",
+    "section": "",
+    "text": "terms.Call(call, is_response=False)\nCall in a model term.\nThis class and Variable are the atomic components of a model term.\nThis object supports stateful transformations defined in formulae.transforms. A transformation of this type defines its parameters the first time it is called, and then can be used to recompute the transformation with memorized parameter values. This behavior is useful when implementing a predict method and using transformations such as center(x) or scale(x). center(x) memorizes the value of the mean, and scale(x) memorizes both the mean and the standard deviation.\n\n\n\ncall : formulae.terms.call_resolver.LazyCall\n\nThe call expression returned by the parser.\n\nis_response : bool = False\n\nIndicates whether this call represents a response. Defaults to False.\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nlabels\nObtain labels of the columns in the design matrix associated with this Call\n\n\nvar_names\nReturns the names of the variables involved in the call, not including the callee.\n\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\naccept\nAccept method called by a visitor.\n\n\neval_categoric\nFinishes evaluation of categoric call.\n\n\neval_new_data\nEvaluates the function call with new data.\n\n\neval_new_data_categoric\nEvaluates the call with new data when the result of the call is categoric.\n\n\neval_numeric\nFinishes evaluation of a numeric call.\n\n\nset_data\nFinishes the evaluation of the call according to its type.\n\n\nset_type\nEvaluates function and determines the type of the result of the call.\n\n\n\n\n\nterms.Call.accept(visitor)\nAccept method called by a visitor.\nVisitors are those available in call_utils.py, and are used to work with call terms.\n\n\n\nterms.Call.eval_categoric(x, spans_intercept)\nFinishes evaluation of categoric call.\nFirst, it checks whether the intermediate evaluation returned is ordered. If not, it creates a category where the levels are the observed in the variable. They are sorted according to sorted() rules.\nThen, it determines the reference level as well as all the other levels. If the variable is a response, the value returned is a dummy with 1s for the reference level and 0s elsewhere. If it is not a response variable, it determines the matrix of dummies according to the levels and the encoding passed.\n\n\n\nx : np.ndarray or pd.Series\n\nThe intermediate values of the variable.\n\nspans_intercept : bool\n\nIndicates if the encoding of categorical variables spans the intercept or not. Omitted when the variable is numeric.\n\n\n\n\n\n\nterms.Call.eval_new_data(data_mask)\nEvaluates the function call with new data.\nThis method evaluates the function call within a new data mask. If the transformation applied is a stateful transformation, it uses the proper object that remembers all parameters or settings that may have been set in a first pass.\n\n\n\ndata_mask : pd.DataFrame\n\nThe data frame where variables are taken from\n\n\n\n\n\n\nresult : np.array\n\nThe rules for the shape of this array are the rules for self.eval_numeric() and self.eval_categoric(). The first applies for numeric calls, the second for categoric ones.\n\n\n\n\n\n\nterms.Call.eval_new_data_categoric(x)\nEvaluates the call with new data when the result of the call is categoric.\nThis method also checks the levels observed in the new data frame are included within the set of the levels of the result of the original call If not, an error is raised.\nx : np.ndarray or pd.Series The intermediate values of the variable.\n\n\n\nresult : np.array\n\nNumeric numpy array (n, p), where n is the number of observations and p the number of dummy variables used in the numeric representation of the categorical variable.\n\n\n\n\n\n\nterms.Call.eval_numeric(x)\nFinishes evaluation of a numeric call.\nConverts the intermediate values of the call into a numpy array of shape (n, 1), where n is the number of observations. This method is used both in self.set_data and in self.eval_new_data.\n\n\n\nx : np.ndarray or pd.Series\n\nThe intermediate values resulting from the call.\n\n\n\n\n\n\nresult : dict\n\nA dictionary with keys \"value\" and \"kind\". The first contains the result of the evaluation, and the latter is equal to \"numeric\".\n\n\n\n\n\n\nterms.Call.set_data(spans_intercept=False)\nFinishes the evaluation of the call according to its type.\nIt does not support multi-level categoric responses yet. If self.is_response is True and the variable is of a categoric type, this method returns a 1d array of 0-1 instead of a matrix. # XTODO: Fix previous point In practice, it just completes the evaluation that started with self.set_type().\n\n\n\nspans_intercept : bool = False\n\nIndicates if the encoding of categorical variables spans the intercept or not. Omitted when the variable is numeric.\n\n\n\n\n\n\nterms.Call.set_type(data_mask, env)\nEvaluates function and determines the type of the result of the call.\nEvaluates the function call and sets the .kind property to \"numeric\" or \"categoric\" depending on the type of the result. It also stores the intermediate result of the evaluation in ._intermediate_data to prevent us from computing the same thing more than once.\n\n\n\ndata_mask : pd.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Call"
+    ]
+  },
+  {
+    "objectID": "api/terms.Call.html#parameters",
+    "href": "api/terms.Call.html#parameters",
+    "title": "terms.Call",
+    "section": "",
+    "text": "call : formulae.terms.call_resolver.LazyCall\n\nThe call expression returned by the parser.\n\nis_response : bool = False\n\nIndicates whether this call represents a response. Defaults to False.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Call"
+    ]
+  },
+  {
+    "objectID": "api/terms.Call.html#attributes",
+    "href": "api/terms.Call.html#attributes",
+    "title": "terms.Call",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\nlabels\nObtain labels of the columns in the design matrix associated with this Call\n\n\nvar_names\nReturns the names of the variables involved in the call, not including the callee.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Call"
+    ]
+  },
+  {
+    "objectID": "api/terms.Call.html#methods",
+    "href": "api/terms.Call.html#methods",
+    "title": "terms.Call",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\naccept\nAccept method called by a visitor.\n\n\neval_categoric\nFinishes evaluation of categoric call.\n\n\neval_new_data\nEvaluates the function call with new data.\n\n\neval_new_data_categoric\nEvaluates the call with new data when the result of the call is categoric.\n\n\neval_numeric\nFinishes evaluation of a numeric call.\n\n\nset_data\nFinishes the evaluation of the call according to its type.\n\n\nset_type\nEvaluates function and determines the type of the result of the call.\n\n\n\n\n\nterms.Call.accept(visitor)\nAccept method called by a visitor.\nVisitors are those available in call_utils.py, and are used to work with call terms.\n\n\n\nterms.Call.eval_categoric(x, spans_intercept)\nFinishes evaluation of categoric call.\nFirst, it checks whether the intermediate evaluation returned is ordered. If not, it creates a category where the levels are the observed in the variable. They are sorted according to sorted() rules.\nThen, it determines the reference level as well as all the other levels. If the variable is a response, the value returned is a dummy with 1s for the reference level and 0s elsewhere. If it is not a response variable, it determines the matrix of dummies according to the levels and the encoding passed.\n\n\n\nx : np.ndarray or pd.Series\n\nThe intermediate values of the variable.\n\nspans_intercept : bool\n\nIndicates if the encoding of categorical variables spans the intercept or not. Omitted when the variable is numeric.\n\n\n\n\n\n\nterms.Call.eval_new_data(data_mask)\nEvaluates the function call with new data.\nThis method evaluates the function call within a new data mask. If the transformation applied is a stateful transformation, it uses the proper object that remembers all parameters or settings that may have been set in a first pass.\n\n\n\ndata_mask : pd.DataFrame\n\nThe data frame where variables are taken from\n\n\n\n\n\n\nresult : np.array\n\nThe rules for the shape of this array are the rules for self.eval_numeric() and self.eval_categoric(). The first applies for numeric calls, the second for categoric ones.\n\n\n\n\n\n\nterms.Call.eval_new_data_categoric(x)\nEvaluates the call with new data when the result of the call is categoric.\nThis method also checks the levels observed in the new data frame are included within the set of the levels of the result of the original call If not, an error is raised.\nx : np.ndarray or pd.Series The intermediate values of the variable.\n\n\n\nresult : np.array\n\nNumeric numpy array (n, p), where n is the number of observations and p the number of dummy variables used in the numeric representation of the categorical variable.\n\n\n\n\n\n\nterms.Call.eval_numeric(x)\nFinishes evaluation of a numeric call.\nConverts the intermediate values of the call into a numpy array of shape (n, 1), where n is the number of observations. This method is used both in self.set_data and in self.eval_new_data.\n\n\n\nx : np.ndarray or pd.Series\n\nThe intermediate values resulting from the call.\n\n\n\n\n\n\nresult : dict\n\nA dictionary with keys \"value\" and \"kind\". The first contains the result of the evaluation, and the latter is equal to \"numeric\".\n\n\n\n\n\n\nterms.Call.set_data(spans_intercept=False)\nFinishes the evaluation of the call according to its type.\nIt does not support multi-level categoric responses yet. If self.is_response is True and the variable is of a categoric type, this method returns a 1d array of 0-1 instead of a matrix. # XTODO: Fix previous point In practice, it just completes the evaluation that started with self.set_type().\n\n\n\nspans_intercept : bool = False\n\nIndicates if the encoding of categorical variables spans the intercept or not. Omitted when the variable is numeric.\n\n\n\n\n\n\nterms.Call.set_type(data_mask, env)\nEvaluates function and determines the type of the result of the call.\nEvaluates the function call and sets the .kind property to \"numeric\" or \"categoric\" depending on the type of the result. It also stores the intermediate result of the evaluation in ._intermediate_data to prevent us from computing the same thing more than once.\n\n\n\ndata_mask : pd.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Call"
+    ]
+  },
+  {
+    "objectID": "api/matrices.ResponseMatrix.html",
+    "href": "api/matrices.ResponseMatrix.html",
+    "title": "matrices.ResponseMatrix",
+    "section": "",
+    "text": "matrices.ResponseMatrix(term)\nResponse matrix for a model.\n\n\n\nterm : Response\n\nThe term that represents the response in the model.\n\n\n\n\n\n\ndesign_matrix : np.array\n\nA 2-dimensional numpy array containing the values of the response.\n\nname : str\n\nThe name of the response term.\n\nkind : str\n\nThe kind of the response. Can be \"numeric\", \"categoric\" or \"proportion\".\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nas_dataframe\nReturns self.design_matrix as a pandas.DataFrame.\n\n\nevaluate\nEvaluates self.term inside the data mask provided by data and\n\n\n\n\n\nmatrices.ResponseMatrix.as_dataframe()\nReturns self.design_matrix as a pandas.DataFrame.\n\n\n\nmatrices.ResponseMatrix.evaluate(data, env)\nEvaluates self.term inside the data mask provided by data and updates self.design_matrix and self.name.\n\n\n\ndata : pandas.DataFrame\n\nThe data frame where variables are taken from.\n\nenv : Environment\n\nThe environment where values and functions are taken from.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "matrices.ResponseMatrix"
+    ]
+  },
+  {
+    "objectID": "api/matrices.ResponseMatrix.html#parameters",
+    "href": "api/matrices.ResponseMatrix.html#parameters",
+    "title": "matrices.ResponseMatrix",
+    "section": "",
+    "text": "term : Response\n\nThe term that represents the response in the model.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "matrices.ResponseMatrix"
+    ]
+  },
+  {
+    "objectID": "api/matrices.ResponseMatrix.html#attributes",
+    "href": "api/matrices.ResponseMatrix.html#attributes",
+    "title": "matrices.ResponseMatrix",
+    "section": "",
+    "text": "design_matrix : np.array\n\nA 2-dimensional numpy array containing the values of the response.\n\nname : str\n\nThe name of the response term.\n\nkind : str\n\nThe kind of the response. Can be \"numeric\", \"categoric\" or \"proportion\".",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "matrices.ResponseMatrix"
+    ]
+  },
+  {
+    "objectID": "api/matrices.ResponseMatrix.html#methods",
+    "href": "api/matrices.ResponseMatrix.html#methods",
+    "title": "matrices.ResponseMatrix",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\nas_dataframe\nReturns self.design_matrix as a pandas.DataFrame.\n\n\nevaluate\nEvaluates self.term inside the data mask provided by data and\n\n\n\n\n\nmatrices.ResponseMatrix.as_dataframe()\nReturns self.design_matrix as a pandas.DataFrame.\n\n\n\nmatrices.ResponseMatrix.evaluate(data, env)\nEvaluates self.term inside the data mask provided by data and updates self.design_matrix and self.name.\n\n\n\ndata : pandas.DataFrame\n\nThe data frame where variables are taken from.\n\nenv : Environment\n\nThe environment where values and functions are taken from.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "matrices.ResponseMatrix"
+    ]
+  },
+  {
+    "objectID": "api/matrices.DesignMatrices.html",
+    "href": "api/matrices.DesignMatrices.html",
+    "title": "matrices.DesignMatrices",
+    "section": "",
+    "text": "matrices.DesignMatrices(model, data, env)\nA wrapper of the response, the common, and group specific effects.\n\n\n\nmodel : Model\n\nThe model description, the result of calling model_description.\n\ndata : pandas.DataFrame\n\nThe data frame where variables are taken from.\n\nenv : Environment\n\nThe environment where values and functions are taken from.\n\n\n\n\n\n\nresponse : ResponseMatrix\n\nThe response in the model. Access its values with self.response.design_matrix. It is None if there is no response term in the model.\n\ncommon : CommonEffectsMatrix\n\nThe common effects (a.k.a. fixed effects) in the model. The design matrix can be accessed with self.common.design_matrix. The submatrix for a term is accessed via self.common[term_name]. It is None if there are no common terms in the model.\n\ngroup : GroupEffectsMatrix\n\nThe group specific effects (a.k.a. random effects) in the model. The design matrix can be accessed with self.group.design_matrix. The submatrix for a term is accessed via self.group[term_name]. It is None if there are no group specific terms in the model.",
+    "crumbs": [
+      "API Reference",
+      "matrices.DesignMatrices"
+    ]
+  },
+  {
+    "objectID": "api/matrices.DesignMatrices.html#parameters",
+    "href": "api/matrices.DesignMatrices.html#parameters",
+    "title": "matrices.DesignMatrices",
+    "section": "",
+    "text": "model : Model\n\nThe model description, the result of calling model_description.\n\ndata : pandas.DataFrame\n\nThe data frame where variables are taken from.\n\nenv : Environment\n\nThe environment where values and functions are taken from.",
+    "crumbs": [
+      "API Reference",
+      "matrices.DesignMatrices"
+    ]
+  },
+  {
+    "objectID": "api/matrices.DesignMatrices.html#attributes",
+    "href": "api/matrices.DesignMatrices.html#attributes",
+    "title": "matrices.DesignMatrices",
+    "section": "",
+    "text": "response : ResponseMatrix\n\nThe response in the model. Access its values with self.response.design_matrix. It is None if there is no response term in the model.\n\ncommon : CommonEffectsMatrix\n\nThe common effects (a.k.a. fixed effects) in the model. The design matrix can be accessed with self.common.design_matrix. The submatrix for a term is accessed via self.common[term_name]. It is None if there are no common terms in the model.\n\ngroup : GroupEffectsMatrix\n\nThe group specific effects (a.k.a. random effects) in the model. The design matrix can be accessed with self.group.design_matrix. The submatrix for a term is accessed via self.group[term_name]. It is None if there are no group specific terms in the model.",
+    "crumbs": [
+      "API Reference",
+      "matrices.DesignMatrices"
+    ]
+  },
+  {
+    "objectID": "api/index.html",
+    "href": "api/index.html",
+    "title": "Formulae",
+    "section": "",
+    "text": "Public functions and classes.\n\n\n\nmodel_description\n\n\n\ndesign_matrices\nParse and materialize a model formula into a DesignMatrices.\n\n\nmatrices.DesignMatrices\nA wrapper of the response, the common, and group specific effects.",
+    "crumbs": [
+      "API Reference",
+      "Formulae"
+    ]
+  },
+  {
+    "objectID": "api/index.html#api-reference",
+    "href": "api/index.html#api-reference",
+    "title": "Formulae",
+    "section": "",
+    "text": "Public functions and classes.\n\n\n\nmodel_description\n\n\n\ndesign_matrices\nParse and materialize a model formula into a DesignMatrices.\n\n\nmatrices.DesignMatrices\nA wrapper of the response, the common, and group specific effects.",
+    "crumbs": [
+      "API Reference",
+      "Formulae"
+    ]
+  },
+  {
+    "objectID": "api/index.html#internals",
+    "href": "api/index.html#internals",
+    "title": "Formulae",
+    "section": "Internals",
+    "text": "Internals\nObjects useful to downstream library developers.\n\n\n\nmatrices.ResponseMatrix\nResponse matrix for a model.\n\n\nmatrices.CommonEffectsMatrix\nCommon-effects matrix.\n\n\nmatrices.GroupEffectsMatrix\nGroup-specific-effects matrix.\n\n\nterms.Variable\nVariable in a model term.\n\n\nterms.Call\nCall in a model term.\n\n\nterms.Term\nModel term.\n\n\nterms.GroupSpecificTerm\nGroup-specific model term.\n\n\nterms.Intercept\nModel intercept.\n\n\nterms.NegatedIntercept\nNegated model intercept.\n\n\nterms.Response\nModel response term.\n\n\nterms.Model\nModel terms and response.\n\n\nterms.call_resolver.LazyValue\nDeferred Python value.\n\n\nterms.call_resolver.LazyVariable\nDeferred variable reference.\n\n\nterms.call_resolver.LazyOperator\nDeferred unary or binary operation.\n\n\nterms.call_resolver.LazyCall\nDeferred function call.",
+    "crumbs": [
+      "API Reference",
+      "Formulae"
+    ]
+  },
+  {
+    "objectID": "api/design_matrices.html",
+    "href": "api/design_matrices.html",
+    "title": "design_matrices",
+    "section": "",
+    "text": "design_matrices(formula, data, na_action='drop', env=0, extra_namespace=None)\nParse and materialize a model formula into a DesignMatrices.\nA DesignMatrices object contains objects representing the response and the design matrices for both the common and group specific effects.\n\n\n\nformula : str\n\nA model formula.\n\ndata : pandas.DataFrame\n\nThe data frame where variables in the formula are taken from.\n\nna_action : str = 'drop'\n\nDescribes what to do with missing values in data. \"drop\" means to drop all rows with a missing value, \"error\" means to raise an error, \"pass\" means to keep all. Defaults to \"drop\".\n\nenv : integer = 0\n\nThe number of environments we walk up in the stack starting from the function’s caller to capture the environment where formula is evaluated. Defaults to 0 which means the evaluation environment is the environment where design_matrices is called.\n\nextra_namespace : dict = None\n\nAdditional user supplied transformations to include in the environment where the formula is evaluated. Defaults to None.\n\n\n\n\n\n\ndesign : DesignMatrices\n\nAn instance of DesignMatrices that contains the design matrix or matrices described by formula.",
+    "crumbs": [
+      "API Reference",
+      "design_matrices"
+    ]
+  },
+  {
+    "objectID": "api/design_matrices.html#parameters",
+    "href": "api/design_matrices.html#parameters",
+    "title": "design_matrices",
+    "section": "",
+    "text": "formula : str\n\nA model formula.\n\ndata : pandas.DataFrame\n\nThe data frame where variables in the formula are taken from.\n\nna_action : str = 'drop'\n\nDescribes what to do with missing values in data. \"drop\" means to drop all rows with a missing value, \"error\" means to raise an error, \"pass\" means to keep all. Defaults to \"drop\".\n\nenv : integer = 0\n\nThe number of environments we walk up in the stack starting from the function’s caller to capture the environment where formula is evaluated. Defaults to 0 which means the evaluation environment is the environment where design_matrices is called.\n\nextra_namespace : dict = None\n\nAdditional user supplied transformations to include in the environment where the formula is evaluated. Defaults to None.",
+    "crumbs": [
+      "API Reference",
+      "design_matrices"
+    ]
+  },
+  {
+    "objectID": "api/design_matrices.html#returns",
+    "href": "api/design_matrices.html#returns",
+    "title": "design_matrices",
+    "section": "",
+    "text": "design : DesignMatrices\n\nAn instance of DesignMatrices that contains the design matrix or matrices described by formula.",
+    "crumbs": [
+      "API Reference",
+      "design_matrices"
+    ]
+  },
+  {
+    "objectID": "api/matrices.CommonEffectsMatrix.html",
+    "href": "api/matrices.CommonEffectsMatrix.html",
+    "title": "matrices.CommonEffectsMatrix",
+    "section": "",
+    "text": "matrices.CommonEffectsMatrix(terms)\nCommon-effects matrix.\n\n\n\nterms : list\n\nA list of Term objects.\n\n\n\n\n\n\ndesign_matrix : np.array\n\nA 2-dimensional numpy array containing the values of the design matrix.\n\nevaluated : bool\n\nIndicates if the terms have been evaluated at least once. The terms must have been evaluated before calling self.evaluate_new_data() because we must know the kind of each term to correctly handle the new data passed and the terms here.\n\nterms : dict\n\nA dictionary that holds all the terms passed at instantiation. The keys are given by the term names.\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nas_dataframe\nReturns self.design_matrix as a pandas.DataFrame.\n\n\nevaluate\nObtain design matrix for common effects.\n\n\nevaluate_new_data\nEvaluates common terms with new data and return a new instance of\n\n\n\n\n\nmatrices.CommonEffectsMatrix.as_dataframe()\nReturns self.design_matrix as a pandas.DataFrame.\n\n\n\nmatrices.CommonEffectsMatrix.evaluate(data, env)\nObtain design matrix for common effects.\nUses self.terms inside the data mask provided by data and updates self.design_matrix. This method also sets the values of self.data and self.env.\nIt also populates the dictionary self.slices …\n\n\n\ndata : pandas.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.\n\n\n\n\n\n\nmatrices.CommonEffectsMatrix.evaluate_new_data(data)\nEvaluates common terms with new data and return a new instance of CommonEffectsMatrix.\nThis method is intended to be used to obtain design matrices for new data and obtain out of sample predictions. Stateful transformations are properly handled if present in any of the terms, which means parameters involved in the transformation are not overwritten with the new data.\n\n\n\ndata : pandas.DataFrame\n\nThe data frame where variables are taken from\n\n\n\n\n\n\nnew_instance : CommonEffectsMatrix\n\nA new instance of CommonEffectsMatrix whose design matrix is obtained with the values in the new data set.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "matrices.CommonEffectsMatrix"
+    ]
+  },
+  {
+    "objectID": "api/matrices.CommonEffectsMatrix.html#parameters",
+    "href": "api/matrices.CommonEffectsMatrix.html#parameters",
+    "title": "matrices.CommonEffectsMatrix",
+    "section": "",
+    "text": "terms : list\n\nA list of Term objects.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "matrices.CommonEffectsMatrix"
+    ]
+  },
+  {
+    "objectID": "api/matrices.CommonEffectsMatrix.html#attributes",
+    "href": "api/matrices.CommonEffectsMatrix.html#attributes",
+    "title": "matrices.CommonEffectsMatrix",
+    "section": "",
+    "text": "design_matrix : np.array\n\nA 2-dimensional numpy array containing the values of the design matrix.\n\nevaluated : bool\n\nIndicates if the terms have been evaluated at least once. The terms must have been evaluated before calling self.evaluate_new_data() because we must know the kind of each term to correctly handle the new data passed and the terms here.\n\nterms : dict\n\nA dictionary that holds all the terms passed at instantiation. The keys are given by the term names.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "matrices.CommonEffectsMatrix"
+    ]
+  },
+  {
+    "objectID": "api/matrices.CommonEffectsMatrix.html#methods",
+    "href": "api/matrices.CommonEffectsMatrix.html#methods",
+    "title": "matrices.CommonEffectsMatrix",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\nas_dataframe\nReturns self.design_matrix as a pandas.DataFrame.\n\n\nevaluate\nObtain design matrix for common effects.\n\n\nevaluate_new_data\nEvaluates common terms with new data and return a new instance of\n\n\n\n\n\nmatrices.CommonEffectsMatrix.as_dataframe()\nReturns self.design_matrix as a pandas.DataFrame.\n\n\n\nmatrices.CommonEffectsMatrix.evaluate(data, env)\nObtain design matrix for common effects.\nUses self.terms inside the data mask provided by data and updates self.design_matrix. This method also sets the values of self.data and self.env.\nIt also populates the dictionary self.slices …\n\n\n\ndata : pandas.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.\n\n\n\n\n\n\nmatrices.CommonEffectsMatrix.evaluate_new_data(data)\nEvaluates common terms with new data and return a new instance of CommonEffectsMatrix.\nThis method is intended to be used to obtain design matrices for new data and obtain out of sample predictions. Stateful transformations are properly handled if present in any of the terms, which means parameters involved in the transformation are not overwritten with the new data.\n\n\n\ndata : pandas.DataFrame\n\nThe data frame where variables are taken from\n\n\n\n\n\n\nnew_instance : CommonEffectsMatrix\n\nA new instance of CommonEffectsMatrix whose design matrix is obtained with the values in the new data set.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "matrices.CommonEffectsMatrix"
+    ]
+  },
+  {
+    "objectID": "api/matrices.GroupEffectsMatrix.html",
+    "href": "api/matrices.GroupEffectsMatrix.html",
+    "title": "matrices.GroupEffectsMatrix",
+    "section": "",
+    "text": "matrices.GroupEffectsMatrix(terms)\nGroup-specific-effects matrix.\nThe sub-matrix that corresponds to a specific group effect can be accessed by self[term_name], for example self[\"1|g\"].\n\n\n\nterms : list\n\nA list of GroupSpecificTerm objects.\n\n\n\n\n\n\ndesign_matrix : scipy.sparse.csr_matrix\n\nThe design matrix in CSR format.\n\nevaluated : bool\n\nIndicates if the terms have been evaluated at least once. The terms must have been evaluated before calling self.evaluate_new_data() because we must know the kind of each term to correctly handle the new data passed and the terms here.\n\nterms : dict\n\nA dictionary that holds all the group specific terms. The keys are given by the term names.\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nas_dataframe\nReturns self.design_matrix as a pandas.DataFrame.\n\n\nevaluate\nEvaluate group specific terms.\n\n\nevaluate_new_data\nEvaluates group specific terms with new data and return a new instance of\n\n\n\n\n\nmatrices.GroupEffectsMatrix.as_dataframe()\nReturns self.design_matrix as a pandas.DataFrame.\n\n\n\nmatrices.GroupEffectsMatrix.evaluate(data, env)\nEvaluate group specific terms.\nThis evaluates self.terms inside the data mask provided by data and the environment env. It updates self.design_matrix with the result from the evaluation of each term.\nThis method also sets the values of self.data and self.env. It also populates the dictionary self.slices with the columns each term occupies in the design matrix.\n\n\n\ndata : pandas.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.\n\n\n\n\n\n\nmatrices.GroupEffectsMatrix.evaluate_new_data(data)\nEvaluates group specific terms with new data and return a new instance of GroupEffectsMatrix.\nThis method is intended to be used to obtain design matrices for new data and obtain out of sample predictions. Stateful transformations are properly handled if present in any of the group specific terms, which means parameters involved in the transformation are not overwritten with the new data.\n\n\n\ndata : pandas.DataFrame\n\nThe data frame where variables are taken from\n\n\n\n\n\n\nnew_instance : GroupEffectsMatrix\n\nA new instance of GroupEffectsMatrix whose design matrix is obtained with the values in the new data set.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "matrices.GroupEffectsMatrix"
+    ]
+  },
+  {
+    "objectID": "api/matrices.GroupEffectsMatrix.html#parameters",
+    "href": "api/matrices.GroupEffectsMatrix.html#parameters",
+    "title": "matrices.GroupEffectsMatrix",
+    "section": "",
+    "text": "terms : list\n\nA list of GroupSpecificTerm objects.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "matrices.GroupEffectsMatrix"
+    ]
+  },
+  {
+    "objectID": "api/matrices.GroupEffectsMatrix.html#attributes",
+    "href": "api/matrices.GroupEffectsMatrix.html#attributes",
+    "title": "matrices.GroupEffectsMatrix",
+    "section": "",
+    "text": "design_matrix : scipy.sparse.csr_matrix\n\nThe design matrix in CSR format.\n\nevaluated : bool\n\nIndicates if the terms have been evaluated at least once. The terms must have been evaluated before calling self.evaluate_new_data() because we must know the kind of each term to correctly handle the new data passed and the terms here.\n\nterms : dict\n\nA dictionary that holds all the group specific terms. The keys are given by the term names.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "matrices.GroupEffectsMatrix"
+    ]
+  },
+  {
+    "objectID": "api/matrices.GroupEffectsMatrix.html#methods",
+    "href": "api/matrices.GroupEffectsMatrix.html#methods",
+    "title": "matrices.GroupEffectsMatrix",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\nas_dataframe\nReturns self.design_matrix as a pandas.DataFrame.\n\n\nevaluate\nEvaluate group specific terms.\n\n\nevaluate_new_data\nEvaluates group specific terms with new data and return a new instance of\n\n\n\n\n\nmatrices.GroupEffectsMatrix.as_dataframe()\nReturns self.design_matrix as a pandas.DataFrame.\n\n\n\nmatrices.GroupEffectsMatrix.evaluate(data, env)\nEvaluate group specific terms.\nThis evaluates self.terms inside the data mask provided by data and the environment env. It updates self.design_matrix with the result from the evaluation of each term.\nThis method also sets the values of self.data and self.env. It also populates the dictionary self.slices with the columns each term occupies in the design matrix.\n\n\n\ndata : pandas.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.\n\n\n\n\n\n\nmatrices.GroupEffectsMatrix.evaluate_new_data(data)\nEvaluates group specific terms with new data and return a new instance of GroupEffectsMatrix.\nThis method is intended to be used to obtain design matrices for new data and obtain out of sample predictions. Stateful transformations are properly handled if present in any of the group specific terms, which means parameters involved in the transformation are not overwritten with the new data.\n\n\n\ndata : pandas.DataFrame\n\nThe data frame where variables are taken from\n\n\n\n\n\n\nnew_instance : GroupEffectsMatrix\n\nA new instance of GroupEffectsMatrix whose design matrix is obtained with the values in the new data set.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "matrices.GroupEffectsMatrix"
+    ]
+  },
+  {
+    "objectID": "api/model_description.html",
+    "href": "api/model_description.html",
+    "title": "model_description",
+    "section": "",
+    "text": "model_description\n\n\n\n\n\nName\nDescription\n\n\n\n\nmodel_description\nInterpret model formula and obtain a model description.\n\n\n\n\n\nmodel_description.model_description(formula)\nInterpret model formula and obtain a model description.\nThis function receives a string with a formula describing a statistical model and returns an object of class Model that describes the model interpreted from the formula.\n\n\n\nformula : str\n\nA string with a model description in formula language.\n\n\n\n\n\n\n : An object of class Model with an internal description of the model.",
+    "crumbs": [
+      "API Reference",
+      "model_description"
+    ]
+  },
+  {
+    "objectID": "api/model_description.html#functions",
+    "href": "api/model_description.html#functions",
+    "title": "model_description",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\nmodel_description\nInterpret model formula and obtain a model description.\n\n\n\n\n\nmodel_description.model_description(formula)\nInterpret model formula and obtain a model description.\nThis function receives a string with a formula describing a statistical model and returns an object of class Model that describes the model interpreted from the formula.\n\n\n\nformula : str\n\nA string with a model description in formula language.\n\n\n\n\n\n\n : An object of class Model with an internal description of the model.",
+    "crumbs": [
+      "API Reference",
+      "model_description"
+    ]
+  },
+  {
+    "objectID": "api/terms.GroupSpecificTerm.html",
+    "href": "api/terms.GroupSpecificTerm.html",
+    "title": "terms.GroupSpecificTerm",
+    "section": "",
+    "text": "terms.GroupSpecificTerm(expr, factor)\nGroup-specific model term.\nGroup specific terms are of the form (expr | factor). The expression expr is evaluated as a model formula with only common effects and produces a model matrix following the rules for common terms. factor is inspired on factors in R, but here it is evaluated as an ordered pandas.CategoricalDtype object.\nThe pipe operator | works as in R package lme4. As its authors say: “One way to think about the vertical bar operator is as a special kind of interaction between the model matrix and the grouping factor. This interaction ensures that the columns of the model matrix have different effects for each level of the grouping factor”\n\n\n\nexpr : Intercept or Term\n\nThe term for which we want to have a group specific term.\n\nfactor : Term\n\nThe factor that determines the groups in the group specific term.\n\n\n\n\n\n\ndata : scipy.sparse.csr_matrix\n\nThe values associated with the term as they go into the design matrix.\n\nkind : str\n\nIndicates the type of the term. Can be one of \"numeric\", \"categoric\", or \"interaction\".\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\neval_new_data\nEvaluates the term with new data.\n\n\neval_new_data_group_index\nEvaluate the grouping factor as indices for new data.\n\n\n\n\n\nterms.GroupSpecificTerm.eval_new_data(data)\nEvaluates the term with new data.\nConverts the variable in factor to the type remembered from the first evaluation and produces the design matrix for this grouping, calls .eval_new_data() on self.expr to obtain the design matrix for the expr side, then computes the design matrix corresponding to the group specific effect.\n\n\n\ndata : pd.DataFrame\n\nThe data frame where variables are taken from.\n\n\n\n\n\n\nZi : scipy.sparse.csr_matrix\n\n\n\n\n\n\n\n\nterms.GroupSpecificTerm.eval_new_data_group_index(data)\nEvaluate the grouping factor as indices for new data.\nUnlike eval_new_data, this method preserves the distinction between missing values and unseen, non-missing levels. Existing factor columns are represented by their fitted index, missing values by -1, and unseen levels by consecutive indices after the fitted columns.\n\n\n\ndata : pandas.DataFrame\n\nThe data frame where factor values are taken from.\n\n\n\n\n\n\nindex : numpy.ndarray\n\nOne-dimensional int64 array. Existing groups use indices in 0..G-1, missing groups use -1, and new groups use G...\n\nnew_groups : tuple\n\nNew, non-missing levels in first-occurrence order. Interaction levels are represented as tuples of their component values.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.GroupSpecificTerm"
+    ]
+  },
+  {
+    "objectID": "api/terms.GroupSpecificTerm.html#parameters",
+    "href": "api/terms.GroupSpecificTerm.html#parameters",
+    "title": "terms.GroupSpecificTerm",
+    "section": "",
+    "text": "expr : Intercept or Term\n\nThe term for which we want to have a group specific term.\n\nfactor : Term\n\nThe factor that determines the groups in the group specific term.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.GroupSpecificTerm"
+    ]
+  },
+  {
+    "objectID": "api/terms.GroupSpecificTerm.html#attributes",
+    "href": "api/terms.GroupSpecificTerm.html#attributes",
+    "title": "terms.GroupSpecificTerm",
+    "section": "",
+    "text": "data : scipy.sparse.csr_matrix\n\nThe values associated with the term as they go into the design matrix.\n\nkind : str\n\nIndicates the type of the term. Can be one of \"numeric\", \"categoric\", or \"interaction\".",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.GroupSpecificTerm"
+    ]
+  },
+  {
+    "objectID": "api/terms.GroupSpecificTerm.html#methods",
+    "href": "api/terms.GroupSpecificTerm.html#methods",
+    "title": "terms.GroupSpecificTerm",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\neval_new_data\nEvaluates the term with new data.\n\n\neval_new_data_group_index\nEvaluate the grouping factor as indices for new data.\n\n\n\n\n\nterms.GroupSpecificTerm.eval_new_data(data)\nEvaluates the term with new data.\nConverts the variable in factor to the type remembered from the first evaluation and produces the design matrix for this grouping, calls .eval_new_data() on self.expr to obtain the design matrix for the expr side, then computes the design matrix corresponding to the group specific effect.\n\n\n\ndata : pd.DataFrame\n\nThe data frame where variables are taken from.\n\n\n\n\n\n\nZi : scipy.sparse.csr_matrix\n\n\n\n\n\n\n\n\nterms.GroupSpecificTerm.eval_new_data_group_index(data)\nEvaluate the grouping factor as indices for new data.\nUnlike eval_new_data, this method preserves the distinction between missing values and unseen, non-missing levels. Existing factor columns are represented by their fitted index, missing values by -1, and unseen levels by consecutive indices after the fitted columns.\n\n\n\ndata : pandas.DataFrame\n\nThe data frame where factor values are taken from.\n\n\n\n\n\n\nindex : numpy.ndarray\n\nOne-dimensional int64 array. Existing groups use indices in 0..G-1, missing groups use -1, and new groups use G...\n\nnew_groups : tuple\n\nNew, non-missing levels in first-occurrence order. Interaction levels are represented as tuples of their component values.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.GroupSpecificTerm"
+    ]
+  },
+  {
+    "objectID": "api/terms.Model.html",
+    "href": "api/terms.Model.html",
+    "title": "terms.Model",
+    "section": "",
+    "text": "terms.Model(*terms, response=None)\nModel terms and response.\n\n\n\nterms : Term = ()\n\nThis object can be instantiated with one or many terms.\n\nresponse : Response = None\n\nThe response term. Defaults to None which means there is no response.\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\ncommon_components\nComponents in common terms in the model.\n\n\nterms\nTerms in the model.\n\n\nvar_names\nGet the name of the variables in the model.\n\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nadd_response\nAdd response term to model description.\n\n\nadd_term\nAdd term to model description.\n\n\neval\nEvaluates terms in the model.\n\n\nset_types\nSet the type of the terms in the model.\n\n\n\n\n\nterms.Model.add_response(term)\nAdd response term to model description.\nThis method is called when something like \"y ~ x + z\" appears in a model formula.\nThis method is called via special methods such as Response.__add__.\n\n\n\nself : Model\n\nThe same model object but now with a response term.\n\n\n\n\n\n\nterms.Model.add_term(term)\nAdd term to model description.\nThe term added can be of class Intercept, Term, or GroupSpecificTerm. It appends the new term object to the list of common terms or group specific terms as appropriate.\nThis method is called via special methods such as add.\n\n\n\nself : Model\n\nThe same model object but now containing the new term.\n\n\n\n\n\n\nterms.Model.eval(data, env)\nEvaluates terms in the model.\n\n\n\ndata : pd.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.\n\n\n\n\n\n\nterms.Model.set_types(data, env)\nSet the type of the terms in the model.\nCalls .set_type() method on term in the model.\n\n\n\ndata : pd.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Model"
+    ]
+  },
+  {
+    "objectID": "api/terms.Model.html#parameters",
+    "href": "api/terms.Model.html#parameters",
+    "title": "terms.Model",
+    "section": "",
+    "text": "terms : Term = ()\n\nThis object can be instantiated with one or many terms.\n\nresponse : Response = None\n\nThe response term. Defaults to None which means there is no response.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Model"
+    ]
+  },
+  {
+    "objectID": "api/terms.Model.html#attributes",
+    "href": "api/terms.Model.html#attributes",
+    "title": "terms.Model",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\ncommon_components\nComponents in common terms in the model.\n\n\nterms\nTerms in the model.\n\n\nvar_names\nGet the name of the variables in the model.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Model"
+    ]
+  },
+  {
+    "objectID": "api/terms.Model.html#methods",
+    "href": "api/terms.Model.html#methods",
+    "title": "terms.Model",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\nadd_response\nAdd response term to model description.\n\n\nadd_term\nAdd term to model description.\n\n\neval\nEvaluates terms in the model.\n\n\nset_types\nSet the type of the terms in the model.\n\n\n\n\n\nterms.Model.add_response(term)\nAdd response term to model description.\nThis method is called when something like \"y ~ x + z\" appears in a model formula.\nThis method is called via special methods such as Response.__add__.\n\n\n\nself : Model\n\nThe same model object but now with a response term.\n\n\n\n\n\n\nterms.Model.add_term(term)\nAdd term to model description.\nThe term added can be of class Intercept, Term, or GroupSpecificTerm. It appends the new term object to the list of common terms or group specific terms as appropriate.\nThis method is called via special methods such as add.\n\n\n\nself : Model\n\nThe same model object but now containing the new term.\n\n\n\n\n\n\nterms.Model.eval(data, env)\nEvaluates terms in the model.\n\n\n\ndata : pd.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.\n\n\n\n\n\n\nterms.Model.set_types(data, env)\nSet the type of the terms in the model.\nCalls .set_type() method on term in the model.\n\n\n\ndata : pd.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Model"
+    ]
+  },
+  {
+    "objectID": "api/terms.Response.html",
+    "href": "api/terms.Response.html",
+    "title": "terms.Response",
+    "section": "",
+    "text": "terms.Response(term)\nModel response term.\nIt is mostly a wrapper around Term.\n\n\n\nterm : Term\n\nThe term we want to take as response in the model. Must contain only one component.\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nvar_names\nReturns the name of the variables in the response as a set.\n\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nset_data\nSet data of the response term.\n\n\nset_type\nSet type of the response term.\n\n\n\n\n\nterms.Response.set_data()\nSet data of the response term.\n\n\n\nterms.Response.set_type(data, env)\nSet type of the response term.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Response"
+    ]
+  },
+  {
+    "objectID": "api/terms.Response.html#parameters",
+    "href": "api/terms.Response.html#parameters",
+    "title": "terms.Response",
+    "section": "",
+    "text": "term : Term\n\nThe term we want to take as response in the model. Must contain only one component.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Response"
+    ]
+  },
+  {
+    "objectID": "api/terms.Response.html#attributes",
+    "href": "api/terms.Response.html#attributes",
+    "title": "terms.Response",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\nvar_names\nReturns the name of the variables in the response as a set.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Response"
+    ]
+  },
+  {
+    "objectID": "api/terms.Response.html#methods",
+    "href": "api/terms.Response.html#methods",
+    "title": "terms.Response",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\nset_data\nSet data of the response term.\n\n\nset_type\nSet type of the response term.\n\n\n\n\n\nterms.Response.set_data()\nSet data of the response term.\n\n\n\nterms.Response.set_type(data, env)\nSet type of the response term.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Response"
+    ]
+  },
+  {
+    "objectID": "api/terms.Variable.html",
+    "href": "api/terms.Variable.html",
+    "title": "terms.Variable",
+    "section": "",
+    "text": "terms.Variable(name, level=None, is_response=False)\nVariable in a model term.\nThis class and Call are the atomic components of a model term.\n\n\n\nname : str\n\nThe identifier of the variable.\n\nlevel : str = None\n\nThe level to use as reference. Allows to use the notation variable[\"level\"] to indicate which event should be model as success in binary response models. Can only be used with response terms. Defaults to None.\n\nis_response : bool = False\n\nIndicates whether this variable represents a response. Defaults to False.\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nlabels\nObtain labels of the columns in the design matrix associated with this Variable\n\n\nvar_names\nReturns the name of the variable as a set.\n\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\neval_categoric\nFinishes evaluation of a categoric variable.\n\n\neval_new_data\nEvaluates the variable with new data.\n\n\neval_new_data_categoric\nEvaluates the variable with new data when variable is categoric.\n\n\neval_numeric\nFinishes evaluation of a numeric variable.\n\n\nset_data\nObtains and stores the final data object related to this variable.\n\n\nset_type\nDetermines the type of the variable.\n\n\n\n\n\nterms.Variable.eval_categoric(x, spans_intercept)\nFinishes evaluation of a categoric variable.\nConverts the intermediate values in x into a numpy array of shape (n, p), where n is the number of observations and p the number of dummy variables used in the numeric representation of the categorical variable.\n\n\n\nx : np.ndarray or pd.Series\n\nThe intermediate values of the variable.\n\nspans_intercept : bool\n\nIndicates if the encoding of categorical variables spans the intercept or not. Omitted when the variable is numeric.\n\n\n\n\n\n\nterms.Variable.eval_new_data(data_mask)\nEvaluates the variable with new data.\nThis method evaluates the variable within a new data mask. If this object is categorical, original encoding is remembered (and checked) when carrying out the new evaluation.\n\n\n\ndata_mask : pd.DataFrame\n\nThe data frame where variables are taken from\n\n\n\n\n\n\nresult : np.array\n\nThe rules for the shape of this array are the rules for self.eval_numeric() and self.eval_categoric(). The first applies for numeric variables, the second for categoric ones.\n\n\n\n\n\n\nterms.Variable.eval_new_data_categoric(x)\nEvaluates the variable with new data when variable is categoric.\nThis method also checks the levels observed in the new data frame are included within the set of the levels of the original data set. If not, an error is raised.\nx : np.ndarray or pd.Series The intermediate values of the variable.\n\n\n\nresult : np.array\n\nNumeric numpy array (n, p), where n is the number of observations and p the number of dummy variables used in the numeric representation of the categorical variable.\n\n\n\n\n\n\nterms.Variable.eval_numeric(x)\nFinishes evaluation of a numeric variable.\nConverts the intermediate values in x into a 1d numpy array.\n\n\n\nx : np.ndarray or pd.Series\n\nThe intermediate values of the variable.\n\n\n\n\n\n\nterms.Variable.set_data(spans_intercept=None)\nObtains and stores the final data object related to this variable.\n\n\n\nspans_intercept : bool = None\n\nIndicates if the encoding of categorical variables spans the intercept or not. Omitted when the variable is numeric.\n\n\n\n\n\n\nterms.Variable.set_type(data_mask)\nDetermines the type of the variable.\nLooks for the name of the variable in data_mask and sets the .kind property to \"numeric\" or \"categoric\" depending on the type of the variable. It also stores the result of the intermediate evaluation in self._intermediate_data.\n\n\n\ndata_mask : pd.DataFrame\n\nThe data frame where variables are taken from",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Variable"
+    ]
+  },
+  {
+    "objectID": "api/terms.Variable.html#parameters",
+    "href": "api/terms.Variable.html#parameters",
+    "title": "terms.Variable",
+    "section": "",
+    "text": "name : str\n\nThe identifier of the variable.\n\nlevel : str = None\n\nThe level to use as reference. Allows to use the notation variable[\"level\"] to indicate which event should be model as success in binary response models. Can only be used with response terms. Defaults to None.\n\nis_response : bool = False\n\nIndicates whether this variable represents a response. Defaults to False.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Variable"
+    ]
+  },
+  {
+    "objectID": "api/terms.Variable.html#attributes",
+    "href": "api/terms.Variable.html#attributes",
+    "title": "terms.Variable",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\nlabels\nObtain labels of the columns in the design matrix associated with this Variable\n\n\nvar_names\nReturns the name of the variable as a set.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Variable"
+    ]
+  },
+  {
+    "objectID": "api/terms.Variable.html#methods",
+    "href": "api/terms.Variable.html#methods",
+    "title": "terms.Variable",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\neval_categoric\nFinishes evaluation of a categoric variable.\n\n\neval_new_data\nEvaluates the variable with new data.\n\n\neval_new_data_categoric\nEvaluates the variable with new data when variable is categoric.\n\n\neval_numeric\nFinishes evaluation of a numeric variable.\n\n\nset_data\nObtains and stores the final data object related to this variable.\n\n\nset_type\nDetermines the type of the variable.\n\n\n\n\n\nterms.Variable.eval_categoric(x, spans_intercept)\nFinishes evaluation of a categoric variable.\nConverts the intermediate values in x into a numpy array of shape (n, p), where n is the number of observations and p the number of dummy variables used in the numeric representation of the categorical variable.\n\n\n\nx : np.ndarray or pd.Series\n\nThe intermediate values of the variable.\n\nspans_intercept : bool\n\nIndicates if the encoding of categorical variables spans the intercept or not. Omitted when the variable is numeric.\n\n\n\n\n\n\nterms.Variable.eval_new_data(data_mask)\nEvaluates the variable with new data.\nThis method evaluates the variable within a new data mask. If this object is categorical, original encoding is remembered (and checked) when carrying out the new evaluation.\n\n\n\ndata_mask : pd.DataFrame\n\nThe data frame where variables are taken from\n\n\n\n\n\n\nresult : np.array\n\nThe rules for the shape of this array are the rules for self.eval_numeric() and self.eval_categoric(). The first applies for numeric variables, the second for categoric ones.\n\n\n\n\n\n\nterms.Variable.eval_new_data_categoric(x)\nEvaluates the variable with new data when variable is categoric.\nThis method also checks the levels observed in the new data frame are included within the set of the levels of the original data set. If not, an error is raised.\nx : np.ndarray or pd.Series The intermediate values of the variable.\n\n\n\nresult : np.array\n\nNumeric numpy array (n, p), where n is the number of observations and p the number of dummy variables used in the numeric representation of the categorical variable.\n\n\n\n\n\n\nterms.Variable.eval_numeric(x)\nFinishes evaluation of a numeric variable.\nConverts the intermediate values in x into a 1d numpy array.\n\n\n\nx : np.ndarray or pd.Series\n\nThe intermediate values of the variable.\n\n\n\n\n\n\nterms.Variable.set_data(spans_intercept=None)\nObtains and stores the final data object related to this variable.\n\n\n\nspans_intercept : bool = None\n\nIndicates if the encoding of categorical variables spans the intercept or not. Omitted when the variable is numeric.\n\n\n\n\n\n\nterms.Variable.set_type(data_mask)\nDetermines the type of the variable.\nLooks for the name of the variable in data_mask and sets the .kind property to \"numeric\" or \"categoric\" depending on the type of the variable. It also stores the result of the intermediate evaluation in self._intermediate_data.\n\n\n\ndata_mask : pd.DataFrame\n\nThe data frame where variables are taken from",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.Variable"
+    ]
+  },
+  {
+    "objectID": "api/terms.call_resolver.LazyOperator.html",
+    "href": "api/terms.call_resolver.LazyOperator.html",
+    "title": "terms.call_resolver.LazyOperator",
+    "section": "",
+    "text": "terms.call_resolver.LazyOperator(op, *args)\nDeferred unary or binary operation.\nFunctions calls like a + b are converted into a LazyOperator that is resolved when you explicitly evaluates it.\n\n\n\nop : builtin_function_or_method\n\nAn operator in the operator built-in module. It can be one of add, pos, sub, neg, pow, mul, and truediv.\n\nargs :  = ()\n\nOne or two lazy instances.\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\neval\nEvaluates the operation.\n\n\n\n\n\nterms.call_resolver.LazyOperator.eval(data_mask, env)\nEvaluates the operation.\nEvaluates the arguments involved in the operation, calls the Python operator, and returns the result.\n\n\n\ndata_mask : pd.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.\n\n\n\n\n\n\nresult : \n\nThe value obtained from the operator call.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.call_resolver.LazyOperator"
+    ]
+  },
+  {
+    "objectID": "api/terms.call_resolver.LazyOperator.html#parameters",
+    "href": "api/terms.call_resolver.LazyOperator.html#parameters",
+    "title": "terms.call_resolver.LazyOperator",
+    "section": "",
+    "text": "op : builtin_function_or_method\n\nAn operator in the operator built-in module. It can be one of add, pos, sub, neg, pow, mul, and truediv.\n\nargs :  = ()\n\nOne or two lazy instances.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.call_resolver.LazyOperator"
+    ]
+  },
+  {
+    "objectID": "api/terms.call_resolver.LazyOperator.html#methods",
+    "href": "api/terms.call_resolver.LazyOperator.html#methods",
+    "title": "terms.call_resolver.LazyOperator",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\neval\nEvaluates the operation.\n\n\n\n\n\nterms.call_resolver.LazyOperator.eval(data_mask, env)\nEvaluates the operation.\nEvaluates the arguments involved in the operation, calls the Python operator, and returns the result.\n\n\n\ndata_mask : pd.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.\n\n\n\n\n\n\nresult : \n\nThe value obtained from the operator call.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.call_resolver.LazyOperator"
+    ]
+  },
+  {
+    "objectID": "api/terms.call_resolver.LazyVariable.html",
+    "href": "api/terms.call_resolver.LazyVariable.html",
+    "title": "terms.call_resolver.LazyVariable",
+    "section": "",
+    "text": "terms.call_resolver.LazyVariable(name)\nDeferred variable reference.\nThe variable represented in this object does not hold any value until it is explicitly evaluated within a data mask and an evaluation environment.\n\n\n\nname : str\n\nThe name of the variable it represents.\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\neval\nEvaluates variable.\n\n\n\n\n\nterms.call_resolver.LazyVariable.eval(data_mask, env)\nEvaluates variable.\nFirst it looks for the variable in data_mask. If not found there, it looks in env. Then it just returns the value the variable represents in either the data mask or the evaluation environment.\n\n\n\ndata_mask : pd.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.\n\n\n\n\n\n\nresult : \n\nThe value represented by this name in either the data mask or the environment.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.call_resolver.LazyVariable"
+    ]
+  },
+  {
+    "objectID": "api/terms.call_resolver.LazyVariable.html#parameters",
+    "href": "api/terms.call_resolver.LazyVariable.html#parameters",
+    "title": "terms.call_resolver.LazyVariable",
+    "section": "",
+    "text": "name : str\n\nThe name of the variable it represents.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.call_resolver.LazyVariable"
+    ]
+  },
+  {
+    "objectID": "api/terms.call_resolver.LazyVariable.html#methods",
+    "href": "api/terms.call_resolver.LazyVariable.html#methods",
+    "title": "terms.call_resolver.LazyVariable",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\neval\nEvaluates variable.\n\n\n\n\n\nterms.call_resolver.LazyVariable.eval(data_mask, env)\nEvaluates variable.\nFirst it looks for the variable in data_mask. If not found there, it looks in env. Then it just returns the value the variable represents in either the data mask or the evaluation environment.\n\n\n\ndata_mask : pd.DataFrame\n\nThe data frame where variables are taken from\n\nenv : Environment\n\nThe environment where values and functions are taken from.\n\n\n\n\n\n\nresult : \n\nThe value represented by this name in either the data mask or the environment.",
+    "crumbs": [
+      "API Reference",
+      "Internals",
+      "terms.call_resolver.LazyVariable"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Formulas for mixed-effects models in Python",
+    "section": "",
+    "text": "Formulae is a Python library that implements Wilkinson’s formulas for mixed-effects models. It was written to make group-specific effects convenient in Bambi, but it can also be used independently as a backend for another library. Formulae extends classical statistical formulas in a way inspired by R’s lme4."
+  },
+  {
+    "objectID": "index.html#dependencies",
+    "href": "index.html#dependencies",
+    "title": "Formulas for mixed-effects models in Python",
+    "section": "Dependencies",
+    "text": "Dependencies\nFormulae requires Python 3.8 or later, plus the versions of NumPy, SciPy, and Pandas specified in pyproject.toml."
+  },
+  {
+    "objectID": "index.html#installation",
+    "href": "index.html#installation",
+    "title": "Formulas for mixed-effects models in Python",
+    "section": "Installation",
+    "text": "Installation\nInstall the latest release with pip:\npip install formulae\nOr install the development version directly from GitHub:\npip install git+https://github.com/bambinos/formulae.git"
+  },
+  {
+    "objectID": "index.html#history-related-projects-and-credits",
+    "href": "index.html#history-related-projects-and-credits",
+    "title": "Formulas for mixed-effects models in Python",
+    "section": "History, related projects, and credits",
+    "text": "History, related projects, and credits\nFormulae was built to provide Bambi with a concise syntax for mixed-effects models. Before Formulae, Bambi used Patsy to parse formulas and build design matrices. Patsy is flexible and robust, but does not support mixed model effects. Formulae therefore adopted the familiar | syntax from lme4 and builds the common and group-specific design matrices Bambi needs.\nIts main function, design_matrices(), returns a wrapper around the response, common-effects, and group-effects matrices, along with methods and metadata useful to downstream libraries.\nFormulae draws on the following projects and references:\n\nWilkinson and Rogers (1973), where the formula notation originated.\nR, a widely used implementation of Wilkinson’s formulas.\nlme4, for the | operator and mixed effects matrix construction.\nPatsy, especially its evaluation-environment implementation.\nFormulaic, whose backtick and quote operators inspired Formulae’s equivalents.\n\nIf you only need design matrices for linear models with fixed effects, Patsy or Formulaic may be a more direct fit. Formulae is designed primarily for developers and libraries that need to construct design matrices automatically for mixed-effects models."
+  },
+  {
+    "objectID": "index.html#contributors",
+    "href": "index.html#contributors",
+    "title": "Formulas for mixed-effects models in Python",
+    "section": "Contributors",
+    "text": "Contributors\nSee the GitHub contributors page."
+  },
+  {
+    "objectID": "index.html#contributing",
+    "href": "index.html#contributing",
+    "title": "Formulas for mixed-effects models in Python",
+    "section": "Contributing",
+    "text": "Contributing\nWe welcome contributions from interested individuals and groups. See the contributing guide for the project’s workflow and pull request checklist."
+  },
+  {
+    "objectID": "index.html#license",
+    "href": "index.html#license",
+    "title": "Formulas for mixed-effects models in Python",
+    "section": "License",
+    "text": "License\nMIT License"
+  }
+]

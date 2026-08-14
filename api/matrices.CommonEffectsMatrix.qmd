@@ -1,0 +1,93 @@
+# matrices.CommonEffectsMatrix { #formulae.matrices.CommonEffectsMatrix }
+
+```python
+matrices.CommonEffectsMatrix(terms)
+```
+
+Common-effects matrix.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+<code>[**terms**]{.parameter-name} [:]{.parameter-annotation-sep} [[list](`list`)]{.parameter-annotation}</code>
+
+:   A list of [Term](`formulae.terms.Term`) objects.
+
+## Attributes {.doc-section .doc-section-attributes}
+
+<code>[**design_matrix**]{.parameter-name} [:]{.parameter-annotation-sep} [[np](`numpy`).[array](`numpy.array`)]{.parameter-annotation}</code>
+
+:   A 2-dimensional numpy array containing the values of the design matrix.
+
+<code>[**evaluated**]{.parameter-name} [:]{.parameter-annotation-sep} [[bool](`bool`)]{.parameter-annotation}</code>
+
+:   Indicates if the terms have been evaluated at least once. The terms must have been evaluated before calling `self.evaluate_new_data()` because we must know the kind of each term to correctly handle the new data passed and the terms here.
+
+<code>[**terms**]{.parameter-name} [:]{.parameter-annotation-sep} [[dict](`dict`)]{.parameter-annotation}</code>
+
+:   A dictionary that holds all the terms passed at instantiation. The keys are given by the term names.
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [as_dataframe](#formulae.matrices.CommonEffectsMatrix.as_dataframe) | Returns `self.design_matrix` as a pandas.DataFrame. |
+| [evaluate](#formulae.matrices.CommonEffectsMatrix.evaluate) | Obtain design matrix for common effects. |
+| [evaluate_new_data](#formulae.matrices.CommonEffectsMatrix.evaluate_new_data) | Evaluates common terms with new data and return a new instance of |
+
+### as_dataframe { #formulae.matrices.CommonEffectsMatrix.as_dataframe }
+
+```python
+matrices.CommonEffectsMatrix.as_dataframe()
+```
+
+Returns `self.design_matrix` as a pandas.DataFrame.
+
+### evaluate { #formulae.matrices.CommonEffectsMatrix.evaluate }
+
+```python
+matrices.CommonEffectsMatrix.evaluate(data, env)
+```
+
+Obtain design matrix for common effects.
+
+Uses `self.terms` inside the data mask provided by `data` and updates
+`self.design_matrix`. This method also sets the values of `self.data` and
+`self.env`.
+
+It also populates the dictionary `self.slices` ...
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**data**]{.parameter-name} [:]{.parameter-annotation-sep} [[pandas](`pandas`).[DataFrame](`pandas.DataFrame`)]{.parameter-annotation}</code>
+
+:   The data frame where variables are taken from
+
+<code>[**env**]{.parameter-name} [:]{.parameter-annotation-sep} [[Environment](`formulae.environment.Environment`)]{.parameter-annotation}</code>
+
+:   The environment where values and functions are taken from.
+
+### evaluate_new_data { #formulae.matrices.CommonEffectsMatrix.evaluate_new_data }
+
+```python
+matrices.CommonEffectsMatrix.evaluate_new_data(data)
+```
+
+Evaluates common terms with new data and return a new instance of
+`CommonEffectsMatrix`.
+
+This method is intended to be used to obtain design matrices for new data and obtain
+out of sample predictions. Stateful transformations are properly handled if present in any
+of the terms, which means parameters involved in the transformation are not overwritten with
+the new data.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**data**]{.parameter-name} [:]{.parameter-annotation-sep} [[pandas](`pandas`).[DataFrame](`pandas.DataFrame`)]{.parameter-annotation}</code>
+
+:   The data frame where variables are taken from
+
+#### Returns {.doc-section .doc-section-returns}
+
+<code>[**new_instance**]{.parameter-name} [:]{.parameter-annotation-sep} [[CommonEffectsMatrix](`formulae.matrices.CommonEffectsMatrix`)]{.parameter-annotation}</code>
+
+:   A new instance of `CommonEffectsMatrix` whose design matrix is obtained with the values in the new data set.

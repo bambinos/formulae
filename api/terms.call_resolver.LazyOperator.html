@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Formulas for mixed-effects models in Python – Formulae</title>
+<title>terms.call_resolver.lazyoperator – Formulae</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -58,23 +58,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-95f13c27692fc470293e238ef4333d2a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../api/terms.call_resolver.LazyCall.html" rel="next">
+<link href="../api/terms.call_resolver.LazyVariable.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-95f13c27692fc470293e238ef4333d2a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -104,19 +106,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 
 
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../styles.css">
 </head>
 
-<body class="nav-fixed fullcontent quarto-light">
+<body class="nav-sidebar floating nav-fixed quarto-light">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a href="./index.html" class="navbar-brand navbar-brand-logo">
-    <img src="./logo/formulae_small.png" alt="Formulae home" class="navbar-logo light-content">
-    <img src="./logo/formulae_small.png" alt="Formulae home" class="navbar-logo dark-content">
+    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../logo/formulae_small.png" alt="Formulae home" class="navbar-logo light-content">
+    <img src="../logo/formulae_small.png" alt="Formulae home" class="navbar-logo dark-content">
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -126,15 +128,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./notebooks/getting_started.html"> 
+    <a class="nav-link" href="../notebooks/getting_started.html"> 
 <span class="menu-text">Getting Started</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./api/index.html"> 
+    <a class="nav-link active" href="../api/index.html" aria-current="page"> 
 <span class="menu-text">API Reference</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./changelog.html"> 
+    <a class="nav-link" href="../changelog.html"> 
 <span class="menu-text">Changelog</span></a>
   </li>  
 </ul>
@@ -144,79 +146,251 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
       </div> <!-- /container-fluid -->
     </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../api/matrices.ResponseMatrix.html">Internals</a></li><li class="breadcrumb-item"><a href="../api/terms.call_resolver.LazyOperator.html">terms.call_resolver.LazyOperator</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
 </header>
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
-<!-- margin-sidebar -->
-    
-<!-- main -->
-<main class="content" id="quarto-document-content">
-
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">Formulas for mixed-effects models in Python</h1>
-</div>
-
-
-
-<div class="quarto-title-meta">
-
-    
-  
-    
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Formulae</span></a>
   </div>
-  
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">API Reference</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/model_description.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">model_description</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/design_matrices.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">design_matrices</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/matrices.DesignMatrices.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">matrices.DesignMatrices</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Internals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/matrices.ResponseMatrix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">matrices.ResponseMatrix</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/matrices.CommonEffectsMatrix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">matrices.CommonEffectsMatrix</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/matrices.GroupEffectsMatrix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">matrices.GroupEffectsMatrix</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/terms.Variable.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">terms.Variable</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/terms.Call.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">terms.Call</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/terms.Term.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">terms.Term</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/terms.GroupSpecificTerm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">terms.GroupSpecificTerm</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/terms.Intercept.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">terms.Intercept</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/terms.NegatedIntercept.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">terms.NegatedIntercept</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/terms.Response.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">terms.Response</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/terms.Model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">terms.Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/terms.call_resolver.LazyValue.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">terms.call_resolver.LazyValue</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/terms.call_resolver.LazyVariable.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">terms.call_resolver.LazyVariable</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/terms.call_resolver.LazyOperator.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">terms.call_resolver.LazyOperator</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api/terms.call_resolver.LazyCall.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">terms.call_resolver.LazyCall</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#formulae.terms.call_resolver.LazyOperator" id="toc-formulae.terms.call_resolver.LazyOperator" class="nav-link active" data-scroll-target="#formulae.terms.call_resolver.LazyOperator">terms.call_resolver.LazyOperator</a>
+  <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
+  <ul class="collapse">
+  <li><a href="#formulae.terms.call_resolver.LazyOperator.eval" id="toc-formulae.terms.call_resolver.LazyOperator.eval" class="nav-link" data-scroll-target="#formulae.terms.call_resolver.LazyOperator.eval">eval</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../api/matrices.ResponseMatrix.html">Internals</a></li><li class="breadcrumb-item"><a href="../api/terms.call_resolver.LazyOperator.html">terms.call_resolver.LazyOperator</a></li></ol></nav></header>
 
 
-</header>
 
 
-<center>
-<img src="logo/formulae_large.png" width="250" alt="Formulae">
-</center>
-<center>
-<p><a href="https://badge.fury.io/py/formulae"><img src="https://badge.fury.io/py/formulae.svg" class="img-fluid" alt="PyPI version"></a> <a href="https://codecov.io/gh/bambinos/formulae"><img src="https://codecov.io/gh/bambinos/formulae/branch/master/graph/badge.svg" class="img-fluid" alt="codecov"></a> <a href="https://github.com/psf/black"><img src="https://img.shields.io/badge/code%20style-black-000000.svg" class="img-fluid" alt="Code style: black"></a></p>
-</center>
-<p>Formulae is a Python library that implements Wilkinson’s formulas for mixed-effects models. It was written to make group-specific effects convenient in <a href="https://github.com/bambinos/bambi">Bambi</a>, but it can also be used independently as a backend for another library. Formulae extends classical statistical formulas in a way inspired by R’s <a href="https://CRAN.R-project.org/package=lme4">lme4</a>.</p>
-<section id="dependencies" class="level2">
-<h2 class="anchored" data-anchor-id="dependencies">Dependencies</h2>
-<p>Formulae requires Python 3.8 or later, plus the versions of NumPy, SciPy, and Pandas specified in <a href="https://github.com/bambinos/formulae/blob/master/pyproject.toml">pyproject.toml</a>.</p>
+<section id="formulae.terms.call_resolver.LazyOperator" class="level1">
+<h1>terms.call_resolver.LazyOperator</h1>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>terms.call_resolver.LazyOperator(op, <span class="op">*</span>args)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Deferred unary or binary operation.</p>
+<p>Functions calls like <code>a + b</code> are converted into a LazyOperator that is resolved when you explicitly evaluates it.</p>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<dl>
+<dt><code><span class="parameter-name"><strong>op</strong></span> <span class="parameter-annotation-sep">:</span> <span class="parameter-annotation"><code>builtin_function_or_method</code></span></code></dt>
+<dd>
+<p>An operator in the <code>operator</code> built-in module. It can be one of <code>add</code>, <code>pos</code>, <code>sub</code>, <code>neg</code>, <code>pow</code>, <code>mul</code>, and <code>truediv</code>.</p>
+</dd>
+<dt><code><span class="parameter-name"><strong>args</strong></span> <span class="parameter-annotation-sep">:</span> <span class="parameter-annotation"></span> <span class="parameter-default-sep">=</span> <span class="parameter-default">()</span></code></dt>
+<dd>
+<p>One or two lazy instances.</p>
+</dd>
+</dl>
 </section>
-<section id="installation" class="level2">
-<h2 class="anchored" data-anchor-id="installation">Installation</h2>
-<p>Install the latest release with pip:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install formulae</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Or install the development version directly from GitHub:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install git+https://github.com/bambinos/formulae.git</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="methods" class="level2">
+<h2 class="anchored" data-anchor-id="methods">Methods</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="#formulae.terms.call_resolver.LazyOperator.eval">eval</a></td>
+<td>Evaluates the operation.</td>
+</tr>
+</tbody>
+</table>
+<section id="formulae.terms.call_resolver.LazyOperator.eval" class="level3">
+<h3 class="anchored" data-anchor-id="formulae.terms.call_resolver.LazyOperator.eval">eval</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>terms.call_resolver.LazyOperator.<span class="bu">eval</span>(data_mask, env)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Evaluates the operation.</p>
+<p>Evaluates the arguments involved in the operation, calls the Python operator, and returns the result.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<dl>
+<dt><code><span class="parameter-name"><strong>data_mask</strong></span> <span class="parameter-annotation-sep">:</span> <span class="parameter-annotation"><code>pd</code>.<code>DataFrame</code></span></code></dt>
+<dd>
+<p>The data frame where variables are taken from</p>
+</dd>
+<dt><code><span class="parameter-name"><strong>env</strong></span> <span class="parameter-annotation-sep">:</span> <span class="parameter-annotation"><code>Environment</code></span></code></dt>
+<dd>
+<p>The environment where values and functions are taken from.</p>
+</dd>
+</dl>
 </section>
-<section id="history-related-projects-and-credits" class="level2">
-<h2 class="anchored" data-anchor-id="history-related-projects-and-credits">History, related projects, and credits</h2>
-<p>Formulae was built to provide Bambi with a concise syntax for mixed-effects models. Before Formulae, Bambi used <a href="https://patsy.readthedocs.io/">Patsy</a> to parse formulas and build design matrices. Patsy is flexible and robust, but does not support mixed model effects. Formulae therefore adopted the familiar <code>|</code> syntax from lme4 and builds the common and group-specific design matrices Bambi needs.</p>
-<p>Its main function, <code>design_matrices()</code>, returns a wrapper around the response, common-effects, and group-effects matrices, along with methods and metadata useful to downstream libraries.</p>
-<p>Formulae draws on the following projects and references:</p>
-<ul>
-<li><a href="https://doi.org/10.2307/2346786">Wilkinson and Rogers (1973)</a>, where the formula notation originated.</li>
-<li><a href="https://www.r-project.org/">R</a>, a widely used implementation of Wilkinson’s formulas.</li>
-<li><a href="https://CRAN.R-project.org/package=lme4">lme4</a>, for the <code>|</code> operator and mixed effects matrix construction.</li>
-<li><a href="https://patsy.readthedocs.io/">Patsy</a>, especially its evaluation-environment implementation.</li>
-<li><a href="https://matthewwardrop.github.io/formulaic/">Formulaic</a>, whose backtick and quote operators inspired Formulae’s equivalents.</li>
-</ul>
-<p>If you only need design matrices for linear models with fixed effects, Patsy or Formulaic may be a more direct fit. Formulae is designed primarily for developers and libraries that need to construct design matrices automatically for mixed-effects models.</p>
-</section>
-<section id="contributors" class="level2">
-<h2 class="anchored" data-anchor-id="contributors">Contributors</h2>
-<p>See the <a href="https://github.com/bambinos/formulae/graphs/contributors">GitHub contributors page</a>.</p>
-</section>
-<section id="contributing" class="level2">
-<h2 class="anchored" data-anchor-id="contributing">Contributing</h2>
-<p>We welcome contributions from interested individuals and groups. See the <a href="https://github.com/bambinos/formulae/blob/master/CONTRIBUTING.md">contributing guide</a> for the project’s workflow and pull request checklist.</p>
-</section>
-<section id="license" class="level2">
-<h2 class="anchored" data-anchor-id="license">License</h2>
-<p><a href="https://github.com/bambinos/formulae/blob/master/LICENSE">MIT License</a></p>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<dl>
+<dt><code><span class="parameter-name"><strong>result</strong></span> <span class="parameter-annotation-sep">:</span> <span class="parameter-annotation"></span></code></dt>
+<dd>
+<p>The value obtained from the operator call.</p>
+</dd>
+</dl>
 
 
+</section>
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->
@@ -620,6 +794,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     }
   });
   </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../api/terms.call_resolver.LazyVariable.html" class="pagination-link" aria-label="terms.call_resolver.LazyVariable">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">terms.call_resolver.LazyVariable</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../api/terms.call_resolver.LazyCall.html" class="pagination-link" aria-label="terms.call_resolver.LazyCall">
+        <span class="nav-page-text">terms.call_resolver.LazyCall</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
 </div> <!-- /content -->
 
 

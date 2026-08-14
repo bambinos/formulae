@@ -1,0 +1,11 @@
+# terms.NegatedIntercept { #formulae.terms.NegatedIntercept }
+
+```python
+terms.NegatedIntercept()
+```
+
+Negated model intercept.
+
+This object is created whenever we use `"0"` or `"-1"` in a model formula. It is not
+expected to appear in a final model. It's here to help us make operations using the
+`Intercept` and deciding when to keep it and when to drop it.

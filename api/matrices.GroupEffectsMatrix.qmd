@@ -1,0 +1,97 @@
+# matrices.GroupEffectsMatrix { #formulae.matrices.GroupEffectsMatrix }
+
+```python
+matrices.GroupEffectsMatrix(terms)
+```
+
+Group-specific-effects matrix.
+
+The sub-matrix that corresponds to a specific group effect can be accessed by
+`self[term_name]`, for example `self["1|g"]`.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+<code>[**terms**]{.parameter-name} [:]{.parameter-annotation-sep} [[list](`list`)]{.parameter-annotation}</code>
+
+:   A list of [GroupSpecificTerm](`formulae.terms.GroupSpecificTerm`) objects.
+
+## Attributes {.doc-section .doc-section-attributes}
+
+<code>[**design_matrix**]{.parameter-name} [:]{.parameter-annotation-sep} [[scipy](`scipy`).[sparse](`scipy.sparse`).[csr_matrix](`scipy.sparse.csr_matrix`)]{.parameter-annotation}</code>
+
+:   The design matrix in CSR format.
+
+<code>[**evaluated**]{.parameter-name} [:]{.parameter-annotation-sep} [[bool](`bool`)]{.parameter-annotation}</code>
+
+:   Indicates if the terms have been evaluated at least once. The terms must have been evaluated before calling `self.evaluate_new_data()` because we must know the kind of each term to correctly handle the new data passed and the terms here.
+
+<code>[**terms**]{.parameter-name} [:]{.parameter-annotation-sep} [[dict](`dict`)]{.parameter-annotation}</code>
+
+:   A dictionary that holds all the group specific terms. The keys are given by the term names.
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [as_dataframe](#formulae.matrices.GroupEffectsMatrix.as_dataframe) | Returns `self.design_matrix` as a pandas.DataFrame. |
+| [evaluate](#formulae.matrices.GroupEffectsMatrix.evaluate) | Evaluate group specific terms. |
+| [evaluate_new_data](#formulae.matrices.GroupEffectsMatrix.evaluate_new_data) | Evaluates group specific terms with new data and return a new instance of |
+
+### as_dataframe { #formulae.matrices.GroupEffectsMatrix.as_dataframe }
+
+```python
+matrices.GroupEffectsMatrix.as_dataframe()
+```
+
+Returns `self.design_matrix` as a pandas.DataFrame.
+
+### evaluate { #formulae.matrices.GroupEffectsMatrix.evaluate }
+
+```python
+matrices.GroupEffectsMatrix.evaluate(data, env)
+```
+
+Evaluate group specific terms.
+
+This evaluates `self.terms` inside the data mask provided by `data` and the environment
+`env`. It updates `self.design_matrix` with the result from the evaluation of each
+term.
+
+This method also sets the values of `self.data` and `self.env`. It also populates
+the dictionary `self.slices` with the columns each term occupies in the design matrix.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**data**]{.parameter-name} [:]{.parameter-annotation-sep} [[pandas](`pandas`).[DataFrame](`pandas.DataFrame`)]{.parameter-annotation}</code>
+
+:   The data frame where variables are taken from
+
+<code>[**env**]{.parameter-name} [:]{.parameter-annotation-sep} [[Environment](`formulae.environment.Environment`)]{.parameter-annotation}</code>
+
+:   The environment where values and functions are taken from.
+
+### evaluate_new_data { #formulae.matrices.GroupEffectsMatrix.evaluate_new_data }
+
+```python
+matrices.GroupEffectsMatrix.evaluate_new_data(data)
+```
+
+Evaluates group specific terms with new data and return a new instance of
+`GroupEffectsMatrix`.
+
+This method is intended to be used to obtain design matrices for new data and obtain
+out of sample predictions. Stateful transformations are properly handled if present in any
+of the group specific terms, which means parameters involved in the transformation are not
+overwritten with the new data.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**data**]{.parameter-name} [:]{.parameter-annotation-sep} [[pandas](`pandas`).[DataFrame](`pandas.DataFrame`)]{.parameter-annotation}</code>
+
+:   The data frame where variables are taken from
+
+#### Returns {.doc-section .doc-section-returns}
+
+<code>[**new_instance**]{.parameter-name} [:]{.parameter-annotation-sep} [[GroupEffectsMatrix](`formulae.matrices.GroupEffectsMatrix`)]{.parameter-annotation}</code>
+
+:   A new instance of `GroupEffectsMatrix` whose design matrix is obtained with the values in the new data set.

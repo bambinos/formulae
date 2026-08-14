@@ -1,0 +1,61 @@
+# terms.call_resolver.LazyCall { #formulae.terms.call_resolver.LazyCall }
+
+```python
+terms.call_resolver.LazyCall(callee, args, kwargs)
+```
+
+Deferred function call.
+
+This class represents a function that can be a stateful transform (a function with memory)
+whose arguments can also be stateful transforms.
+
+To evaluate these functions we don't create a string representing Python code and let `eval()`
+run it. We take care of all the steps of the evaluation to make sure all the possibly nested
+stateful transformations are handled correctly.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+<code>[**callee**]{.parameter-name} [:]{.parameter-annotation-sep} [[str](`str`)]{.parameter-annotation}</code>
+
+:   The name of the function
+
+<code>[**args**]{.parameter-name} [:]{.parameter-annotation-sep} [[list](`list`)]{.parameter-annotation}</code>
+
+:   A list of lazy objects that are evaluated when calling the function this object represents.
+
+<code>[**kwargs**]{.parameter-name} [:]{.parameter-annotation-sep} [[dict](`dict`)]{.parameter-annotation}</code>
+
+:   A dictionary of named arguments that are evaluated when calling the function this object represents.
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [eval](#formulae.terms.call_resolver.LazyCall.eval) | Evaluate the call. |
+
+### eval { #formulae.terms.call_resolver.LazyCall.eval }
+
+```python
+terms.call_resolver.LazyCall.eval(data_mask, env)
+```
+
+Evaluate the call.
+
+This method first evaluates all its arguments, which are themselves lazy objects, and then
+proceeds to evaluate the call it represents.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**data_mask**]{.parameter-name} [:]{.parameter-annotation-sep} [[pd](`pd`).[DataFrame](`pd.DataFrame`)]{.parameter-annotation}</code>
+
+:   The data frame where variables are taken from
+
+<code>[**env**]{.parameter-name} [:]{.parameter-annotation-sep} [[Environment](`Environment`)]{.parameter-annotation}</code>
+
+:   The environment where values and functions are taken from.
+
+#### Returns {.doc-section .doc-section-returns}
+
+<code>[**result**]{.parameter-name} [:]{.parameter-annotation-sep} []{.parameter-annotation}</code>
+
+:   The result of the call evaluation.

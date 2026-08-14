@@ -1,0 +1,193 @@
+# terms.Call { #formulae.terms.Call }
+
+```python
+terms.Call(call, is_response=False)
+```
+
+Call in a model term.
+
+This class and [Variable](`formulae.terms.Variable`) are the atomic components of a model term.
+
+This object supports stateful transformations defined in `formulae.transforms`.
+A transformation of this type defines its parameters the first time it is called,
+and then can be used to recompute the transformation with memorized parameter values.
+This behavior is useful when implementing a predict method and using transformations such
+as `center(x)` or `scale(x)`. `center(x)` memorizes the value of the mean, and
+`scale(x)` memorizes both the mean and the standard deviation.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+<code>[**call**]{.parameter-name} [:]{.parameter-annotation-sep} [[formulae](`formulae`).[terms](`formulae.terms`).[call_resolver](`formulae.terms.call_resolver`).[LazyCall](`formulae.terms.call_resolver.LazyCall`)]{.parameter-annotation}</code>
+
+:   The call expression returned by the parser.
+
+<code>[**is_response**]{.parameter-name} [:]{.parameter-annotation-sep} [[bool](`bool`)]{.parameter-annotation} [ = ]{.parameter-default-sep} [False]{.parameter-default}</code>
+
+:   Indicates whether this call represents a response. Defaults to `False`.
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [labels](#formulae.terms.Call.labels) | Obtain labels of the columns in the design matrix associated with this Call |
+| [var_names](#formulae.terms.Call.var_names) | Returns the names of the variables involved in the call, not including the callee. |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [accept](#formulae.terms.Call.accept) | Accept method called by a visitor. |
+| [eval_categoric](#formulae.terms.Call.eval_categoric) | Finishes evaluation of categoric call. |
+| [eval_new_data](#formulae.terms.Call.eval_new_data) | Evaluates the function call with new data. |
+| [eval_new_data_categoric](#formulae.terms.Call.eval_new_data_categoric) | Evaluates the call with new data when the result of the call is categoric. |
+| [eval_numeric](#formulae.terms.Call.eval_numeric) | Finishes evaluation of a numeric call. |
+| [set_data](#formulae.terms.Call.set_data) | Finishes the evaluation of the call according to its type. |
+| [set_type](#formulae.terms.Call.set_type) | Evaluates function and determines the type of the result of the call. |
+
+### accept { #formulae.terms.Call.accept }
+
+```python
+terms.Call.accept(visitor)
+```
+
+Accept method called by a visitor.
+
+Visitors are those available in call_utils.py, and are used to work with call terms.
+
+### eval_categoric { #formulae.terms.Call.eval_categoric }
+
+```python
+terms.Call.eval_categoric(x, spans_intercept)
+```
+
+Finishes evaluation of categoric call.
+
+First, it checks whether the intermediate evaluation returned is ordered. If not, it
+creates a category where the levels are the observed in the variable. They are sorted
+according to `sorted()` rules.
+
+Then, it determines the reference level as well as all the other levels. If the variable
+is a response, the value returned is a dummy with 1s for the reference level and 0s
+elsewhere. If it is not a response variable, it determines the matrix of dummies according
+to the levels and the encoding passed.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**x**]{.parameter-name} [:]{.parameter-annotation-sep} [[np](`numpy`).[ndarray](`numpy.ndarray`) or [pd](`pandas`).[Series](`pandas.Series`)]{.parameter-annotation}</code>
+
+:   The intermediate values of the variable.
+
+<code>[**spans_intercept**]{.parameter-name} [:]{.parameter-annotation-sep} [[bool](`bool`)]{.parameter-annotation}</code>
+
+:   Indicates if the encoding of categorical variables spans the intercept or not. Omitted when the variable is numeric.
+
+### eval_new_data { #formulae.terms.Call.eval_new_data }
+
+```python
+terms.Call.eval_new_data(data_mask)
+```
+
+Evaluates the function call with new data.
+
+This method evaluates the function call within a new data mask. If the transformation
+applied is a stateful transformation, it uses the proper object that remembers all
+parameters or settings that may have been set in a first pass.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**data_mask**]{.parameter-name} [:]{.parameter-annotation-sep} [[pd](`pandas`).[DataFrame](`pandas.DataFrame`)]{.parameter-annotation}</code>
+
+:   The data frame where variables are taken from
+
+#### Returns {.doc-section .doc-section-returns}
+
+<code>[**result**]{.parameter-name} [:]{.parameter-annotation-sep} [[np](`numpy`).[array](`numpy.array`)]{.parameter-annotation}</code>
+
+:   The rules for the shape of this array are the rules for `self.eval_numeric()` and `self.eval_categoric()`. The first applies for numeric calls, the second for categoric ones.
+
+### eval_new_data_categoric { #formulae.terms.Call.eval_new_data_categoric }
+
+```python
+terms.Call.eval_new_data_categoric(x)
+```
+
+Evaluates the call with new data when the result of the call is categoric.
+
+This method also checks the levels observed in the new data frame are included within the
+set of the levels of the result of the original call If not, an error is raised.
+
+x : np.ndarray or pd.Series
+    The intermediate values of the variable.
+
+#### Returns {.doc-section .doc-section-returns}
+
+<code>[**result**]{.parameter-name} [:]{.parameter-annotation-sep} [[np](`numpy`).[array](`numpy.array`)]{.parameter-annotation}</code>
+
+:   Numeric numpy array `(n, p)`, where `n` is the number of observations and `p` the number of dummy variables used in the numeric representation of the categorical variable.
+
+### eval_numeric { #formulae.terms.Call.eval_numeric }
+
+```python
+terms.Call.eval_numeric(x)
+```
+
+Finishes evaluation of a numeric call.
+
+Converts the intermediate values of the call into a numpy array of shape `(n, 1)`,
+where `n` is the number of observations. This method is used both in `self.set_data`
+and in `self.eval_new_data`.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**x**]{.parameter-name} [:]{.parameter-annotation-sep} [[np](`numpy`).[ndarray](`numpy.ndarray`) or [pd](`pandas`).[Series](`pandas.Series`)]{.parameter-annotation}</code>
+
+:   The intermediate values resulting from the call.
+
+#### Returns {.doc-section .doc-section-returns}
+
+<code>[**result**]{.parameter-name} [:]{.parameter-annotation-sep} [[dict](`dict`)]{.parameter-annotation}</code>
+
+:   A dictionary with keys `"value"` and `"kind"`. The first contains the result of the evaluation, and the latter is equal to `"numeric"`.
+
+### set_data { #formulae.terms.Call.set_data }
+
+```python
+terms.Call.set_data(spans_intercept=False)
+```
+
+Finishes the evaluation of the call according to its type.
+
+It does not support multi-level categoric responses yet.
+If `self.is_response` is `True` and the variable is of a categoric type, this method
+returns a 1d array of 0-1 instead of a matrix.
+# XTODO: Fix previous point
+In practice, it just completes the evaluation that started with `self.set_type()`.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**spans_intercept**]{.parameter-name} [:]{.parameter-annotation-sep} [[bool](`bool`)]{.parameter-annotation} [ = ]{.parameter-default-sep} [False]{.parameter-default}</code>
+
+:   Indicates if the encoding of categorical variables spans the intercept or not. Omitted when the variable is numeric.
+
+### set_type { #formulae.terms.Call.set_type }
+
+```python
+terms.Call.set_type(data_mask, env)
+```
+
+Evaluates function and determines the type of the result of the call.
+
+Evaluates the function call and sets the `.kind` property to `"numeric"` or
+`"categoric"` depending on the type of the result. It also stores the intermediate result
+of the evaluation in `._intermediate_data` to prevent us from computing the same thing
+more than once.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**data_mask**]{.parameter-name} [:]{.parameter-annotation-sep} [[pd](`pandas`).[DataFrame](`pandas.DataFrame`)]{.parameter-annotation}</code>
+
+:   The data frame where variables are taken from
+
+<code>[**env**]{.parameter-name} [:]{.parameter-annotation-sep} [[Environment](`formulae.environment.Environment`)]{.parameter-annotation}</code>
+
+:   The environment where values and functions are taken from.

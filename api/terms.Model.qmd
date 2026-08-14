@@ -1,0 +1,113 @@
+# terms.Model { #formulae.terms.Model }
+
+```python
+terms.Model(*terms, response=None)
+```
+
+Model terms and response.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+<code>[**terms**]{.parameter-name} [:]{.parameter-annotation-sep} [[Term](`formulae.terms.terms.Term`)]{.parameter-annotation} [ = ]{.parameter-default-sep} [()]{.parameter-default}</code>
+
+:   This object can be instantiated with one or many terms.
+
+<code>[**response**]{.parameter-name} [:]{.parameter-annotation-sep} [[Response](`formulae.terms.terms.Response`)]{.parameter-annotation} [ = ]{.parameter-default-sep} [None]{.parameter-default}</code>
+
+:   The response term. Defaults to `None` which means there is no response.
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [common_components](#formulae.terms.Model.common_components) | Components in common terms in the model. |
+| [terms](#formulae.terms.Model.terms) | Terms in the model. |
+| [var_names](#formulae.terms.Model.var_names) | Get the name of the variables in the model. |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [add_response](#formulae.terms.Model.add_response) | Add response term to model description. |
+| [add_term](#formulae.terms.Model.add_term) | Add term to model description. |
+| [eval](#formulae.terms.Model.eval) | Evaluates terms in the model. |
+| [set_types](#formulae.terms.Model.set_types) | Set the type of the terms in the model. |
+
+### add_response { #formulae.terms.Model.add_response }
+
+```python
+terms.Model.add_response(term)
+```
+
+Add response term to model description.
+
+This method is called when something like `"y ~ x + z"` appears in a model formula.
+
+This method is called via special methods such as
+[Response.__add__](`formulae.terms.Response.__add__`).
+
+#### Returns {.doc-section .doc-section-returns}
+
+<code>[**self**]{.parameter-name} [:]{.parameter-annotation-sep} [[Model](`formulae.terms.terms.Model`)]{.parameter-annotation}</code>
+
+:   The same model object but now with a response term.
+
+### add_term { #formulae.terms.Model.add_term }
+
+```python
+terms.Model.add_term(term)
+```
+
+Add term to model description.
+
+The term added can be of class [Intercept](`formulae.terms.Intercept`),
+[Term](`formulae.terms.Term`), or [GroupSpecificTerm](`formulae.terms.GroupSpecificTerm`).
+It appends the new term object to the list of common terms or group specific terms as
+appropriate.
+
+This method is called via special methods such as
+[__add__](`formulae.terms.Model.__add__`).
+
+#### Returns {.doc-section .doc-section-returns}
+
+<code>[**self**]{.parameter-name} [:]{.parameter-annotation-sep} [[Model](`formulae.terms.terms.Model`)]{.parameter-annotation}</code>
+
+:   The same model object but now containing the new term.
+
+### eval { #formulae.terms.Model.eval }
+
+```python
+terms.Model.eval(data, env)
+```
+
+Evaluates terms in the model.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**data**]{.parameter-name} [:]{.parameter-annotation-sep} [[pd](`pandas`).[DataFrame](`pandas.DataFrame`)]{.parameter-annotation}</code>
+
+:   The data frame where variables are taken from
+
+<code>[**env**]{.parameter-name} [:]{.parameter-annotation-sep} [[Environment](`Environment`)]{.parameter-annotation}</code>
+
+:   The environment where values and functions are taken from.
+
+### set_types { #formulae.terms.Model.set_types }
+
+```python
+terms.Model.set_types(data, env)
+```
+
+Set the type of the terms in the model.
+
+Calls `.set_type()` method on term in the model.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**data**]{.parameter-name} [:]{.parameter-annotation-sep} [[pd](`pandas`).[DataFrame](`pandas.DataFrame`)]{.parameter-annotation}</code>
+
+:   The data frame where variables are taken from
+
+<code>[**env**]{.parameter-name} [:]{.parameter-annotation-sep} [[Environment](`Environment`)]{.parameter-annotation}</code>
+
+:   The environment where values and functions are taken from.

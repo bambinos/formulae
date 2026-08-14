@@ -1,0 +1,28 @@
+website:
+  sidebar:
+  - contents:
+    - api/index.qmd
+    - contents:
+      - api/model_description.qmd
+      - api/design_matrices.qmd
+      - api/matrices.DesignMatrices.qmd
+      section: API Reference
+    - contents:
+      - api/matrices.ResponseMatrix.qmd
+      - api/matrices.CommonEffectsMatrix.qmd
+      - api/matrices.GroupEffectsMatrix.qmd
+      - api/terms.Variable.qmd
+      - api/terms.Call.qmd
+      - api/terms.Term.qmd
+      - api/terms.GroupSpecificTerm.qmd
+      - api/terms.Intercept.qmd
+      - api/terms.NegatedIntercept.qmd
+      - api/terms.Response.qmd
+      - api/terms.Model.qmd
+      - api/terms.call_resolver.LazyValue.qmd
+      - api/terms.call_resolver.LazyVariable.qmd
+      - api/terms.call_resolver.LazyOperator.qmd
+      - api/terms.call_resolver.LazyCall.qmd
+      section: Internals
+    id: api
+  - id: dummy-sidebar

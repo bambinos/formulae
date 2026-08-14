@@ -1,0 +1,49 @@
+# terms.Intercept { #formulae.terms.Intercept }
+
+```python
+terms.Intercept()
+```
+
+Model intercept.
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [var_names](#formulae.terms.Intercept.var_names) | Returns empty set, no variables are used in the intercept. |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [eval_new_data](#formulae.terms.Intercept.eval_new_data) | Returns data for a new intercept. |
+| [set_data](#formulae.terms.Intercept.set_data) | Creates data for the intercept. |
+| [set_type](#formulae.terms.Intercept.set_type) | Sets length of the intercept. |
+
+### eval_new_data { #formulae.terms.Intercept.eval_new_data }
+
+```python
+terms.Intercept.eval_new_data(data)
+```
+
+Returns data for a new intercept.
+
+The length of the new intercept is given by the number of rows in `data`.
+
+### set_data { #formulae.terms.Intercept.set_data }
+
+```python
+terms.Intercept.set_data(encoding)
+```
+
+Creates data for the intercept.
+
+It sets `self.data` equal to a numpy array of ones of length `(self.len, 1)`.
+
+### set_type { #formulae.terms.Intercept.set_type }
+
+```python
+terms.Intercept.set_type(data, env)
+```
+
+Sets length of the intercept.

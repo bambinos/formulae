@@ -1,0 +1,53 @@
+# terms.call_resolver.LazyOperator { #formulae.terms.call_resolver.LazyOperator }
+
+```python
+terms.call_resolver.LazyOperator(op, *args)
+```
+
+Deferred unary or binary operation.
+
+Functions calls like `a + b` are converted into a LazyOperator that is resolved when you
+explicitly evaluates it.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+<code>[**op**]{.parameter-name} [:]{.parameter-annotation-sep} [[builtin_function_or_method](`builtin_function_or_method`)]{.parameter-annotation}</code>
+
+:   An operator in the `operator` built-in module. It can be one of `add`, `pos`, `sub`, `neg`, `pow`, `mul`, and `truediv`.
+
+<code>[**args**]{.parameter-name} [:]{.parameter-annotation-sep} []{.parameter-annotation} [ = ]{.parameter-default-sep} [()]{.parameter-default}</code>
+
+:   One or two lazy instances.
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [eval](#formulae.terms.call_resolver.LazyOperator.eval) | Evaluates the operation. |
+
+### eval { #formulae.terms.call_resolver.LazyOperator.eval }
+
+```python
+terms.call_resolver.LazyOperator.eval(data_mask, env)
+```
+
+Evaluates the operation.
+
+Evaluates the arguments involved in the operation, calls the Python operator, and returns
+the result.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**data_mask**]{.parameter-name} [:]{.parameter-annotation-sep} [[pd](`pd`).[DataFrame](`pd.DataFrame`)]{.parameter-annotation}</code>
+
+:   The data frame where variables are taken from
+
+<code>[**env**]{.parameter-name} [:]{.parameter-annotation-sep} [[Environment](`Environment`)]{.parameter-annotation}</code>
+
+:   The environment where values and functions are taken from.
+
+#### Returns {.doc-section .doc-section-returns}
+
+<code>[**result**]{.parameter-name} [:]{.parameter-annotation-sep} []{.parameter-annotation}</code>
+
+:   The value obtained from the operator call.

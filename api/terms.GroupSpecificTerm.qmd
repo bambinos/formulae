@@ -1,0 +1,99 @@
+# terms.GroupSpecificTerm { #formulae.terms.GroupSpecificTerm }
+
+```python
+terms.GroupSpecificTerm(expr, factor)
+```
+
+Group-specific model term.
+
+Group specific terms are of the form `(expr | factor)`. The expression `expr` is evaluated
+as a model formula with only common effects and produces a model matrix following the rules
+for common terms. `factor` is inspired on factors in R, but here it is evaluated as an ordered
+`pandas.CategoricalDtype` object.
+
+The pipe operator `|` works as in R package lme4. As its authors say: "One way to think about
+the vertical bar operator is as a special kind of interaction between the model matrix and the
+grouping factor. This interaction ensures that the columns of the model matrix have different
+effects for each level of the grouping factor"
+
+## Parameters {.doc-section .doc-section-parameters}
+
+<code>[**expr**]{.parameter-name} [:]{.parameter-annotation-sep} [[Intercept](`formulae.terms.terms.Intercept`) or [Term](`formulae.terms.terms.Term`)]{.parameter-annotation}</code>
+
+:   The term for which we want to have a group specific term.
+
+<code>[**factor**]{.parameter-name} [:]{.parameter-annotation-sep} [[Term](`formulae.terms.terms.Term`)]{.parameter-annotation}</code>
+
+:   The factor that determines the groups in the group specific term.
+
+## Attributes {.doc-section .doc-section-attributes}
+
+<code>[**data**]{.parameter-name} [:]{.parameter-annotation-sep} [[scipy](`scipy`).[sparse](`scipy.sparse`).[csr_matrix](`scipy.sparse.csr_matrix`)]{.parameter-annotation}</code>
+
+:   The values associated with the term as they go into the design matrix.
+
+<code>[**kind**]{.parameter-name} [:]{.parameter-annotation-sep} [[str](`str`)]{.parameter-annotation}</code>
+
+:   Indicates the type of the term. Can be one of `"numeric"`, `"categoric"`, or `"interaction"`.
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [eval_new_data](#formulae.terms.GroupSpecificTerm.eval_new_data) | Evaluates the term with new data. |
+| [eval_new_data_group_index](#formulae.terms.GroupSpecificTerm.eval_new_data_group_index) | Evaluate the grouping factor as indices for new data. |
+
+### eval_new_data { #formulae.terms.GroupSpecificTerm.eval_new_data }
+
+```python
+terms.GroupSpecificTerm.eval_new_data(data)
+```
+
+Evaluates the term with new data.
+
+Converts the variable in `factor` to the type remembered from the first evaluation and
+produces the design matrix for this grouping, calls `.eval_new_data()` on `self.expr`
+to obtain the design matrix for the `expr` side, then computes the design matrix
+corresponding to the group specific effect.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**data**]{.parameter-name} [:]{.parameter-annotation-sep} [[pd](`pandas`).[DataFrame](`pandas.DataFrame`)]{.parameter-annotation}</code>
+
+:   The data frame where variables are taken from.
+
+#### Returns {.doc-section .doc-section-returns}
+
+<code>[**Zi**]{.parameter-name} [:]{.parameter-annotation-sep} [[scipy](`scipy`).[sparse](`scipy.sparse`).[csr_matrix](`scipy.sparse.csr_matrix`)]{.parameter-annotation}</code>
+
+:   
+
+### eval_new_data_group_index { #formulae.terms.GroupSpecificTerm.eval_new_data_group_index }
+
+```python
+terms.GroupSpecificTerm.eval_new_data_group_index(data)
+```
+
+Evaluate the grouping factor as indices for new data.
+
+Unlike [eval_new_data](`formulae.terms.GroupSpecificTerm.eval_new_data`), this method
+preserves the distinction between
+missing values and unseen, non-missing levels. Existing factor columns are
+represented by their fitted index, missing values by `-1`, and unseen
+levels by consecutive indices after the fitted columns.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**data**]{.parameter-name} [:]{.parameter-annotation-sep} [[pandas](`pandas`).[DataFrame](`pandas.DataFrame`)]{.parameter-annotation}</code>
+
+:   The data frame where factor values are taken from.
+
+#### Returns {.doc-section .doc-section-returns}
+
+<code>[**index**]{.parameter-name} [:]{.parameter-annotation-sep} [[numpy](`numpy`).[ndarray](`numpy.ndarray`)]{.parameter-annotation}</code>
+
+:   One-dimensional `int64` array. Existing groups use indices in `0..G-1`, missing groups use `-1`, and new groups use `G..`.
+
+<code>[**new_groups**]{.parameter-name} [:]{.parameter-annotation-sep} [[tuple](`tuple`)]{.parameter-annotation}</code>
+
+:   New, non-missing levels in first-occurrence order. Interaction levels are represented as tuples of their component values.

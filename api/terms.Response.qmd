@@ -1,0 +1,44 @@
+# terms.Response { #formulae.terms.Response }
+
+```python
+terms.Response(term)
+```
+
+Model response term.
+
+It is mostly a wrapper around [Term](`formulae.terms.Term`).
+
+## Parameters {.doc-section .doc-section-parameters}
+
+<code>[**term**]{.parameter-name} [:]{.parameter-annotation-sep} [[Term](`formulae.terms.terms.Term`)]{.parameter-annotation}</code>
+
+:   The term we want to take as response in the model. Must contain only one component.
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [var_names](#formulae.terms.Response.var_names) | Returns the name of the variables in the response as a set. |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [set_data](#formulae.terms.Response.set_data) | Set data of the response term. |
+| [set_type](#formulae.terms.Response.set_type) | Set type of the response term. |
+
+### set_data { #formulae.terms.Response.set_data }
+
+```python
+terms.Response.set_data()
+```
+
+Set data of the response term.
+
+### set_type { #formulae.terms.Response.set_type }
+
+```python
+terms.Response.set_type(data, env)
+```
+
+Set type of the response term.

@@ -1,0 +1,50 @@
+# terms.call_resolver.LazyVariable { #formulae.terms.call_resolver.LazyVariable }
+
+```python
+terms.call_resolver.LazyVariable(name)
+```
+
+Deferred variable reference.
+
+The variable represented in this object does not hold any value until it is explicitly evaluated
+within a data mask and an evaluation environment.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+<code>[**name**]{.parameter-name} [:]{.parameter-annotation-sep} [[str](`str`)]{.parameter-annotation}</code>
+
+:   The name of the variable it represents.
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [eval](#formulae.terms.call_resolver.LazyVariable.eval) | Evaluates variable. |
+
+### eval { #formulae.terms.call_resolver.LazyVariable.eval }
+
+```python
+terms.call_resolver.LazyVariable.eval(data_mask, env)
+```
+
+Evaluates variable.
+
+First it looks for the variable in `data_mask`. If not found there, it looks in
+`env`. Then it just returns the value the variable represents in either the
+data mask or the evaluation environment.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**data_mask**]{.parameter-name} [:]{.parameter-annotation-sep} [[pd](`pd`).[DataFrame](`pd.DataFrame`)]{.parameter-annotation}</code>
+
+:   The data frame where variables are taken from
+
+<code>[**env**]{.parameter-name} [:]{.parameter-annotation-sep} [[Environment](`Environment`)]{.parameter-annotation}</code>
+
+:   The environment where values and functions are taken from.
+
+#### Returns {.doc-section .doc-section-returns}
+
+<code>[**result**]{.parameter-name} [:]{.parameter-annotation-sep} []{.parameter-annotation}</code>
+
+:   The value represented by this name in either the data mask or the environment.

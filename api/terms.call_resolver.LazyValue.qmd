@@ -1,0 +1,43 @@
+# terms.call_resolver.LazyValue { #formulae.terms.call_resolver.LazyValue }
+
+```python
+terms.call_resolver.LazyValue(value, lexeme)
+```
+
+Deferred Python value.
+
+This object holds a value (a string or a number).
+It returns its value only when it is evaluated via `.eval()`.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+<code>[**value**]{.parameter-name} [:]{.parameter-annotation-sep} [[str](`str`) or [numeric](`numeric`)]{.parameter-annotation}</code>
+
+:   The value it holds.
+
+<code>[**lexeme**]{.parameter-name} [:]{.parameter-annotation-sep} [[str](`str`)]{.parameter-annotation}</code>
+
+:   The string that generated the value it holds
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [eval](#formulae.terms.call_resolver.LazyValue.eval) | Evaluates the value. |
+
+### eval { #formulae.terms.call_resolver.LazyValue.eval }
+
+```python
+terms.call_resolver.LazyValue.eval(*args, **kwargs)
+```
+
+Evaluates the value.
+
+Simply returns the value. Other arguments are ignored but required for consistency
+among all the lazy objects.
+
+#### Returns {.doc-section .doc-section-returns}
+
+<code>[**value**]{.parameter-name} [:]{.parameter-annotation-sep} []{.parameter-annotation}</code>
+
+:   The value this obejct represents.

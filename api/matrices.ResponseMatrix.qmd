@@ -1,0 +1,61 @@
+# matrices.ResponseMatrix { #formulae.matrices.ResponseMatrix }
+
+```python
+matrices.ResponseMatrix(term)
+```
+
+Response matrix for a model.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+<code>[**term**]{.parameter-name} [:]{.parameter-annotation-sep} [[Response](`Response`)]{.parameter-annotation}</code>
+
+:   The term that represents the response in the model.
+
+## Attributes {.doc-section .doc-section-attributes}
+
+<code>[**design_matrix**]{.parameter-name} [:]{.parameter-annotation-sep} [[np](`numpy`).[array](`numpy.array`)]{.parameter-annotation}</code>
+
+:   A 2-dimensional numpy array containing the values of the response.
+
+<code>[**name**]{.parameter-name} [:]{.parameter-annotation-sep} [[str](`str`)]{.parameter-annotation}</code>
+
+:   The name of the response term.
+
+<code>[**kind**]{.parameter-name} [:]{.parameter-annotation-sep} [[str](`str`)]{.parameter-annotation}</code>
+
+:   The kind of the response. Can be `"numeric"`, `"categoric"` or `"proportion"`.
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [as_dataframe](#formulae.matrices.ResponseMatrix.as_dataframe) | Returns `self.design_matrix` as a pandas.DataFrame. |
+| [evaluate](#formulae.matrices.ResponseMatrix.evaluate) | Evaluates `self.term` inside the data mask provided by `data` and |
+
+### as_dataframe { #formulae.matrices.ResponseMatrix.as_dataframe }
+
+```python
+matrices.ResponseMatrix.as_dataframe()
+```
+
+Returns `self.design_matrix` as a pandas.DataFrame.
+
+### evaluate { #formulae.matrices.ResponseMatrix.evaluate }
+
+```python
+matrices.ResponseMatrix.evaluate(data, env)
+```
+
+Evaluates `self.term` inside the data mask provided by `data` and
+updates `self.design_matrix` and `self.name`.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**data**]{.parameter-name} [:]{.parameter-annotation-sep} [[pandas](`pandas`).[DataFrame](`pandas.DataFrame`)]{.parameter-annotation}</code>
+
+:   The data frame where variables are taken from.
+
+<code>[**env**]{.parameter-name} [:]{.parameter-annotation-sep} [[Environment](`formulae.environment.Environment`)]{.parameter-annotation}</code>
+
+:   The environment where values and functions are taken from.

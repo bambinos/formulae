@@ -1,0 +1,36 @@
+---
+title: Formulae
+
+---
+
+## API Reference
+
+Public functions and classes.
+
+| | |
+| --- | --- |
+| [model_description](model_description.qmd#formulae.model_description) |  |
+| [design_matrices](design_matrices.qmd#formulae.design_matrices) | Parse and materialize a model formula into a `DesignMatrices`. |
+| [matrices.DesignMatrices](matrices.DesignMatrices.qmd#formulae.matrices.DesignMatrices) | A wrapper of the response, the common, and group specific effects. |
+
+## Internals
+
+Objects useful to downstream library developers.
+
+| | |
+| --- | --- |
+| [matrices.ResponseMatrix](matrices.ResponseMatrix.qmd#formulae.matrices.ResponseMatrix) | Response matrix for a model. |
+| [matrices.CommonEffectsMatrix](matrices.CommonEffectsMatrix.qmd#formulae.matrices.CommonEffectsMatrix) | Common-effects matrix. |
+| [matrices.GroupEffectsMatrix](matrices.GroupEffectsMatrix.qmd#formulae.matrices.GroupEffectsMatrix) | Group-specific-effects matrix. |
+| [terms.Variable](terms.Variable.qmd#formulae.terms.Variable) | Variable in a model term. |
+| [terms.Call](terms.Call.qmd#formulae.terms.Call) | Call in a model term. |
+| [terms.Term](terms.Term.qmd#formulae.terms.Term) | Model term. |
+| [terms.GroupSpecificTerm](terms.GroupSpecificTerm.qmd#formulae.terms.GroupSpecificTerm) | Group-specific model term. |
+| [terms.Intercept](terms.Intercept.qmd#formulae.terms.Intercept) | Model intercept. |
+| [terms.NegatedIntercept](terms.NegatedIntercept.qmd#formulae.terms.NegatedIntercept) | Negated model intercept. |
+| [terms.Response](terms.Response.qmd#formulae.terms.Response) | Model response term. |
+| [terms.Model](terms.Model.qmd#formulae.terms.Model) | Model terms and response. |
+| [terms.call_resolver.LazyValue](terms.call_resolver.LazyValue.qmd#formulae.terms.call_resolver.LazyValue) | Deferred Python value. |
+| [terms.call_resolver.LazyVariable](terms.call_resolver.LazyVariable.qmd#formulae.terms.call_resolver.LazyVariable) | Deferred variable reference. |
+| [terms.call_resolver.LazyOperator](terms.call_resolver.LazyOperator.qmd#formulae.terms.call_resolver.LazyOperator) | Deferred unary or binary operation. |
+| [terms.call_resolver.LazyCall](terms.call_resolver.LazyCall.qmd#formulae.terms.call_resolver.LazyCall) | Deferred function call. |

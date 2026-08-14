@@ -1,0 +1,35 @@
+# model_description { #formulae.model_description }
+
+`model_description`
+
+
+
+## Functions
+
+| Name | Description |
+| --- | --- |
+| [model_description](#formulae.model_description.model_description) | Interpret model formula and obtain a model description. |
+
+### model_description { #formulae.model_description.model_description }
+
+```python
+model_description.model_description(formula)
+```
+
+Interpret model formula and obtain a model description.
+
+This function receives a string with a formula describing a statistical
+model and returns an object of class `Model` that describes the
+model interpreted from the formula.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+<code>[**formula**]{.parameter-name} [:]{.parameter-annotation-sep} [[str](`str`)]{.parameter-annotation}</code>
+
+:   A string with a model description in formula language.
+
+#### Returns {.doc-section .doc-section-returns}
+
+<code>[]{.parameter-name} [:]{.parameter-annotation-sep} [An object of class `Model` with an internal description of the model.]{.parameter-annotation}</code>
+
+:   
