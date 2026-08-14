@@ -7,7 +7,9 @@ from functools import reduce
 from itertools import combinations, product
 
 import numpy as np
+import pandas as pd
 
+from formulae.categorical import CategoricalBox
 from formulae.utils import get_interaction_matrix, row_khatri_rao_sparse
 from formulae.contrasts import pick_contrasts
 
@@ -681,6 +683,70 @@ class GroupSpecificTerm:
             Ji = Ji[:, np.newaxis]
 
         self.data = row_khatri_rao_sparse(Xi, Ji.argmax(1), Ji.shape[1])
+
+    def eval_new_data_group_index(self, data):
+        """Evaluate the grouping factor as indices for new data.
+
+        Unlike :meth:`eval_new_data`, this method preserves the distinction between
+        missing values and unseen, non-missing levels. Existing factor columns are
+        represented by their fitted index, missing values by ``-1``, and unseen
+        levels by consecutive indices after the fitted columns.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            The data frame where factor values are taken from.
+
+        Returns
+        -------
+        index : numpy.ndarray
+            One-dimensional ``int64`` array. Existing groups use indices in
+            ``0..G-1``, missing groups use ``-1``, and new groups use ``G..``.
+        new_groups : tuple
+            New, non-missing levels in first-occurrence order.
+            Interaction levels are represented as tuples of their component values.
+        """
+        values = []
+        codes = []
+        missing = []
+
+        components_n = len(self.factor.components)
+        obs_n = len(data)
+        index = np.full(obs_n, -1, dtype=np.int64)
+
+        for component in self.factor.components:
+            if isinstance(component, Variable):
+                value = data[component.name]
+            else:
+                assert isinstance(component, Call)
+                value = component.call.eval(data, component.env)
+                if isinstance(value, CategoricalBox):
+                    value = value.data
+
+            values.append(np.asarray(value))
+            codes.append(pd.Categorical(value, categories=component.levels).codes)
+            missing.append(np.asarray(pd.isna(value), dtype=bool))
+
+        missing = np.logical_or.reduce(missing)  # missing[0] | missing[1] | ...
+        known = np.logical_and.reduce([code >= 0 for code in codes])
+        dimensions = tuple(len(component.levels) for component in self.factor.components)
+        index[known] = np.ravel_multi_index(tuple(code[known] for code in codes), dimensions)
+        n_fitted_groups = int(np.prod(dimensions))
+
+        new_groups = []
+        new_group_indices = {}
+        for row in np.flatnonzero(~known & ~missing):
+            group = tuple(value[row] for value in values)
+            if group not in new_group_indices:
+                new_group_indices[group] = n_fitted_groups + len(new_groups)
+                new_groups.append(group)
+
+            index[row] = new_group_indices[group]
+
+        if components_n == 1:
+            new_groups = [group[0] for group in new_groups]
+
+        return index, tuple(new_groups)
 
     def eval_new_data(self, data):
         """Evaluates the term with new data.
