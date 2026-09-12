@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from pandas.api.types import is_numeric_dtype
-from scipy.interpolate import splev
+from scipy.interpolate import CubicSpline as SciPyCubicSpline, splev
 
 from formulae.categorical import CategoricalBox, Sum, Treatment
 
@@ -285,7 +285,6 @@ class BSpline:
 
         if df and not isinstance(df, int):
             raise ValueError("'df' must be either None or integer")
-        # XTODO: Check the type of knots.
 
         order = degree + 1
 
@@ -360,6 +359,328 @@ class BSpline:
 
         if not self._intercept:
             basis = basis[:, 1:]
+        return basis
+
+
+class _CubicRegressionSpline:
+    """Shared implementation for natural and cyclic cubic regression splines."""
+
+    def __init__(self):
+        self.params_set = False
+        self._lower_bound = None
+        self._upper_bound = None
+        self._knots = None
+        self._center = None
+        self._centering_matrix = None
+        self._spline = None
+
+    @staticmethod
+    def _get_knots(
+        df,
+        knots,
+        lower_bound,
+        upper_bound,
+        data,
+        df_offset,
+        minimum_inner_knots,
+    ):
+        if df is not None and not isinstance(df, int):
+            raise ValueError("'df' must be either None or an integer")
+
+        minimum_df = df_offset + minimum_inner_knots
+        if df is not None and df < minimum_df:
+            raise ValueError(f"'df' must be greater than or equal to {minimum_df}")
+
+        if knots is not None:
+            inner_knots = np.asarray(knots, dtype=float)
+            if inner_knots.ndim != 1:
+                raise ValueError("'knots' must be one dimensional")
+
+            if not np.all(np.isfinite(inner_knots)):
+                raise ValueError("'knots' must contain only finite values")
+
+            if np.unique(inner_knots).size != inner_knots.size:
+                raise ValueError("'knots' must not contain repeated values")
+
+            if np.any(inner_knots <= lower_bound) or np.any(inner_knots >= upper_bound):
+                raise ValueError("All knots must fall strictly between the boundaries")
+
+            if inner_knots.size < minimum_inner_knots:
+                raise ValueError(
+                    f"This cubic spline requires at least {minimum_inner_knots} interior knot(s)"
+                )
+
+            inferred_df = inner_knots.size + df_offset
+            if df is not None and df != inferred_df:
+                raise ValueError(
+                    f"df={df} implies {df - df_offset} knots, but {inner_knots.size} were provided"
+                )
+            inner_knots = np.sort(inner_knots)
+        else:
+            n_inner_knots = df - df_offset
+            knot_quantiles = np.linspace(0, 1, n_inner_knots + 2)[1:-1]
+            knot_data = np.unique(data)
+            inner_knots = np.quantile(knot_data, knot_quantiles)
+
+        return inner_knots
+
+    def _set_state(self, spline, all_knots, raw_basis, center):
+        centering_matrix = None
+
+        if center:
+            column_means = raw_basis.mean(axis=0)
+            # Keep only directions orthogonal to the column means. This makes the fitted smooth
+            # average to zero on the training data and removes the constant direction, which is
+            # represented by the model intercept.
+            unit_means = column_means / np.linalg.norm(column_means)
+            reflector = unit_means.copy()
+            reflector[0] += 1 if unit_means[0] >= 0 else -1
+            reflector /= np.linalg.norm(reflector)
+            householder = np.eye(column_means.size) - 2 * np.outer(reflector, reflector)
+            centering_matrix = householder[:, 1:]
+
+        self._lower_bound = all_knots[0]
+        self._upper_bound = all_knots[-1]
+        self._knots = all_knots
+        self._center = center
+        self._centering_matrix = centering_matrix
+        self._spline = spline
+        self.params_set = True
+
+    @property
+    def bounds(self):
+        """Remembered lower and upper boundary knots."""
+        return self._lower_bound, self._upper_bound
+
+
+@register_stateful_transform
+class CyclicCubicSpline(_CubicRegressionSpline):
+    """Cyclic cubic regression spline representation.
+
+    Generates a cubic spline basis for periodic covariates. The values and first two derivatives of
+    every basis function agree at the two boundaries, so any linear combination of the columns
+    joins smoothly across the boundary.
+
+    Parameters
+    ----------
+    x : 1D array-like
+        The data.
+    period : int or float
+        Length of the cycle. It must be finite and greater than zero.
+    df : int or None
+        Number of columns in the returned basis, after applying the centering constraint. Defaults
+        to 10. This differs from the `k` argument in mgcv, which counts dimensions before all
+        constraints are absorbed. If `knots` is supplied without `df`, the number of columns is
+        inferred from the knots.
+    knots : 1D array-like or None
+        Interior knots. They must be finite, distinct, and strictly between the boundaries.
+        If omitted, knots are placed at equally spaced quantiles of the unique observed phases.
+    lower_bound : float or None
+        Start of the cycle. Defaults to the minimum observed value. The end of the cycle is computed
+        as `lower_bound + period`.
+    center : bool
+        If `True` (the default), center the spline basis using the original data. This avoids
+        confounding the smooth with a model intercept.
+
+    Notes
+    -----
+    Values outside the boundaries, including new data, are wrapped into the original interval.
+    With centering enabled, `df=d` corresponds to `k=d+2` in a centered mgcv cyclic smooth: mgcv
+    also counts the periodic endpoint identification before absorbing the centering constraint.
+    Use the default centered basis in a model with an intercept. For a model without an intercept,
+    use `center=False` if the spline must also represent the overall constant.
+    """
+
+    __transform_name__ = "cc"
+
+    def __init__(self):
+        super().__init__()
+        self._period = None
+
+    def __call__(
+        self,
+        x,
+        period,
+        df=None,
+        knots=None,
+        lower_bound=None,
+        center=True,
+    ):
+        if not self.params_set:
+            self._initialize(x, period, df, knots, lower_bound, center)
+        return self.eval(x)
+
+    def _initialize(self, x, period, df, knots, lower_bound, center):
+        x = np.asarray(x)
+
+        if not isinstance(period, (int, float)):
+            raise ValueError("'period' must be a number")
+
+        if period <= 0 or not np.isfinite(period):
+            raise ValueError("'period' must be finite and greater than zero")
+
+        if lower_bound is not None and not isinstance(lower_bound, (int, float)):
+            raise ValueError("'lower_bound' must be a finite number")
+
+        period = float(period)
+        center = bool(center)
+        lower_bound = float(np.min(x) if lower_bound is None else lower_bound)
+        upper_bound = lower_bound + period
+
+        # Keep `cc(x, period=...)` convenient while allowing knots to determine the basis
+        # dimension when `df` is explicitly or implicitly omitted.
+        if df is None and knots is None:
+            df = 10
+
+        wrapped_x = lower_bound + np.mod(x - lower_bound, period)
+        df_offset = 0 if center else 1
+        inner_knots = self._get_knots(
+            df,
+            knots,
+            lower_bound,
+            upper_bound,
+            wrapped_x,
+            df_offset,
+            minimum_inner_knots=1,
+        )
+        all_knots = np.concatenate(([lower_bound], inner_knots, [upper_bound]))
+        n_free = all_knots.size - 1
+
+        # The endpoint value is not independent for a periodic spline:
+        # the final row repeats the first row of the identity matrix.
+        values = np.vstack((np.eye(n_free), np.eye(n_free)[0]))
+        spline = SciPyCubicSpline(
+            all_knots, values, axis=0, bc_type="periodic", extrapolate="periodic"
+        )
+
+        raw_basis = spline(wrapped_x)
+        self._period = period
+        self._set_state(spline, all_knots, raw_basis, center)
+
+    def eval(self, x):
+        x = np.asarray(x)
+        wrapped_x = self._lower_bound + np.mod(x - self._lower_bound, self._period)
+        basis = self._spline(wrapped_x)
+
+        if self._center:
+            basis = basis @ self._centering_matrix
+
+        return basis
+
+    @property
+    def period(self):
+        """Length of the remembered cycle."""
+        return self._period
+
+
+@register_stateful_transform
+class NaturalCubicSpline(_CubicRegressionSpline):
+    """Natural cubic regression spline representation.
+
+    Generates a cubic spline basis satisfying `f''(a) = f''(b) = 0`.
+    Values outside the boundary knots are evaluated using exact linear continuation,
+    rather than cubic polynomial extrapolation.
+
+    Parameters
+    ----------
+    x : 1D array-like
+        The data.
+    df : int or None
+        Number of columns in the returned basis, after applying the centering constraint. Defaults
+        to 10. This differs from the `k` argument in mgcv, which counts dimensions before the
+        centering constraint is absorbed. If `knots` is supplied without `df`, the number of
+        columns is inferred from the knots.
+    knots : 1D array-like or None
+        Interior knots. If omitted, knots are placed at equally spaced quantiles of the unique
+        observed values.
+    lower_bound : float or None
+        Lower boundary knot. Defaults to the minimum observed value.
+    upper_bound : float or None
+        Upper boundary knot. Defaults to the maximum observed value.
+    center : bool
+        If `True` (the default), center the spline basis using the original data.
+
+    Notes
+    -----
+    With centering enabled, `df=d` corresponds to `k=d+1` in a centered mgcv natural cubic smooth.
+    Use the default centered basis in a model with an intercept. For a model without an intercept,
+    use `center=False` if the spline must also represent the overall constant.
+    """
+
+    __transform_name__ = "cr"
+
+    def __call__(
+        self,
+        x,
+        df=None,
+        knots=None,
+        lower_bound=None,
+        upper_bound=None,
+        center=True,
+    ):
+        if not self.params_set:
+            self._initialize(x, df, knots, lower_bound, upper_bound, center)
+        return self.eval(x)
+
+    def _initialize(self, x, df, knots, lower_bound, upper_bound, center):
+        for name, value in (("lower_bound", lower_bound), ("upper_bound", upper_bound)):
+            if value is not None and not isinstance(value, (int, float)):
+                raise ValueError(f"'{name}' must be a number")
+
+        if df is None and knots is None:
+            df = 10
+
+        x = np.asarray(x)
+        center = bool(center)
+        lower_bound = float(np.min(x) if lower_bound is None else lower_bound)
+        upper_bound = float(np.max(x) if upper_bound is None else upper_bound)
+
+        if lower_bound >= upper_bound:
+            raise ValueError("'lower_bound' must be less than 'upper_bound'")
+
+        df_offset = 1 if center else 2
+        inner_knots = self._get_knots(
+            df,
+            knots,
+            lower_bound,
+            upper_bound,
+            x,
+            df_offset,
+            minimum_inner_knots=0,
+        )
+        all_knots = np.concatenate(([lower_bound], inner_knots, [upper_bound]))
+        values = np.eye(all_knots.size)
+        spline = SciPyCubicSpline(all_knots, values, axis=0, bc_type="natural", extrapolate=False)
+
+        raw_basis = self._eval_linear_tails(x, spline, lower_bound, upper_bound)
+        self._set_state(spline, all_knots, raw_basis, center)
+
+    @staticmethod
+    def _eval_linear_tails(x, spline, lower_bound, upper_bound):
+        """Evaluate inside the knot range and continue with tangent lines outside."""
+        basis = spline(np.clip(x, lower_bound, upper_bound))
+        below = x < lower_bound
+        above = x > upper_bound
+
+        if np.any(below):
+            basis[below] = spline(lower_bound) + np.multiply.outer(
+                x[below] - lower_bound, spline(lower_bound, nu=1)
+            )
+
+        if np.any(above):
+            basis[above] = spline(upper_bound) + np.multiply.outer(
+                x[above] - upper_bound, spline(upper_bound, nu=1)
+            )
+
+        return basis
+
+    def eval(self, x):
+        x = np.asarray(x)
+        basis = self._eval_linear_tails(x, self._spline, self._lower_bound, self._upper_bound)
+
+        if self._center:
+            basis = basis @ self._centering_matrix
+
         return basis
 
 
