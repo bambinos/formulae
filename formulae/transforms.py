@@ -6,6 +6,7 @@ import pandas as pd
 
 from pandas.api.types import is_numeric_dtype
 from scipy.interpolate import CubicSpline as SciPyCubicSpline, splev
+from scipy.sparse.linalg import eigsh
 
 from formulae.categorical import CategoricalBox, Sum, Treatment
 
@@ -682,6 +683,219 @@ class NaturalCubicSpline(_CubicRegressionSpline):
             basis = basis @ self._centering_matrix
 
         return basis
+
+
+@register_stateful_transform
+class ThinPlateRegressionSpline:
+    """Low-rank univariate thin-plate regression spline.
+
+    This implements the rank-reduced thin-plate construction of Wood (2003).
+    For a univariate, second-order smooth the radial kernel is `abs(x - x_i) ** 3 / 12` and
+    the penalty null space is spanned by a constant and a linear function.
+
+    Parameters
+    ----------
+    x : 1D array-like
+        The data.
+    df : int
+        Number of columns in the returned basis, after centering. Defaults to 10. At least two
+        columns are required: one unpenalized linear column and one penalized column.
+    center : bool
+        If `True` (the default), impose a sum-to-zero constraint over the training data and omit
+        the constant null-space column. Use this form in a model containing an intercept. With
+        `center=False`, the constant and linear null-space columns are both retained and `df`
+        must be at least three.
+    max_knots : int
+        Maximum number of unique data locations used in the eigendecomposition. If there are more
+        unique locations, a deterministic subsample is used. These internal locations are not
+        user-selected regression-spline knots. Defaults to 2000, as in mgcv.
+    seed : int
+        Seed used only when subsampling more than `max_knots` unique locations. Defaults to 1.
+
+    Notes
+    -----
+    The covariate is shifted and scaled before constructing the kernel. This improves numerical
+    conditioning and makes the whitened smoothing prior invariant to the units used for `x`.
+    Columns are returned with the penalty null space first. The :attr:`penalty` is expressed in
+    the returned coordinates and, by construction, is diagonal: the null-space columns have zero
+    penalty and the remaining columns have unit penalty. Consequently a smoothing prior can give
+    the penalized coefficients a shared scale while assigning the null-space coefficients their
+    own weakly informative prior. `formulae` constructs design matrices and does not itself
+    create coefficient priors; downstream modelling packages can obtain this information from
+    the remembered stateful transform.
+
+    New data are evaluated against the locations, eigenspace, constraints, scaling, and centering
+    values learned from the training data. No extrapolation rule or new knots are selected.
+    """
+
+    __transform_name__ = "tp"
+    _NULL_SPACE_DIMENSION = 2
+
+    def __init__(self):
+        self.params_set = False
+        self._center = None
+        self._df = None
+        self._shift = None
+        self._scale = None
+        self._sites = None
+        self._radial_map = None
+        self._column_means = None
+        self._penalty = None
+        self._null_space_dimension = None
+
+    def __call__(self, x, df=10, center=True, max_knots=2000, seed=1):
+        if not self.params_set:
+            self._initialize(x, df, center, max_knots, seed)
+        return self.eval(x)
+
+    @staticmethod
+    def _validate_x(x):
+        x = np.asarray(x, dtype=float)
+        if x.ndim != 1:
+            raise ValueError("'x' must be one dimensional")
+        if x.size == 0:
+            raise ValueError("'x' must contain at least one value")
+        if not np.all(np.isfinite(x)):
+            raise ValueError("'x' must contain only finite values")
+        return x
+
+    @staticmethod
+    def _kernel(x, sites):
+        return np.abs(np.subtract.outer(x, sites)) ** 3 / 12
+
+    @staticmethod
+    def _truncated_eigendecomposition(matrix, rank):
+        """Return eigenpairs ordered by decreasing eigenvalue magnitude."""
+        size = matrix.shape[0]
+        if rank >= size // 2 or size <= 200:
+            values, vectors = np.linalg.eigh(matrix)
+        else:
+            # A fixed initial vector makes ARPACK results reproducible across calls.
+            values, vectors = eigsh(matrix, k=rank, which="LM", v0=np.ones(size))
+
+        order = np.argsort(np.abs(values))[::-1][:rank]
+        return values[order], vectors[:, order]
+
+    def _initialize(self, x, df, center, max_knots, seed):
+        x = self._validate_x(x)
+
+        if not isinstance(df, int) or isinstance(df, bool):
+            raise ValueError("'df' must be an integer")
+        if not isinstance(max_knots, int) or isinstance(max_knots, bool):
+            raise ValueError("'max_knots' must be an integer")
+        if not isinstance(seed, int) or isinstance(seed, bool):
+            raise ValueError("'seed' must be an integer")
+        if max_knots < self._NULL_SPACE_DIMENSION + 1:
+            raise ValueError("'max_knots' must be greater than the penalty null-space dimension")
+
+        center = bool(center)
+        minimum_df = 2 if center else 3
+        if df < minimum_df:
+            raise ValueError(f"'df' must be greater than or equal to {minimum_df}")
+
+        # Centering absorbs the constant constraint, so the pre-constraint TPRS rank is one larger
+        # than the number of returned columns.
+        full_rank = df + int(center)
+        shift = np.mean(x)
+        scale = np.sqrt(np.mean((x - shift) ** 2))
+        if scale == 0:
+            raise ValueError("'x' must contain at least two distinct values")
+        standardized_x = (x - shift) / scale
+        sites = np.unique(standardized_x)
+
+        if sites.size > max_knots:
+            # RandomState, rather than default_rng, preserves support for NumPy 1.16.
+            rng = np.random.RandomState(seed)  # pylint: disable=no-member
+            sites = np.sort(rng.choice(sites, size=max_knots, replace=False))
+
+        if sites.size < full_rank:
+            raise ValueError(
+                f"A thin-plate basis with df={df} requires at least {full_rank} unique "
+                f"values, but only {sites.size} were found"
+            )
+
+        kernel = self._kernel(sites, sites)
+        eigenvalues, eigenvectors = self._truncated_eigendecomposition(kernel, full_rank)
+
+        polynomial = np.column_stack((np.ones(sites.size), sites))
+        constraints = eigenvectors.T @ polynomial
+        constraint_q, _ = np.linalg.qr(constraints, mode="complete")
+        constraint_basis = constraint_q[:, self._NULL_SPACE_DIMENSION :]
+
+        # In the paper's coordinates the radial design is E U Z and its penalty is Z' D Z.
+        # Whiten that positive-definite penalty so a spherical coefficient prior controls the
+        # wiggliness directly.
+        raw_radial_map = eigenvectors @ constraint_basis
+        raw_penalty = constraint_basis.T @ (eigenvalues[:, None] * constraint_basis)
+        raw_penalty = (raw_penalty + raw_penalty.T) / 2
+        penalty_values, penalty_vectors = np.linalg.eigh(raw_penalty)
+        tolerance = np.spacing(1.0) * max(raw_penalty.shape) * np.max(np.abs(penalty_values))
+        if np.any(penalty_values <= tolerance):
+            raise ValueError(
+                "Could not construct a positive-definite thin-plate penalty; "
+                "try a smaller value of 'df'"
+            )
+        whitening = penalty_vectors / np.sqrt(penalty_values)
+        radial_map = raw_radial_map @ whitening
+
+        radial_basis = self._kernel(standardized_x, sites) @ radial_map
+        if center:
+            raw_basis = np.column_stack((standardized_x, radial_basis))
+            column_means = raw_basis.mean(axis=0)
+            null_space_dimension = 1
+        else:
+            raw_basis = np.column_stack((np.ones(x.size), standardized_x, radial_basis))
+            column_means = np.zeros(raw_basis.shape[1])
+            null_space_dimension = 2
+
+        penalty = np.diag(
+            np.concatenate(
+                (np.zeros(null_space_dimension), np.ones(raw_basis.shape[1] - null_space_dimension))
+            )
+        )
+
+        self._center = center
+        self._df = df
+        self._shift = shift
+        self._scale = scale
+        self._sites = sites
+        self._radial_map = radial_map
+        self._column_means = column_means
+        self._penalty = penalty
+        self._null_space_dimension = null_space_dimension
+        self.params_set = True
+
+    def eval(self, x):
+        x = self._validate_x(x)
+        standardized_x = (x - self._shift) / self._scale
+        radial_basis = self._kernel(standardized_x, self._sites) @ self._radial_map
+
+        if self._center:
+            basis = np.column_stack((standardized_x, radial_basis))
+        else:
+            basis = np.column_stack((np.ones(x.size), standardized_x, radial_basis))
+
+        return basis - self._column_means
+
+    @property
+    def penalty(self):
+        """Quadratic wiggliness penalty in the returned basis coordinates."""
+        return self._penalty.copy()
+
+    @property
+    def null_space_dimension(self):
+        """Number of leading, unpenalized columns in the returned basis."""
+        return self._null_space_dimension
+
+    @property
+    def rank(self):
+        """Rank of the wiggliness penalty."""
+        return self._df - self._null_space_dimension
+
+    @property
+    def sites(self):
+        """Standardized unique data locations used to construct the low-rank eigenspace."""
+        return self._sites.copy()
 
 
 @register_stateful_transform

@@ -9,6 +9,7 @@ from formulae.transforms import (
     BSpline,
     CyclicCubicSpline,
     NaturalCubicSpline,
+    ThinPlateRegressionSpline,
     _CubicRegressionSpline,
 )
 
@@ -632,11 +633,162 @@ class TestNaturalCubicSpline:
             NaturalCubicSpline()(sequence, df=df, center=center)
 
 
+class TestThinPlateRegressionSpline:
+    @pytest.fixture
+    def sequence(self):
+        return np.linspace(0, 10, 21)
+
+    def test_shape_centering_and_penalty(self, sequence):
+        spline = ThinPlateRegressionSpline()
+        basis = spline(sequence, df=6)
+
+        assert basis.shape == (21, 6)
+        assert np.allclose(basis.mean(axis=0), 0)
+        assert np.linalg.matrix_rank(basis) == 6
+        assert np.array_equal(np.diag(spline.penalty), [0, 1, 1, 1, 1, 1])
+        assert spline.null_space_dimension == 1
+        assert spline.rank == 5
+
+    def test_default_df(self):
+        x = np.linspace(0, 1, 20)
+        assert ThinPlateRegressionSpline()(x).shape == (20, 10)
+
+    def test_uncentered_null_space(self, sequence):
+        spline = ThinPlateRegressionSpline()
+        basis = spline(sequence, df=5, center=False)
+
+        assert basis.shape == (21, 5)
+        assert np.allclose(basis[:, 0], 1)
+        assert np.allclose(basis[:, 1].mean(), 0)
+        assert np.array_equal(np.diag(spline.penalty), [0, 0, 1, 1, 1])
+        assert spline.null_space_dimension == 2
+        assert spline.rank == 3
+
+    def test_matches_mgcv_basis_space(self):
+        # x was generated in Python and copied verbatim to mgcv 1.9-1:
+        # smoothCon(s(x, bs="tp", k=5), data.frame(x=x), absorb.cons=TRUE)[[1]]$X
+        # Basis coordinates are intentionally allowed to differ, so compare the projection
+        # matrices rather than individual columns.
+        x = np.array(
+            [
+                7.74031445,
+                1.49492503,
+                0.58818596,
+                9.50374841,
+                2.5347688,
+                7.70885074,
+                8.66345652,
+                4.64862233,
+                6.01866163,
+                6.46400334,
+                5.89970973,
+                4.66060134,
+                0.29105762,
+            ]
+        )
+        mgcv_basis = np.array(
+            [
+                [-0.960986937771499, 0.247041241678969, 0.015643784596147, 0.899035246827469],
+                [1.275709456582650, 0.108782455562221, -0.251716972324698, -1.222403467616965],
+                [1.354843958678114, 0.256782223203160, -0.505138770777363, -1.530405297068513],
+                [-0.954000721464108, 0.598671046138252, -0.472868978316006, 1.498039859915320],
+                [1.070462680912061, -0.136170611942512, 0.034760181624322, -0.869188530596776],
+                [-0.957455261027460, 0.237322943670231, 0.024115360554517, 0.888347629450032],
+                [-0.993630169376607, 0.469429010005014, -0.238925046507698, 1.212608860021052],
+                [0.191691926224676, -0.562225660480619, 0.433847323424461, -0.151153126615990],
+                [-0.487188725149936, -0.356104182904074, 0.389984966575566, 0.314222883728991],
+                [-0.663295552277916, -0.209241330535172, 0.318890743695259, 0.465496900642236],
+                [-0.434614700762847, -0.390227505891063, 0.404587674465881, 0.273817210223891],
+                [0.185576037281598, -0.562444729636184, 0.434675251965284, -0.147084087222972],
+                [1.372888008151273, 0.298385101131776, -0.587855518975676, -1.631334081687776],
+            ]
+        )
+        basis = ThinPlateRegressionSpline()(x, df=4)
+
+        projection = basis @ np.linalg.pinv(basis)
+        mgcv_projection = mgcv_basis @ np.linalg.pinv(mgcv_basis)
+        assert np.allclose(projection, mgcv_projection, atol=1e-9)
+
+    def test_repeated_values_use_unique_locations(self):
+        x = np.repeat(np.linspace(0, 10, 11), 2)
+        spline = ThinPlateRegressionSpline()
+        basis = spline(x, df=6)
+
+        assert spline.sites.size == 11
+        assert np.allclose(basis[::2], basis[1::2])
+
+    def test_deterministic_subsample(self):
+        x = np.linspace(0, 10, 100)
+        first = ThinPlateRegressionSpline()
+        second = ThinPlateRegressionSpline()
+        first_basis = first(x, df=6, max_knots=20, seed=42)
+        second_basis = second(x, df=6, max_knots=20, seed=42)
+
+        assert first.sites.size == 20
+        assert np.array_equal(first.sites, second.sites)
+        assert np.allclose(first_basis, second_basis)
+
+    def test_invariant_to_location_and_scale(self):
+        x = np.linspace(0, 10, 21)
+        reference = ThinPlateRegressionSpline()(x, df=6)
+        transformed = ThinPlateRegressionSpline()(1000 + 25 * x, df=6)
+
+        assert np.allclose(reference, transformed)
+
+    def test_through_design_matrices_and_new_data(self, sequence):
+        data = pd.DataFrame({"x": sequence})
+        dm = design_matrices("tp(x, df=5) - 1", data)
+        new_data = pd.DataFrame({"x": [-3, 0, 5, 10, 13]})
+        new_dm = dm.common.evaluate_new_data(new_data)
+
+        assert dm.common.design_matrix.shape == (21, 5)
+        assert new_dm.design_matrix.shape == (5, 5)
+
+        transform = dm.common.terms["tp(x, df=5)"].components[0].call.stateful_transform
+        new_transform = new_dm.terms["tp(x, df=5)"].components[0].call.stateful_transform
+        assert np.array_equal(transform.sites, new_transform.sites)
+        assert np.array_equal(transform.penalty, new_transform.penalty)
+
+    def test_new_data_has_linear_tails(self, sequence):
+        spline = ThinPlateRegressionSpline()
+        spline(sequence, df=5)
+
+        left = spline.eval(np.array([-4, -2, 0], dtype=float))
+        right = spline.eval(np.array([10, 12, 14], dtype=float))
+
+        assert np.allclose(left[0] - 2 * left[1] + left[2], 0)
+        assert np.allclose(right[0] - 2 * right[1] + right[2], 0)
+
+    @pytest.mark.parametrize(
+        "kwargs, match",
+        [
+            ({"df": 1}, "greater than or equal"),
+            ({"df": 2, "center": False}, "greater than or equal"),
+            ({"df": 3.5}, "integer"),
+            ({"df": 5, "max_knots": 2}, "null-space dimension"),
+            ({"df": 5, "seed": 1.5}, "'seed'"),
+        ],
+    )
+    def test_invalid_options(self, sequence, kwargs, match):
+        with pytest.raises(ValueError, match=match):
+            ThinPlateRegressionSpline()(sequence, **kwargs)
+
+    @pytest.mark.parametrize("x", [[[0], [1]], [0, np.nan, 1], [1, np.inf, 2]])
+    def test_invalid_data(self, x):
+        with pytest.raises(ValueError, match="'x'"):
+            ThinPlateRegressionSpline()(x, df=2)
+
+    def test_not_enough_unique_values(self):
+        with pytest.raises(ValueError, match="requires at least 5 unique values"):
+            ThinPlateRegressionSpline()([0, 0, 1, 1], df=4)
+
+
 @pytest.mark.parametrize(
     "formula, term_name",
     [
         ("cr(x, df=4)", "cr(x, df=4)"),
         ("cc(x, period=12, df=4)", "cc(x, period=12, df=4)"),
+        ("tp(x, df=4)", "tp(x, df=4)"),
     ],
 )
 def test_centered_spline_with_model_intercept(formula, term_name):
