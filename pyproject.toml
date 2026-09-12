@@ -77,15 +77,19 @@ python = "~=3.12.0"
 [tool.pixi.feature.py313.dependencies]
 python = "~=3.13.0"
 
+[tool.pixi.feature.py314.dependencies]
+python = "~=3.14.0"
+
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
-dev = { features = ["dev", "test", "docs", "py313"], solve-group = "default" }
+dev = { features = ["dev", "test", "docs", "py314"], solve-group = "default" }
 docs = { features = ["docs", "py313"], solve-group = "default" }
 # Only used for testing purposes
 py311 = {features = ["dev", "test", "docs", "py311"]}
 py312 = {features = ["dev", "test", "docs", "py312"]}
 py313 = {features = ["dev", "test", "docs", "py313"]}
+py314 = {features = ["dev", "test", "docs", "py314"]}
 
 [tool.pixi.feature.dev.tasks]
 pre-commit-setup = "pre-commit install"
