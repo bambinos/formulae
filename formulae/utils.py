@@ -29,6 +29,17 @@ def flatten_list(nested_list):
             yield sublist
 
 
+def get_centering_matrix(basis):
+    """Remove the coefficient direction given by the training column means."""
+    column_means = basis.mean(axis=0)
+    unit_means = column_means / np.linalg.norm(column_means)
+    reflector = unit_means.copy()
+    reflector[0] += 1 if unit_means[0] >= 0 else -1
+    reflector /= np.linalg.norm(reflector)
+    householder = np.eye(column_means.size) - 2 * np.outer(reflector, reflector)
+    return householder[:, 1:]
+
+
 def get_interaction_matrix(x, y):
     l = []
 
