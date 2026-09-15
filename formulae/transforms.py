@@ -8,6 +8,7 @@ from pandas.api.types import is_numeric_dtype
 from scipy.interpolate import splev
 
 from formulae.categorical import CategoricalBox, Sum, Treatment
+from formulae.utils import get_centering_matrix
 
 TRANSFORMS = {}
 
@@ -230,49 +231,70 @@ def offset(x):
 class BSpline:
     """B-Spline representation
 
-    Generates a B-spline basis for `x`, allowing non-linear fits. The usual
-    usage is something like::
-
-        y ~ 1 + bs(x, 4)
-
-    to fit `y` as a smooth function of `x`, with 4 degrees of freedom
-    given to the smooth.
+    Generates a B-spline basis for non-linear fits. For example, `y ~ 1 + bs(x, df=4)`
+    gives four centered columns for the smooth, alongside the model intercept.
 
     Parameters
     ----------
     x : 1D array-like
         The data.
-    df : The number of degrees of freedom to use for this spline. The return value will have this
-        many columns. You must specify at least one of `df` and `knots`.
+    df : int or None
+        Number of columns in the returned basis, after applying the centering constraint.
+        You must specify at least one of `df` and `knots`.
     knots : 1D array-like or None
         The interior knots to use for the spline. If unspecified, then equally spaced quantiles of
         the input data are used. You must specify at least one of `df` and `knots`
     degree : int
         Degree of the piecewise polynomial. Default is 3 for cubic splines.
-    intercept : bool
-        If `True`, an intercept is included in the basis. Default is `False`.
+    intercept : bool or None
+        Deprecated alias for `center=not intercept`. Defaults to `None`. Passing a boolean emits
+        a warning and overrides `center`. In particular, `intercept=False` now centers the full
+        basis instead of dropping its first column.
     lower_bound :
         The lower exterior knot location.
     upper_bound :
         The upper exterior knot location.
+    center : bool
+        If `True` (the default), impose a sum-to-zero constraint over the training data. The
+        constraint is absorbed into the basis and reused for new data. Use `center=False` to
+        retain the full basis, including the ability to represent a constant.
     """
 
     __transform_name__ = "bs"
 
     def __init__(self):
         self.params_set = False
-        self._intercept = None
+        self._center = None
+        self._centering_matrix = None
         self._degree = None
         self._knots = None
 
     def __call__(
-        self, x, df=None, knots=None, degree=3, intercept=False, lower_bound=None, upper_bound=None
+        self,
+        x,
+        df=None,
+        knots=None,
+        degree=3,
+        intercept=None,
+        lower_bound=None,
+        upper_bound=None,
+        center=True,
     ):
+        if intercept is not None:
+            center = not intercept
+            warnings.warn(
+                "'intercept' is deprecated; use 'center' instead. "
+                f"Using center={center}. Centering replaces dropping the first basis column "
+                "when intercept=False.",
+                FutureWarning,
+                stacklevel=2,
+            )
+
         if not self.params_set:
-            self._initialize(x, df, knots, degree, intercept, lower_bound, upper_bound)
+            self._initialize(x, df, knots, degree, center, lower_bound, upper_bound)
         return self.eval(x)
 
-    def _initialize(self, x, df, knots, degree, intercept, lower_bound, upper_bound):
+    def _initialize(self, x, df, knots, degree, center, lower_bound, upper_bound):
 
         if not isinstance(degree, int):
             raise ValueError(f"'degree' must be an integer, not {type(degree)}")
@@ -285,19 +307,17 @@ class BSpline:
 
         if df and not isinstance(df, int):
             raise ValueError("'df' must be either None or integer")
-        # XTODO: Check the type of knots.
 
         order = degree + 1
+        center = bool(center)
 
         if df is not None:
             n_inner_knots = df - order
-            if not intercept:
+            if center:
                 n_inner_knots += 1
             if n_inner_knots < 0:
-                # We know that n_inner_knots is negative;
-                # If df were that much larger, it would have been zero, and things would work.
                 raise ValueError(
-                    f"df={df} is too small for degree={degree} and intercept={intercept}; "
+                    f"df={df} is too small for degree={degree} and center={center}; "
                     f"it must be >= {df - n_inner_knots}"
                 )
 
@@ -345,12 +365,15 @@ class BSpline:
         all_knots = np.concatenate(([lower_bound, upper_bound] * order, inner_knots))
         all_knots.sort()
 
-        self._intercept = intercept
+        self._center = center
         self._degree = degree
         self._knots = all_knots
+        if center:
+            self._centering_matrix = get_centering_matrix(self._eval_basis(x))
         self.params_set = True
 
-    def eval(self, x):
+    def _eval_basis(self, x):
+        x = np.asarray(x)
         n_bases = len(self._knots) - (self._degree + 1)
         basis = np.empty((x.shape[0], n_bases), dtype=float)
         for i in range(n_bases):
@@ -358,8 +381,15 @@ class BSpline:
             coefs[i] = 1
             basis[:, i] = splev(x, (self._knots, coefs, self._degree))
 
-        if not self._intercept:
-            basis = basis[:, 1:]
+        return basis
+
+    def eval(self, x):
+        basis = self._eval_basis(x)
+        if self._center:
+            basis = basis @ self._centering_matrix
+        return basis
+
+
         return basis
 
 
