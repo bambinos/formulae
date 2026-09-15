@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        pixi-env: ["py311", "py312", "py313"]
+        pixi-env: ["py311", "py312", "py313", "py314"]
 
     name: CI on ${{ matrix.pixi-env }}
     steps:
