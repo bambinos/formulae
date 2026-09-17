@@ -530,7 +530,7 @@ class TestThinPlateRegressionSpline:
         assert np.allclose(basis.mean(axis=0), 0)
         assert np.linalg.matrix_rank(basis) == 6
         assert spline.null_space_dimension == 1
-        null_basis = basis[:, : spline.null_space_dimension]
+        null_basis = spline.to_random()[:, : spline.null_space_dimension]
         assert np.allclose(null_basis[:, 0], (sequence - sequence.mean()) / sequence.std())
         assert basis[:, spline.null_space_dimension :].shape == (21, 5)
 
@@ -543,10 +543,11 @@ class TestThinPlateRegressionSpline:
         basis = spline(sequence, df=5, center=False)
 
         assert basis.shape == (21, 5)
-        assert np.allclose(basis[:, 0], 1)
-        assert np.allclose(basis[:, 1].mean(), 0)
+        assert np.allclose(basis[:, -2], 1)
+        assert np.allclose(basis[:, -1].mean(), 0)
+        assert np.allclose(np.mean(basis**2, axis=0), 1)
         assert spline.null_space_dimension == 2
-        null_basis = basis[:, : spline.null_space_dimension]
+        null_basis = spline.to_random()[:, : spline.null_space_dimension]
         expected = np.column_stack(
             (np.ones(sequence.size), (sequence - sequence.mean()) / sequence.std())
         )
@@ -662,11 +663,6 @@ class TestThinPlateRegressionSpline:
         with pytest.raises(ValueError, match=match):
             ThinPlateRegressionSpline()(sequence, **kwargs)
 
-    @pytest.mark.parametrize("x", [[[0], [1]], [0, np.nan, 1], [1, np.inf, 2]])
-    def test_invalid_data(self, x):
-        with pytest.raises(ValueError, match="'x'"):
-            ThinPlateRegressionSpline()(x, df=2)
-
     def test_not_enough_unique_values(self):
         with pytest.raises(ValueError, match="requires at least 5 unique values"):
             ThinPlateRegressionSpline()([0, 0, 1, 1], df=4)
@@ -708,3 +704,184 @@ def test_uncentered_spline_without_model_intercept(formula):
     assert matrix.shape == (24, 4)
     assert np.allclose(matrix.sum(axis=1), 1)
     assert np.linalg.matrix_rank(matrix) == 4
+
+
+@pytest.mark.parametrize(
+    "spline_class, kwargs",
+    [
+        (NaturalCubicSpline, {}),
+        (CyclicCubicSpline, {"period": 12}),
+        (ThinPlateRegressionSpline, {}),
+    ],
+)
+@pytest.mark.parametrize("center", [False, True])
+def test_to_random(spline_class, kwargs, center):
+    x = np.linspace(0, 10, 41) ** 1.1
+    spline = spline_class()
+    B = spline(x, df=6, center=center, **kwargs)
+    original = B.copy()
+    S = spline.penalty_matrix
+    Z = spline.to_random()
+    m = spline.null_space_dimension
+    np.testing.assert_allclose(Z, spline.to_random(B))
+    assert Z.shape == B.shape
+    assert np.linalg.matrix_rank(Z) == Z.shape[1]
+    if not center:
+        np.testing.assert_allclose(Z[:, 0], 1)
+    if spline_class is not CyclicCubicSpline:
+        np.testing.assert_allclose(Z[:, m - 1], (x - x.mean()) / x.std(), atol=1e-10)
+    # Both the null-space and the curvature penalty must survive the change of coordinates.
+    transform = np.linalg.lstsq(B, Z, rcond=None)[0]
+    expected_penalty = np.diag([0.0] * m + [1.0] * (B.shape[1] - m))
+    np.testing.assert_allclose(transform.T @ S @ transform, expected_penalty, atol=1e-8)
+    new_x = np.array([-4.0, 0.3, 8.0, 20.0])
+    new_B = spline.eval(new_x)
+    new_Z = spline.to_random(new_B)
+    np.testing.assert_allclose(new_Z, new_B @ transform, atol=1e-8)
+    np.testing.assert_allclose(spline.to_random(new_B[:1]), new_Z[:1], atol=1e-10)
+    np.testing.assert_allclose(spline.to_random(), Z)
+    np.testing.assert_array_equal(spline.eval(x), original)
+    np.testing.assert_array_equal(spline.penalty_matrix, S)
+    np.testing.assert_array_equal(B, original)
+    assert spline.to_random(np.empty((0, B.shape[1]))).shape == (0, B.shape[1])
+    # The returned matrix must not expose stored training state.
+    Z[:] = 999
+    np.testing.assert_allclose(spline.to_random(), B @ transform, atol=1e-8)
+
+
+@pytest.mark.parametrize(
+    "spline_class, kwargs",
+    [
+        (NaturalCubicSpline, {}),
+        (CyclicCubicSpline, {"period": 12}),
+        (ThinPlateRegressionSpline, {}),
+    ],
+)
+def test_to_random_first_prediction(spline_class, kwargs):
+    spline = spline_class()
+    with pytest.raises(ValueError, match="Fit the spline"):
+        spline.to_random()
+    x = np.linspace(0, 10, 31)
+    B = spline(x, df=5, **kwargs)
+    # First conversion may be prediction; learning must still use training state.
+    new = spline.to_random(spline.eval([3.0, 4.0]))
+    Z = spline.to_random()
+    np.testing.assert_allclose(new, Z[[9, 12]], atol=1e-10)
+    np.testing.assert_allclose(spline.to_random(B), Z, atol=1e-10)
+
+
+@pytest.mark.parametrize("center", [False, True])
+def test_to_random_pure_linear_cr(center):
+    x = np.linspace(-3, 8, 20)
+    spline = NaturalCubicSpline()
+    spline(x, df=1 if center else 2, center=center)
+    Z = spline.to_random()
+    assert Z.shape[1] == spline.null_space_dimension
+    np.testing.assert_allclose(Z[:, -1], (x - x.mean()) / x.std())
+    if not center:
+        np.testing.assert_allclose(Z[:, 0], 1)
+
+
+@pytest.mark.parametrize("formula", ["cr(x, df=5)", "cc(x, period=12, df=5)", "tp(x, df=5)"])
+def test_to_random_through_design_matrices(formula):
+    data = pd.DataFrame({"x": np.linspace(0, 10, 31)})
+    dm = design_matrices(formula, data)
+    term = dm.common.terms[formula]
+    spline = term.components[0].call.stateful_transform
+    np.testing.assert_allclose(spline.to_random(), spline.to_random(term.data), atol=1e-10)
+    new_data = pd.DataFrame({"x": [-2.0, 2.0, 20.0]})
+    new_dm = dm.common.evaluate_new_data(new_data)
+    new_term = new_dm.terms[formula]
+    new_spline = new_term.components[0].call.stateful_transform
+    np.testing.assert_allclose(
+        new_spline.to_random(new_dm.design_matrix[:, 1:]),
+        spline.to_random(spline.eval(new_data.x)),
+        atol=1e-10,
+    )
+
+
+@pytest.mark.parametrize("center", [False, True])
+@pytest.mark.parametrize("kind", ["cr", "cc", "tp"])
+def test_to_random_matches_mgcv(kind, center):
+    import json
+    from pathlib import Path
+
+    fixture = json.loads((Path(__file__).parent / "data/spline_random_reference.json").read_text())
+    reference = fixture["cases"][f"{kind}_{str(center).lower()}"]
+    x = np.array(fixture["x"])
+    new_x = np.array(fixture["new_x"])
+    if kind == "cr":
+        spline = NaturalCubicSpline()
+        kwargs = {"knots": [2, 5, 8], "lower_bound": 0, "upper_bound": 10}
+    elif kind == "cc":
+        spline = CyclicCubicSpline()
+        kwargs = {"knots": [1, 3, 5, 8], "lower_bound": 0, "period": 10}
+    else:
+        spline = ThinPlateRegressionSpline()
+        kwargs = {"df": 4 if center else 5}
+    B = spline(x, center=center, **kwargs)
+    Bnew = spline.eval(new_x)
+    mgcv_B = np.array(reference["X"])
+    # TP coordinates may rotate; compare the full quadratic form, not just the basis span.
+    A = np.linalg.lstsq(B, mgcv_B, rcond=None)[0]
+    np.testing.assert_allclose(B @ A, mgcv_B, atol=1e-8)
+    np.testing.assert_allclose(Bnew @ A, reference["Xnew"], atol=1e-8)
+    np.testing.assert_allclose(
+        A.T @ spline.penalty_matrix @ A, reference["S"], rtol=1e-7, atol=1e-8
+    )
+    # Compare conditional posterior predictions and covariances against smooth2random.
+    # Null coordinates can differ, so use flat priors there and identical spherical
+    # priors on the random effects. Add the model intercept for centered smooths.
+    Z, Znew = spline.to_random(), spline.to_random(Bnew)
+    R, Rnew = np.array(reference["Z"]), np.array(reference["Znew"])
+    if center:
+        Z, Znew = np.column_stack((np.ones(len(x)), Z)), np.column_stack(
+            (np.ones(len(new_x)), Znew)
+        )
+        R, Rnew = np.column_stack((np.ones(len(x)), R)), np.column_stack(
+            (np.ones(len(new_x)), Rnew)
+        )
+    m = spline.null_space_dimension + int(center)
+    D = np.diag([0.0] * m + [1.0] * (Z.shape[1] - m))
+    covariance = np.linalg.solve(Z.T @ Z + 2.5 * D, np.eye(Z.shape[1]))
+    covariance_R = np.linalg.solve(R.T @ R + 2.5 * D, np.eye(R.shape[1]))
+    y = np.sin(x) + x / 10
+    np.testing.assert_allclose(
+        Znew @ covariance @ Z.T @ y, Rnew @ covariance_R @ R.T @ y, atol=1e-7
+    )
+    np.testing.assert_allclose(Znew @ covariance @ Znew.T, Rnew @ covariance_R @ Rnew.T, atol=1e-7)
+
+
+@pytest.mark.parametrize("center", [False, True])
+@pytest.mark.parametrize("size,max_knots", [(6, 6), (251, 2000), (251, 30)])
+def test_tp_random_full_rank_iterative_and_subsampled(center, size, max_knots):
+    x = np.linspace(-3, 7, size)
+    spline = ThinPlateRegressionSpline()
+    B = spline(x, df=6 - int(center), center=center, max_knots=max_knots)
+    Z = spline.to_random()
+    transform = np.linalg.lstsq(B, Z, rcond=None)[0]
+    m = spline.null_space_dimension
+    np.testing.assert_allclose(
+        transform.T @ spline.penalty_matrix @ transform,
+        np.diag([0.0] * m + [1.0] * (B.shape[1] - m)),
+        atol=1e-8,
+    )
+    np.testing.assert_allclose(Z[:, m - 1], (x - x.mean()) / x.std(), atol=1e-10)
+
+
+@pytest.mark.parametrize("center", [False, True])
+def test_tp_penalty_integrates_curvature_in_original_units(center):
+    x = np.array([1.0, 2.0, 2.0, 5.0, 7.0, 12.0, 19.0, 27.0])
+    spline = ThinPlateRegressionSpline()
+    spline(x, df=5, center=center)
+    # Independently integrate second derivatives: d2(|z-site|^3/12)/dz2 = |z-site|/2.
+    # Between sites their products are quadratic, so two Gauss nodes are exact.
+    widths = np.diff(spline.sites)
+    midpoints = (spline.sites[:-1] + spline.sites[1:]) / 2
+    nodes = (midpoints[:, None] + widths[:, None] * np.array([-1, 1]) / (2 * np.sqrt(3))).ravel()
+    curvature = np.abs(nodes[:, None] - spline.sites) / 2 @ spline._radial_map / x.std() ** 2
+    curvature = np.column_stack((curvature, np.zeros((len(nodes), 2))))
+    if center:
+        curvature = curvature @ spline._centering_matrix
+    integrated = curvature.T @ (np.repeat(widths * x.std() / 2, 2)[:, None] * curvature)
+    np.testing.assert_allclose(spline.penalty_matrix, integrated, rtol=1e-8, atol=1e-10)

@@ -1,4 +1,4 @@
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,too-many-lines
 import inspect
 import warnings
 
@@ -392,8 +392,76 @@ class BSpline:
         return basis
 
 
-class _CubicRegressionSpline:
+class _RandomEffectsSplineMixin:
+    """Stateful conversion of a single-penalty spline to random effects."""
+
+    def to_random(self, basis=None):
+        """Return the fixed/null-space columns followed by whitened random-effect columns.
+
+        Parameters
+        ----------
+        basis : 2D array-like or None
+            A basis returned by this fitted transform (for example `spline.eval(x_new)`).
+            Omit to convert the original training basis.
+
+        Returns
+        -------
+        ndarray
+            A new matrix with the same shape as the input basis. Its first
+            `null_space_dimension` columns are unpenalized by the smoothing prior.
+            For CR and TP these are a column of ones followed by the standardized linear
+            covariate when `center=False`, or just the standardized linear covariate
+            when centered. Standardization uses the training mean and population standard
+            deviation. CC has only a constant when uncentered and no null columns when centered.
+
+        Notes
+        -----
+        The transformed penalty is `diag(0, I)`: curved coefficients can share independent
+        `Normal(0, tau)` priors, while null-space coefficients require separate priors.
+        This reparameterizes the same curvature penalty without changing its value.
+        This is analogous to `mgcv::smooth2random(type=2)`, but returns one matrix with null
+        columns first, rather than separate fixed and random matrices.
+        Unlike mgcv's default `smoothCon`, penalties are not rescaled for numerical convenience.
+
+        Examples
+        --------
+        >>> spline = NaturalCubicSpline()
+        >>> B = spline(np.linspace(0, 1, 20), df=5)
+        >>> Z = spline.to_random()
+        >>> Z_new = spline.to_random(spline.eval([0.2, 1.2]))
+        """
+        if not self.params_set:
+            raise ValueError("Fit the spline before calling 'to_random'")
+
+        state = self._random_state
+        basis = state["basis"] if basis is None else np.asarray(basis, dtype=float)
+
+        if state["transform"] is None:
+            values, vectors = np.linalg.eigh(self.penalty_matrix)
+            m = self.null_space_dimension
+            positive = values[m:]
+            tolerance = np.spacing(1.0) * len(values) * np.max(np.abs(values))
+
+            if np.any(positive <= tolerance):
+                raise ValueError("The spline penalty is numerically singular. Try a smaller 'df'")
+
+            curved = vectors[:, m:] / np.sqrt(positive)
+            state["transform"] = np.column_stack((state["null"], curved))
+
+        return basis @ state["transform"]
+
+    def _set_random_state(self, basis, null_coefficients):
+        self._random_state = {  # pylint: disable=attribute-defined-outside-init
+            "basis": basis.copy(),
+            "null": null_coefficients,
+            "transform": None,
+        }
+
+
+class _CubicRegressionSpline(_RandomEffectsSplineMixin):
     """Shared implementation for natural and cyclic cubic regression splines."""
+
+    _RAW_NULL_SPACE_DIMENSION = 2
 
     def __init__(self):
         self.params_set = False
@@ -403,6 +471,8 @@ class _CubicRegressionSpline:
         self._center = None
         self._centering_matrix = None
         self._spline = None
+        self._penalty_matrix = None
+        self._random_state = None
 
     @staticmethod
     def _get_knots(
@@ -413,6 +483,7 @@ class _CubicRegressionSpline:
         data,
         df_offset,
         minimum_inner_knots,
+        cyclic,
     ):
         if df is not None and not isinstance(df, int):
             raise ValueError("'df' must be either None or an integer")
@@ -449,17 +520,52 @@ class _CubicRegressionSpline:
         else:
             n_inner_knots = df - df_offset
             knot_quantiles = np.linspace(0, 1, n_inner_knots + 2)[1:-1]
-            knot_data = np.unique(data)
-            inner_knots = np.quantile(knot_data, knot_quantiles)
+            knot_data = np.unique(data[(data >= lower_bound) & (data <= upper_bound)])
+
+            if n_inner_knots and knot_data.size < n_inner_knots + (1 if cyclic else 2):
+                raise ValueError("Not enough unique values within the boundaries for this 'df'")
+
+            inner_knots = np.quantile(knot_data, knot_quantiles) if n_inner_knots else np.array([])
+
+        required = inner_knots.size + (1 if cyclic else 2)
+        if np.unique(data).size < required:
+            raise ValueError(f"This spline requires at least {required} unique values")
 
         return inner_knots
 
     def _set_state(self, spline, all_knots, raw_basis, center):
         centering_matrix = None
 
+        if np.linalg.matrix_rank(raw_basis) < raw_basis.shape[1]:
+            raise ValueError("The spline basis is rank deficient on the training data")
+
+        # Second derivatives are linear on each interval.
+        # Two-point Gauss quadrature therefore integrates their pairwise products exactly.
+        widths = np.diff(all_knots)
+        midpoints = (all_knots[:-1] + all_knots[1:]) / 2
+        points = midpoints[:, None] + widths[:, None] * np.array([-1, 1]) / (2 * np.sqrt(3))
+        derivatives = spline(points.ravel(), nu=2)
+
         if center:
             # Absorb the training sum-to-zero constraint, leaving the constant to the intercept.
             centering_matrix = get_centering_matrix(raw_basis)
+            derivatives = derivatives @ centering_matrix
+
+        penalty = derivatives.T @ (np.repeat(widths / 2, 2)[:, None] * derivatives)
+
+        # Cardinal coefficients for explicit constant/linear directions.
+        # Centering projects the mean-zero linear direction into the returned coordinates.
+        null = np.ones((raw_basis.shape[1], 1))
+        if self._RAW_NULL_SPACE_DIMENSION == 2:
+            # Natural cardinal splines reproduce the covariate, including linear tails.
+            x = raw_basis @ all_knots
+            linear = (all_knots - x.mean()) / x.std()
+            null = np.column_stack((null, linear))
+        basis = raw_basis
+        if center:
+            basis = raw_basis @ centering_matrix
+            null = centering_matrix.T @ null[:, 1:]
+        self._set_random_state(basis, null)
 
         self._lower_bound = all_knots[0]
         self._upper_bound = all_knots[-1]
@@ -467,12 +573,32 @@ class _CubicRegressionSpline:
         self._center = center
         self._centering_matrix = centering_matrix
         self._spline = spline
+        self._penalty_matrix = (penalty + penalty.T) / 2
         self.params_set = True
 
     @property
     def bounds(self):
         """Remembered lower and upper boundary knots."""
         return self._lower_bound, self._upper_bound
+
+    @property
+    def penalty_matrix(self):
+        """Integrated squared-curvature penalty in the returned basis coordinates.
+
+        For coefficients `beta`, `beta.T @ S @ beta` equals the integral of `f''(x)**2` over the
+        boundary interval, in the original units of `x`.
+        For cyclic splines this is the integral over one period.
+        Natural spline tails are linear and contribute zero.
+        """
+        return self._penalty_matrix.copy()
+
+    @property
+    def null_space_dimension(self):
+        """Dimension of the curvature penalty null space.
+
+        This counts leading columns only in the result of `to_random`.
+        """
+        return self._RAW_NULL_SPACE_DIMENSION - int(self._center)
 
 
 @register_stateful_transform
@@ -511,9 +637,12 @@ class CyclicCubicSpline(_CubicRegressionSpline):
     also counts the periodic endpoint identification before absorbing the centering constraint.
     Use the default centered basis in a model with an intercept. For a model without an intercept,
     use `center=False` if the spline must also represent the overall constant.
+    `penalty_matrix` supplies the integrated squared second-derivative penalty over one
+    period. Its null space is constant when uncentered and empty when centered.
     """
 
     __transform_name__ = "cc"
+    _RAW_NULL_SPACE_DIMENSION = 1
 
     def __init__(self):
         super().__init__()
@@ -564,6 +693,7 @@ class CyclicCubicSpline(_CubicRegressionSpline):
             wrapped_x,
             df_offset,
             minimum_inner_knots=1,
+            cyclic=True,
         )
         all_knots = np.concatenate(([lower_bound], inner_knots, [upper_bound]))
         n_free = all_knots.size - 1
@@ -614,7 +744,8 @@ class NaturalCubicSpline(_CubicRegressionSpline):
         columns is inferred from the knots.
     knots : 1D array-like or None
         Interior knots. If omitted, knots are placed at equally spaced quantiles of the unique
-        observed values.
+        observed values within the boundary interval. There must be enough distinct values
+        in that interval to place the requested knots.
     lower_bound : float or None
         Lower boundary knot. Defaults to the minimum observed value.
     upper_bound : float or None
@@ -627,6 +758,7 @@ class NaturalCubicSpline(_CubicRegressionSpline):
     With centering enabled, `df=d` corresponds to `k=d+1` in a centered mgcv natural cubic smooth.
     Use the default centered basis in a model with an intercept. For a model without an intercept,
     use `center=False` if the spline must also represent the overall constant.
+    `penalty_matrix` supplies the integrated squared second-derivative penalty.
     """
 
     __transform_name__ = "cr"
@@ -669,6 +801,7 @@ class NaturalCubicSpline(_CubicRegressionSpline):
             x,
             df_offset,
             minimum_inner_knots=0,
+            cyclic=False,
         )
         all_knots = np.concatenate(([lower_bound], inner_knots, [upper_bound]))
         values = np.eye(all_knots.size)
@@ -707,7 +840,7 @@ class NaturalCubicSpline(_CubicRegressionSpline):
 
 
 @register_stateful_transform
-class ThinPlateRegressionSpline:
+class ThinPlateRegressionSpline(_RandomEffectsSplineMixin):
     """Low-rank univariate thin-plate regression spline.
 
     This implements the rank-reduced thin-plate construction of Wood (2003).
@@ -720,10 +853,10 @@ class ThinPlateRegressionSpline:
         The data.
     df : int
         Number of columns in the returned basis, after centering. Defaults to 10. At least two
-        columns are required: one unpenalized linear column and one penalized column.
+        columns are required: one null-space direction and one penalized direction.
     center : bool
         If `True` (the default), impose a sum-to-zero constraint over the training data and omit
-        the constant null-space column. Use this form in a model containing an intercept. With
+        the constant direction. Use this form in a model containing an intercept. With
         `center=False`, the constant and linear null-space columns are both retained and `df`
         must be at least three.
     max_knots : int
@@ -735,14 +868,17 @@ class ThinPlateRegressionSpline:
 
     Notes
     -----
-    The covariate is shifted and scaled before constructing the kernel. This improves numerical
-    conditioning and makes the whitened smoothing prior invariant to the units used for `x`.
-    The first :attr:`null_space_dimension` columns span the penalty null space: the linear
-    function when centered, or the constant followed by the linear function when uncentered.
-    The remaining columns are normalized to have an identity curvature penalty, so their
-    coefficients can share a smoothing prior scale. Given a returned basis `B` and
-    `m = spline.null_space_dimension`, downstream modelling packages can use `B[:, :m]` for the
-    null-space component and `B[:, m:]` for the curved component.
+    Before absorbing the centering constraint, radial columns have unit root mean square over
+    training data and are followed by constant and standardized linear columns.
+    The full sum-to-zero constraint is absorbed when centered. Eigenvector signs and rotations can
+    differ from mgcv; the function space and quadratic penalty are equivalent when the same
+    locations are used.
+
+    The covariate is standardized internally for numerical conditioning. `penalty_matrix`
+    accounts for this and measures integrated squared curvature in the original units of x,
+    without mgcv's optional penalty rescaling. Use `to_random()` explicitly to separate the
+    null space and whiten the penalty. Its first `null_space_dimension` columns are then the
+    unpenalized directions, with independent, equally penalized curved directions following.
 
     New data are evaluated against the locations, eigenspace, constraints, scaling, and centering
     values learned from the training data.
@@ -758,24 +894,15 @@ class ThinPlateRegressionSpline:
         self._scale = None
         self._sites = None
         self._radial_map = None
-        self._column_means = None
+        self._centering_matrix = None
         self._null_space_dimension = None
+        self._penalty_matrix = None
+        self._random_state = None
 
     def __call__(self, x, df=10, center=True, max_knots=2000, seed=1):
         if not self.params_set:
             self._initialize(x, df, center, max_knots, seed)
         return self.eval(x)
-
-    @staticmethod
-    def _validate_x(x):
-        x = np.asarray(x, dtype=float)
-        if x.ndim != 1:
-            raise ValueError("'x' must be one dimensional")
-        if x.size == 0:
-            raise ValueError("'x' must contain at least one value")
-        if not np.all(np.isfinite(x)):
-            raise ValueError("'x' must contain only finite values")
-        return x
 
     @staticmethod
     def _kernel(x, sites):
@@ -795,14 +922,17 @@ class ThinPlateRegressionSpline:
         return values[order], vectors[:, order]
 
     def _initialize(self, x, df, center, max_knots, seed):
-        x = self._validate_x(x)
+        x = np.asarray(x, dtype=float)
 
-        if not isinstance(df, int) or isinstance(df, bool):
+        if not isinstance(df, int):
             raise ValueError("'df' must be an integer")
-        if not isinstance(max_knots, int) or isinstance(max_knots, bool):
+
+        if not isinstance(max_knots, int):
             raise ValueError("'max_knots' must be an integer")
-        if not isinstance(seed, int) or isinstance(seed, bool):
+
+        if not isinstance(seed, int):
             raise ValueError("'seed' must be an integer")
+
         if max_knots < self._NULL_SPACE_DIMENSION + 1:
             raise ValueError("'max_knots' must be greater than the penalty null-space dimension")
 
@@ -840,59 +970,65 @@ class ThinPlateRegressionSpline:
         constraint_q, _ = np.linalg.qr(constraints, mode="complete")
         constraint_basis = constraint_q[:, self._NULL_SPACE_DIMENSION :]
 
-        # In the paper's coordinates the radial design is E U Z and its penalty is Z' D Z.
-        # Whiten that positive-definite penalty so a spherical coefficient prior controls the
-        # wiggliness directly.
+        # Retain the regression coordinates; whitening is an explicit to_random operation.
         raw_radial_map = eigenvectors @ constraint_basis
         raw_penalty = constraint_basis.T @ (eigenvalues[:, None] * constraint_basis)
         raw_penalty = (raw_penalty + raw_penalty.T) / 2
-        penalty_values, penalty_vectors = np.linalg.eigh(raw_penalty)
+        penalty_values = np.linalg.eigvalsh(raw_penalty)
         tolerance = np.spacing(1.0) * max(raw_penalty.shape) * np.max(np.abs(penalty_values))
+
         if np.any(penalty_values <= tolerance):
             raise ValueError(
                 "Could not construct a positive-definite thin-plate penalty; "
                 "try a smaller value of 'df'"
             )
-        whitening = penalty_vectors / np.sqrt(penalty_values)
-        radial_map = raw_radial_map @ whitening
+        radial_basis = self._kernel(standardized_x, sites) @ raw_radial_map
+        rms = np.sqrt(np.mean(radial_basis**2, axis=0))
+        radial_map = raw_radial_map / rms
+        raw_basis = np.column_stack((radial_basis / rms, np.ones(x.size), standardized_x))
+        penalty = np.zeros((full_rank, full_rank))
+        penalty[:-2, :-2] = raw_penalty / np.outer(rms, rms) / scale**3
+        null = np.eye(full_rank)[:, -2:]
+        centering_matrix = None
 
-        radial_basis = self._kernel(standardized_x, sites) @ radial_map
         if center:
-            raw_basis = np.column_stack((standardized_x, radial_basis))
-            column_means = raw_basis.mean(axis=0)
-            null_space_dimension = 1
-        else:
-            raw_basis = np.column_stack((np.ones(x.size), standardized_x, radial_basis))
-            column_means = np.zeros(raw_basis.shape[1])
-            null_space_dimension = 2
+            centering_matrix = get_centering_matrix(raw_basis)
+            raw_basis = raw_basis @ centering_matrix
+            penalty = centering_matrix.T @ penalty @ centering_matrix
+            null = centering_matrix.T @ null[:, 1:]
 
         self._center = center
         self._shift = shift
         self._scale = scale
         self._sites = sites
         self._radial_map = radial_map
-        self._column_means = column_means
-        self._null_space_dimension = null_space_dimension
+        self._centering_matrix = centering_matrix
+        self._null_space_dimension = 2 - int(center)
+        self._penalty_matrix = (penalty + penalty.T) / 2
+        self._set_random_state(raw_basis, null)
         self.params_set = True
 
     def eval(self, x):
-        x = self._validate_x(x)
+        x = np.asarray(x, dtype=float)
         standardized_x = (x - self._shift) / self._scale
         radial_basis = self._kernel(standardized_x, self._sites) @ self._radial_map
 
+        basis = np.column_stack((radial_basis, np.ones(x.size), standardized_x))
         if self._center:
-            basis = np.column_stack((standardized_x, radial_basis))
-        else:
-            basis = np.column_stack((np.ones(x.size), standardized_x, radial_basis))
+            basis = basis @ self._centering_matrix
+        return basis
 
-        return basis - self._column_means
+    @property
+    def penalty_matrix(self):
+        """Integrated squared-curvature penalty in the default basis, in original x units."""
+        return self._penalty_matrix.copy()
 
     @property
     def null_space_dimension(self):
-        """Number of leading columns with zero curvature penalty.
+        """Number of null-space directions, placed first only by `to_random`.
 
         This is 1 (linear) with centering or 2 (constant, linear) without centering.
-        All remaining columns have an identity curvature penalty in the returned coordinates.
+        The remaining `to_random` columns have identity curvature penalty.
         """
         return self._null_space_dimension
 
