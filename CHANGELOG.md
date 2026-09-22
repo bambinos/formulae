@@ -10,6 +10,12 @@
 
 ### Deprecation
 
+## 0.9.0
+
+### Maintenance and fixes
+
+- Reject interactions involving `hsgp()`, `bs()`, `cr()`, `cc()`, or `tp()` (#129).
+
 ## 0.8.0
 
 ### New features
