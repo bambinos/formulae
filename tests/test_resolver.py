@@ -137,6 +137,13 @@ def test_term_interaction():
     assert desc == comp
 
 
+@pytest.mark.parametrize("transform", ["hsgp", "cr", "cc", "bs", "tp"])
+@pytest.mark.parametrize("operator", [":", "*"])
+def test_spline_transforms_reject_interactions(transform, operator):
+    with pytest.raises(TypeError, match=f"Interaction with '{transform}' is not supported"):
+        model_description(f"y{operator}{transform}(x)")
+
+
 def test_term_power_interaction():
     desc = model_description("x*y")
     comp = Model(

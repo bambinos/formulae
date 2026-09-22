@@ -17,6 +17,7 @@ from formulae.terms.call import Call
 from formulae.terms.variable import Variable
 
 _log = logging.getLogger("formulae")
+_NON_INTERACTABLE_TRANSFORMS = {"hsgp", "cr", "cc", "bs", "tp"}
 
 
 # XTODO: Components have 'value' and terms have 'data'... which one should be kept?
@@ -226,6 +227,13 @@ class Term:
         for component in components:
             if component not in self.components:
                 self.components.append(component)
+        if len(self.components) > 1:
+            for component in self.components:
+                if (
+                    isinstance(component, Call)
+                    and component.call.callee in _NON_INTERACTABLE_TRANSFORMS
+                ):
+                    raise TypeError(f"Interaction with '{component.call.callee}' is not supported.")
         self.data = None
         self.kind = None
         self.name = ":".join([str(component.name) for component in self.components])
