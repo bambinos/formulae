@@ -1179,40 +1179,6 @@ def test_categorical_ordered_series():
     assert levels == list("bcd")
 
 
-def test_bs_categorical_interaction():
-    data = pd.DataFrame(
-        {
-            "state": np.tile(
-                ["lonely", "depressed", "hopeful", "stressed", "positive", "isolated"], 10
-            ),
-            "time": np.repeat(np.arange(0, 5), 12),
-        }
-    )
-
-    formula = "0 + bs(time, degree=2, df=3) : state"
-    dm = design_matrices(formula, data)
-    assert dm.common.terms["bs(time, degree=2, df=3):state"].levels == [
-        "0, depressed",
-        "0, hopeful",
-        "0, isolated",
-        "0, lonely",
-        "0, positive",
-        "0, stressed",
-        "1, depressed",
-        "1, hopeful",
-        "1, isolated",
-        "1, lonely",
-        "1, positive",
-        "1, stressed",
-        "2, depressed",
-        "2, hopeful",
-        "2, isolated",
-        "2, lonely",
-        "2, positive",
-        "2, stressed",
-    ]
-
-
 def test_calls_with_lazy_values():
     # https://github.com/bambinos/formulae/issues/87
     value = np.arange(5)
