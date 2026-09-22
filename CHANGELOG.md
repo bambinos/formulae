@@ -10,6 +10,34 @@
 
 ### Deprecation
 
+## 0.8.0
+
+### New features
+
+- Add `cr()` for natural cubic splines, with linear extrapolation beyond the boundary knots (#127).
+- Add `cc()` for cyclic cubic splines, with a configurable period and automatic wrapping
+  of values outside the cycle (#127).
+- Add `tp()` for univariate thin-plate regression splines, with reproducible subsampling
+  for large datasets (#127).
+
+### Maintenance and fixes
+
+- Add Python 3.14 to the CI test matrix (#127).
+
+### Documentation
+
+- Migrate the documentation website to Quarto (#126).
+
+### Deprecation
+
+- Deprecate the `intercept` argument in `bs()` in favor of `center`.
+  Use `center=False` in place of `intercept=True`,
+  and `center=True` in place of `intercept=False` (#127).
+- `bs()` now centers the full basis by default instead of dropping its first column.
+  This changes the returned basis values, including when using `intercept=False`.
+  For models without an intercept, use `center=False` if the spline should also
+  represent the overall constant (#127).
+
 ## 0.7.0
 
 ### New features
